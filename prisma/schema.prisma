@@ -1,0 +1,29 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid // Matches Supabase auth.users UUID
+  email     String?  @unique
+  name      String?
+  avatarUrl String?
+  
+  // BuilderStory specific base fields (empty for now, as requested)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  provider  String   // e.g., "dodo"
+  type      String   // e.g., "payment.succeeded"
+  status    String   // e.g., "processed", "failed"
+  createdAt DateTime @default(now())
+}
