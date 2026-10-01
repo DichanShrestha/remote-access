@@ -17,7 +17,7 @@ import ChromaGrid from '@/components/ChromaGrid';
 // @ts-ignore
 import BounceCards from '@/components/BounceCards';
 // @ts-ignore
-import CardSwap from '@/components/CardSwap';
+
 // @ts-ignore
 import ReflectiveCard from '@/components/ReflectiveCard';
 // @ts-ignore
@@ -40,6 +40,10 @@ import Dock from '@/components/Dock';
 import CountUp from '@/components/CountUp';
 // @ts-ignore
 import Stepper from '@/components/Stepper';
+import { Marquee } from '@/components/ui/marquee';
+import { MagicCard } from '@/components/ui/magic-card';
+import { ShineBorder } from '@/components/ui/shine-border';
+import { NumberTicker } from '@/components/ui/number-ticker';
 
 // ── URL Button ─────────────────────────────────────────────────
 export function UrlButtonSection({ section, theme }: { section: any; theme: ThemeConfig }) {
@@ -219,9 +223,23 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
 
   if (variant === 'masonry') {
     return (
-      <section className="py-12 px-4 md:px-8 max-w-7xl mx-auto">
-        {/* @ts-ignore */}
-        <Masonry data={images.map((img: any) => ({ id: img.id || Math.random(), image: img.url, height: 200 + Math.random() * 150 }))} />
+      <section className="py-12 px-4 md:px-8 max-w-6xl mx-auto">
+        <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
+          {images.map((img: any, i: number) => (
+            <div key={img.id || i} className="break-inside-avoid group relative overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+              <img 
+                src={img.url} 
+                alt={img.caption || ''} 
+                className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500" 
+              />
+              {img.caption && (
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <p className="text-white text-sm font-medium">{img.caption}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </section>
     );
   }
@@ -237,27 +255,16 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
 
   if (variant === 'bounce') {
     return (
-      <section className="py-20 w-full max-w-7xl mx-auto flex items-center justify-center min-h-[500px]">
-        {/* @ts-ignore */}
-        <BounceCards images={urls} containerWidth={800} containerHeight={400} />
+      <section className="py-20 w-full max-w-7xl mx-auto flex items-center justify-center min-h-[500px] overflow-hidden">
+        <div className="relative w-full max-w-[800px] h-[400px] flex items-center justify-center scale-75 md:scale-100">
+          {/* @ts-ignore */}
+          <BounceCards images={urls} containerWidth="100%" containerHeight="100%" />
+        </div>
       </section>
     );
   }
 
-  if (variant === 'swap') {
-    return (
-      <section className="py-12 px-4 md:px-8 max-w-3xl mx-auto min-h-[600px] flex items-center justify-center">
-        {/* @ts-ignore */}
-        <CardSwap cardDistance={60} verticalDistance={70}>
-          {images.map((img: any, i: number) => (
-            <div key={i} className="w-80 h-96 rounded-2xl overflow-hidden shadow-2xl">
-              <img src={img.url} alt={img.caption || ''} className="w-full h-full object-cover" />
-            </div>
-          ))}
-        </CardSwap>
-      </section>
-    );
-  }
+
 
   return (
     <section className="py-12 px-4 md:px-8 max-w-6xl mx-auto">
@@ -534,6 +541,40 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
     );
   }
 
+  if (variant === 'magic-card') {
+    return (
+      <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
+        {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {items.map((item: any) => (
+            <MagicCard key={item.id} className="p-7 shadow-2xl flex flex-col items-start justify-center cursor-pointer whitespace-nowrap" gradientColor={theme.primaryColor + '22'}>
+              <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4 whitespace-normal">{item.description}</p>
+              {item.price && <div className="font-bold text-lg" style={{ color: theme.primaryColor }}>{item.price}</div>}
+            </MagicCard>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === 'shine-border') {
+    return (
+      <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
+        {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {items.map((item: any) => (
+            <ShineBorder key={item.id} className="p-7 relative flex w-full flex-col items-center justify-center overflow-hidden rounded-lg border bg-background md:shadow-xl" color={theme.primaryColor}>
+              <h3 className="text-xl font-bold mb-3 self-start">{item.title}</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4 self-start">{item.description}</p>
+              {item.price && <div className="font-bold text-lg self-start" style={{ color: theme.primaryColor }}>{item.price}</div>}
+            </ShineBorder>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
       {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
@@ -725,22 +766,17 @@ export function QuoteSection({ section, theme }: { section: any; theme: ThemeCon
 // ── Marquee ────────────────────────────────────────────────────
 export function MarqueeSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { text } = section.content;
-  const direction = section.layout === 'right' ? 'marquee-right' : 'marquee-left';
   return (
     <section className="py-6 overflow-hidden relative">
-      <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white dark:from-slate-900 to-transparent z-10" />
-      <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white dark:from-slate-900 to-transparent z-10" />
-      <div className={`flex gap-12 whitespace-nowrap animate-marquee`} style={{ animationDirection: section.layout === 'right' ? 'reverse' : 'normal' }}>
-        {[...Array(4)].map((_, i) => (
-          <span key={i} className="text-2xl md:text-4xl font-black uppercase tracking-widest opacity-15" style={{ color: theme.primaryColor }}>
+      <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-slate-100 dark:from-slate-950 to-transparent z-10" />
+      <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-slate-100 dark:from-slate-950 to-transparent z-10" />
+      <Marquee reverse={section.layout === 'right'} pauseOnHover className="[--duration:20s]">
+        {[...Array(6)].map((_, i) => (
+          <span key={i} className="text-2xl md:text-4xl font-black uppercase tracking-widest mx-4 opacity-30" style={{ color: theme.primaryColor }}>
             {text}
           </span>
         ))}
-      </div>
-      <style>{`
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .animate-marquee { animation: marquee 20s linear infinite; display: flex; width: max-content; }
-      `}</style>
+      </Marquee>
     </section>
   );
 }
@@ -878,6 +914,27 @@ export function SpacerSection({ section }: { section: any; theme: ThemeConfig })
   const height = layout === 'small' ? 'h-6' : layout === 'medium' ? 'h-12' : layout === 'large' ? 'h-24' : 'h-40';
   return <div className={`w-full ${height}`} />;
 }
+// ── Stats ──────────────────────────────────────────────────────
+export function StatsSection({ section, theme }: { section: any; theme: ThemeConfig }) {
+  const { title, items } = section.content;
+  return (
+    <section className="py-16 px-4 md:px-8 max-w-6xl mx-auto text-center">
+      {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        {items.map((item: any) => (
+          <div key={item.id} className="flex flex-col items-center">
+            <p className="whitespace-pre-wrap text-4xl font-medium tracking-tighter text-black dark:text-white">
+              {item.prefix}
+              <NumberTicker value={parseInt(item.value) || 0} />
+              {item.suffix}
+            </p>
+            <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider mt-2">{item.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 // ── Central Dispatcher ─────────────────────────────────────────
 export function renderSection(section: PageSection, theme: ThemeConfig) {
@@ -913,6 +970,7 @@ export function renderSection(section: PageSection, theme: ThemeConfig) {
     case 'marquee': return <MarqueeSection key={section.id} section={section} theme={theme} />;
     case 'donate': return <DonateSection key={section.id} section={section} theme={theme} />;
     case 'countdown': return <CountdownSection key={section.id} section={section} theme={theme} />;
+    case 'stats': return <StatsSection key={section.id} section={section} theme={theme} />;
     case 'timeline': return <TimelineSection key={section.id} section={section} theme={theme} />;
     case 'divider': return <DividerSection key={section.id} section={section} theme={theme} />;
     case 'spacer': return <SpacerSection key={section.id} section={section} theme={theme} />;

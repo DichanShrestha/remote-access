@@ -26,7 +26,24 @@ export const ComponentRegistry: Record<SectionType, ComponentMetadata> = {
   'hero': {
     type: 'hero', label: 'Hero / Profile', category: 'popular',
     categories: ['popular'],
-    defaultData: () => ({ type: 'hero', layout: 'center', content: { title: 'Welcome to my page', subtitle: 'A brief intro goes here.' } }),
+    defaultData: () => ({
+      type: 'hero',
+      variant: 'editorial-center',
+      layout: 'center',
+      content: {
+        eyebrow: 'Designer · Developer · Creator',
+        title: 'Alex Morgan',
+        headline: 'Building digital products that people love',
+        subtitle: 'Product designer and creative developer based in San Francisco. Helping startups and brands craft meaningful digital experiences.',
+        buttonText: 'Get in Touch',
+        buttonUrl: '#contact',
+        secondaryButtonText: 'View Work',
+        secondaryButtonUrl: '#portfolio',
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
+        location: 'San Francisco, CA',
+        badge: 'Available for work',
+      },
+    }),
   },
   'url-button': {
     type: 'url-button', label: 'URL Button', category: 'popular',
@@ -182,6 +199,20 @@ export const ComponentRegistry: Record<SectionType, ComponentMetadata> = {
     type: 'cta', label: 'CTA', category: 'trust',
     categories: ['trust', 'popular'],
     defaultData: () => ({ type: 'cta', content: { title: 'Ready to start?', buttonText: 'Get Started', buttonUrl: '#' } }),
+  },
+  'stats': {
+    type: 'stats', label: 'Statistics', category: 'trust',
+    categories: ['trust'],
+    defaultData: () => ({
+      type: 'stats',
+      content: {
+        title: 'Our Impact',
+        items: [
+          { id: '1', value: '1000', label: 'Users', suffix: '+' },
+          { id: '2', value: '50', label: 'Projects', suffix: '+' },
+        ]
+      }
+    })
   },
 
   // ── Organize my page ────────────────────────────────────────

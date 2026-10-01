@@ -26,11 +26,25 @@ export const PageSettingsSchema = z.object({
 export const HeroSectionSchema = BaseSectionSchema.extend({
   type: z.literal('hero'),
   content: z.object({
+    eyebrow: z.string().optional(),
     title: z.string(),
+    headline: z.string().optional(),
     subtitle: z.string().optional(),
     buttonText: z.string().optional(),
     buttonUrl: z.string().optional(),
+    secondaryButtonText: z.string().optional(),
+    secondaryButtonUrl: z.string().optional(),
     imageUrl: z.string().optional(),
+    avatarUrl: z.string().optional(),
+    location: z.string().optional(),
+    badge: z.string().optional(),
+    metric: z.string().optional(),
+    metricLabel: z.string().optional(),
+    socialLinks: z.array(z.object({
+      id: z.string(),
+      platform: z.string(),
+      url: z.string(),
+    })).optional(),
   }),
   layout: z.enum(['center', 'left', 'split']).default('center'),
 });
@@ -304,6 +318,20 @@ export const CountdownSectionSchema = BaseSectionSchema.extend({
   }),
 });
 
+export const StatsSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('stats'),
+  content: z.object({
+    title: z.string().optional(),
+    items: z.array(z.object({
+      id: z.string(),
+      value: z.string(),
+      label: z.string(),
+      prefix: z.string().optional(),
+      suffix: z.string().optional(),
+    })),
+  }),
+});
+
 export const TimelineSectionSchema = BaseSectionSchema.extend({
   type: z.literal('timeline'),
   content: z.object({
@@ -360,6 +388,7 @@ export const PageSectionSchema = z.discriminatedUnion('type', [
   MarqueeSectionSchema,
   DonateSectionSchema,
   CountdownSectionSchema,
+  StatsSectionSchema,
   TimelineSectionSchema,
   DividerSectionSchema,
   SpacerSectionSchema,

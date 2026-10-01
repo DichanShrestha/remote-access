@@ -47,12 +47,20 @@ function deepSet(obj: any, path: string, value: any): any {
 const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
   hero: {
     fields: [
-      { key: 'content.title', label: 'Title', type: 'text', placeholder: 'Page title' },
-      { key: 'content.subtitle', label: 'Subtitle', type: 'textarea', placeholder: 'Subtitle text' },
-      { key: 'content.buttonText', label: 'Button Text', type: 'text' },
-      { key: 'content.buttonUrl', label: 'Button URL', type: 'url' },
-      { key: 'content.imageUrl', label: 'Image URL', type: 'url' },
-      { key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Center', value: 'center' }, { label: 'Left', value: 'left' }, { label: 'Split', value: 'split' }] },
+      { key: 'content.eyebrow', label: 'Eyebrow', type: 'text', placeholder: 'e.g. Designer · Writer · Creator' },
+      { key: 'content.title', label: 'Name / Title', type: 'text', placeholder: 'Your name or brand' },
+      { key: 'content.headline', label: 'Headline', type: 'text', placeholder: 'What you do or stand for' },
+      { key: 'content.subtitle', label: 'Description', type: 'textarea', placeholder: 'A short supporting description' },
+      { key: 'content.buttonText', label: 'Primary Button', type: 'text', placeholder: 'e.g. Get in Touch' },
+      { key: 'content.buttonUrl', label: 'Primary Button URL', type: 'url' },
+      { key: 'content.secondaryButtonText', label: 'Secondary Button', type: 'text', placeholder: 'e.g. View Work' },
+      { key: 'content.secondaryButtonUrl', label: 'Secondary Button URL', type: 'url' },
+      { key: 'content.avatarUrl', label: 'Avatar / Photo URL', type: 'url' },
+      { key: 'content.imageUrl', label: 'Hero Image URL', type: 'url' },
+      { key: 'content.location', label: 'Location', type: 'text', placeholder: 'e.g. San Francisco, CA' },
+      { key: 'content.badge', label: 'Badge / Status', type: 'text', placeholder: 'e.g. Available for work' },
+      { key: 'content.metric', label: 'Metric Value', type: 'text', placeholder: 'e.g. 12K' },
+      { key: 'content.metricLabel', label: 'Metric Label', type: 'text', placeholder: 'e.g. followers' },
     ],
   },
   'rich-text': {

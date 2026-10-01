@@ -18,10 +18,11 @@ const PlaceholderSVG = () => (
 
 export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> = {
   hero: [
-    { id: 'default', label: 'Classic Hero', previewNode: <PlaceholderSVG /> },
-    { id: 'profile-card', label: 'Profile Card', previewNode: <PlaceholderSVG /> },
-    { id: 'aurora', label: 'Aurora Background', previewNode: <PlaceholderSVG /> },
-    { id: 'dark-veil', label: 'Dark Veil', previewNode: <PlaceholderSVG /> },
+    { id: 'editorial-center', label: 'Editorial Center', previewNode: <PlaceholderSVG /> },
+    { id: 'split', label: 'Split', previewNode: <PlaceholderSVG /> },
+    { id: 'immersive', label: 'Immersive', previewNode: <PlaceholderSVG /> },
+    { id: 'minimal', label: 'Minimal Profile', previewNode: <PlaceholderSVG /> },
+    { id: 'asymmetric', label: 'Asymmetric', previewNode: <PlaceholderSVG /> },
   ],
   'rich-text': [
     { id: 'default', label: 'Standard', previewNode: <PlaceholderSVG /> },
@@ -52,7 +53,6 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'masonry', label: 'Masonry', previewNode: <PlaceholderSVG /> },
     { id: 'chroma', label: 'Chroma Grid', previewNode: <PlaceholderSVG /> },
     { id: 'bounce', label: 'Bounce Cards', previewNode: <PlaceholderSVG /> },
-    { id: 'swap', label: 'Card Swap', previewNode: <PlaceholderSVG /> },
   ],
   services: [
     { id: 'default', label: 'Standard Grid', previewNode: <PlaceholderSVG /> },
