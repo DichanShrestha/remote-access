@@ -17,6 +17,19 @@ const PlaceholderSVG = () => (
 );
 
 export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> = {
+  hero: [
+    { id: 'default', label: 'Classic Hero', previewNode: <PlaceholderSVG /> },
+    { id: 'profile-card', label: 'Profile Card', previewNode: <PlaceholderSVG /> },
+    { id: 'aurora', label: 'Aurora Background', previewNode: <PlaceholderSVG /> },
+    { id: 'dark-veil', label: 'Dark Veil', previewNode: <PlaceholderSVG /> },
+  ],
+  'rich-text': [
+    { id: 'default', label: 'Standard', previewNode: <PlaceholderSVG /> },
+    { id: 'split', label: 'Split Text', previewNode: <PlaceholderSVG /> },
+    { id: 'blur', label: 'Blur Reveal', previewNode: <PlaceholderSVG /> },
+    { id: 'shiny', label: 'Shiny Text', previewNode: <PlaceholderSVG /> },
+    { id: 'typewriter', label: 'Typewriter', previewNode: <PlaceholderSVG /> },
+  ],
   carousel: [
     { 
       id: 'default', 
@@ -29,36 +42,45 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
         </div>
       )
     },
-    { 
-      id: 'flex', 
-      label: 'Flex Carousel',
-      previewNode: (
-        <div className="w-full h-full bg-slate-100 flex gap-0.5 items-center justify-center p-1">
-          <div className="w-1/4 h-full bg-slate-300 rounded-sm"></div>
-          <div className="w-1/2 h-full bg-blue-400 rounded-sm"></div>
-          <div className="w-1/4 h-full bg-slate-300 rounded-sm"></div>
-        </div>
-      )
-    },
-    { 
-      id: 'circular', 
-      label: 'Circular Ring',
-      previewNode: (
-        <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-          <div className="w-6 h-6 rounded-full border-2 border-slate-300 border-t-blue-400"></div>
-        </div>
-      )
-    },
-    { 
-      id: 'depth', 
-      label: '3D Depth',
-      previewNode: (
-        <div className="w-full h-full bg-slate-100 flex items-center justify-center relative">
-          <div className="absolute w-4 h-6 bg-slate-300 rounded-sm -translate-x-3 scale-75 opacity-50"></div>
-          <div className="absolute w-4 h-6 bg-slate-300 rounded-sm translate-x-3 scale-75 opacity-50"></div>
-          <div className="absolute w-5 h-7 bg-blue-400 rounded-sm shadow-lg z-10"></div>
-        </div>
-      )
-    },
+    { id: 'react-bits', label: 'Smooth Carousel', previewNode: <PlaceholderSVG /> },
+    { id: 'flex', label: 'Flex Carousel', previewNode: <PlaceholderSVG /> },
+    { id: 'circular', label: 'Circular Ring', previewNode: <PlaceholderSVG /> },
+    { id: 'depth', label: '3D Depth', previewNode: <PlaceholderSVG /> },
+  ],
+  gallery: [
+    { id: 'default', label: 'Grid', previewNode: <PlaceholderSVG /> },
+    { id: 'masonry', label: 'Masonry', previewNode: <PlaceholderSVG /> },
+    { id: 'chroma', label: 'Chroma Grid', previewNode: <PlaceholderSVG /> },
+    { id: 'bounce', label: 'Bounce Cards', previewNode: <PlaceholderSVG /> },
+    { id: 'swap', label: 'Card Swap', previewNode: <PlaceholderSVG /> },
+  ],
+  services: [
+    { id: 'default', label: 'Standard Grid', previewNode: <PlaceholderSVG /> },
+    { id: 'reflective', label: 'Reflective Cards', previewNode: <PlaceholderSVG /> },
+    { id: 'spotlight', label: 'Spotlight Hover', previewNode: <PlaceholderSVG /> },
+    { id: 'glow', label: 'Border Glow', previewNode: <PlaceholderSVG /> },
+  ],
+  products: [
+    { id: 'default', label: 'Standard Grid', previewNode: <PlaceholderSVG /> },
+    { id: 'glare', label: 'Glare Hover', previewNode: <PlaceholderSVG /> },
+  ],
+  image: [
+    { id: 'default', label: 'Standard Image', previewNode: <PlaceholderSVG /> },
+    { id: 'scroll-reveal', label: 'Scroll Reveal', previewNode: <PlaceholderSVG /> },
+    { id: 'gradual-blur', label: 'Gradual Blur', previewNode: <PlaceholderSVG /> },
+    { id: 'silk', label: 'Silk Effect', previewNode: <PlaceholderSVG /> },
+    { id: 'gradient-blinds', label: 'Gradient Blinds', previewNode: <PlaceholderSVG /> },
+  ],
+  'social-links': [
+    { id: 'default', label: 'Standard Row', previewNode: <PlaceholderSVG /> },
+    { id: 'dock', label: 'Mac OS Dock', previewNode: <PlaceholderSVG /> },
+  ],
+  countdown: [
+    { id: 'default', label: 'Date Countdown', previewNode: <PlaceholderSVG /> },
+    { id: 'count-up', label: 'Count Up Stats', previewNode: <PlaceholderSVG /> },
+  ],
+  resume: [
+    { id: 'default', label: 'Standard List', previewNode: <PlaceholderSVG /> },
+    { id: 'stepper', label: 'Interactive Stepper', previewNode: <PlaceholderSVG /> },
   ],
 };

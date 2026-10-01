@@ -7,6 +7,40 @@ import { LinkListSection } from './LinkListSection';
 import { AiChatSection } from './AiChatSection';
 import { FaqSection } from './FaqSection';
 
+// --- React Bits Components ---
+// @ts-ignore
+import Carousel from '@/components/Carousel';
+// @ts-ignore
+import Masonry from '@/components/Masonry';
+// @ts-ignore
+import ChromaGrid from '@/components/ChromaGrid';
+// @ts-ignore
+import BounceCards from '@/components/BounceCards';
+// @ts-ignore
+import CardSwap from '@/components/CardSwap';
+// @ts-ignore
+import ReflectiveCard from '@/components/ReflectiveCard';
+// @ts-ignore
+import SpotlightCard from '@/components/SpotlightCard';
+// @ts-ignore
+import BorderGlow from '@/components/BorderGlow';
+// @ts-ignore
+import GlareHover from '@/components/GlareHover';
+// @ts-ignore
+import ScrollReveal from '@/components/ScrollReveal';
+// @ts-ignore
+import GradualBlur from '@/components/GradualBlur';
+// @ts-ignore
+import Silk from '@/components/Silk';
+// @ts-ignore
+import GradientBlinds from '@/components/GradientBlinds';
+// @ts-ignore
+import Dock from '@/components/Dock';
+// @ts-ignore
+import CountUp from '@/components/CountUp';
+// @ts-ignore
+import Stepper from '@/components/Stepper';
+
 // ── URL Button ─────────────────────────────────────────────────
 export function UrlButtonSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { label, url, description } = section.content;
@@ -100,7 +134,25 @@ export function CtaSection({ section, theme }: { section: any; theme: ThemeConfi
 // ── Social Links / Follow ──────────────────────────────────────
 export function SocialLinksSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { links } = section.content;
-  const { layout } = section;
+  const { layout, variant = 'default' } = section;
+
+  if (variant === 'dock') {
+    const dockItems = links.map((link: any) => ({
+      title: link.platform,
+      icon: (
+        <a href={link.url} target="_blank" rel="noreferrer" className="w-full h-full flex items-center justify-center rounded-full text-white text-lg font-bold" style={{ backgroundColor: theme.primaryColor }}>
+          {link.platform.charAt(0).toUpperCase()}
+        </a>
+      ),
+    }));
+    return (
+      <section className="py-8 px-4 flex justify-center w-full my-4">
+        {/* @ts-ignore */}
+        <Dock items={dockItems} size={56} magnification={72} />
+      </section>
+    );
+  }
+
   return (
     <section className="py-10 px-4 md:px-8 max-w-2xl mx-auto">
       <div className={`flex ${layout === 'grid' ? 'flex-wrap gap-3 justify-center' : 'flex-row gap-3 justify-center flex-wrap'}`}>
@@ -117,7 +169,31 @@ export function SocialLinksSection({ section, theme }: { section: any; theme: Th
 // ── Image ──────────────────────────────────────────────────────
 export function ImageSection({ section }: { section: any; theme: ThemeConfig }) {
   const { url, alt, caption } = section.content;
-  const { layout } = section;
+  const { layout, variant = 'default' } = section;
+
+  if (variant === 'scroll-reveal') {
+    return (
+      <section className={`py-10 ${layout === 'full' ? 'w-full' : 'px-4 md:px-8 max-w-5xl mx-auto'}`}>
+        {/* @ts-ignore */}
+        <ScrollReveal>
+          <img src={url} alt={alt || caption || 'Image'} className={`w-full h-auto object-cover ${layout === 'full' ? '' : 'rounded-2xl shadow-lg'}`} />
+        </ScrollReveal>
+        {caption && <p className="text-center text-sm text-slate-400 mt-4 italic">{caption}</p>}
+      </section>
+    );
+  }
+
+  if (variant === 'gradual-blur') {
+    return (
+      <section className={`py-10 relative ${layout === 'full' ? 'w-full' : 'px-4 md:px-8 max-w-5xl mx-auto'}`}>
+        <img src={url} alt={alt || caption || 'Image'} className={`w-full h-auto object-cover ${layout === 'full' ? '' : 'rounded-2xl shadow-lg'}`} />
+        {/* @ts-ignore */}
+        <GradualBlur position="bottom" strength={5} height="40%" />
+        {caption && <p className="text-center text-sm text-slate-400 mt-4 italic">{caption}</p>}
+      </section>
+    );
+  }
+
   return (
     <section className={`py-10 ${layout === 'full' ? 'w-full' : 'px-4 md:px-8 max-w-5xl mx-auto'}`}>
       <figure className="w-full group">
@@ -133,9 +209,56 @@ export function ImageSection({ section }: { section: any; theme: ThemeConfig }) 
 // ── Gallery ────────────────────────────────────────────────────
 export function GallerySection({ section }: { section: any; theme: ThemeConfig }) {
   const { images } = section.content;
+  const variant = section.variant || 'default';
+
   if (!images || images.length === 0) {
     return <section className="py-10 px-4 text-center text-slate-400 text-sm">Add images to your gallery</section>;
   }
+
+  const urls = images.map((img: any) => img.url);
+
+  if (variant === 'masonry') {
+    return (
+      <section className="py-12 px-4 md:px-8 max-w-7xl mx-auto">
+        {/* @ts-ignore */}
+        <Masonry data={images.map((img: any) => ({ id: img.id || Math.random(), image: img.url, height: 200 + Math.random() * 150 }))} />
+      </section>
+    );
+  }
+
+  if (variant === 'chroma') {
+    return (
+      <section className="py-12 w-full max-w-7xl mx-auto">
+        {/* @ts-ignore */}
+        <ChromaGrid items={urls.map((u: string) => ({ image: u }))} />
+      </section>
+    );
+  }
+
+  if (variant === 'bounce') {
+    return (
+      <section className="py-20 w-full max-w-7xl mx-auto flex items-center justify-center min-h-[500px]">
+        {/* @ts-ignore */}
+        <BounceCards images={urls} containerWidth={800} containerHeight={400} />
+      </section>
+    );
+  }
+
+  if (variant === 'swap') {
+    return (
+      <section className="py-12 px-4 md:px-8 max-w-3xl mx-auto min-h-[600px] flex items-center justify-center">
+        {/* @ts-ignore */}
+        <CardSwap cardDistance={60} verticalDistance={70}>
+          {images.map((img: any, i: number) => (
+            <div key={i} className="w-80 h-96 rounded-2xl overflow-hidden shadow-2xl">
+              <img src={img.url} alt={img.caption || ''} className="w-full h-full object-cover" />
+            </div>
+          ))}
+        </CardSwap>
+      </section>
+    );
+  }
+
   return (
     <section className="py-12 px-4 md:px-8 max-w-6xl mx-auto">
       <div className={`grid gap-3 ${section.layout === 'masonry' ? 'grid-cols-2 md:grid-cols-4 items-start' : 'grid-cols-2 md:grid-cols-3'}`}>
@@ -206,6 +329,15 @@ export function CarouselSection({ section, theme }: { section: any; theme: Theme
       <section className="py-12 w-full h-[600px] md:h-[700px] relative overflow-hidden flex items-center justify-center">
         {/* @ts-ignore React Bits JSX components miss some optional props */}
         <CircularCarousel items={formattedItems} cardWidth={250} gap={40} />
+      </section>
+    );
+  }
+
+  if (variant === 'react-bits') {
+    return (
+      <section className="py-12 px-4 md:px-8 max-w-6xl mx-auto relative w-full">
+        {/* @ts-ignore */}
+        <Carousel items={formattedItems} />
       </section>
     );
   }
@@ -304,6 +436,22 @@ export function AudioSection({ section, theme }: { section: any; theme: ThemeCon
 // ── Resume ─────────────────────────────────────────────────────
 export function ResumeSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, items } = section.content;
+  const variant = section.variant || 'default';
+
+  if (variant === 'stepper') {
+    const steps = items.map((item: any) => ({
+      title: `${item.role} at ${item.company}`,
+      description: `${item.period}\n${item.description || ''}`,
+    }));
+    return (
+      <section className="py-16 px-4 md:px-8 max-w-4xl mx-auto">
+        {title && <h2 className="text-3xl font-bold mb-10 text-center" style={{ color: theme.primaryColor }}>{title}</h2>}
+        {/* @ts-ignore */}
+        <Stepper steps={steps} activeStep={0} />
+      </section>
+    );
+  }
+
   return (
     <section className="py-16 px-4 md:px-8 max-w-3xl mx-auto">
       {title && <h2 className="text-3xl font-bold mb-10 text-center" style={{ color: theme.primaryColor }}>{title}</h2>}
@@ -330,6 +478,62 @@ export function ResumeSection({ section, theme }: { section: any; theme: ThemeCo
 // ── Services ───────────────────────────────────────────────────
 export function ServicesSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, items } = section.content;
+  const variant = section.variant || 'default';
+
+  if (variant === 'reflective') {
+    return (
+      <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
+        {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {items.map((item: any) => (
+            // @ts-ignore
+            <ReflectiveCard key={item.id} className="p-7 bg-white dark:bg-slate-800 rounded-2xl">
+              <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">{item.description}</p>
+              {item.price && <div className="font-bold text-lg" style={{ color: theme.primaryColor }}>{item.price}</div>}
+            </ReflectiveCard>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === 'spotlight') {
+    return (
+      <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
+        {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {items.map((item: any) => (
+            // @ts-ignore
+            <SpotlightCard key={item.id} className="p-7 bg-slate-900 border border-slate-800 rounded-2xl">
+              <h3 className="text-xl font-bold mb-3 text-white">{item.title}</h3>
+              <p className="text-slate-400 text-sm leading-relaxed mb-4">{item.description}</p>
+              {item.price && <div className="font-bold text-lg text-indigo-400">{item.price}</div>}
+            </SpotlightCard>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === 'glow') {
+    return (
+      <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
+        {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {items.map((item: any) => (
+            // @ts-ignore
+            <BorderGlow key={item.id} className="p-7 bg-slate-900 rounded-2xl">
+              <h3 className="text-xl font-bold mb-3 text-white">{item.title}</h3>
+              <p className="text-slate-400 text-sm leading-relaxed mb-4">{item.description}</p>
+              {item.price && <div className="font-bold text-lg" style={{ color: theme.primaryColor }}>{item.price}</div>}
+            </BorderGlow>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
       {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
@@ -347,8 +551,35 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
 }
 
 // ── Products ───────────────────────────────────────────────────
-export function ProductsSection({ section }: { section: any; theme: ThemeConfig }) {
+export function ProductsSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, items } = section.content;
+  const variant = section.variant || 'default';
+
+  if (variant === 'glare') {
+    return (
+      <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
+        {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+          {items.map((item: any) => (
+            // @ts-ignore
+            <GlareHover key={item.id} className="rounded-2xl overflow-hidden bg-slate-900 border border-slate-800">
+              {item.imageUrl && (
+                <div className="aspect-square overflow-hidden">
+                  <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="p-4">
+                <h3 className="font-bold text-sm text-white">{item.title}</h3>
+                <p className="text-xs text-slate-400 mb-1 line-clamp-2">{item.description}</p>
+                <div className="font-bold text-sm" style={{ color: theme.primaryColor }}>{item.price}</div>
+              </div>
+            </GlareHover>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
       {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
@@ -538,6 +769,7 @@ export function DonateSection({ section, theme }: { section: any; theme: ThemeCo
 // ── Countdown ──────────────────────────────────────────────────
 export function CountdownSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, targetDate } = section.content;
+  const variant = section.variant || 'default';
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
   const intervalRef = useRef<NodeJS.Timeout>(null);
 
@@ -555,6 +787,33 @@ export function CountdownSection({ section, theme }: { section: any; theme: Them
     intervalRef.current = setInterval(calc, 1000);
     return () => clearInterval(intervalRef.current!);
   }, [targetDate]);
+
+  if (variant === 'count-up') {
+    return (
+      <section className="py-16 px-4 md:px-8 max-w-lg mx-auto text-center">
+        {title && <h2 className="text-xl font-bold mb-8">{title}</h2>}
+        <div className="flex justify-center gap-6 md:gap-10">
+          <div className="flex flex-col items-center">
+            {/* @ts-ignore */}
+            <CountUp from={0} to={timeLeft.days} duration={2} className="text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.primaryColor }} />
+            <div className="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1">days</div>
+          </div>
+          <span className="text-3xl font-bold text-slate-200 dark:text-slate-700 self-start mt-2">:</span>
+          <div className="flex flex-col items-center">
+            {/* @ts-ignore */}
+            <CountUp from={0} to={timeLeft.hours} duration={2} className="text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.primaryColor }} />
+            <div className="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1">hours</div>
+          </div>
+          <span className="text-3xl font-bold text-slate-200 dark:text-slate-700 self-start mt-2">:</span>
+          <div className="flex flex-col items-center">
+            {/* @ts-ignore */}
+            <CountUp from={0} to={timeLeft.mins} duration={2} className="text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.primaryColor }} />
+            <div className="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1">mins</div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const Unit = ({ value, label }: { value: number; label: string }) => (
     <div className="flex flex-col items-center">
