@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { PageSection, ThemeConfig } from '@/lib/page-engine/schemas';
 import { HeroSection } from './HeroSection';
 import { RichTextSection } from './RichTextSection';
@@ -154,28 +154,85 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
   );
 }
 
+import FlexCarousel from '@/components/FlexCarousel';
+import CircularCarousel from '@/components/CircularCarousel';
+import DepthCarousel from '@/components/DepthCarousel';
+
 // ── Carousel ───────────────────────────────────────────────────
 export function CarouselSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { images } = section.content;
+  const variant = section.variant || 'default';
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const formattedItems = useMemo(() => {
+    if (!images || images.length === 0) return [];
+
+    // To ensure 3-4 items are beautifully visible in the front arc of the cylinder,
+    // we need the cylinder to have at least 8-10 items total.
+    let displayImages = [...images];
+    while (displayImages.length < 8) {
+      displayImages = [...displayImages, ...images];
+    }
+    // Trim to 20 if it gets absurdly long
+    if (displayImages.length > 20) {
+      displayImages = displayImages.slice(0, 20);
+    }
+
+    return displayImages.map((img: any, i: number) => ({
+      src: img.url,
+      image: img.url,
+      alt: img.caption || 'Carousel image',
+      title: img.caption || '',
+      subtitle: '',
+      id: `${img.id}-${i}`, // keep unique react key if they use it
+    }));
+  }, [images]);
 
   if (!images || images.length === 0) {
     return <section className="py-10 px-4 text-center text-slate-400 text-sm">Add images to your carousel</section>;
   }
 
+  if (variant === 'flex') {
+    return (
+      <section className="py-12 px-4 md:px-8 max-w-6xl mx-auto h-[600px] relative w-full">
+        {/* @ts-ignore React Bits JSX components miss some optional props */}
+        <FlexCarousel items={formattedItems} />
+      </section>
+    );
+  }
+
+  if (variant === 'circular') {
+    return (
+      <section className="py-12 w-full h-[600px] md:h-[700px] relative overflow-hidden flex items-center justify-center">
+        {/* @ts-ignore React Bits JSX components miss some optional props */}
+        <CircularCarousel items={formattedItems} cardWidth={250} gap={40} />
+      </section>
+    );
+  }
+
+  if (variant === 'depth') {
+    return (
+      <section className="py-12 px-4 md:px-8 max-w-6xl mx-auto h-[500px] relative w-full">
+        {/* @ts-ignore React Bits JSX components miss some optional props */}
+        <DepthCarousel items={formattedItems} />
+      </section>
+    );
+  }
+
+  // Default layout
   const handleNext = () => setCurrentIndex((prev) => (prev + 1) % images.length);
   const handlePrev = () => setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
 
   return (
     <section className="py-12 px-4 md:px-8 max-w-5xl mx-auto">
       <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-video bg-slate-900 group">
-        <img 
-          src={images[currentIndex].url} 
-          alt={images[currentIndex].caption || ''} 
+        <img
+          src={images[currentIndex].url}
+          alt={images[currentIndex].caption || ''}
           className="w-full h-full object-cover transition-opacity duration-500"
-          key={currentIndex} 
+          key={currentIndex}
         />
-        
+
         {images[currentIndex].caption && (
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 pb-4 pt-16 px-6">
             <span className="text-white font-medium">{images[currentIndex].caption}</span>
@@ -192,10 +249,10 @@ export function CarouselSection({ section, theme }: { section: any; theme: Theme
             </button>
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
               {images.map((_: any, i: number) => (
-                <button 
-                  key={i} 
-                  onClick={() => setCurrentIndex(i)} 
-                  className={`w-2 h-2 rounded-full transition-all ${i === currentIndex ? 'w-6 bg-white' : 'bg-white/50 hover:bg-white/80'}`} 
+                <button
+                  key={i}
+                  onClick={() => setCurrentIndex(i)}
+                  className={`w-2 h-2 rounded-full transition-all ${i === currentIndex ? 'w-6 bg-white' : 'bg-white/50 hover:bg-white/80'}`}
                   style={i === currentIndex ? { backgroundColor: theme.primaryColor } : {}}
                 />
               ))}
@@ -568,38 +625,38 @@ export function renderSection(section: PageSection, theme: ThemeConfig) {
   if (section.isHidden) return null;
 
   switch (section.type) {
-    case 'hero':            return <HeroSection key={section.id} section={section} theme={theme} />;
-    case 'rich-text':       return <RichTextSection key={section.id} section={section as any} theme={theme} />;
-    case 'link-list':       return <LinkListSection key={section.id} section={section as any} theme={theme} />;
-    case 'ai-chat':         return <AiChatSection key={section.id} section={section as any} theme={theme} />;
-    case 'faq':             return <FaqSection key={section.id} section={section as any} theme={theme} />;
-    case 'url-button':      return <UrlButtonSection key={section.id} section={section} theme={theme} />;
-    case 'image-button':    return <ImageButtonSection key={section.id} section={section} theme={theme} />;
-    case 'email-button':    return <EmailButtonSection key={section.id} section={section} theme={theme} />;
-    case 'file-button':     return <FileButtonSection key={section.id} section={section} theme={theme} />;
-    case 'cta':             return <CtaSection key={section.id} section={section} theme={theme} />;
-    case 'social-links':    return <SocialLinksSection key={section.id} section={section} theme={theme} />;
-    case 'image':           return <ImageSection key={section.id} section={section} theme={theme} />;
-    case 'gallery':         return <GallerySection key={section.id} section={section} theme={theme} />;
-    case 'carousel':        return <CarouselSection key={section.id} section={section} theme={theme} />;
-    case 'video':           return <VideoSection key={section.id} section={section} theme={theme} />;
-    case 'audio':           return <AudioSection key={section.id} section={section} theme={theme} />;
-    case 'resume':          return <ResumeSection key={section.id} section={section} theme={theme} />;
-    case 'services':        return <ServicesSection key={section.id} section={section} theme={theme} />;
-    case 'products':        return <ProductsSection key={section.id} section={section} theme={theme} />;
-    case 'testimonials':    return <TestimonialsSection key={section.id} section={section} theme={theme} />;
-    case 'announcement':    return <AnnouncementSection key={section.id} section={section} theme={theme} />;
-    case 'lead-form':       return <LeadFormSection key={section.id} section={section} theme={theme} />;
-    case 'collect-emails':  return <CollectEmailsSection key={section.id} section={section} theme={theme} />;
-    case 'booking':         return <BookingSection key={section.id} section={section} theme={theme} />;
-    case 'contact':         return <ContactSection key={section.id} section={section} theme={theme} />;
-    case 'quote':           return <QuoteSection key={section.id} section={section} theme={theme} />;
-    case 'marquee':         return <MarqueeSection key={section.id} section={section} theme={theme} />;
-    case 'donate':          return <DonateSection key={section.id} section={section} theme={theme} />;
-    case 'countdown':       return <CountdownSection key={section.id} section={section} theme={theme} />;
-    case 'timeline':        return <TimelineSection key={section.id} section={section} theme={theme} />;
-    case 'divider':         return <DividerSection key={section.id} section={section} theme={theme} />;
-    case 'spacer':          return <SpacerSection key={section.id} section={section} theme={theme} />;
+    case 'hero': return <HeroSection key={section.id} section={section} theme={theme} />;
+    case 'rich-text': return <RichTextSection key={section.id} section={section as any} theme={theme} />;
+    case 'link-list': return <LinkListSection key={section.id} section={section as any} theme={theme} />;
+    case 'ai-chat': return <AiChatSection key={section.id} section={section as any} theme={theme} />;
+    case 'faq': return <FaqSection key={section.id} section={section as any} theme={theme} />;
+    case 'url-button': return <UrlButtonSection key={section.id} section={section} theme={theme} />;
+    case 'image-button': return <ImageButtonSection key={section.id} section={section} theme={theme} />;
+    case 'email-button': return <EmailButtonSection key={section.id} section={section} theme={theme} />;
+    case 'file-button': return <FileButtonSection key={section.id} section={section} theme={theme} />;
+    case 'cta': return <CtaSection key={section.id} section={section} theme={theme} />;
+    case 'social-links': return <SocialLinksSection key={section.id} section={section} theme={theme} />;
+    case 'image': return <ImageSection key={section.id} section={section} theme={theme} />;
+    case 'gallery': return <GallerySection key={section.id} section={section} theme={theme} />;
+    case 'carousel': return <CarouselSection key={section.id} section={section} theme={theme} />;
+    case 'video': return <VideoSection key={section.id} section={section} theme={theme} />;
+    case 'audio': return <AudioSection key={section.id} section={section} theme={theme} />;
+    case 'resume': return <ResumeSection key={section.id} section={section} theme={theme} />;
+    case 'services': return <ServicesSection key={section.id} section={section} theme={theme} />;
+    case 'products': return <ProductsSection key={section.id} section={section} theme={theme} />;
+    case 'testimonials': return <TestimonialsSection key={section.id} section={section} theme={theme} />;
+    case 'announcement': return <AnnouncementSection key={section.id} section={section} theme={theme} />;
+    case 'lead-form': return <LeadFormSection key={section.id} section={section} theme={theme} />;
+    case 'collect-emails': return <CollectEmailsSection key={section.id} section={section} theme={theme} />;
+    case 'booking': return <BookingSection key={section.id} section={section} theme={theme} />;
+    case 'contact': return <ContactSection key={section.id} section={section} theme={theme} />;
+    case 'quote': return <QuoteSection key={section.id} section={section} theme={theme} />;
+    case 'marquee': return <MarqueeSection key={section.id} section={section} theme={theme} />;
+    case 'donate': return <DonateSection key={section.id} section={section} theme={theme} />;
+    case 'countdown': return <CountdownSection key={section.id} section={section} theme={theme} />;
+    case 'timeline': return <TimelineSection key={section.id} section={section} theme={theme} />;
+    case 'divider': return <DividerSection key={section.id} section={section} theme={theme} />;
+    case 'spacer': return <SpacerSection key={section.id} section={section} theme={theme} />;
     default: {
       const _exhaustive: never = section;
       return <div key={(section as any).id} className="p-4 text-center text-red-500">Unknown: {(section as any).type}</div>;

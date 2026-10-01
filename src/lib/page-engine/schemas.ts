@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-// Shared building blocks
 export const BaseSectionSchema = z.object({
   id: z.string(),
   isHidden: z.boolean().default(false),
+  variant: z.string().optional(),
 });
 
 export const ThemeConfigSchema = z.object({

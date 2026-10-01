@@ -337,24 +337,58 @@ function ArrayFieldEditor({ def, items, onChange }: { def: ArrayFieldDef; items:
   );
 }
 
+import { SECTION_VARIANTS } from '@/lib/page-engine/variants';
+
 // ── Main Inspector ─────────────────────────────────────────────
 export function SectionInspector({ section, onChange }: { section: PageSection; onChange: (updated: PageSection) => void }) {
   const def = INSPECTOR_DEFS[section.type];
-  if (!def) return <div className="text-sm text-slate-400 italic py-4 text-center">No editable properties. Use AI Edit above!</div>;
-
+  
   const handleFieldChange = (path: string, value: any) => onChange(deepSet(section, path, value));
 
+  const variants = SECTION_VARIANTS[section.type];
+
   return (
-    <div className="flex flex-col gap-5">
-      {def.fields.map(field => (
-        <div key={field.key}>
-          <label className="text-xs font-medium text-slate-500 mb-1.5 block">{field.label}</label>
-          <InspectorField field={field} value={deepGet(section, field.key)} onChange={v => handleFieldChange(field.key, v)} />
+    <div className="flex flex-col gap-6">
+      {variants && variants.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Layout Variant</label>
+          <div className="grid grid-cols-2 gap-3">
+            {variants.map(v => {
+              const isActive = (section.variant || 'default') === v.id;
+              return (
+                <button 
+                  key={v.id}
+                  onClick={() => onChange({ ...section, variant: v.id })}
+                  className={`flex flex-col gap-2 p-2 rounded-xl border-2 transition-all ${isActive ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800'}`}
+                >
+                  <div className="h-16 w-full rounded-lg overflow-hidden border border-slate-100 dark:border-slate-700">
+                    {v.previewNode}
+                  </div>
+                  <span className={`text-[10px] font-semibold text-center w-full ${isActive ? 'text-blue-700 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                    {v.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      ))}
-      {def.arrayFields?.map(arrayDef => (
-        <ArrayFieldEditor key={arrayDef.key} def={arrayDef} items={deepGet(section, arrayDef.key) || []} onChange={items => handleFieldChange(arrayDef.key, items)} />
-      ))}
+      )}
+
+      {!def ? (
+        <div className="text-sm text-slate-400 italic py-4 text-center">No editable properties. Use AI Edit above!</div>
+      ) : (
+        <div className="flex flex-col gap-5">
+          {def.fields.map(field => (
+            <div key={field.key}>
+              <label className="text-xs font-medium text-slate-500 mb-1.5 block">{field.label}</label>
+              <InspectorField field={field} value={deepGet(section, field.key)} onChange={v => handleFieldChange(field.key, v)} />
+            </div>
+          ))}
+          {def.arrayFields?.map(arrayDef => (
+            <ArrayFieldEditor key={arrayDef.key} def={arrayDef} items={deepGet(section, arrayDef.key) || []} onChange={items => handleFieldChange(arrayDef.key, items)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
