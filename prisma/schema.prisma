@@ -1,10 +1,14 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum ProfileType {
+  CREATOR
+  BUSINESS
 }
 
 model User {
@@ -13,17 +17,73 @@ model User {
   name      String?
   avatarUrl String?
   
-  // BuilderStory specific base fields (empty for now, as requested)
+  profile   Profile?
+  subscriptions Subscription[]
+  usage     Usage?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+model Profile {
+  id          String      @id @default(cuid())
+  userId      String      @unique @db.Uuid
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        ProfileType @default(CREATOR)
+  username    String      @unique
+  displayName String
+  bio         String?
+  avatarUrl   String?
+  
+  page        Page?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Page {
+  id        String   @id @default(cuid())
+  profileId String   @unique
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  draftConfig     Json     @default("{}")
+  publishedConfig Json?
+  isPublished     Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+  id          String   @id @default(cuid())
+  userId      String   @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId      String
+  status      String
+  currentPeriodEnd DateTime?
+  dodoSubscriptionId String? @unique
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Usage {
+  id          String   @id @default(cuid())
+  userId      String   @unique @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageGenerations Int @default(0)
+  aiEdits       Int @default(0)
+  chatMessages  Int @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model WebhookEvent {
   id        String   @id @default(cuid())
   eventId   String   @unique
-  provider  String   // e.g., "dodo"
-  type      String   // e.g., "payment.succeeded"
-  status    String   // e.g., "processed", "failed"
+  provider  String
+  type      String
+  status    String
   createdAt DateTime @default(now())
 }

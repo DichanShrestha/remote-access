@@ -1,0 +1,378 @@
+import { z } from 'zod';
+
+// Shared building blocks
+export const BaseSectionSchema = z.object({
+  id: z.string(),
+  isHidden: z.boolean().default(false),
+});
+
+export const ThemeConfigSchema = z.object({
+  style: z.enum(['premium-minimal', 'bold', 'playful']),
+  primaryColor: z.string(),
+  radius: z.enum(['none', 'small', 'medium', 'large', 'full']),
+  density: z.enum(['compact', 'comfortable', 'spacious']),
+});
+export type ThemeConfig = z.infer<typeof ThemeConfigSchema>;
+
+export const PageSettingsSchema = z.object({
+  seoTitle: z.string().optional(),
+  seoDescription: z.string().optional(),
+  ogImage: z.string().optional(),
+  showFooterBranding: z.boolean().default(true),
+});
+
+// ─── Component Schemas ───────────────────────────────────────────
+
+export const HeroSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('hero'),
+  content: z.object({
+    title: z.string(),
+    subtitle: z.string().optional(),
+    buttonText: z.string().optional(),
+    buttonUrl: z.string().optional(),
+    imageUrl: z.string().optional(),
+  }),
+  layout: z.enum(['center', 'left', 'split']).default('center'),
+});
+
+export const RichTextSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('rich-text'),
+  content: z.object({ text: z.string() }),
+});
+
+export const CtaSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('cta'),
+  content: z.object({
+    title: z.string(),
+    text: z.string().optional(),
+    buttonText: z.string(),
+    buttonUrl: z.string(),
+  }),
+});
+
+export const UrlButtonSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('url-button'),
+  content: z.object({
+    label: z.string(),
+    url: z.string(),
+    description: z.string().optional(),
+  }),
+  layout: z.enum(['filled', 'outline', 'ghost']).default('filled'),
+});
+
+export const ImageButtonSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('image-button'),
+  content: z.object({
+    imageUrl: z.string(),
+    label: z.string().optional(),
+    url: z.string(),
+  }),
+});
+
+export const EmailButtonSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('email-button'),
+  content: z.object({
+    label: z.string(),
+    email: z.string(),
+    subject: z.string().optional(),
+  }),
+});
+
+export const FileButtonSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('file-button'),
+  content: z.object({
+    label: z.string(),
+    fileUrl: z.string(),
+    fileName: z.string().optional(),
+  }),
+});
+
+export const SocialLinksSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('social-links'),
+  content: z.object({
+    links: z.array(z.object({
+      id: z.string(),
+      platform: z.string(),
+      url: z.string(),
+    })),
+  }),
+  layout: z.enum(['row', 'grid']).default('row'),
+});
+
+export const ImageSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('image'),
+  content: z.object({
+    url: z.string(),
+    alt: z.string().optional(),
+    caption: z.string().optional(),
+  }),
+  layout: z.enum(['full', 'contained']).default('contained'),
+});
+
+export const GallerySectionSchema = BaseSectionSchema.extend({
+  type: z.literal('gallery'),
+  content: z.object({
+    images: z.array(z.object({ id: z.string(), url: z.string(), caption: z.string().optional() })),
+  }),
+  layout: z.enum(['grid', 'masonry']).default('grid'),
+});
+
+export const CarouselSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('carousel'),
+  content: z.object({
+    images: z.array(z.object({ id: z.string(), url: z.string(), caption: z.string().optional() })),
+  }),
+});
+
+export const VideoSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('video'),
+  content: z.object({
+    url: z.string(),
+    title: z.string().optional(),
+  }),
+});
+
+export const AudioSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('audio'),
+  content: z.object({
+    url: z.string(),
+    title: z.string().optional(),
+    artist: z.string().optional(),
+  }),
+});
+
+export const ResumeSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('resume'),
+  content: z.object({
+    title: z.string().optional(),
+    items: z.array(z.object({
+      id: z.string(),
+      role: z.string(),
+      company: z.string(),
+      period: z.string(),
+      description: z.string().optional(),
+    })),
+  }),
+});
+
+export const ServicesSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('services'),
+  content: z.object({
+    title: z.string().optional(),
+    items: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      description: z.string(),
+      price: z.string().optional(),
+      icon: z.string().optional(),
+    })),
+  }),
+});
+
+export const ProductsSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('products'),
+  content: z.object({
+    title: z.string().optional(),
+    items: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      description: z.string(),
+      price: z.string(),
+      imageUrl: z.string().optional(),
+      url: z.string().optional(),
+    })),
+  }),
+});
+
+export const TestimonialsSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('testimonials'),
+  content: z.object({
+    title: z.string().optional(),
+    items: z.array(z.object({
+      id: z.string(),
+      quote: z.string(),
+      author: z.string(),
+      role: z.string().optional(),
+      avatarUrl: z.string().optional(),
+    })),
+  }),
+});
+
+export const FaqSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('faq'),
+  content: z.object({
+    title: z.string().optional(),
+    items: z.array(z.object({ id: z.string(), question: z.string(), answer: z.string() })),
+  }),
+});
+
+export const AnnouncementSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('announcement'),
+  content: z.object({
+    text: z.string(),
+    url: z.string().optional(),
+    buttonText: z.string().optional(),
+  }),
+});
+
+export const LeadFormSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('lead-form'),
+  content: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    buttonText: z.string().default('Submit'),
+    successMessage: z.string().default('Thanks! We will be in touch.'),
+  }),
+});
+
+export const CollectEmailsSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('collect-emails'),
+  content: z.object({
+    title: z.string().optional(),
+    placeholder: z.string().default('Your email address'),
+    buttonText: z.string().default('Subscribe'),
+    successMessage: z.string().default('You\'re subscribed!'),
+  }),
+});
+
+export const BookingSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('booking'),
+  content: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    provider: z.enum(['cal.com', 'calendly', 'custom']).default('cal.com'),
+    link: z.string(),
+  }),
+});
+
+export const LinkListSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('link-list'),
+  content: z.object({
+    links: z.array(z.object({ id: z.string(), label: z.string(), url: z.string() })),
+  }),
+});
+
+export const AiChatSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('ai-chat'),
+  content: z.object({ greeting: z.string().optional() }),
+  layout: z.enum(['floating', 'inline']).default('floating'),
+});
+
+export const ContactSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('contact'),
+  content: z.object({
+    title: z.string().optional(),
+    email: z.string().optional(),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+  }),
+});
+
+export const QuoteSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('quote'),
+  content: z.object({
+    text: z.string(),
+    author: z.string().optional(),
+  }),
+});
+
+export const MarqueeSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('marquee'),
+  content: z.object({
+    text: z.string(),
+  }),
+  layout: z.enum(['left', 'right']).default('left'),
+});
+
+export const DonateSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('donate'),
+  content: z.object({
+    title: z.string().optional(),
+    links: z.array(z.object({
+      id: z.string(),
+      platform: z.string(),
+      url: z.string(),
+    })),
+  }),
+});
+
+export const CountdownSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('countdown'),
+  content: z.object({
+    title: z.string().optional(),
+    targetDate: z.string(),
+  }),
+});
+
+export const TimelineSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('timeline'),
+  content: z.object({
+    title: z.string().optional(),
+    items: z.array(z.object({
+      id: z.string(),
+      label: z.string(),
+      description: z.string().optional(),
+    })),
+  }),
+});
+
+export const DividerSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('divider'),
+  content: z.object({}).optional(),
+  layout: z.enum(['solid', 'dashed', 'dotted']).default('solid'),
+});
+
+export const SpacerSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('spacer'),
+  content: z.object({}).optional(),
+  layout: z.enum(['small', 'medium', 'large', 'xl']).default('medium'),
+});
+
+// ─── Master Union ────────────────────────────────────────────────
+
+export const PageSectionSchema = z.discriminatedUnion('type', [
+  HeroSectionSchema,
+  RichTextSectionSchema,
+  CtaSectionSchema,
+  UrlButtonSectionSchema,
+  ImageButtonSectionSchema,
+  EmailButtonSectionSchema,
+  FileButtonSectionSchema,
+  SocialLinksSectionSchema,
+  ImageSectionSchema,
+  GallerySectionSchema,
+  CarouselSectionSchema,
+  VideoSectionSchema,
+  AudioSectionSchema,
+  ResumeSectionSchema,
+  ServicesSectionSchema,
+  ProductsSectionSchema,
+  TestimonialsSectionSchema,
+  FaqSectionSchema,
+  AnnouncementSectionSchema,
+  LeadFormSectionSchema,
+  CollectEmailsSectionSchema,
+  BookingSectionSchema,
+  LinkListSectionSchema,
+  AiChatSectionSchema,
+  ContactSectionSchema,
+  QuoteSectionSchema,
+  MarqueeSectionSchema,
+  DonateSectionSchema,
+  CountdownSectionSchema,
+  TimelineSectionSchema,
+  DividerSectionSchema,
+  SpacerSectionSchema,
+]);
+
+export type PageSection = z.infer<typeof PageSectionSchema>;
+export type SectionType = PageSection['type'];
+
+export const PageDocumentSchema = z.object({
+  version: z.number().default(1),
+  theme: ThemeConfigSchema.default({ style: 'premium-minimal', primaryColor: '#000000', radius: 'medium', density: 'comfortable' }),
+  settings: PageSettingsSchema.default({ showFooterBranding: true }),
+  sections: z.array(PageSectionSchema).default([]),
+});
+
+export type PageDocument = z.infer<typeof PageDocumentSchema>;

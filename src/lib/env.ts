@@ -4,6 +4,7 @@ const serverSchema = z.object({
   DATABASE_URL: z.string().url(),
   DODO_API_KEY: z.string().min(1),
   DODO_WEBHOOK_SECRET: z.string().min(1),
+  OPENAI_API_KEY: z.string().min(1),
 });
 
 const clientSchema = z.object({
@@ -20,8 +21,9 @@ const clientParsed = clientSchema.safeParse({
 });
 
 if (!clientParsed.success) {
+  const invalidVars = Object.keys(clientParsed.error.flatten().fieldErrors).join(', ');
   console.error('❌ Invalid client environment variables:', clientParsed.error.format());
-  throw new Error('Invalid client environment variables');
+  throw new Error(`Invalid client environment variables: ${invalidVars}`);
 }
 
 // Validate server variables (only on server)
@@ -31,11 +33,13 @@ if (isServer) {
     DATABASE_URL: process.env.DATABASE_URL,
     DODO_API_KEY: process.env.DODO_API_KEY,
     DODO_WEBHOOK_SECRET: process.env.DODO_WEBHOOK_SECRET,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   });
 
   if (!serverParsed.success) {
+    const invalidVars = Object.keys(serverParsed.error.flatten().fieldErrors).join(', ');
     console.error('❌ Invalid server environment variables:', serverParsed.error.format());
-    throw new Error('Invalid server environment variables');
+    throw new Error(`Invalid server environment variables: ${invalidVars}`);
   }
   serverData = serverParsed.data;
 }
