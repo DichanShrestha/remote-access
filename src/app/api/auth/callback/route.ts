@@ -13,21 +13,53 @@ export async function GET(request: Request) {
     
     if (!error && data.user) {
       // Sync user to Prisma
-      await prisma.user.upsert({
+      let dbUser = await prisma.user.findUnique({
         where: { id: data.user.id },
-        update: {
-          email: data.user.email,
-          name: data.user.user_metadata?.full_name || data.user.user_metadata?.name,
-          avatarUrl: data.user.user_metadata?.avatar_url,
-        },
-        create: {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.user_metadata?.full_name || data.user.user_metadata?.name,
-          avatarUrl: data.user.user_metadata?.avatar_url,
-        },
+        include: { profile: true }
       })
-      
+
+      if (!dbUser) {
+        dbUser = await prisma.user.create({
+          data: {
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.user_metadata?.full_name || data.user.user_metadata?.name,
+            avatarUrl: data.user.user_metadata?.avatar_url,
+          },
+          include: { profile: true }
+        })
+      }
+
+      if (!dbUser.profile) {
+        // Auto-create a profile for the user
+        const baseUsername = (data.user.email?.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9_-]/g, '')
+        let username = baseUsername
+        let counter = 1
+        
+        while (true) {
+          const existing = await prisma.profile.findUnique({ where: { username } })
+          if (!existing) break
+          username = `${baseUsername}${counter}`
+          counter++
+        }
+
+        const profile = await prisma.profile.create({
+          data: {
+            userId: data.user.id,
+            username,
+            displayName: dbUser.name || 'User',
+            type: 'CREATOR',
+          }
+        })
+
+        await prisma.page.create({
+          data: {
+            profileId: profile.id,
+            draftConfig: {},
+          }
+        })
+      }
+
       const forwardedHost = request.headers.get('x-forwarded-host') 
       const isLocalEnv = process.env.NODE_ENV === 'development'
       

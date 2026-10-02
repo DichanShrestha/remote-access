@@ -4,8 +4,11 @@ import { PageSection, ThemeConfig } from '@/lib/page-engine/schemas';
 import { HeroSection } from './HeroSection';
 import { RichTextSection } from './RichTextSection';
 import { LinkListSection } from './LinkListSection';
-import { AiChatSection } from './AiChatSection';
 import { FaqSection } from './FaqSection';
+import { FaTwitter, FaInstagram, FaGithub, FaLinkedin, FaYoutube, FaTiktok, FaDribbble, FaBehance, FaSpotify, FaFacebook, FaLink } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
+import { motion, useScroll, useTransform, useInView } from 'motion/react';
+import { Marquee } from '@/components/ui/marquee';
 
 // --- React Bits Components ---
 // @ts-ignore
@@ -40,7 +43,6 @@ import Dock from '@/components/Dock';
 import CountUp from '@/components/CountUp';
 // @ts-ignore
 import Stepper from '@/components/Stepper';
-import { Marquee } from '@/components/ui/marquee';
 import { MagicCard } from '@/components/ui/magic-card';
 import { ShineBorder } from '@/components/ui/shine-border';
 import { NumberTicker } from '@/components/ui/number-ticker';
@@ -157,11 +159,35 @@ export function SocialLinksSection({ section, theme }: { section: any; theme: Th
     );
   }
 
+  const getIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'twitter': return <FaTwitter className="w-4 h-4" />;
+      case 'x': return <FaXTwitter className="w-4 h-4" />;
+      case 'instagram': return <FaInstagram className="w-4 h-4" />;
+      case 'github': return <FaGithub className="w-4 h-4" />;
+      case 'linkedin': return <FaLinkedin className="w-4 h-4" />;
+      case 'youtube': return <FaYoutube className="w-4 h-4" />;
+      case 'tiktok': return <FaTiktok className="w-4 h-4" />;
+      case 'dribbble': return <FaDribbble className="w-4 h-4" />;
+      case 'behance': return <FaBehance className="w-4 h-4" />;
+      case 'spotify': return <FaSpotify className="w-4 h-4" />;
+      case 'facebook': return <FaFacebook className="w-4 h-4" />;
+      default: return <FaLink className="w-4 h-4" />;
+    }
+  };
+
   return (
-    <section className="py-10 px-4 md:px-8 max-w-2xl mx-auto">
-      <div className={`flex ${layout === 'grid' ? 'flex-wrap gap-3 justify-center' : 'flex-row gap-3 justify-center flex-wrap'}`}>
+    <section className="py-8 px-4 md:px-8 max-w-4xl mx-auto">
+      <div className="flex flex-wrap justify-center gap-3 py-8">
         {links.map((link: any) => (
-          <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-3 rounded-full border-2 font-semibold text-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ borderColor: theme.primaryColor, color: theme.primaryColor }}>
+          <a
+            key={link.id}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-neutral-200 bg-white text-xs font-medium text-neutral-800 shadow-sm transition-all hover:border-neutral-400 hover:shadow-md dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-500"
+          >
+            {getIcon(link.platform)}
             {link.platform}
           </a>
         ))}
@@ -227,10 +253,10 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
         <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
           {images.map((img: any, i: number) => (
             <div key={img.id || i} className="break-inside-avoid group relative overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
-              <img 
-                src={img.url} 
-                alt={img.caption || ''} 
-                className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500" 
+              <img
+                src={img.url}
+                alt={img.caption || ''}
+                className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
               />
               {img.caption && (
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -287,6 +313,7 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
 import FlexCarousel from '@/components/FlexCarousel';
 import CircularCarousel from '@/components/CircularCarousel';
 import DepthCarousel from '@/components/DepthCarousel';
+import { BlurFade } from '@/components/ui/blur-fade';
 
 // ── Carousel ───────────────────────────────────────────────────
 export function CarouselSection({ section, theme }: { section: any; theme: ThemeConfig }) {
@@ -404,9 +431,27 @@ export function CarouselSection({ section, theme }: { section: any; theme: Theme
 }
 
 // ── Video ──────────────────────────────────────────────────────
-export function VideoSection({ section }: { section: any; theme: ThemeConfig }) {
+export function VideoSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { url, title } = section.content;
+  const variant = section.variant || 'default';
   const embedUrl = url.includes('watch?v=') ? url.replace('watch?v=', 'embed/') : url;
+
+  if (variant === 'blur-fade') {
+    return (
+      <section className="py-20 md:py-32 px-4 md:px-8 max-w-5xl mx-auto">
+        <BlurFade delay={0.2} inView>
+          <div className="relative group">
+            {/* Soft decorative background shape */}
+            <div className="absolute -inset-4 md:-inset-8 rounded-[2rem] opacity-[0.04]" style={{ backgroundColor: theme.primaryColor }} />
+            <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-2xl relative z-10 border border-slate-200/50 dark:border-slate-800/50">
+              <iframe src={embedUrl} className="w-full h-full border-0" allowFullScreen title={title || 'Video'} />
+            </div>
+          </div>
+        </BlurFade>
+      </section>
+    );
+  }
+
   return (
     <section className="py-12 px-4 md:px-8 max-w-4xl mx-auto">
       {title && <h2 className="text-2xl font-bold mb-6 text-center">{title}</h2>}
@@ -485,105 +530,75 @@ export function ResumeSection({ section, theme }: { section: any; theme: ThemeCo
 // ── Services ───────────────────────────────────────────────────
 export function ServicesSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, items } = section.content;
-  const variant = section.variant || 'default';
+  const variant = section.variant || 'minimal-border';
 
-  if (variant === 'reflective') {
+  const renderDescription = (desc?: string) => desc || <span className="opacity-60">Premium service offering tailored to your unique requirements and goals.</span>;
+
+  if (variant === 'glass-dark') {
     return (
-      <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
-        {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
+      <section className="py-16 px-6 max-w-6xl mx-auto">
+        {title && <h2 className="text-3xl md:text-4xl font-serif mb-12 text-center text-neutral-900 dark:text-white">{title}</h2>}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {items.map((item: any) => (
-            // @ts-ignore
-            <ReflectiveCard key={item.id} className="p-7 bg-white dark:bg-slate-800 rounded-2xl">
-              <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">{item.description}</p>
-              {item.price && <div className="font-bold text-lg" style={{ color: theme.primaryColor }}>{item.price}</div>}
-            </ReflectiveCard>
+            <div key={item.id} className="group flex flex-col justify-between h-full min-h-[260px] p-8 rounded-2xl transition-all duration-300 bg-neutral-900 border border-neutral-800 text-white shadow-xl hover:border-neutral-700 hover:bg-neutral-850">
+              <div>
+                <div className="w-8 h-[2px] bg-neutral-700 mb-6 group-hover:w-12 group-hover:bg-white transition-all" />
+                <h3 className="text-xl font-serif text-white mb-3">{item.title}</h3>
+                <p className="text-sm text-neutral-300 leading-relaxed font-sans">{renderDescription(item.description)}</p>
+              </div>
+              {item.price && (
+                <div className="mt-6 font-bold text-lg text-white/90">{item.price}</div>
+              )}
+            </div>
           ))}
         </div>
       </section>
     );
   }
 
-  if (variant === 'spotlight') {
+  if (variant === 'asymmetric-bento') {
     return (
-      <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
-        {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
+      <section className="py-16 px-6 max-w-6xl mx-auto">
+        {title && <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center text-neutral-900 dark:text-white">{title}</h2>}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {items.map((item: any) => (
-            // @ts-ignore
-            <SpotlightCard key={item.id} className="p-7 bg-slate-900 border border-slate-800 rounded-2xl">
-              <h3 className="text-xl font-bold mb-3 text-white">{item.title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed mb-4">{item.description}</p>
-              {item.price && <div className="font-bold text-lg text-indigo-400">{item.price}</div>}
-            </SpotlightCard>
+            <div key={item.id} className="group flex flex-col justify-between h-full min-h-[260px] p-8 rounded-3xl transition-all duration-300 bg-neutral-50/80 border border-neutral-200/60 hover:bg-white hover:shadow-lg dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-750">
+              <div>
+                <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-3">{item.title}</h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans">{renderDescription(item.description)}</p>
+              </div>
+              {item.price && (
+                <div className="mt-6 font-bold text-sm bg-white dark:bg-slate-900 px-4 py-2 rounded-full shadow-sm border border-neutral-100 dark:border-slate-700 w-fit" style={{ color: theme.primaryColor }}>
+                  {item.price}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </section>
     );
   }
 
-  if (variant === 'glow') {
-    return (
-      <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
-        {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {items.map((item: any) => (
-            // @ts-ignore
-            <BorderGlow key={item.id} className="p-7 bg-slate-900 rounded-2xl">
-              <h3 className="text-xl font-bold mb-3 text-white">{item.title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed mb-4">{item.description}</p>
-              {item.price && <div className="font-bold text-lg" style={{ color: theme.primaryColor }}>{item.price}</div>}
-            </BorderGlow>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  if (variant === 'magic-card') {
-    return (
-      <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
-        {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {items.map((item: any) => (
-            <MagicCard key={item.id} className="p-7 shadow-2xl flex flex-col items-start justify-center cursor-pointer whitespace-nowrap" gradientColor={theme.primaryColor + '22'}>
-              <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4 whitespace-normal">{item.description}</p>
-              {item.price && <div className="font-bold text-lg" style={{ color: theme.primaryColor }}>{item.price}</div>}
-            </MagicCard>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  if (variant === 'shine-border') {
-    return (
-      <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
-        {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {items.map((item: any) => (
-            <ShineBorder key={item.id} className="p-7 relative flex w-full flex-col items-center justify-center overflow-hidden rounded-lg border bg-background md:shadow-xl" color={theme.primaryColor}>
-              <h3 className="text-xl font-bold mb-3 self-start">{item.title}</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4 self-start">{item.description}</p>
-              {item.price && <div className="font-bold text-lg self-start" style={{ color: theme.primaryColor }}>{item.price}</div>}
-            </ShineBorder>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
+  // Default: minimal-border
   return (
-    <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
-      {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
+    <section className="py-16 px-6 max-w-6xl mx-auto">
+      {title && <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center text-neutral-900 dark:text-white">{title}</h2>}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {items.map((item: any) => (
-          <div key={item.id} className="group p-7 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-4">{item.description}</p>
-            {item.price && <div className="font-bold text-lg" style={{ color: theme.primaryColor }}>{item.price}</div>}
+        {items.map((item: any, i: number) => (
+          <div key={item.id} className="group flex flex-col justify-between h-full min-h-[260px] p-8 rounded-2xl transition-all duration-300 bg-white border border-neutral-200/80 shadow-sm hover:shadow-xl hover:border-neutral-300 hover:-translate-y-1 dark:bg-slate-900 dark:border-slate-800 dark:hover:border-slate-700">
+            <div>
+              <div className="text-xs font-mono font-semibold text-neutral-400 mb-6 bg-neutral-100 dark:bg-slate-800 px-2.5 py-1 rounded-md w-fit">
+                {String(i + 1).padStart(2, '0')}
+              </div>
+              <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-3">{item.title}</h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed font-sans">{renderDescription(item.description)}</p>
+            </div>
+            <div className="mt-6 flex items-center justify-between">
+              <span className="font-bold text-sm" style={{ color: theme.primaryColor }}>{item.price}</span>
+              <div className="text-xs font-medium text-neutral-900 dark:text-white inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                Learn more <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -621,6 +636,33 @@ export function ProductsSection({ section, theme }: { section: any; theme: Theme
     );
   }
 
+  if (variant === 'magic-card') {
+    return (
+      <section className="py-24 px-4 md:px-8 max-w-6xl mx-auto">
+        {title && <h2 className="text-4xl font-serif mb-16 text-center text-slate-800 dark:text-slate-100">{title}</h2>}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+          {items.map((item: any) => (
+            <div key={item.id} className="group flex flex-col gap-5">
+              <MagicCard className="w-full aspect-[4/5] rounded-xl overflow-hidden cursor-pointer" gradientColor={theme.primaryColor + '10'}>
+                {item.imageUrl && (
+                  <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                )}
+              </MagicCard>
+              <div className="flex flex-col gap-1.5 px-1">
+                <div className="flex items-start justify-between gap-4">
+                  <h3 className="font-bold text-lg font-serif">{item.title}</h3>
+                  <div className="font-medium text-slate-500 whitespace-nowrap">{item.price}</div>
+                </div>
+                <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">{item.description}</p>
+                <a href={item.url || '#'} className="inline-block mt-3 text-sm font-semibold tracking-wide uppercase border-b border-transparent hover:border-slate-800 transition-colors self-start pb-0.5">Shop Now</a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
       {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
@@ -643,29 +685,90 @@ export function ProductsSection({ section, theme }: { section: any; theme: Theme
 }
 
 // ── Testimonials ───────────────────────────────────────────────
+function StarRating({ rating = 5 }: { rating?: number }) {
+  return (
+    <div className="flex items-center gap-1 text-amber-400 mb-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <svg key={i} className={`w-4 h-4 ${i < rating ? 'fill-current' : 'fill-transparent stroke-current'}`} viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+      ))}
+    </div>
+  );
+}
+
+function TestimonialCard({ item, isMarquee = false }: { item: any, isMarquee?: boolean }) {
+  return (
+    <div className={`bg-white dark:bg-slate-900 border border-neutral-200/80 dark:border-slate-800 p-8 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${isMarquee ? 'w-[320px] md:w-[380px] shrink-0 mx-3' : 'w-full h-full'}`}>
+      <div>
+        <div className="text-neutral-200 dark:text-slate-700 text-4xl font-serif leading-none select-none mb-4">"</div>
+        <StarRating rating={item.rating || 5} />
+        <p className="font-serif text-base md:text-lg text-neutral-800 dark:text-slate-200 leading-relaxed mb-8">{item.quote}</p>
+      </div>
+
+      <div className="flex items-center gap-3">
+        {item.avatarUrl ? (
+          <img src={item.avatarUrl} alt={item.author} className="w-10 h-10 rounded-full object-cover border border-neutral-200 dark:border-slate-700" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 flex items-center justify-center font-bold text-neutral-400">
+            {item.author?.[0] || 'A'}
+          </div>
+        )}
+        <div>
+          <div className="text-sm font-semibold text-neutral-900 dark:text-white">{item.author}</div>
+          {item.role && <div className="text-xs text-neutral-500 dark:text-slate-400">{item.role}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function TestimonialsSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, items } = section.content;
+  const variant = section.variant || 'grid';
+
+  if (variant === 'marquee') {
+    // Split items into two rows
+    const firstRow = items.slice(0, Math.ceil(items.length / 2));
+    const secondRow = items.slice(Math.ceil(items.length / 2));
+
+    return (
+      <section className="py-20 px-0 md:px-0 w-full overflow-hidden">
+        {title && <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 dark:text-white text-center mb-16">{title}</h2>}
+
+        <div className="relative flex w-full flex-col items-center justify-center overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+          <Marquee pauseOnHover className="[--duration:40s]">
+            {firstRow.map((item: any) => (
+              <TestimonialCard key={item.id} item={item} isMarquee />
+            ))}
+          </Marquee>
+
+          {secondRow.length > 0 && (
+            <Marquee reverse pauseOnHover className="[--duration:40s] mt-6">
+              {secondRow.map((item: any) => (
+                <TestimonialCard key={item.id} item={item} isMarquee />
+              ))}
+            </Marquee>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  // Default: Grid
   return (
-    <section className="py-16 px-4 md:px-8 max-w-5xl mx-auto">
-      {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <section className="py-20 px-6 max-w-6xl mx-auto">
+      {title && <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 dark:text-white text-center mb-16">{title}</h2>}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {items.map((item: any) => (
-          <blockquote key={item.id} className="p-8 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 relative overflow-hidden">
-            <div className="absolute -top-2 -left-1 text-7xl leading-none font-serif opacity-10" style={{ color: theme.primaryColor }}>"</div>
-            <p className="text-lg italic mb-6 relative z-10 leading-relaxed">{item.quote}</p>
-            <div className="flex items-center gap-3 relative z-10">
-              {item.avatarUrl && <img src={item.avatarUrl} className="w-11 h-11 rounded-full object-cover ring-2 ring-white dark:ring-slate-700" />}
-              <div>
-                <div className="font-bold text-sm">{item.author}</div>
-                {item.role && <div className="text-xs text-slate-400">{item.role}</div>}
-              </div>
-            </div>
-          </blockquote>
+          <div key={item.id} className="h-full">
+            <TestimonialCard item={item} />
+          </div>
         ))}
       </div>
     </section>
   );
 }
+
 
 // ── Announcement ───────────────────────────────────────────────
 export function AnnouncementSection({ section, theme }: { section: any; theme: ThemeConfig }) {
@@ -679,20 +782,134 @@ export function AnnouncementSection({ section, theme }: { section: any; theme: T
 }
 
 // ── Lead Form ──────────────────────────────────────────────────
+function LeadFormFields({ buttonText, theme }: { buttonText: string; theme: ThemeConfig }) {
+  const [activeChips, setActiveChips] = useState<string[]>([]);
+  const chips = ['Web Design', 'Branding', 'Growth', 'Other'];
+
+  const toggleChip = (chip: string) => {
+    setActiveChips(prev => prev.includes(chip) ? prev.filter(c => c !== chip) : [...prev, chip]);
+  };
+
+  return (
+    <form className="flex flex-col gap-5 w-full" onSubmit={e => e.preventDefault()}>
+      {/* Service Pills */}
+      <div className="flex flex-wrap gap-2 mb-1">
+        {chips.map(chip => (
+          <button
+            key={chip}
+            type="button"
+            onClick={() => toggleChip(chip)}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer ${activeChips.includes(chip) ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 border-neutral-900 dark:border-white' : 'bg-white dark:bg-slate-900 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-slate-700 hover:border-neutral-400 dark:hover:border-slate-500'}`}
+          >
+            {chip}
+          </button>
+        ))}
+      </div>
+
+      {/* Name */}
+      <div>
+        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Full Name</label>
+        <input type="text" placeholder="John Doe" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
+      </div>
+
+      {/* Email */}
+      <div>
+        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Email Address</label>
+        <input type="email" placeholder="john@company.com" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
+      </div>
+
+      {/* Message */}
+      <div>
+        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Your Message</label>
+        <textarea placeholder="Tell us about your project..." rows={4} className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm resize-none" />
+      </div>
+
+      {/* CTA Button */}
+      <button type="submit" className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-1">
+        {buttonText || 'Send Message'}
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+      </button>
+
+      {/* Trust Badges */}
+      <div className="flex items-center justify-center gap-5 mt-1">
+        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">⚡ Avg. response: &lt; 24h</span>
+        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">🔒 100% Privacy. No spam.</span>
+      </div>
+    </form>
+  );
+}
+
 export function LeadFormSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, description, buttonText } = section.content;
+  const variant = section.variant || 'card-centered';
+
+  if (variant === 'split-layout') {
+    return (
+      <section className="py-16 px-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          {/* Left Column — Info & Social Proof (5 cols) */}
+          <div className="lg:col-span-5 flex flex-col justify-center">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-neutral-900 dark:text-white mb-4">
+              {title || "Let's talk"}
+            </h2>
+            <p className="text-neutral-600 dark:text-neutral-400 text-base leading-relaxed mb-10">
+              {description || "Ready to elevate your digital presence? Fill out the form and we'll schedule a free strategy call."}
+            </p>
+
+            <div className="flex flex-col gap-6 mb-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-slate-800 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Email</div>
+                  <div className="text-sm font-medium text-neutral-900 dark:text-white">hello@yoursite.com</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-slate-800 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Location</div>
+                  <div className="text-sm font-medium text-neutral-900 dark:text-white">Remote · Worldwide</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Founder Quote */}
+            <div className="p-5 bg-neutral-50 dark:bg-slate-800/80 rounded-2xl border border-neutral-100 dark:border-slate-700 flex gap-4 items-start">
+              <div className="w-11 h-11 rounded-full bg-neutral-200 dark:bg-slate-600 flex-shrink-0 flex items-center justify-center font-serif text-lg font-bold text-neutral-600 dark:text-neutral-300">F</div>
+              <div>
+                <p className="text-sm italic text-neutral-600 dark:text-neutral-300 leading-relaxed mb-1.5">"We partner with ambitious brands to create category-defining digital experiences."</p>
+                <div className="text-xs font-semibold text-neutral-900 dark:text-white">Founder</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column — Form Card (7 cols) */}
+          <div className="lg:col-span-7 bg-neutral-50/50 dark:bg-slate-800/50 border border-neutral-200 dark:border-slate-700 p-8 rounded-3xl">
+            <LeadFormFields buttonText={buttonText} theme={theme} />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Default: card-centered
   return (
-    <section className="py-16 px-4 md:px-8 max-w-md mx-auto text-center">
-      <h2 className="text-2xl font-bold mb-2">{title}</h2>
-      {description && <p className="text-slate-400 text-sm mb-8">{description}</p>}
-      <form className="flex flex-col gap-3" onSubmit={e => e.preventDefault()}>
-        <input type="text" placeholder="Your name" className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2" style={{ ['--tw-ring-color' as any]: theme.primaryColor }} />
-        <input type="email" placeholder="Your email" className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2" />
-        <textarea placeholder="Your message" rows={3} className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm resize-none focus:outline-none focus:ring-2" />
-        <button type="submit" className="w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all" style={{ backgroundColor: theme.primaryColor }}>
-          {buttonText}
-        </button>
-      </form>
+    <section className="py-20 px-6 w-full">
+      <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-neutral-200/80 dark:border-slate-800 shadow-xl rounded-3xl p-8 md:p-10">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mb-3">
+            {title || "Let's talk"}
+          </h2>
+          <p className="text-neutral-600 dark:text-neutral-400 text-base leading-relaxed">
+            {description || "Tell us about your project and we'll schedule a free strategy call."}
+          </p>
+        </div>
+        <LeadFormFields buttonText={buttonText} theme={theme} />
+      </div>
     </section>
   );
 }
@@ -700,6 +917,24 @@ export function LeadFormSection({ section, theme }: { section: any; theme: Theme
 // ── Collect Emails ─────────────────────────────────────────────
 export function CollectEmailsSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, placeholder, buttonText } = section.content;
+  const variant = section.variant || 'default';
+
+  if (variant === 'spacious') {
+    return (
+      <section className="py-32 px-4 md:px-8 max-w-2xl mx-auto text-center border-t border-slate-200/50">
+        <BlurFade delay={0.1} inView>
+          {title && <h2 className="text-3xl md:text-4xl font-serif mb-12">{title}</h2>}
+          <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto" onSubmit={e => e.preventDefault()}>
+            <input type="email" placeholder={placeholder || 'Your email'} className="flex-1 px-6 py-4 rounded-none border-b-2 border-slate-200 dark:border-slate-700 bg-transparent text-base focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors text-center sm:text-left" />
+            <button type="submit" className="px-8 py-4 rounded-none font-bold text-white text-sm tracking-widest uppercase transition-all flex-shrink-0" style={{ backgroundColor: theme.primaryColor }}>
+              {buttonText}
+            </button>
+          </form>
+        </BlurFade>
+      </section>
+    );
+  }
+
   return (
     <section className="py-12 px-4 md:px-8 max-w-md mx-auto text-center">
       {title && <h2 className="text-xl font-bold mb-4">{title}</h2>}
@@ -730,20 +965,136 @@ export function BookingSection({ section, theme }: { section: any; theme: ThemeC
 }
 
 // ── Contact ────────────────────────────────────────────────────
+function ContactForm({ theme }: { theme: ThemeConfig }) {
+  const [activeChips, setActiveChips] = useState<string[]>([]);
+  const chips = ['Web Design', 'Branding', 'Growth', 'Other'];
+
+  const toggleChip = (chip: string) => {
+    setActiveChips(prev => prev.includes(chip) ? prev.filter(c => c !== chip) : [...prev, chip]);
+  };
+
+  return (
+    <form className="flex flex-col gap-5 w-full" onSubmit={e => e.preventDefault()}>
+      <div className="flex flex-wrap gap-2 mb-2">
+        {chips.map(chip => (
+          <button
+            key={chip}
+            type="button"
+            onClick={() => toggleChip(chip)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${activeChips.includes(chip) ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 border-neutral-900 dark:border-white' : 'bg-white dark:bg-slate-900 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-slate-700 hover:border-neutral-300 dark:hover:border-slate-500'}`}
+          >
+            {chip}
+          </button>
+        ))}
+      </div>
+      <div>
+        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Name</label>
+        <input type="text" placeholder="John Doe" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
+      </div>
+      <div>
+        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Email</label>
+        <input type="email" placeholder="john@company.com" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
+      </div>
+      <div>
+        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Message</label>
+        <textarea placeholder="How can we help?" rows={4} className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm resize-none" />
+      </div>
+      <button type="submit" className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-2">
+        Send Message
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+      </button>
+      <div className="flex items-center justify-center gap-4 mt-2 opacity-70">
+        <div className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">⚡ Avg. response: &lt; 24h</div>
+        <div className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">🔒 100% Privacy</div>
+      </div>
+    </form>
+  );
+}
+
 export function ContactSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, email, phone, address } = section.content;
+  const variant = section.variant || 'card-centered';
+
+  if (variant === 'minimal-footer') {
+    return (
+      <footer className="py-16 px-8 mt-12 border-t border-slate-200 dark:border-slate-800 text-slate-500 text-sm">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex gap-6 items-center">
+            {address && <span>{address}</span>}
+            {email && <a href={`mailto:${email}`} className="hover:text-slate-900 dark:hover:text-slate-200 transition-colors">{email}</a>}
+            {phone && <span>{phone}</span>}
+          </div>
+          <div className="text-xs opacity-60">© {new Date().getFullYear()} Forma. All rights reserved.</div>
+        </div>
+      </footer>
+    );
+  }
+
+  if (variant === 'split-layout') {
+    return (
+      <section className="py-16 px-6 max-w-6xl mx-auto items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* Left Column (5 cols) */}
+          <div className="lg:col-span-5 flex flex-col justify-center h-full">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-neutral-900 dark:text-white mb-4">
+              {title || "Let's build something great together."}
+            </h2>
+            <p className="text-neutral-600 dark:text-neutral-400 text-base leading-relaxed mb-10">
+              Ready to elevate your digital presence? We're currently taking on new projects and would love to hear about your vision.
+            </p>
+
+            <div className="flex flex-col gap-6">
+              {email && (
+                <div>
+                  <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Email Us</div>
+                  <a href={`mailto:${email}`} className="text-lg font-medium text-neutral-900 dark:text-white hover:underline decoration-neutral-300 underline-offset-4">{email}</a>
+                </div>
+              )}
+              {phone && (
+                <div>
+                  <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Call Us</div>
+                  <div className="text-lg font-medium text-neutral-900 dark:text-white">{phone}</div>
+                </div>
+              )}
+              {address && (
+                <div>
+                  <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Location</div>
+                  <div className="text-lg font-medium text-neutral-900 dark:text-white">{address}</div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-12 p-6 bg-neutral-50 dark:bg-slate-800 rounded-2xl border border-neutral-100 dark:border-slate-700 flex gap-4 items-start">
+              <div className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-slate-600 flex-shrink-0 flex items-center justify-center font-serif text-xl font-bold">F</div>
+              <div>
+                <p className="text-sm italic text-neutral-700 dark:text-neutral-300 mb-2">"We partner with ambitious brands to create category-defining digital experiences."</p>
+                <div className="text-xs font-semibold text-neutral-900 dark:text-white">Founder, Forma</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column (7 cols) */}
+          <div className="lg:col-span-7 bg-neutral-50/50 dark:bg-slate-800/50 border border-neutral-200 dark:border-slate-700 p-8 rounded-3xl">
+            <ContactForm theme={theme} />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Default: card-centered
   return (
-    <section className="py-16 px-4 md:px-8 max-w-2xl mx-auto text-center">
-      {title && <h2 className="text-2xl font-bold mb-8">{title}</h2>}
-      <div className="flex flex-col gap-4 text-base">
-        {email && (
-          <a href={`mailto:${email}`} className="flex items-center justify-center gap-3 px-6 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition font-medium" style={{ color: theme.primaryColor }}>
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-            {email}
-          </a>
-        )}
-        {phone && <div className="text-slate-500">{phone}</div>}
-        {address && <div className="text-sm text-slate-400">{address}</div>}
+    <section className="py-20 px-6 w-full">
+      <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-neutral-200/80 dark:border-slate-800 shadow-xl rounded-3xl p-8 md:p-10">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mb-3">
+            {title || "Get in touch"}
+          </h2>
+          <p className="text-neutral-600 dark:text-neutral-400 text-base leading-relaxed">
+            Fill out the form below and our team will get back to you within 24 hours.
+          </p>
+        </div>
+        <ContactForm theme={theme} />
       </div>
     </section>
   );
@@ -766,6 +1117,26 @@ export function QuoteSection({ section, theme }: { section: any; theme: ThemeCon
 // ── Marquee ────────────────────────────────────────────────────
 export function MarqueeSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { text } = section.content;
+  const variant = section.variant || 'default';
+
+  if (variant === 'premium') {
+    return (
+      <section className="py-10 overflow-hidden relative bg-slate-50 dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800">
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-slate-50 dark:from-slate-900 to-transparent z-10" />
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-slate-50 dark:from-slate-900 to-transparent z-10" />
+        {/* @ts-ignore */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23000000\' fill-opacity=\'1\' fill-rule=\'evenodd\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'3\'/%3E%3Cg/%3E%3C/svg%3E")' }} />
+        <Marquee reverse={section.layout === 'right'} pauseOnHover className="[--duration:25s]">
+          {[...Array(8)].map((_, i) => (
+            <span key={i} className="text-sm md:text-base font-bold uppercase tracking-[0.3em] mx-12 opacity-80" style={{ color: theme.primaryColor }}>
+              {text}
+            </span>
+          ))}
+        </Marquee>
+      </section>
+    );
+  }
+
   return (
     <section className="py-6 overflow-hidden relative">
       <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-slate-100 dark:from-slate-950 to-transparent z-10" />
@@ -873,26 +1244,87 @@ export function CountdownSection({ section, theme }: { section: any; theme: Them
 }
 
 // ── Timeline ───────────────────────────────────────────────────
+function TimelineStep({ item, index, theme }: { item: any, index: number, theme: ThemeConfig }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { margin: "-40% 0px -40% 0px" });
+
+  return (
+    <div ref={ref} className="flex gap-0 items-start relative w-full group">
+      {/* Left column */}
+      <div className="w-20 flex-shrink-0 flex flex-col items-center justify-start relative pt-1">
+        {/* Circle */}
+        <div
+          className={`w-12 h-12 flex items-center justify-center rounded-full font-mono text-sm font-bold z-10 transition-all duration-500 relative
+            ${isInView
+              ? 'bg-neutral-900 text-white shadow-md scale-100 dark:bg-white dark:text-neutral-900'
+              : 'bg-neutral-100 text-neutral-400 border border-neutral-300 scale-90 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500'
+            }
+          `}
+        >
+          {index + 1}
+        </div>
+      </div>
+      {/* Right column */}
+      <div className="pb-12 last:pb-0 pl-6 flex-1">
+        <h3 className={`text-xl font-semibold mb-2 transition-colors duration-500 ${isInView ? 'text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-slate-400'}`}>
+          {item.label || item.title}
+        </h3>
+        <p className="text-base text-neutral-600 dark:text-neutral-400 leading-relaxed font-sans">{item.description}</p>
+      </div>
+    </div>
+  );
+}
+
 export function TimelineSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, items } = section.content;
-  return (
-    <section className="py-16 px-4 md:px-8 max-w-2xl mx-auto">
-      {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
-      <div className="flex flex-col gap-0">
-        {items.map((item: any, i: number) => (
-          <div key={item.id} className="flex gap-5 items-start">
-            <div className="flex flex-col items-center">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-md" style={{ backgroundColor: theme.primaryColor }}>
+  const layout = section.layout || 'vertical';
+
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start center", "end center"]
+  });
+
+  const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
+  if (layout === 'horizontal-cards') {
+    return (
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        {title && <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 dark:text-white text-center mb-16">{title}</h2>}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {items.map((item: any, i: number) => (
+            <div key={item.id} className="bg-white dark:bg-slate-900 border border-neutral-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+              <div className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-neutral-100 dark:bg-slate-800 text-neutral-400 dark:text-slate-500 font-mono text-xs font-bold group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-slate-900 transition-colors">
                 {i + 1}
               </div>
-              {i < items.length - 1 && <div className="w-0.5 h-12 bg-slate-200 dark:bg-slate-700" />}
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2 mt-4 pr-10">{item.label || item.title}</h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed font-sans">{item.description}</p>
             </div>
-            <div className="pb-8 flex-1">
-              <div className="font-bold text-lg">{item.label}</div>
-              {item.description && <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{item.description}</p>}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="max-w-3xl mx-auto px-6 py-20" ref={containerRef}>
+      {title && <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 dark:text-white text-center mb-16">{title}</h2>}
+
+      <div className="relative">
+        {/* Background stem line */}
+        <div className="absolute left-[39px] top-6 bottom-6 w-0.5 bg-neutral-200 dark:bg-slate-800" />
+
+        {/* Animated stem line */}
+        <motion.div
+          className="absolute left-[39px] top-6 bottom-6 w-0.5 bg-neutral-900 dark:bg-white origin-top"
+          style={{ scaleY: lineHeight }}
+        />
+
+        <div className="flex flex-col relative z-10">
+          {items.map((item: any, i: number) => (
+            <TimelineStep key={item.id} item={item} index={i} theme={theme} />
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -944,7 +1376,6 @@ export function renderSection(section: PageSection, theme: ThemeConfig) {
     case 'hero': return <HeroSection key={section.id} section={section} theme={theme} />;
     case 'rich-text': return <RichTextSection key={section.id} section={section as any} theme={theme} />;
     case 'link-list': return <LinkListSection key={section.id} section={section as any} theme={theme} />;
-    case 'ai-chat': return <AiChatSection key={section.id} section={section as any} theme={theme} />;
     case 'faq': return <FaqSection key={section.id} section={section as any} theme={theme} />;
     case 'url-button': return <UrlButtonSection key={section.id} section={section} theme={theme} />;
     case 'image-button': return <ImageButtonSection key={section.id} section={section} theme={theme} />;

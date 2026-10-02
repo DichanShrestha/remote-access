@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from 'react';
 import { PageSection, SectionType } from '@/lib/page-engine/schemas';
-import { Plus, Trash, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash, ChevronDown, ChevronUp, Image as ImageIcon, X, Link2, Type, Layout, MousePointerClick, Eye, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 // ── Field definition system ────────────────────────────────────
 type FieldType = 'text' | 'textarea' | 'url' | 'select' | 'color' | 'email' | 'number' | 'toggle' | 'datetime';
@@ -43,26 +44,8 @@ function deepSet(obj: any, path: string, value: any): any {
   return clone;
 }
 
-// ── Inspector definitions per component ────────────────────────
+// ── Inspector definitions per component (NON-HERO) ─────────────
 const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
-  hero: {
-    fields: [
-      { key: 'content.eyebrow', label: 'Eyebrow', type: 'text', placeholder: 'e.g. Designer · Writer · Creator' },
-      { key: 'content.title', label: 'Name / Title', type: 'text', placeholder: 'Your name or brand' },
-      { key: 'content.headline', label: 'Headline', type: 'text', placeholder: 'What you do or stand for' },
-      { key: 'content.subtitle', label: 'Description', type: 'textarea', placeholder: 'A short supporting description' },
-      { key: 'content.buttonText', label: 'Primary Button', type: 'text', placeholder: 'e.g. Get in Touch' },
-      { key: 'content.buttonUrl', label: 'Primary Button URL', type: 'url' },
-      { key: 'content.secondaryButtonText', label: 'Secondary Button', type: 'text', placeholder: 'e.g. View Work' },
-      { key: 'content.secondaryButtonUrl', label: 'Secondary Button URL', type: 'url' },
-      { key: 'content.avatarUrl', label: 'Avatar / Photo URL', type: 'url' },
-      { key: 'content.imageUrl', label: 'Hero Image URL', type: 'url' },
-      { key: 'content.location', label: 'Location', type: 'text', placeholder: 'e.g. San Francisco, CA' },
-      { key: 'content.badge', label: 'Badge / Status', type: 'text', placeholder: 'e.g. Available for work' },
-      { key: 'content.metric', label: 'Metric Value', type: 'text', placeholder: 'e.g. 12K' },
-      { key: 'content.metricLabel', label: 'Metric Label', type: 'text', placeholder: 'e.g. followers' },
-    ],
-  },
   'rich-text': {
     fields: [{ key: 'content.text', label: 'Content (HTML)', type: 'textarea' }],
   },
@@ -232,12 +215,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), label: '', url: '' }),
     }],
   },
-  'ai-chat': {
-    fields: [
-      { key: 'content.greeting', label: 'Greeting', type: 'text' },
-      { key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Floating', value: 'floating' }, { label: 'Inline', value: 'inline' }] },
-    ],
-  },
+
   contact: {
     fields: [
       { key: 'content.title', label: 'Title', type: 'text' },
@@ -286,11 +264,24 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
   spacer: {
     fields: [{ key: 'layout', label: 'Size', type: 'select', options: [{ label: 'Small', value: 'small' }, { label: 'Medium', value: 'medium' }, { label: 'Large', value: 'large' }, { label: 'XL', value: 'xl' }] }],
   },
+  stats: {
+    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }],
+    arrayFields: [{
+      key: 'content.items', label: 'Stats',
+      itemFields: [
+        { key: 'value', label: 'Value', type: 'text', placeholder: 'e.g. 150' },
+        { key: 'label', label: 'Label', type: 'text', placeholder: 'e.g. Clients' },
+        { key: 'prefix', label: 'Prefix', type: 'text', placeholder: 'e.g. $' },
+        { key: 'suffix', label: 'Suffix', type: 'text', placeholder: 'e.g. +' },
+      ],
+      newItem: () => ({ id: Math.random().toString(36).substr(2, 9), value: '', label: '', prefix: '', suffix: '' }),
+    }],
+  },
 };
 
-// ── Field renderer ─────────────────────────────────────────────
+// ── Field renderer (shared) ────────────────────────────────────
 function InspectorField({ field, value, onChange }: { field: FieldDef; value: any; onChange: (v: any) => void }) {
-  const base = "w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition";
+  const base = "w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition placeholder:text-slate-400";
   switch (field.type) {
     case 'textarea':
       return <textarea value={value || ''} onChange={e => onChange(e.target.value)} placeholder={field.placeholder} rows={3} className={base + " resize-y"} />;
@@ -307,7 +298,7 @@ function InspectorField({ field, value, onChange }: { field: FieldDef; value: an
   }
 }
 
-// ── Array field editor ─────────────────────────────────────────
+// ── Array field editor (shared) ────────────────────────────────
 function ArrayFieldEditor({ def, items, onChange }: { def: ArrayFieldDef; items: any[]; onChange: (items: any[]) => void }) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   return (
@@ -320,8 +311,8 @@ function ArrayFieldEditor({ def, items, onChange }: { def: ArrayFieldDef; items:
         const isExpanded = expandedIndex === idx;
         const preview = item[def.itemFields[0].key] || `${def.label} #${idx + 1}`;
         return (
-          <div key={item.id || idx} className="border border-slate-200 dark:border-slate-600 rounded-lg overflow-hidden">
-            <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-700/50 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition" onClick={() => setExpandedIndex(isExpanded ? null : idx)}>
+          <div key={item.id || idx} className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition" onClick={() => setExpandedIndex(isExpanded ? null : idx)}>
               <span className="text-sm truncate flex-1">{typeof preview === 'string' && preview ? preview : `Item ${idx + 1}`}</span>
               <div className="flex items-center gap-1">
                 <button onClick={e => { e.stopPropagation(); const n = [...items]; n.splice(idx, 1); onChange(n); }} className="p-1 text-red-400 hover:text-red-600"><Trash className="w-3 h-3" /></button>
@@ -329,7 +320,7 @@ function ArrayFieldEditor({ def, items, onChange }: { def: ArrayFieldDef; items:
               </div>
             </div>
             {isExpanded && (
-              <div className="p-3 flex flex-col gap-3 border-t border-slate-200 dark:border-slate-600">
+              <div className="p-3 flex flex-col gap-3 border-t border-slate-200 dark:border-slate-700">
                 {def.itemFields.map(field => (
                   <div key={field.key}>
                     <label className="text-xs font-medium text-slate-500 mb-1 block">{field.label}</label>
@@ -345,10 +336,350 @@ function ArrayFieldEditor({ def, items, onChange }: { def: ArrayFieldDef; items:
   );
 }
 
+// ══════════════════════════════════════════════════════════════════
+// ██ HERO-SPECIFIC INSPECTOR ██
+// ══════════════════════════════════════════════════════════════════
+
+/** Collapsible section card used in Hero inspector */
+function InspectorGroup({ title, icon, children, defaultOpen = true }: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-800/30">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+      >
+        <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          {icon}
+          {title}
+        </span>
+        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="px-4 pb-4 flex flex-col gap-4 border-t border-slate-100 dark:border-slate-700/50 pt-4">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Media picker with thumbnail preview and Supabase upload */
+function MediaPicker({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const hasImage = value && value.trim().length > 0;
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const supabase = createClient();
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `uploads/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('smart-page-assets')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('smart-page-assets')
+        .getPublicUrl(filePath);
+
+      onChange(publicUrl);
+    } catch (error: any) {
+      alert(`Upload failed: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const promptUrl = () => {
+    const url = prompt('Enter image URL:', value);
+    if (url !== null) onChange(url);
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-xs font-medium text-slate-500">{label}</label>
+      <input 
+        type="file" 
+        accept="image/*" 
+        ref={fileInputRef} 
+        onChange={handleUpload} 
+        className="hidden" 
+      />
+      
+      {isUploading ? (
+        <div className="w-full h-24 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex flex-col items-center justify-center gap-2 text-blue-500">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-xs font-medium">Uploading...</span>
+        </div>
+      ) : hasImage ? (
+        <div className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+          <img src={value} alt="" className="w-full h-28 object-cover" />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 bg-white rounded-lg text-slate-700 shadow-lg hover:bg-slate-50 transition"
+              title="Upload new image"
+            >
+              <Upload className="w-4 h-4" />
+            </button>
+            <button
+              onClick={promptUrl}
+              className="p-2 bg-white rounded-lg text-slate-700 shadow-lg hover:bg-slate-50 transition"
+              title="Change URL"
+            >
+              <LinkIcon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onChange('')}
+              className="p-2 bg-white rounded-lg text-red-500 shadow-lg hover:bg-red-50 transition"
+              title="Remove image"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex-1 h-24 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors cursor-pointer"
+          >
+            <Upload className="w-5 h-5" />
+            <span className="text-xs font-medium">Upload File</span>
+          </button>
+          <button
+            onClick={promptUrl}
+            className="flex-1 h-24 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors cursor-pointer"
+          >
+            <LinkIcon className="w-5 h-5" />
+            <span className="text-xs font-medium">Paste URL</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Compact text input for Hero fields */
+function HeroInput({ label, value, onChange, placeholder, multiline }: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  multiline?: boolean;
+}) {
+  const base = "w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition placeholder:text-slate-400";
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs font-medium text-slate-500">{label}</label>
+      {multiline ? (
+        <textarea value={value || ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={3} className={base + " resize-y"} />
+      ) : (
+        <input type="text" value={value || ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} className={base} />
+      )}
+    </div>
+  );
+}
+
+/** Action block card (Primary / Secondary CTA) */
+function ActionCard({ title, textValue, urlValue, onTextChange, onUrlChange, textPlaceholder, urlPlaceholder }: {
+  title: string;
+  textValue: string;
+  urlValue: string;
+  onTextChange: (v: string) => void;
+  onUrlChange: (v: string) => void;
+  textPlaceholder?: string;
+  urlPlaceholder?: string;
+}) {
+  return (
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-slate-50/50 dark:bg-slate-800/20">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 block">{title}</span>
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] font-medium text-slate-400">Label</label>
+          <input
+            type="text"
+            value={textValue || ''}
+            onChange={e => onTextChange(e.target.value)}
+            placeholder={textPlaceholder || 'Button text'}
+            className="w-full px-2.5 py-2 text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition placeholder:text-slate-400"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[10px] font-medium text-slate-400 flex items-center gap-1"><Link2 className="w-3 h-3" /> URL</label>
+          <input
+            type="url"
+            value={urlValue || ''}
+            onChange={e => onUrlChange(e.target.value)}
+            placeholder={urlPlaceholder || 'https://...'}
+            className="w-full px-2.5 py-2 text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition placeholder:text-slate-400"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The full Hero-specific inspector panel */
+function HeroInspector({ section, onChange }: { section: PageSection; onChange: (updated: PageSection) => void }) {
+  const handleFieldChange = (path: string, value: any) => onChange(deepSet(section, path, value));
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* 1. Layout & Variant */}
+      <InspectorGroup title="Layout & Variant" icon={<Layout className="w-3.5 h-3.5" />} defaultOpen={true}>
+        <HeroVariantPicker
+          currentVariant={(section.variant as string) || 'editorial-center'}
+          onChange={(v) => onChange({ ...section, variant: v })}
+        />
+        {/* Text Contrast Toggle */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+            <Eye className="w-3.5 h-3.5" />
+            Text Contrast
+          </label>
+          <div className="flex gap-1.5">
+            {(['auto', 'light', 'dark'] as const).map((mode) => {
+              const isActive = ((section as any).textContrast || 'auto') === mode;
+              return (
+                <button
+                  key={mode}
+                  onClick={() => onChange(deepSet(section, 'textContrast', mode))}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold capitalize transition-all ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {mode}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </InspectorGroup>
+
+      {/* 2. Typography & Content */}
+      <InspectorGroup title="Typography & Content" icon={<Type className="w-3.5 h-3.5" />} defaultOpen={true}>
+        <HeroInput label="Eyebrow" value={deepGet(section, 'content.eyebrow') || ''} onChange={v => handleFieldChange('content.eyebrow', v)} placeholder="e.g. Designer · Writer · Creator" />
+        <HeroInput label="Name / Title" value={deepGet(section, 'content.title') || ''} onChange={v => handleFieldChange('content.title', v)} placeholder="Your name or brand" />
+        <HeroInput label="Headline" value={deepGet(section, 'content.headline') || ''} onChange={v => handleFieldChange('content.headline', v)} placeholder="What you do or stand for" />
+        <HeroInput label="Description" value={deepGet(section, 'content.subtitle') || ''} onChange={v => handleFieldChange('content.subtitle', v)} placeholder="A short supporting description" multiline />
+        <div className="grid grid-cols-2 gap-2.5">
+          <HeroInput label="Badge / Status" value={deepGet(section, 'content.badge') || ''} onChange={v => handleFieldChange('content.badge', v)} placeholder="e.g. Open to work" />
+          <HeroInput label="Location" value={deepGet(section, 'content.location') || ''} onChange={v => handleFieldChange('content.location', v)} placeholder="San Francisco, CA" />
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
+          <HeroInput label="Metric Value" value={deepGet(section, 'content.metric') || ''} onChange={v => handleFieldChange('content.metric', v)} placeholder="e.g. 12K" />
+          <HeroInput label="Metric Label" value={deepGet(section, 'content.metricLabel') || ''} onChange={v => handleFieldChange('content.metricLabel', v)} placeholder="e.g. followers" />
+        </div>
+      </InspectorGroup>
+
+      {/* 3. Media & Assets */}
+      <InspectorGroup title="Media & Assets" icon={<ImageIcon className="w-3.5 h-3.5" />} defaultOpen={false}>
+        <MediaPicker label="Hero Image" value={deepGet(section, 'content.imageUrl') || ''} onChange={v => handleFieldChange('content.imageUrl', v)} />
+        <MediaPicker label="Avatar / Photo" value={deepGet(section, 'content.avatarUrl') || ''} onChange={v => handleFieldChange('content.avatarUrl', v)} />
+      </InspectorGroup>
+
+      {/* 4. Actions */}
+      <InspectorGroup title="Actions" icon={<MousePointerClick className="w-3.5 h-3.5" />} defaultOpen={false}>
+        <ActionCard
+          title="Primary Action"
+          textValue={deepGet(section, 'content.buttonText') || ''}
+          urlValue={deepGet(section, 'content.buttonUrl') || ''}
+          onTextChange={v => handleFieldChange('content.buttonText', v)}
+          onUrlChange={v => handleFieldChange('content.buttonUrl', v)}
+          textPlaceholder="Get in Touch"
+          urlPlaceholder="https://..."
+        />
+        <ActionCard
+          title="Secondary Action"
+          textValue={deepGet(section, 'content.secondaryButtonText') || ''}
+          urlValue={deepGet(section, 'content.secondaryButtonUrl') || ''}
+          onTextChange={v => handleFieldChange('content.secondaryButtonText', v)}
+          onUrlChange={v => handleFieldChange('content.secondaryButtonUrl', v)}
+          textPlaceholder="View Work"
+          urlPlaceholder="#portfolio"
+        />
+      </InspectorGroup>
+    </div>
+  );
+}
+
+/** Compact variant picker for the Hero */
+function HeroVariantPicker({ currentVariant, onChange }: { currentVariant: string; onChange: (v: string) => void }) {
+  const variants = [
+    { id: 'editorial-center', label: 'Editorial', icon: (
+      <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="16" y="4" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.6"/><rect x="20" y="10" width="20" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="22" y="14" width="16" height="2" rx="1" fill="currentColor" opacity="0.2"/><rect x="23" y="20" width="14" height="4" rx="2" fill="currentColor" opacity="0.4"/></svg>
+    )},
+    { id: 'split', label: 'Split', icon: (
+      <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="4" y="6" width="22" height="3" rx="1.5" fill="currentColor" opacity="0.6"/><rect x="4" y="12" width="18" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="4" y="17" width="14" height="2" rx="1" fill="currentColor" opacity="0.2"/><rect x="4" y="23" width="10" height="3" rx="1.5" fill="currentColor" opacity="0.4"/><rect x="34" y="4" width="22" height="24" rx="3" fill="currentColor" opacity="0.15"/></svg>
+    )},
+    { id: 'immersive', label: 'Immersive', icon: (
+      <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="0" y="0" width="60" height="32" rx="2" fill="currentColor" opacity="0.12"/><rect x="6" y="18" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.6"/><rect x="6" y="23" width="20" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="6" y="27" width="12" height="3" rx="1.5" fill="currentColor" opacity="0.4"/></svg>
+    )},
+    { id: 'minimal', label: 'Minimal', icon: (
+      <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><circle cx="30" cy="8" r="5" fill="currentColor" opacity="0.2"/><rect x="18" y="16" width="24" height="3" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="22" y="21" width="16" height="2" rx="1" fill="currentColor" opacity="0.2"/><rect x="24" y="26" width="12" height="3" rx="1.5" fill="currentColor" opacity="0.3"/></svg>
+    )},
+    { id: 'asymmetric', label: 'Asymmetric', icon: (
+      <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="4" y="8" width="30" height="3" rx="1.5" fill="currentColor" opacity="0.6"/><rect x="4" y="14" width="24" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="4" y="19" width="12" height="3" rx="1.5" fill="currentColor" opacity="0.4"/><rect x="40" y="6" width="16" height="20" rx="2" fill="currentColor" opacity="0.15"/></svg>
+    )},
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {variants.map((v) => {
+        const isActive = currentVariant === v.id;
+        return (
+          <button
+            key={v.id}
+            onClick={() => onChange(v.id)}
+            className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 transition-all duration-150 ${
+              isActive
+                ? 'border-blue-600 bg-blue-50/60 dark:bg-blue-950/20 shadow-sm'
+                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800/30'
+            }`}
+          >
+            <div className={`w-full h-10 flex items-center justify-center ${isActive ? 'text-blue-600' : 'text-slate-400'}`}>
+              {v.icon}
+            </div>
+            <span className={`text-[10px] font-semibold leading-none ${isActive ? 'text-blue-700 dark:text-blue-400' : 'text-slate-500'}`}>
+              {v.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+
 import { SECTION_VARIANTS } from '@/lib/page-engine/variants';
 
 // ── Main Inspector ─────────────────────────────────────────────
 export function SectionInspector({ section, onChange }: { section: PageSection; onChange: (updated: PageSection) => void }) {
+  // HERO gets its own premium inspector
+  if (section.type === 'hero') {
+    return <HeroInspector section={section} onChange={onChange} />;
+  }
+
   const def = INSPECTOR_DEFS[section.type];
   
   const handleFieldChange = (path: string, value: any) => onChange(deepSet(section, path, value));

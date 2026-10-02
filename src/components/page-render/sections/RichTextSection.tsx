@@ -59,6 +59,24 @@ export function RichTextSection({ section, theme }: RichTextProps) {
     );
   }
 
+  if (variant === 'asymmetric') {
+    return (
+      <section className="py-20 md:py-32 px-6 md:px-12 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-start gap-12 md:gap-24">
+          <div className="w-full md:w-1/3 flex-shrink-0">
+            <h2 className="text-3xl md:text-5xl font-serif text-slate-900 dark:text-slate-100 leading-tight">
+              Our Story
+            </h2>
+          </div>
+          <div 
+            className="w-full md:w-2/3 prose prose-lg dark:prose-invert prose-headings:font-serif prose-p:text-slate-500 dark:prose-p:text-slate-400 prose-p:leading-loose prose-a:text-slate-900 dark:prose-a:text-white hover:prose-a:text-opacity-80"
+            dangerouslySetInnerHTML={{ __html: content.text }}
+          />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-8 px-6 w-full max-w-3xl mx-auto prose prose-slate dark:prose-invert prose-lg text-slate-700 dark:text-slate-300">
       <div 

@@ -59,9 +59,9 @@ export default async function Home() {
                   <p className="text-gray-900 font-bold text-lg">Welcome back, {dbUser?.name || user.email}</p>
                   <p className="text-gray-500 text-sm">You are successfully authenticated.</p>
                 </div>
-                <button className="mt-2 w-full px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-sm">
+                <a href="/dashboard" className="mt-2 w-full px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-sm text-center block">
                   Go to Dashboard
-                </button>
+                </a>
               </div>
             ) : (
               <>

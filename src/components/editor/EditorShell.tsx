@@ -49,6 +49,19 @@ export function EditorShell({
     return () => clearTimeout(timeoutRef.current!);
   }, [doc, pageId]);
 
+  // Scroll to selected section
+  useEffect(() => {
+    if (selectedSectionId) {
+      const el = document.getElementById(`preview-section-${selectedSectionId}`);
+      if (el) {
+        // Add a slight delay to ensure rendering is complete (e.g. if switching tabs/modes)
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+      }
+    }
+  }, [selectedSectionId]);
+
   // Wrap setDoc with history tracking
   const updateDoc = (updater: (prev: PageDocument) => PageDocument) => {
     setDoc(prev => {

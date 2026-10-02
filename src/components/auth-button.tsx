@@ -9,9 +9,9 @@ export function AuthButton({ user }: { user: any }) {
 
   const handleSignIn = async () => {
     await supabase.auth.signInWithOAuth({
-      provider: 'twitter',
+      provider: 'google',
       options: {
-        redirectTo: `${location.origin}/api/auth/callback`,
+        redirectTo: `${location.origin}/api/auth/callback?next=/dashboard`,
       },
     })
   }
@@ -33,7 +33,7 @@ export function AuthButton({ user }: { user: any }) {
       onClick={handleSignIn}
       className="px-4 py-2 bg-slate-900 text-white rounded-md hover:bg-slate-800 transition"
     >
-      Continue with X
+      Continue with Google
     </button>
   )
 }

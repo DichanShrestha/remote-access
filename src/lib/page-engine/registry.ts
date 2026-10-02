@@ -173,11 +173,6 @@ export const ComponentRegistry: Record<SectionType, ComponentMetadata> = {
     categories: ['connect'],
     defaultData: () => ({ type: 'contact', content: { title: 'Get in Touch', email: 'hello@example.com' } }),
   },
-  'ai-chat': {
-    type: 'ai-chat', label: 'AI Chat', category: 'connect',
-    categories: ['connect'],
-    defaultData: () => ({ type: 'ai-chat', layout: 'floating', content: { greeting: 'Hi! How can I help?' } }),
-  },
 
   // ── Build trust ─────────────────────────────────────────────
   'testimonials': {

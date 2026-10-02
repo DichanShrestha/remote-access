@@ -17,13 +17,7 @@ const PlaceholderSVG = () => (
 );
 
 export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> = {
-  hero: [
-    { id: 'editorial-center', label: 'Editorial Center', previewNode: <PlaceholderSVG /> },
-    { id: 'split', label: 'Split', previewNode: <PlaceholderSVG /> },
-    { id: 'immersive', label: 'Immersive', previewNode: <PlaceholderSVG /> },
-    { id: 'minimal', label: 'Minimal Profile', previewNode: <PlaceholderSVG /> },
-    { id: 'asymmetric', label: 'Asymmetric', previewNode: <PlaceholderSVG /> },
-  ],
+  // Hero uses its own built-in variant picker in HeroInspector
   'rich-text': [
     { id: 'default', label: 'Standard', previewNode: <PlaceholderSVG /> },
     { id: 'split', label: 'Split Text', previewNode: <PlaceholderSVG /> },
@@ -55,10 +49,9 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'bounce', label: 'Bounce Cards', previewNode: <PlaceholderSVG /> },
   ],
   services: [
-    { id: 'default', label: 'Standard Grid', previewNode: <PlaceholderSVG /> },
-    { id: 'reflective', label: 'Reflective Cards', previewNode: <PlaceholderSVG /> },
-    { id: 'spotlight', label: 'Spotlight Hover', previewNode: <PlaceholderSVG /> },
-    { id: 'glow', label: 'Border Glow', previewNode: <PlaceholderSVG /> },
+    { id: 'minimal-border', label: 'Minimal Border', previewNode: <PlaceholderSVG /> },
+    { id: 'glass-dark', label: 'Glass Dark', previewNode: <PlaceholderSVG /> },
+    { id: 'asymmetric-bento', label: 'Asymmetric Bento', previewNode: <PlaceholderSVG /> },
   ],
   products: [
     { id: 'default', label: 'Standard Grid', previewNode: <PlaceholderSVG /> },
@@ -70,6 +63,19 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'gradual-blur', label: 'Gradual Blur', previewNode: <PlaceholderSVG /> },
     { id: 'silk', label: 'Silk Effect', previewNode: <PlaceholderSVG /> },
     { id: 'gradient-blinds', label: 'Gradient Blinds', previewNode: <PlaceholderSVG /> },
+  ],
+  testimonials: [
+    { id: 'grid', label: 'Masonry Grid', previewNode: <PlaceholderSVG /> },
+    { id: 'marquee', label: 'Infinite Marquee', previewNode: <PlaceholderSVG /> },
+  ],
+  contact: [
+    { id: 'card-centered', label: 'Card Centered', previewNode: <PlaceholderSVG /> },
+    { id: 'split-layout', label: 'Split Layout', previewNode: <PlaceholderSVG /> },
+    { id: 'minimal-footer', label: 'Minimal Footer', previewNode: <PlaceholderSVG /> },
+  ],
+  'lead-form': [
+    { id: 'card-centered', label: 'Card Centered', previewNode: <PlaceholderSVG /> },
+    { id: 'split-layout', label: 'Split Layout', previewNode: <PlaceholderSVG /> },
   ],
   'social-links': [
     { id: 'default', label: 'Standard Row', previewNode: <PlaceholderSVG /> },

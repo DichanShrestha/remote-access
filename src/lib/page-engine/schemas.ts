@@ -266,11 +266,7 @@ export const LinkListSectionSchema = BaseSectionSchema.extend({
   }),
 });
 
-export const AiChatSectionSchema = BaseSectionSchema.extend({
-  type: z.literal('ai-chat'),
-  content: z.object({ greeting: z.string().optional() }),
-  layout: z.enum(['floating', 'inline']).default('floating'),
-});
+
 
 export const ContactSectionSchema = BaseSectionSchema.extend({
   type: z.literal('contact'),
@@ -382,7 +378,7 @@ export const PageSectionSchema = z.discriminatedUnion('type', [
   CollectEmailsSectionSchema,
   BookingSectionSchema,
   LinkListSectionSchema,
-  AiChatSectionSchema,
+
   ContactSectionSchema,
   QuoteSectionSchema,
   MarqueeSectionSchema,
@@ -401,7 +397,14 @@ export const PageDocumentSchema = z.object({
   version: z.number().default(1),
   theme: ThemeConfigSchema.default({ style: 'premium-minimal', primaryColor: '#000000', radius: 'medium', density: 'comfortable' }),
   settings: PageSettingsSchema.default({ showFooterBranding: true }),
-  sections: z.array(PageSectionSchema).default([]),
+  sections: z.array(z.any())
+    .transform(items => {
+      return items
+        .map(item => PageSectionSchema.safeParse(item))
+        .filter(res => res.success)
+        .map(res => (res as any).data as PageSection);
+    })
+    .default([]),
 });
 
 export type PageDocument = z.infer<typeof PageDocumentSchema>;

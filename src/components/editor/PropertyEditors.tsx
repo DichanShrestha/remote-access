@@ -77,32 +77,7 @@ export function RichTextEditor({ section, onChange }: EditorProps<Extract<PageSe
   );
 }
 
-export function AiChatEditor({ section, onChange }: EditorProps<Extract<PageSection, { type: 'ai-chat' }>>) {
-  return (
-    <div className="flex flex-col gap-4 text-sm">
-      <div>
-        <label className="block text-slate-500 mb-1">Greeting</label>
-        <input 
-          type="text" 
-          value={section.content.greeting || ''} 
-          onChange={e => onChange({ content: { ...section.content, greeting: e.target.value } })}
-          className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-900" 
-        />
-      </div>
-      <div>
-        <label className="block text-slate-500 mb-1">Layout</label>
-        <select 
-          value={section.layout} 
-          onChange={e => onChange({ layout: e.target.value as any })}
-          className="w-full p-2 border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-900"
-        >
-          <option value="floating">Floating Bubble</option>
-          <option value="inline">Inline Block</option>
-        </select>
-      </div>
-    </div>
-  );
-}
+
 
 export function LinkListEditor({ section, onChange }: EditorProps<Extract<PageSection, { type: 'link-list' }>>) {
   const { content } = section;
