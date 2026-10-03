@@ -1,20 +1,23 @@
 "use client"
 import { PageDocument, PageSection } from '@/lib/page-engine/schemas';
 import { renderSection } from './sections/AllSections';
+import { ReactLenis } from 'lenis/react';
 
 type PageRendererProps = {
   document: PageDocument;
+  isPreview?: boolean;
+  pageId?: string;
 };
 
-export function PageRenderer({ document }: PageRendererProps) {
+export function PageRenderer({ document, isPreview, pageId }: PageRendererProps) {
   const { sections, theme, settings } = document;
 
-  return (
+  const content = (
     <div className={`@container min-h-screen flex flex-col font-sans bg-slate-50 dark:bg-slate-900 transition-colors duration-500`}>
       <main className="flex-1 flex flex-col pb-24 relative">
         {sections.map((section: PageSection) => (
           <div key={section.id} id={`preview-section-${section.id}`} className="relative group/preview-section scroll-mt-6">
-            {renderSection(section, theme)}
+            {renderSection(section, theme, isPreview, pageId)}
           </div>
         ))}
       </main>
@@ -26,4 +29,10 @@ export function PageRenderer({ document }: PageRendererProps) {
       )}
     </div>
   );
+
+  if (settings.enableSmoothScrolling && !isPreview) {
+    return <ReactLenis root>{content}</ReactLenis>;
+  }
+
+  return content;
 }

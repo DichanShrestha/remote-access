@@ -52,6 +52,8 @@ model Page {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  leads     Lead[]
 }
 
 model Subscription {
@@ -86,4 +88,29 @@ model WebhookEvent {
   type      String
   status    String
   createdAt DateTime @default(now())
+}
+
+model Lead {
+  id            String   @id @default(cuid())
+  pageId        String
+  page          Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  componentId   String
+  componentType String
+  
+  name          String?
+  email         String?
+  phone         String?
+  message       String?  @db.Text
+  customData    Json?
+  
+  source        String?
+  referrer      String?
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([pageId, createdAt])
 }

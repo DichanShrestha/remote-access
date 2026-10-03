@@ -11,6 +11,7 @@ import { ComponentPicker } from './ComponentPicker';
 import { SectionInspector } from './SectionInspector';
 import { Send, Plus, Sparkles, Smartphone, Monitor, Undo, Settings } from 'lucide-react';
 
+
 export function EditorShell({
   initialDocument,
   pageId
@@ -212,7 +213,7 @@ export function EditorShell({
         {/* Preview area */}
         <div className="flex-1 overflow-y-auto bg-slate-200/50 dark:bg-slate-950 p-6 flex justify-center items-start">
           <div className={`bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden min-h-[600px] border border-slate-200 dark:border-slate-800 ring-1 ring-slate-900/5 transition-all duration-300 ${previewMode === 'mobile' ? 'w-[390px]' : 'w-full max-w-5xl'}`}>
-            <PageRenderer document={doc} />
+            <PageRenderer document={doc} isPreview={true} pageId={pageId} />
           </div>
         </div>
       </div>
@@ -318,6 +319,23 @@ export function EditorShell({
                     <option value="comfortable">Comfortable</option>
                     <option value="spacious">Spacious</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Page Features */}
+              <div className="flex flex-col gap-4 mt-2">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Features</h3>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="smoothScroll"
+                    checked={!!doc.settings.enableSmoothScrolling}
+                    onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, enableSmoothScrolling: e.target.checked } }))}
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <label htmlFor="smoothScroll" className="text-sm font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
+                    Enable Smooth Scrolling
+                  </label>
                 </div>
               </div>
 

@@ -574,6 +574,31 @@ function HeroInspector({ section, onChange }: { section: PageSection; onChange: 
             })}
           </div>
         </div>
+        {/* Zoom Reveal Toggle */}
+        <div className="flex items-center justify-between py-1">
+          <label className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
+            Zoom Reveal Intro
+          </label>
+          <button
+            onClick={() => onChange(deepSet(section, 'zoomReveal', !(section as any).zoomReveal))}
+            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${(section as any).zoomReveal ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'}`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${(section as any).zoomReveal ? 'translate-x-4' : 'translate-x-0'}`} />
+          </button>
+        </div>
+        
+        {/* Zoom Word Input (only shown when Zoom Reveal is active) */}
+        {(section as any).zoomReveal && (
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <HeroInput
+              label="Zoom Word"
+              value={(section as any).zoomWord || ''}
+              onChange={v => onChange(deepSet(section, 'zoomWord', v))}
+              placeholder="e.g. INK (defaults to first word of Title)"
+            />
+          </div>
+        )}
       </InspectorGroup>
 
       {/* 2. Typography & Content */}

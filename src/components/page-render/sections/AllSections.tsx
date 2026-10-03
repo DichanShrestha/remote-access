@@ -9,6 +9,7 @@ import { FaTwitter, FaInstagram, FaGithub, FaLinkedin, FaYoutube, FaTiktok, FaDr
 import { FaXTwitter } from 'react-icons/fa6';
 import { motion, useScroll, useTransform, useInView } from 'motion/react';
 import { Marquee } from '@/components/ui/marquee';
+import { submitLead } from '@/actions/leads';
 
 // --- React Bits Components ---
 // @ts-ignore
@@ -782,16 +783,55 @@ export function AnnouncementSection({ section, theme }: { section: any; theme: T
 }
 
 // ── Lead Form ──────────────────────────────────────────────────
-function LeadFormFields({ buttonText, theme }: { buttonText: string; theme: ThemeConfig }) {
+function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: string; theme: ThemeConfig; pageId?: string; sectionId: string }) {
   const [activeChips, setActiveChips] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  
   const chips = ['Web Design', 'Branding', 'Growth', 'Other'];
 
   const toggleChip = (chip: string) => {
     setActiveChips(prev => prev.includes(chip) ? prev.filter(c => c !== chip) : [...prev, chip]);
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!pageId) return;
+    
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const message = formData.get('message') as string;
+    
+    await submitLead({
+      pageId,
+      componentId: sectionId,
+      componentType: 'lead-form',
+      name,
+      email,
+      message,
+      customData: { services: activeChips },
+    });
+    
+    setSuccess(true);
+    setLoading(false);
+  };
+
+  if (success) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center bg-green-50 dark:bg-green-900/20 rounded-2xl border border-green-200 dark:border-green-800">
+        <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center mb-4 text-green-600 dark:text-green-400">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+        </div>
+        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">Message sent!</h3>
+        <p className="text-neutral-600 dark:text-neutral-400 text-sm">We'll get back to you as soon as possible.</p>
+      </div>
+    );
+  }
+
   return (
-    <form className="flex flex-col gap-5 w-full" onSubmit={e => e.preventDefault()}>
+    <form className="flex flex-col gap-5 w-full" onSubmit={handleSubmit}>
       {/* Service Pills */}
       <div className="flex flex-wrap gap-2 mb-1">
         {chips.map(chip => (
@@ -809,25 +849,25 @@ function LeadFormFields({ buttonText, theme }: { buttonText: string; theme: Them
       {/* Name */}
       <div>
         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Full Name</label>
-        <input type="text" placeholder="John Doe" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
+        <input name="name" type="text" required placeholder="John Doe" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
       </div>
 
       {/* Email */}
       <div>
         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Email Address</label>
-        <input type="email" placeholder="john@company.com" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
+        <input name="email" type="email" required placeholder="john@company.com" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
       </div>
 
       {/* Message */}
       <div>
         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Your Message</label>
-        <textarea placeholder="Tell us about your project..." rows={4} className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm resize-none" />
+        <textarea name="message" required placeholder="Tell us about your project..." rows={4} className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm resize-none" />
       </div>
 
       {/* CTA Button */}
-      <button type="submit" className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-1">
-        {buttonText || 'Send Message'}
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+      <button type="submit" disabled={loading} className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-1 disabled:opacity-70">
+        {loading ? 'Sending...' : buttonText || 'Send Message'}
+        {!loading && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
       </button>
 
       {/* Trust Badges */}
@@ -839,7 +879,7 @@ function LeadFormFields({ buttonText, theme }: { buttonText: string; theme: Them
   );
 }
 
-export function LeadFormSection({ section, theme }: { section: any; theme: ThemeConfig }) {
+export function LeadFormSection({ section, theme, pageId }: { section: any; theme: ThemeConfig; pageId?: string }) {
   const { title, description, buttonText } = section.content;
   const variant = section.variant || 'card-centered';
 
@@ -889,7 +929,7 @@ export function LeadFormSection({ section, theme }: { section: any; theme: Theme
 
           {/* Right Column — Form Card (7 cols) */}
           <div className="lg:col-span-7 bg-neutral-50/50 dark:bg-slate-800/50 border border-neutral-200 dark:border-slate-700 p-8 rounded-3xl">
-            <LeadFormFields buttonText={buttonText} theme={theme} />
+            <LeadFormFields buttonText={buttonText} theme={theme} pageId={pageId} sectionId={section.id} />
           </div>
         </div>
       </section>
@@ -908,28 +948,50 @@ export function LeadFormSection({ section, theme }: { section: any; theme: Theme
             {description || "Tell us about your project and we'll schedule a free strategy call."}
           </p>
         </div>
-        <LeadFormFields buttonText={buttonText} theme={theme} />
+        <LeadFormFields buttonText={buttonText} theme={theme} pageId={pageId} sectionId={section.id} />
       </div>
     </section>
   );
 }
 
 // ── Collect Emails ─────────────────────────────────────────────
-export function CollectEmailsSection({ section, theme }: { section: any; theme: ThemeConfig }) {
+export function CollectEmailsSection({ section, theme, pageId }: { section: any; theme: ThemeConfig; pageId?: string }) {
   const { title, placeholder, buttonText } = section.content;
   const variant = section.variant || 'default';
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!pageId) return;
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    await submitLead({
+      pageId,
+      componentId: section.id,
+      componentType: 'collect-emails',
+      email,
+    });
+    setSuccess(true);
+    setLoading(false);
+  };
 
   if (variant === 'spacious') {
     return (
       <section className="py-32 px-4 md:px-8 max-w-2xl mx-auto text-center border-t border-slate-200/50">
         <BlurFade delay={0.1} inView>
           {title && <h2 className="text-3xl md:text-4xl font-serif mb-12">{title}</h2>}
-          <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto" onSubmit={e => e.preventDefault()}>
-            <input type="email" placeholder={placeholder || 'Your email'} className="flex-1 px-6 py-4 rounded-none border-b-2 border-slate-200 dark:border-slate-700 bg-transparent text-base focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors text-center sm:text-left" />
-            <button type="submit" className="px-8 py-4 rounded-none font-bold text-white text-sm tracking-widest uppercase transition-all flex-shrink-0" style={{ backgroundColor: theme.primaryColor }}>
-              {buttonText}
-            </button>
-          </form>
+          {success ? (
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl font-medium">Subscribed successfully!</div>
+          ) : (
+            <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto" onSubmit={handleSubmit}>
+              <input name="email" type="email" required placeholder={placeholder || 'Your email'} className="flex-1 px-6 py-4 rounded-none border-b-2 border-slate-200 dark:border-slate-700 bg-transparent text-base focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors text-center sm:text-left" />
+              <button type="submit" disabled={loading} className="px-8 py-4 rounded-none font-bold text-white text-sm tracking-widest uppercase transition-all flex-shrink-0 disabled:opacity-70" style={{ backgroundColor: theme.primaryColor }}>
+                {loading ? '...' : buttonText}
+              </button>
+            </form>
+          )}
         </BlurFade>
       </section>
     );
@@ -938,12 +1000,16 @@ export function CollectEmailsSection({ section, theme }: { section: any; theme: 
   return (
     <section className="py-12 px-4 md:px-8 max-w-md mx-auto text-center">
       {title && <h2 className="text-xl font-bold mb-4">{title}</h2>}
-      <form className="flex gap-2" onSubmit={e => e.preventDefault()}>
-        <input type="email" placeholder={placeholder || 'Your email'} className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2" />
-        <button type="submit" className="px-6 py-3 rounded-xl font-bold text-white text-sm shadow-lg hover:shadow-xl transition-all flex-shrink-0" style={{ backgroundColor: theme.primaryColor }}>
-          {buttonText}
-        </button>
-      </form>
+      {success ? (
+        <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl text-sm font-medium">Subscribed successfully!</div>
+      ) : (
+        <form className="flex gap-2" onSubmit={handleSubmit}>
+          <input name="email" type="email" required placeholder={placeholder || 'Your email'} className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2" />
+          <button type="submit" disabled={loading} className="px-6 py-3 rounded-xl font-bold text-white text-sm shadow-lg hover:shadow-xl transition-all flex-shrink-0 disabled:opacity-70" style={{ backgroundColor: theme.primaryColor }}>
+            {loading ? '...' : buttonText}
+          </button>
+        </form>
+      )}
     </section>
   );
 }
@@ -965,16 +1031,53 @@ export function BookingSection({ section, theme }: { section: any; theme: ThemeC
 }
 
 // ── Contact ────────────────────────────────────────────────────
-function ContactForm({ theme }: { theme: ThemeConfig }) {
+function ContactForm({ theme, pageId, sectionId }: { theme: ThemeConfig; pageId?: string; sectionId: string }) {
   const [activeChips, setActiveChips] = useState<string[]>([]);
   const chips = ['Web Design', 'Branding', 'Growth', 'Other'];
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const toggleChip = (chip: string) => {
     setActiveChips(prev => prev.includes(chip) ? prev.filter(c => c !== chip) : [...prev, chip]);
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!pageId) return;
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const message = formData.get('message') as string;
+    
+    await submitLead({
+      pageId,
+      componentId: sectionId,
+      componentType: 'contact',
+      name,
+      email,
+      message,
+      customData: { interest: activeChips },
+    });
+    
+    setSuccess(true);
+    setLoading(false);
+  };
+
+  if (success) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center bg-green-50 dark:bg-green-900/20 rounded-2xl border border-green-200 dark:border-green-800">
+        <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center mb-4 text-green-600 dark:text-green-400">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+        </div>
+        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">Message sent!</h3>
+        <p className="text-neutral-600 dark:text-neutral-400 text-sm">We'll get back to you as soon as possible.</p>
+      </div>
+    );
+  }
+
   return (
-    <form className="flex flex-col gap-5 w-full" onSubmit={e => e.preventDefault()}>
+    <form className="flex flex-col gap-5 w-full" onSubmit={handleSubmit}>
       <div className="flex flex-wrap gap-2 mb-2">
         {chips.map(chip => (
           <button
@@ -989,19 +1092,19 @@ function ContactForm({ theme }: { theme: ThemeConfig }) {
       </div>
       <div>
         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Name</label>
-        <input type="text" placeholder="John Doe" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
+        <input name="name" required type="text" placeholder="John Doe" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
       </div>
       <div>
         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Email</label>
-        <input type="email" placeholder="john@company.com" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
+        <input name="email" required type="email" placeholder="john@company.com" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
       </div>
       <div>
         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Message</label>
-        <textarea placeholder="How can we help?" rows={4} className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm resize-none" />
+        <textarea name="message" required placeholder="How can we help?" rows={4} className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm resize-none" />
       </div>
-      <button type="submit" className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-2">
-        Send Message
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+      <button type="submit" disabled={loading} className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-2 disabled:opacity-70">
+        {loading ? 'Sending...' : 'Send Message'}
+        {!loading && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
       </button>
       <div className="flex items-center justify-center gap-4 mt-2 opacity-70">
         <div className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">⚡ Avg. response: &lt; 24h</div>
@@ -1011,7 +1114,7 @@ function ContactForm({ theme }: { theme: ThemeConfig }) {
   );
 }
 
-export function ContactSection({ section, theme }: { section: any; theme: ThemeConfig }) {
+export function ContactSection({ section, theme, pageId }: { section: any; theme: ThemeConfig; pageId?: string }) {
   const { title, email, phone, address } = section.content;
   const variant = section.variant || 'card-centered';
 
@@ -1075,7 +1178,7 @@ export function ContactSection({ section, theme }: { section: any; theme: ThemeC
 
           {/* Right Column (7 cols) */}
           <div className="lg:col-span-7 bg-neutral-50/50 dark:bg-slate-800/50 border border-neutral-200 dark:border-slate-700 p-8 rounded-3xl">
-            <ContactForm theme={theme} />
+            <ContactForm theme={theme} pageId={pageId} sectionId={section.id} />
           </div>
         </div>
       </section>
@@ -1094,7 +1197,7 @@ export function ContactSection({ section, theme }: { section: any; theme: ThemeC
             Fill out the form below and our team will get back to you within 24 hours.
           </p>
         </div>
-        <ContactForm theme={theme} />
+        <ContactForm theme={theme} pageId={pageId} sectionId={section.id} />
       </div>
     </section>
   );
@@ -1369,11 +1472,11 @@ export function StatsSection({ section, theme }: { section: any; theme: ThemeCon
 }
 
 // ── Central Dispatcher ─────────────────────────────────────────
-export function renderSection(section: PageSection, theme: ThemeConfig) {
+export function renderSection(section: PageSection, theme: ThemeConfig, isPreview?: boolean, pageId?: string) {
   if (section.isHidden) return null;
 
   switch (section.type) {
-    case 'hero': return <HeroSection key={section.id} section={section} theme={theme} />;
+    case 'hero': return <HeroSection key={section.id} section={section} theme={theme} isPreview={isPreview} />;
     case 'rich-text': return <RichTextSection key={section.id} section={section as any} theme={theme} />;
     case 'link-list': return <LinkListSection key={section.id} section={section as any} theme={theme} />;
     case 'faq': return <FaqSection key={section.id} section={section as any} theme={theme} />;
@@ -1393,10 +1496,10 @@ export function renderSection(section: PageSection, theme: ThemeConfig) {
     case 'products': return <ProductsSection key={section.id} section={section} theme={theme} />;
     case 'testimonials': return <TestimonialsSection key={section.id} section={section} theme={theme} />;
     case 'announcement': return <AnnouncementSection key={section.id} section={section} theme={theme} />;
-    case 'lead-form': return <LeadFormSection key={section.id} section={section} theme={theme} />;
-    case 'collect-emails': return <CollectEmailsSection key={section.id} section={section} theme={theme} />;
+    case 'lead-form': return <LeadFormSection key={section.id} section={section} theme={theme} pageId={pageId} />;
+    case 'collect-emails': return <CollectEmailsSection key={section.id} section={section} theme={theme} pageId={pageId} />;
     case 'booking': return <BookingSection key={section.id} section={section} theme={theme} />;
-    case 'contact': return <ContactSection key={section.id} section={section} theme={theme} />;
+    case 'contact': return <ContactSection key={section.id} section={section} theme={theme} pageId={pageId} />;
     case 'quote': return <QuoteSection key={section.id} section={section} theme={theme} />;
     case 'marquee': return <MarqueeSection key={section.id} section={section} theme={theme} />;
     case 'donate': return <DonateSection key={section.id} section={section} theme={theme} />;

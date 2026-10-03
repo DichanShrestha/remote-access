@@ -726,7 +726,6 @@ export const TEMPLATE_PRODUCT_BRAND: PageDocument = {
       id: 'testimonials-1',
       type: 'testimonials',
       variant: 'magic-card',
-      layout: 'masonry',
       isHidden: false,
       content: {
         title: 'What people are saying',

@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { z } from 'zod';
 import { HeroSectionSchema, ThemeConfig } from '@/lib/page-engine/schemas';
 import { cn } from '@/lib/utils';
 import { ArrowRight, MapPin, ExternalLink } from 'lucide-react';
 import { BlurFade } from '@/components/ui/blur-fade';
+import { motion, useScroll, useTransform } from 'motion/react';
 
 // ─── Types ─────────────────────────────────────────────────────
 type HeroContent = z.infer<typeof HeroSectionSchema>['content'];
@@ -312,13 +313,179 @@ function EditorialCenter({ content, theme, textContrast = 'auto' }: SubProps) {
 }
 
 // ─── Variant 2: Split ──────────────────────────────────────────
-function SplitHero({ content, theme, textContrast = 'auto' }: SubProps) {
-  const colors = useContrastColors(textContrast, 'split');
-  const hasImage = content.imageUrl || content.avatarUrl;
+// ---------------------------------------------------------------------------
+// ImmersiveHero
+// Fixes:
+//  - Height capped with svh so the next section peeks in on any screen
+//  - Scrim runs left-to-right (where the text is) plus a light bottom fade
+//  - Description/eyebrow forced to readable light colors over images
+//  - CTA gets a visible ring so a navy button doesn't vanish on a dark photo
+//  - Text column is narrower so the photo stays visible on the right
+// ---------------------------------------------------------------------------
+function ImmersiveHero({ content, theme, textContrast = 'auto' }: SubProps) {
+  const bgImage = content.imageUrl;
+  const colors = useContrastColors(textContrast, 'immersive');
+
+  // Only override colors when a photo is behind the text and the user
+  // hasn't explicitly chosen a contrast mode.
+  const overImage = Boolean(bgImage) && textContrast === 'auto';
 
   return (
-    <section className="relative w-full px-6 @md:px-12 py-20 @md:py-28 @lg:py-32">
-      <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 @lg:grid-cols-2 @lg:gap-16 @xl:gap-20">
+    <section
+      className={cn(
+        'relative w-full flex items-end overflow-hidden',
+        // svh = stable viewport height (no mobile URL-bar jump).
+        // The cap stops the hero from swallowing tall monitors, so the
+        // next section is always visible and the page clearly continues.
+        'min-h-[min(72svh,640px)] @md:min-h-[min(80svh,720px)]'
+      )}
+    >
+      {/* Background image */}
+      {bgImage && (
+        <div className="absolute inset-0">
+          <img
+            src={bgImage}
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+            className="h-full w-full object-cover object-center"
+          />
+          {/* Scrim 1: horizontal, dark where the text sits, clear on the right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/5" />
+          {/* Scrim 2: gentle bottom fade for the CTA row */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+        </div>
+      )}
+
+      {/* Fallback gradient when no image */}
+      {!bgImage && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(160deg, ${theme.primaryColor}15 0%, ${theme.primaryColor}05 40%, transparent 70%)`,
+          }}
+        />
+      )}
+
+      <div className="relative z-10 w-full px-6 @md:px-12 pb-14 @md:pb-20 pt-24 @md:pt-32">
+        <div className="mx-auto max-w-5xl">
+          <BlurFade delay={0.08} inView>
+            <div className="flex flex-wrap items-center gap-3 mb-5">
+              <HeroBadge text={content.badge} theme={theme} isLight={colors.isLight} />
+              <HeroEyebrow
+                text={content.eyebrow}
+                theme={theme}
+                className={cn(colors.eyebrow, overImage && 'text-white/80')}
+              />
+            </div>
+          </BlurFade>
+
+          <BlurFade delay={0.14} inView>
+            <HeroTitle
+              text={content.title}
+              className={cn('text-4xl @sm:text-5xl @md:text-6xl @lg:text-7xl', colors.title)}
+            />
+          </BlurFade>
+
+          {content.headline && (
+            <BlurFade delay={0.2} inView>
+              <HeroHeadline
+                text={content.headline}
+                className={cn(
+                  'mt-5 text-lg @md:text-xl max-w-2xl',
+                  colors.headline,
+                  overImage && 'text-white'
+                )}
+              />
+            </BlurFade>
+          )}
+
+          <BlurFade delay={0.24} inView>
+            <HeroDescription
+              text={content.subtitle}
+              className={cn(
+                'mt-4 text-base @md:text-lg max-w-xl',
+                colors.description,
+                // Was gray on a photo: the weakest element. Now near-white.
+                overImage && 'text-white/85'
+              )}
+            />
+          </BlurFade>
+
+          <BlurFade delay={0.3} inView>
+            <div className="mt-8 @md:mt-10 flex flex-wrap items-center gap-6">
+              {/*
+                The ring keeps both buttons visible on a dark photo.
+                Better long-term fix: give HeroCTA an "onImage" variant with
+                a white primary button and a white-outline secondary.
+              */}
+              <div
+                className={cn(
+                  'contents',
+                  overImage &&
+                  '[&_a]:ring-1 [&_a]:ring-white/40 [&_button]:ring-1 [&_button]:ring-white/40'
+                )}
+              >
+                <HeroCTA content={content} theme={theme} colors={colors} />
+              </div>
+
+              {(content.avatarUrl || content.location || content.metric) && (
+                <div className="flex items-center gap-4">
+                  {content.avatarUrl && <HeroAvatar src={content.avatarUrl} size="sm" />}
+                  <div className="flex items-center gap-4">
+                    <HeroLocation
+                      text={content.location}
+                      className={cn(colors.meta, overImage && 'text-white/75')}
+                    />
+                    <HeroMetric
+                      value={content.metric}
+                      label={content.metricLabel}
+                      theme={theme}
+                      className={cn(colors.meta, overImage && 'text-white/75')}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </BlurFade>
+
+          <BlurFade delay={0.34} inView>
+            <HeroSocialLinks
+              links={content.socialLinks}
+              className={cn('mt-6', colors.socialLink, overImage && 'text-white/75')}
+            />
+          </BlurFade>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// SplitHero
+// Fixes:
+//  - Image fills its column (no max-w-md cap) and the grid leans toward it
+//  - Wider crop (4/3 mobile, 5/4 desktop) so the photo keeps its context
+//  - No dead zone: column gap tightened, image no longer pushed to far edge
+//  - Decorative shape is an even, intentional offset that can't read as a glitch
+//  - Vertical padding reduced
+//  - Image is not wrapped in the animated element that shifts the shape
+// ---------------------------------------------------------------------------
+function SplitHero({ content, theme, textContrast = 'auto' }: SubProps) {
+  const colors = useContrastColors(textContrast, 'split');
+  const imageSrc = content.imageUrl || content.avatarUrl;
+  const hasImage = Boolean(imageSrc);
+
+  return (
+    <section className="relative w-full px-6 @md:px-12 py-14 @md:py-20 @lg:py-24">
+      <div
+        className={cn(
+          'relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-10',
+          hasImage
+            ? '@lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] @lg:gap-12 @xl:gap-16'
+            : 'max-w-3xl'
+        )}
+      >
         {/* Left: Text content */}
         <div className="flex flex-col items-start text-left order-1">
           <BlurFade delay={0} inView direction="right">
@@ -337,18 +504,30 @@ function SplitHero({ content, theme, textContrast = 'auto' }: SubProps) {
 
           {content.headline && (
             <BlurFade delay={0.14} inView direction="right">
-              <HeroHeadline text={content.headline} className={cn('mt-4 text-lg', colors.headline)} />
+              <HeroHeadline
+                text={content.headline}
+                // Slightly heavier than the description so the two levels read differently
+                className={cn('mt-4 text-lg @md:text-xl font-medium', colors.headline)}
+              />
             </BlurFade>
           )}
 
           <BlurFade delay={0.18} inView direction="right">
-            <HeroDescription text={content.subtitle} className={cn('mt-4 text-base max-w-md', colors.description)} />
+            <HeroDescription
+              text={content.subtitle}
+              className={cn('mt-3 text-base max-w-md opacity-80', colors.description)}
+            />
           </BlurFade>
 
           <BlurFade delay={0.24} inView direction="right">
             <div className="mt-5 flex flex-wrap items-center gap-4">
               <HeroLocation text={content.location} className={colors.meta} />
-              <HeroMetric value={content.metric} label={content.metricLabel} theme={theme} className={colors.meta} />
+              <HeroMetric
+                value={content.metric}
+                label={content.metricLabel}
+                theme={theme}
+                className={colors.meta}
+              />
             </div>
           </BlurFade>
 
@@ -363,114 +542,28 @@ function SplitHero({ content, theme, textContrast = 'auto' }: SubProps) {
 
         {/* Right: Image */}
         {hasImage && (
-          <BlurFade delay={0.12} inView direction="left" className="flex justify-center @lg:justify-end order-2">
-            <div className="relative w-full max-w-sm @lg:max-w-md">
-              {/* Soft decorative background shape */}
+          <BlurFade delay={0.12} inView direction="left" className="order-2 w-full">
+            {/*
+              Padding on the wrapper reserves room for the offset shape, so it
+              never gets clipped or pushes the layout sideways.
+            */}
+            <div className="relative w-full pr-3 pb-3 @lg:pr-4 @lg:pb-4">
+              {/* Decorative shape: same radius as the photo, offset evenly down-right */}
               <div
-                className="absolute -inset-4 rounded-[2rem] opacity-[0.06]"
+                aria-hidden
+                className="absolute inset-0 left-3 top-3 @lg:left-4 @lg:top-4 rounded-2xl opacity-[0.1]"
                 style={{ backgroundColor: theme.primaryColor }}
               />
               <img
-                src={content.imageUrl || content.avatarUrl}
+                src={imageSrc}
                 alt=""
-                className="relative w-full aspect-[4/5] object-cover rounded-2xl shadow-2xl ring-1 ring-slate-900/5"
+                fetchPriority="high"
+                decoding="async"
+                className="relative block w-full aspect-[4/3] @lg:aspect-[5/4] object-cover object-center rounded-2xl shadow-xl ring-1 ring-slate-900/5"
               />
             </div>
           </BlurFade>
         )}
-      </div>
-    </section>
-  );
-}
-
-// ─── Variant 3: Immersive ──────────────────────────────────────
-function ImmersiveHero({ content, theme, textContrast = 'auto' }: SubProps) {
-  const bgImage = content.imageUrl;
-  const colors = useContrastColors(textContrast, 'immersive');
-
-  return (
-    <section className="relative w-full min-h-[70vh] @md:min-h-[80vh] flex items-end overflow-hidden">
-      {/* Background image */}
-      {bgImage && (
-        <div className="absolute inset-0">
-          <img
-            src={bgImage}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-          {/* Gradient scrim — tuned for guaranteed readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
-        </div>
-      )}
-
-      {/* Fallback gradient when no image */}
-      {!bgImage && (
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(160deg, ${theme.primaryColor}15 0%, ${theme.primaryColor}05 40%, transparent 70%)`,
-          }}
-        />
-      )}
-
-      <div className="relative z-10 w-full px-6 @md:px-12 pb-16 @md:pb-24 pt-32">
-        <div className="mx-auto max-w-5xl">
-          <BlurFade delay={0.08} inView>
-            <div className="flex flex-wrap items-center gap-3 mb-5">
-              <HeroBadge text={content.badge} theme={theme} isLight={colors.isLight} />
-              <HeroEyebrow
-                text={content.eyebrow}
-                theme={theme}
-                className={colors.eyebrow}
-              />
-            </div>
-          </BlurFade>
-
-          <BlurFade delay={0.14} inView>
-            <HeroTitle
-              text={content.title}
-              className={cn('text-4xl @sm:text-5xl @md:text-6xl @lg:text-7xl', colors.title)}
-            />
-          </BlurFade>
-
-          {content.headline && (
-            <BlurFade delay={0.20} inView>
-              <HeroHeadline
-                text={content.headline}
-                className={cn('mt-5 text-lg @md:text-xl max-w-2xl', colors.headline)}
-              />
-            </BlurFade>
-          )}
-
-          <BlurFade delay={0.24} inView>
-            <HeroDescription
-              text={content.subtitle}
-              className={cn('mt-4 text-base @md:text-lg max-w-xl', colors.description)}
-            />
-          </BlurFade>
-
-          <BlurFade delay={0.30} inView>
-            <div className="mt-10 flex flex-wrap items-center gap-6">
-              <HeroCTA content={content} theme={theme} colors={colors} />
-              {(content.avatarUrl || content.location || content.metric) && (
-                <div className="flex items-center gap-4">
-                  {content.avatarUrl && <HeroAvatar src={content.avatarUrl} size="sm" />}
-                  <div className="flex items-center gap-4">
-                    <HeroLocation text={content.location} className={colors.meta} />
-                    <HeroMetric value={content.metric} label={content.metricLabel} theme={theme} className={colors.meta} />
-                  </div>
-                </div>
-              )}
-            </div>
-          </BlurFade>
-
-          <BlurFade delay={0.34} inView>
-            <HeroSocialLinks
-              links={content.socialLinks}
-              className={cn('mt-6', colors.socialLink)}
-            />
-          </BlurFade>
-        </div>
       </div>
     </section>
   );
@@ -622,6 +715,66 @@ function AsymmetricHero({ content, theme, textContrast = 'auto' }: SubProps) {
   );
 }
 
+
+function ZoomRevealPortal({ zoomWord, theme, isPreview }: {
+  zoomWord: string;
+  theme: ThemeConfig;
+  isPreview?: boolean;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start start', 'end end'],
+  });
+
+  const zoomScale = useTransform(
+    scrollYProgress,
+    [0, 0.3, 0.5, 0.7, 0.9, 1],
+    [1, 2, 5, 20, 80, 400]
+  );
+
+  // Fade out the text just before the camera passes completely through the hole
+  // to prevent jagged pixel edges from clipping the viewport.
+  const textOpacity = useTransform(scrollYProgress, [0.85, 0.95], [1, 0]);
+
+  return (
+    <div ref={containerRef} className="relative" style={{ height: '300vh' }}>
+      <div className="sticky top-0 h-[100dvh] w-full overflow-hidden flex items-center justify-center pointer-events-none">
+
+        {/* 
+          FIX 1: Matched Background
+          Changed from bg-black to bg-background/bg-white so it merges 
+          perfectly with "The collection" section.
+        */}
+        <motion.div
+          className="absolute inset-0 bg-white"
+        />
+
+        <motion.div
+          className="absolute inset-0 z-20 flex items-center justify-center"
+          style={{
+            scale: zoomScale,
+            opacity: textOpacity,
+            transformOrigin: '50% 50%',
+          }}
+        >
+          <span
+            className="font-serif font-black uppercase select-none text-black drop-shadow-sm"
+            style={{
+              fontSize: 'clamp(60px, 15vw, 200px)',
+              letterSpacing: '-0.05em',
+              lineHeight: 1,
+              WebkitFontSmoothing: 'antialiased',
+            }}
+          >
+            {zoomWord}
+          </span>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
 // ─── Main Hero Component ───────────────────────────────────────
 const VARIANT_MAP: Record<string, React.ComponentType<SubProps>> = {
   'default': EditorialCenter,
@@ -632,12 +785,22 @@ const VARIANT_MAP: Record<string, React.ComponentType<SubProps>> = {
   'asymmetric': AsymmetricHero,
 };
 
-export function HeroSection({ section, theme }: HeroProps) {
+export function HeroSection({ section, theme, isPreview }: HeroProps & { isPreview?: boolean }) {
   const { content, variant = 'default' } = section;
   const Layout = VARIANT_MAP[variant] || EditorialCenter;
-
-  // Read textContrast from section metadata (defaults to 'auto')
   const textContrast = (section as any).textContrast || 'auto';
 
-  return <Layout content={content} theme={theme} textContrast={textContrast} />;
+  const heroContent = <Layout content={content} theme={theme} textContrast={textContrast} />;
+  const zoomReveal = (section as any).zoomReveal;
+  const zoomWord = (section as any).zoomWord || content.title?.split(' ')[0] || 'Hello';
+
+  return (
+    <>
+      {heroContent}
+      {zoomReveal && (
+        <ZoomRevealPortal zoomWord={zoomWord} theme={theme} isPreview={isPreview} />
+      )}
+    </>
+  );
 }
+

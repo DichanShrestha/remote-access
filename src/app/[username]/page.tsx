@@ -76,5 +76,5 @@ export default async function PublicPage({ params }: PublicPageProps) {
     );
   }
 
-  return <PageRenderer document={parsed.data} />;
+  return <PageRenderer document={parsed.data} pageId={profile.page.id} />;
 }

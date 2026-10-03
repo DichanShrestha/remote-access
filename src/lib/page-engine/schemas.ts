@@ -19,6 +19,7 @@ export const PageSettingsSchema = z.object({
   seoDescription: z.string().optional(),
   ogImage: z.string().optional(),
   showFooterBranding: z.boolean().default(true),
+  enableSmoothScrolling: z.boolean().default(false),
 });
 
 // ─── Component Schemas ───────────────────────────────────────────
@@ -47,6 +48,9 @@ export const HeroSectionSchema = BaseSectionSchema.extend({
     })).optional(),
   }),
   layout: z.enum(['center', 'left', 'split']).default('center'),
+  zoomReveal: z.boolean().optional(),
+  zoomWord: z.string().optional(),
+  textContrast: z.enum(['auto', 'light', 'dark']).optional(),
 });
 
 export const RichTextSectionSchema = BaseSectionSchema.extend({
