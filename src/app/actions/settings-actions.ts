@@ -1,4 +1,5 @@
 "use server";
+import { authService } from "@/services/auth";
 
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
@@ -58,12 +59,10 @@ function decryptKey(encryptedData: string): string {
  * Save a user's OpenAI API key (encrypted).
  */
 export async function saveApiKey(apiKey: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     // Validate key format
     if (!apiKey.startsWith("sk-") || apiKey.length < 20) {
@@ -100,12 +99,10 @@ export async function saveApiKey(apiKey: string) {
  * Get the user's API key hint (not the actual key).
  */
 export async function getApiKeyHint() {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     const key = await prisma.userApiKey.findUnique({
         where: {
@@ -147,12 +144,10 @@ export async function getUserApiKey(userId: string): Promise<string | null> {
  * Delete the user's stored API key.
  */
 export async function deleteApiKey() {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     await prisma.userApiKey.deleteMany({
         where: { userId: user.id, provider: "openai" },
@@ -166,12 +161,10 @@ export async function deleteApiKey() {
  * Update user profile.
  */
 export async function updateProfile(data: { fullName?: string }) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     await prisma.profile.update({
         where: { id: user.id },

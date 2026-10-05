@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { getOrCreateBotForPage, updateBotSettings } from "@/app/actions/chatbot-settings-actions";
-import { Save, MessageSquare, Shield, Palette } from "lucide-react";
+import { Save, MessageSquare, Shield, Palette, Database } from "lucide-react";
+import { TrainingModal } from "../knowchat/TrainingModal";
 
 export function BotSettingsPanel({ pageId }: { pageId: string }) {
     const [bot, setBot] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [isTrainingOpen, setIsTrainingOpen] = useState(false);
 
     useEffect(() => {
         if (pageId === "demo-id") {
@@ -152,9 +154,27 @@ export function BotSettingsPanel({ pageId }: { pageId: string }) {
                 </div>
             </div>
 
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs">
-                <strong>Note:</strong> To train your bot with your data, visit the Data Sources tab in the main dashboard.
+            <div className="flex flex-col gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded-xl border border-blue-100 dark:border-blue-800/50">
+                <div className="flex items-center gap-2 mb-1">
+                    <Database className="w-4 h-4 text-blue-500" />
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Knowledge Base</h4>
+                </div>
+                <p className="text-xs text-blue-700/70 dark:text-blue-300/70">
+                    Upload documents, crawl URLs, add FAQs, and manage visual catalogs to train your AI Assistant.
+                </p>
+                <button
+                    onClick={() => setIsTrainingOpen(true)}
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm mt-1"
+                >
+                    Manage Training Data
+                </button>
             </div>
+
+            <TrainingModal 
+                botId={bot.id}
+                isOpen={isTrainingOpen}
+                onClose={() => setIsTrainingOpen(false)}
+            />
         </div>
     );
 }

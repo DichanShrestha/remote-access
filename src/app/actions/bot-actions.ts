@@ -1,3 +1,4 @@
+import { authService } from "@/services/auth";
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
@@ -11,12 +12,10 @@ import { enforceBotGuard, updateStorageUsage } from "@/lib/guards/resource-manag
  * Create a new bot during onboarding.
  */
 export async function createBot(data: BotFormData) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     // Enforce bot limit
     await enforceBotGuard(user.id);
@@ -53,12 +52,10 @@ export async function createBot(data: BotFormData) {
  * Update a bot's configuration.
  */
 export async function updateBot(botId: string, data: Partial<BotFormData>) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     // Verify ownership
     const existingBot = await prisma.bot.findFirst({
@@ -144,12 +141,10 @@ export async function updateBot(botId: string, data: Partial<BotFormData>) {
  * Delete a bot and all its related data.
  */
 export async function deleteBot(botId: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     // Verify ownership and get sources for cleanup
     const bot = await prisma.bot.findFirst({
@@ -195,12 +190,10 @@ export async function deleteBot(botId: string) {
  * Get all bots for the current user.
  */
 export async function getUserBots() {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     return prisma.bot.findMany({
         where: { userId: user.id },
@@ -219,12 +212,10 @@ export async function getUserBots() {
 export async function getBot(botId: string) {
     if (!botId || botId === "undefined") return null;
 
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     return prisma.bot.findFirst({
         where: { id: botId, userId: user.id },
@@ -246,12 +237,10 @@ export async function getBot(botId: string) {
  * Mark the current user's onboarding as complete.
  */
 export async function completeOnboarding() {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     await prisma.user.update({
         where: { id: user.id },
@@ -268,12 +257,10 @@ export async function completeOnboarding() {
  * Used from the Playground Instructions panel.
  */
 export async function updateBotSystemPrompt(botId: string, systemPrompt: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     const existingBot = await prisma.bot.findFirst({
         where: { id: botId, userId: user.id },
@@ -330,12 +317,10 @@ ${businessContext}
  * Get lead capture keyword mapping config
  */
 export async function getLeadCaptureConfig(botId: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     const bot = await prisma.bot.findFirst({
         where: { id: botId, userId: user.id },
@@ -351,12 +336,10 @@ export async function getLeadCaptureConfig(botId: string) {
  * Update lead capture keyword mapping config
  */
 export async function updateLeadCaptureConfig(botId: string, config: any) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     const existingBot = await prisma.bot.findFirst({
         where: { id: botId, userId: user.id },

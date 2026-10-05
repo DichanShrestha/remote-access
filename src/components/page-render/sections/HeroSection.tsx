@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { z } from 'zod';
 import { HeroSectionSchema, ThemeConfig } from '@/lib/page-engine/schemas';
 import { cn } from '@/lib/utils';

@@ -1,3 +1,4 @@
+import { authService } from "@/services/auth";
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
@@ -21,12 +22,10 @@ export type CrawlResult = {
  * Refactored to use Jina AI Reader API instead of Cheerio.
  */
 export async function crawlWebsite(url: string): Promise<CrawlResult> {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     try {
         // Add protocol if missing
@@ -85,12 +84,10 @@ export async function crawlWebsite(url: string): Promise<CrawlResult> {
  * Enhanced crawl action that extracts all valuable content, generates embeddings, and stores them.
  */
 export async function crawlAndStoreUrl(botId: string, url: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     // Basic URL validation
     let targetUrl = url.trim();

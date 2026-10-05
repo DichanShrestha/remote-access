@@ -1,4 +1,5 @@
 "use server";
+import { authService } from "@/services/auth";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -24,15 +25,15 @@ async function fetchImageAsBase64(url: string) {
 }
 
 async function processImageEmbeddings(
-    botId: string, 
-    itemId: string, 
-    title: string, 
-    description: string, 
-    triggerQueries: string[], 
+    botId: string,
+    itemId: string,
+    title: string,
+    description: string,
+    triggerQueries: string[],
     imageIds: string[]
 ) {
     if (imageIds.length === 0) return;
-    
+
     const imagesToProcess = await prisma.catalogImage.findMany({
         where: { id: { in: imageIds } }
     });
@@ -42,7 +43,7 @@ async function processImageEmbeddings(
         try {
             const textToEmbed = `Title: ${title}\nDescription: ${description || ''}\nTriggers: ${triggerQueries.join(', ')}\nCaption: ${img.caption || ''}`;
             let embeddingParams: any = { text: textToEmbed };
-            
+
             const imageData = await fetchImageAsBase64(img.publicUrl);
             if (imageData) {
                 embeddingParams.imageBase64 = imageData.imageBase64;
@@ -78,10 +79,10 @@ export async function createVisualSet(
     redirectUrl?: string | null
 ) {
     const normalizedTriggers = triggerQueries.map(q => q.toLowerCase().trim()).filter(Boolean);
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
     if (!title) throw new Error("Title is required");
     if (!images || images.length === 0) throw new Error("At least one image is required");
 
@@ -130,22 +131,22 @@ export async function updateVisualSet(
     redirectUrl?: string | null
 ) {
     const normalizedTriggers = triggerQueries.map(q => q.toLowerCase().trim()).filter(Boolean);
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
     if (!title) throw new Error("Title is required");
 
     let coreInfoChanged = false;
-    
+
     // Check if title, desc, or triggers changed to know if we need a new embedding for ALL images
     const oldSet = await prisma.catalogItem.findUnique({
         where: { id: itemId }
     });
-    
+
     if (oldSet) {
-        if (oldSet.title !== title || 
-            oldSet.description !== description || 
+        if (oldSet.title !== title ||
+            oldSet.description !== description ||
             oldSet.triggerQueries.join(',') !== normalizedTriggers.join(',')) {
             coreInfoChanged = true;
         }
@@ -175,15 +176,15 @@ export async function updateVisualSet(
         });
 
         const incomingImageIds = new Set(images.map(img => img.id).filter(Boolean));
-        
+
         // Find images to delete
         const imagesToDelete = existingImages.filter(img => !incomingImageIds.has(img.id));
-        
+
         if (imagesToDelete.length > 0) {
             await tx.catalogImage.deleteMany({
                 where: { id: { in: imagesToDelete.map(img => img.id) } }
             });
-            
+
             // Clean up deleted images from storage
             try {
                 const supabaseAdmin = createAdminClient();
@@ -209,7 +210,7 @@ export async function updateVisualSet(
             if (img.id) {
                 const existingImg = existingImages.find(e => e.id === img.id);
                 const captionChanged = existingImg && existingImg.caption !== img.caption;
-                
+
                 if (coreInfoChanged || captionChanged) {
                     imagesToProcess.push(img.id);
                     await tx.catalogImage.update({
@@ -246,10 +247,10 @@ export async function updateVisualSet(
 }
 
 export async function getVisualSets(botId: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     const items = await prisma.catalogItem.findMany({
         where: { botId, userId: user.id },
@@ -265,10 +266,10 @@ export async function getVisualSets(botId: string) {
 }
 
 export async function deleteVisualSet(itemId: string, botId: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     // Fetch images before deletion for storage cleanup
     const item = await prisma.catalogItem.findUnique({
@@ -322,13 +323,13 @@ export async function searchVisualSets(
     // 1 & 2. Trigger Matches & Keyword Matches
     for (const item of allItems) {
         const triggers = item.triggerQueries || [];
-        
+
         // Exact trigger match
         if (triggers.some(t => t.toLowerCase() === normalizedQuery)) {
             results.push({ ...item, similarity: 1.0 });
             continue;
         }
-        
+
         // Partial trigger match (e.g. "how to setup knowchat" contains "setup knowchat")
         // Only do partial match if the trigger is substantial (e.g. > 3 chars) to avoid false positives on tiny words
         if (triggers.some(t => t.length > 3 && (normalizedQuery.includes(t.toLowerCase()) || t.toLowerCase().includes(normalizedQuery)))) {
@@ -338,7 +339,7 @@ export async function searchVisualSets(
 
         // Title/Description keyword match
         if (
-            item.title.toLowerCase().includes(normalizedQuery) || 
+            item.title.toLowerCase().includes(normalizedQuery) ||
             (item.description && item.description.toLowerCase().includes(normalizedQuery))
         ) {
             results.push({ ...item, similarity: 0.8 });

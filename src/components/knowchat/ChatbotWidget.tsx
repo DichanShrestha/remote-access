@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, Send, User } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
+import { TextStreamChatTransport } from "ai";
 import { v4 as uuidv4 } from "uuid";
 
 export function ChatbotWidget({ botId }: { botId: string }) {
@@ -28,7 +28,7 @@ export function ChatbotWidget({ botId }: { botId: string }) {
     }, [botId]);
 
     const { messages, sendMessage, status } = useChat({
-        transport: new DefaultChatTransport({
+        transport: new TextStreamChatTransport({
             api: "/api/chat/public",
             body: {
                 botId,

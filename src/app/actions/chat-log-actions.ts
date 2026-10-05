@@ -1,3 +1,4 @@
+import { authService } from "@/services/auth";
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
@@ -24,12 +25,10 @@ export interface ConversationMessage {
  * Returns summary info for the sidebar list.
  */
 export async function getBotConversations(botId: string): Promise<ConversationSummary[]> {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     // Verify bot ownership
     const bot = await prisma.bot.findFirst({
@@ -94,12 +93,10 @@ export async function getConversationMessages(
     botId: string,
     sessionId: string
 ): Promise<ConversationMessage[]> {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     // Verify bot ownership
     const bot = await prisma.bot.findFirst({
@@ -130,12 +127,10 @@ export async function deleteConversation(
     botId: string,
     sessionId: string
 ): Promise<{ success: boolean }> {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     // Verify bot ownership
     const bot = await prisma.bot.findFirst({

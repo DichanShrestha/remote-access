@@ -29,7 +29,7 @@ export const OPENAI_FALLBACK_MODEL = "gpt-4o-mini";
  * Used by public chat, authenticated chat, and playground (unless overridden).
  */
 export function getDefaultChatModel(): LanguageModel {
-    return google(GEMINI_DEFAULT_MODEL);
+    return openai("gpt-4o-mini");
 }
 
 /**

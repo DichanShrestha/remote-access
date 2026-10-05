@@ -1,4 +1,5 @@
 "use server";
+import { authService } from "@/services/auth";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -16,12 +17,10 @@ import { enforceStorageGuard, updateStorageUsage } from "@/lib/guards/resource-m
  * Flow: Upload → Parse → Chunk → Embed → Store
  */
 export async function uploadAndTrainFiles(botId: string, formData: FormData) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     // Verify bot ownership
     const bot = await prisma.bot.findFirst({
@@ -154,12 +153,10 @@ export async function uploadAndTrainFiles(botId: string, formData: FormData) {
  * Flow: Crawl → Chunk → Embed → Store
  */
 export async function crawlAndTrain(botId: string, url: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     // Validate URL
     let parsedUrl: URL;
@@ -297,12 +294,10 @@ export async function crawlAndTrain(botId: string, url: string) {
  * Re-train an existing data source.
  */
 export async function reTrainSource(dataSourceId: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     const dataSource = await prisma.dataSource.findFirst({
         where: { id: dataSourceId, userId: user.id },
@@ -379,12 +374,10 @@ export async function reTrainSource(dataSourceId: string) {
  * Delete a data source and its chunks.
  */
 export async function deleteDataSource(dataSourceId: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     const dataSource = await prisma.dataSource.findFirst({
         where: { id: dataSourceId, userId: user.id },
@@ -415,12 +408,10 @@ export async function deleteDataSource(dataSourceId: string) {
  * Get the training status of all data sources for a bot.
  */
 export async function getTrainingStatus(botId: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     const sources = await prisma.dataSource.findMany({
         where: { botId, userId: user.id },

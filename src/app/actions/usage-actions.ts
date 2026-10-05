@@ -1,3 +1,4 @@
+import { authService } from "@/services/auth";
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
@@ -6,12 +7,10 @@ import { TIER_LIMITS, TierType, getEffectiveTier, getTrialInfo } from "@/lib/tie
 import { getStringSize } from "@/lib/utils";
 
 export async function getUserUsage() {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     const userProfile = await prisma.user.findUnique({
         where: { id: user.id },

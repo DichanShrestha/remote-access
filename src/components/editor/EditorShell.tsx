@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PageDocument, PageSection, SectionType } from '@/lib/page-engine/schemas';
 import { addSection, removeSection, updateSection, duplicateSection, toggleSectionVisibility } from '@/lib/page-engine/operations';
 import { ComponentRegistry } from '@/lib/page-engine/registry';
-import { PageRenderer } from '@/components/page-render/PageRenderer';
+
 import { saveDraftConfig, publishPage } from '@/app/editor/actions';
 import { composePage, editSection } from '@/app/editor/ai-actions';
 import { DraggableSectionList } from './DraggableSectionList';
@@ -32,6 +32,7 @@ export function EditorShell({
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [history, setHistory] = useState<PageDocument[]>([]);
   const [activeTab, setActiveTab] = useState<'design' | 'chatbot'>('design');
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Autosave
   const timeoutRef = useRef<NodeJS.Timeout>(null);
@@ -52,16 +53,41 @@ export function EditorShell({
     return () => clearTimeout(timeoutRef.current!);
   }, [doc, pageId]);
 
-  // Scroll to selected section
+  // Sync doc to iframe whenever it changes
   useEffect(() => {
-    if (selectedSectionId) {
-      const el = document.getElementById(`preview-section-${selectedSectionId}`);
-      if (el) {
-        // Add a slight delay to ensure rendering is complete (e.g. if switching tabs/modes)
-        setTimeout(() => {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 50);
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        { type: 'UPDATE_DOC', doc, pageId },
+        '*'
+      );
+    }
+  }, [doc, pageId]);
+
+  // Handle initialization message from iframe
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'PREVIEW_READY') {
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(
+            { type: 'UPDATE_DOC', doc, pageId },
+            '*'
+          );
+        }
       }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [doc, pageId]);
+
+  // Scroll to selected section via iframe
+  useEffect(() => {
+    if (selectedSectionId && iframeRef.current?.contentWindow) {
+      setTimeout(() => {
+        iframeRef.current?.contentWindow?.postMessage(
+          { type: 'SCROLL_TO', sectionId: selectedSectionId },
+          '*'
+        );
+      }, 50);
     }
   }, [selectedSectionId]);
 
@@ -213,9 +239,14 @@ export function EditorShell({
         </div>
 
         {/* Preview area */}
-        <div className="flex-1 overflow-y-auto bg-slate-200/50 dark:bg-slate-950 p-6 flex justify-center items-start">
-          <div className={`bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden min-h-[600px] border border-slate-200 dark:border-slate-800 ring-1 ring-slate-900/5 transition-all duration-300 ${previewMode === 'mobile' ? 'w-[390px]' : 'w-full max-w-5xl'}`}>
-            <PageRenderer document={doc} isPreview={true} pageId={pageId} />
+        <div className="flex-1 overflow-hidden bg-slate-200/50 dark:bg-slate-950 p-6 flex justify-center items-start">
+          <div className={`bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden h-full border border-slate-200 dark:border-slate-800 ring-1 ring-slate-900/5 transition-all duration-300 ${previewMode === 'mobile' ? 'w-[390px]' : 'w-full max-w-5xl'}`}>
+            <iframe
+              ref={iframeRef}
+              src="/editor-preview"
+              className="w-full h-full border-0"
+              title="Editor Preview"
+            />
           </div>
         </div>
       </div>

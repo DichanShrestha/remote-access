@@ -17,7 +17,7 @@ export async function generateEmbeddings(
 ): Promise<number[][]> {
     const model = apiKey
         ? createOpenAI({ apiKey }).embedding("text-embedding-3-small")
-        : google.textEmbeddingModel("gemini-embedding-2");
+        : openai.embedding("text-embedding-3-small");
 
     // Process in batches of 100 (Google limit for embedMany might also be 100)
     const batchSize = 100;
@@ -46,7 +46,7 @@ export async function generateQueryEmbedding(
 ): Promise<number[]> {
     const model = apiKey
         ? createOpenAI({ apiKey }).embedding("text-embedding-3-small")
-        : google.textEmbeddingModel("gemini-embedding-2");
+        : openai.embedding("text-embedding-3-small");
 
     const { embedding } = await embed({
         model,

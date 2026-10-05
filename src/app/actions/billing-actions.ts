@@ -1,3 +1,4 @@
+import { authService } from "@/services/auth";
 "use server";
 
 import { dodo } from "@/lib/dodopayments";
@@ -7,11 +8,9 @@ export async function createCheckoutSession(
     productId: string,
     type: "subscription" | "one_time"
 ) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
+    
+    const user = await authService.requireUser();
+    
 
     // We try to call real Dodo Payments if available, else we mock it
     try {

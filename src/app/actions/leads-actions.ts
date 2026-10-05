@@ -1,3 +1,4 @@
+import { authService } from "@/services/auth";
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
@@ -38,12 +39,10 @@ export async function createLead(data: {
  * Get all leads for a specific bot.
  */
 export async function getBotLeads(botId: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     // Verify ownership via bot
     const bot = await prisma.bot.findFirst({
@@ -62,12 +61,10 @@ export async function getBotLeads(botId: string) {
  * Delete a lead.
  */
 export async function deleteLead(leadId: string) {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     // Verify ownership (simplified: check if bot belongs to user)
     const lead = await prisma.botLead.findUnique({
@@ -92,12 +89,10 @@ export async function deleteLead(leadId: string) {
  * Returns a CSV string that the client can download.
  */
 export async function exportLeadsToCSV(botId: string): Promise<string> {
-    const supabase = await createClient();
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    
+    const user = await authService.requireUser();
 
-    if (!user) throw new Error("Unauthorized");
+    
 
     const bot = await prisma.bot.findFirst({
         where: { id: botId, userId: user.id },

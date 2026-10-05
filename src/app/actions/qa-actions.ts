@@ -1,4 +1,5 @@
 "use server";
+import { authService } from "@/services/auth";
 
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
@@ -113,10 +114,10 @@ async function removeQAEmbeddings(qaId: string, botId: string, userId: string) {
  * Fetch all Q&A pairs for a bot.
  */
 export async function getQAs(botId: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     return await prisma.qAPair.findMany({
         where: { botId, userId: user.id },
@@ -133,10 +134,10 @@ export async function saveQA(
     botId: string,
     data: { questions: string[]; answer: string; id?: string }
 ) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     // Verify bot ownership
     const bot = await prisma.bot.findFirst({
@@ -204,10 +205,10 @@ export async function saveQA(
  * Also removes the corresponding vector embedding from document_chunks.
  */
 export async function deleteQA(qaId: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) throw new Error("Unauthorized");
+    const user = await authService.requireUser();
+
+
 
     const qa = await prisma.qAPair.findUnique({
         where: { id: qaId, userId: user.id },
