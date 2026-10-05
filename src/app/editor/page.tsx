@@ -1,5 +1,5 @@
 import { authService } from '@/services/auth';
-import db from '@/db/prisma';
+import db from '@/lib/prisma';
 import { EditorShell } from '@/components/editor/EditorShell';
 import { PageDocumentSchema } from '@/lib/page-engine/schemas';
 import { TEMPLATE_CREATOR_PROFILE, TEMPLATES_MAP } from '@/lib/page-engine/templates';
@@ -21,11 +21,11 @@ export default async function EditorPage({ searchParams }: { searchParams: Promi
     return <EditorShell initialDocument={TEMPLATES_MAP[params.demo]} pageId="demo-id" />;
   }
 
-  const profile = await db.profile.findUnique({ 
-    where: { userId: user.id }, 
+  const profile = await db.profile.findUnique({
+    where: { userId: user.id },
     include: { page: true }
   });
-  
+
   if (!profile) {
     return <EditorShell initialDocument={DEFAULT_DEMO} pageId="demo-id" />;
   }
@@ -40,9 +40,9 @@ export default async function EditorPage({ searchParams }: { searchParams: Promi
   }
 
   return (
-    <EditorShell 
-      initialDocument={doc.success ? doc.data : DEFAULT_DEMO} 
-      pageId={profile.page.id} 
+    <EditorShell
+      initialDocument={doc.success ? doc.data : DEFAULT_DEMO}
+      pageId={profile.page.id}
     />
   );
 }

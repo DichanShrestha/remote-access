@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import db from '@/db/prisma';
+import db from '@/lib/prisma';
 import { PageRenderer } from '@/components/page-render/PageRenderer';
 import { PageDocumentSchema } from '@/lib/page-engine/schemas';
 import { TEMPLATE_CREATOR_PROFILE, TEMPLATE_LOCAL_SERVICE } from '@/lib/page-engine/templates';
@@ -25,14 +25,14 @@ export async function generateMetadata({ params }: PublicPageProps) {
   // Parse config safely
   const parsed = PageDocumentSchema.safeParse(profile.page.publishedConfig);
   if (!parsed.success) {
-    return { title: profile.displayName };
+    return { title: profile.displayName || profile.username };
   }
 
   const { settings } = parsed.data;
 
   return {
-    title: settings.seoTitle || `${profile.displayName} | Smart Pages`,
-    description: settings.seoDescription || profile.bio,
+    title: settings.seoTitle || `${profile.displayName || profile.username} | Smart Pages`,
+    description: settings.seoDescription || profile.bio || "",
     openGraph: {
       images: settings.ogImage ? [settings.ogImage] : [],
     }
@@ -41,12 +41,12 @@ export async function generateMetadata({ params }: PublicPageProps) {
 
 export default async function PublicPage({ params }: PublicPageProps) {
   const { username } = await params;
-  
+
   // Hardcoded preview for "demo" user using the creator template (useful for early testing before DB is seeded)
   if (username.toLowerCase() === 'demo') {
     return <PageRenderer document={TEMPLATE_CREATOR_PROFILE} />;
   }
-  
+
   if (username.toLowerCase() === 'acme') {
     return <PageRenderer document={TEMPLATE_LOCAL_SERVICE} />;
   }
@@ -61,7 +61,7 @@ export default async function PublicPage({ params }: PublicPageProps) {
   }
 
   const parsed = PageDocumentSchema.safeParse(profile.page.publishedConfig);
-  
+
   if (!parsed.success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
@@ -76,5 +76,5 @@ export default async function PublicPage({ params }: PublicPageProps) {
     );
   }
 
-  return <PageRenderer document={parsed.data} pageId={profile.page.id} />;
+  return <PageRenderer document={parsed.data} pageId={profile.page.id} botId={profile.page.botId || undefined} />;
 }

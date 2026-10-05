@@ -10,7 +10,7 @@ describe('Page Engine Operations', () => {
     doc = {
       version: 1,
       theme: { style: 'premium-minimal', primaryColor: '#000000', radius: 'medium', density: 'comfortable' },
-      settings: { showFooterBranding: true },
+      settings: { showFooterBranding: true, enableSmoothScrolling: false },
       sections: [
         { id: 'sec-1', type: 'hero', isHidden: false, content: { title: 'Hello' }, layout: 'center' }
       ]

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import prisma from '@/db/prisma'
+import prisma from '@/lib/prisma'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createClient()
     const { error, data } = await supabase.auth.exchangeCodeForSession(code)
-    
+
     if (!error && data.user) {
       // Sync user to Prisma
       let dbUser = await prisma.user.findUnique({
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
         const baseUsername = (data.user.email?.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9_-]/g, '')
         let username = baseUsername
         let counter = 1
-        
+
         while (true) {
           const existing = await prisma.profile.findUnique({ where: { username } })
           if (!existing) break
@@ -60,9 +60,9 @@ export async function GET(request: Request) {
         })
       }
 
-      const forwardedHost = request.headers.get('x-forwarded-host') 
+      const forwardedHost = request.headers.get('x-forwarded-host')
       const isLocalEnv = process.env.NODE_ENV === 'development'
-      
+
       if (isLocalEnv) {
         return NextResponse.redirect(`${origin}${next}`)
       } else if (forwardedHost) {

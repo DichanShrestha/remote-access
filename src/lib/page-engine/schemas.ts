@@ -400,7 +400,7 @@ export type SectionType = PageSection['type'];
 export const PageDocumentSchema = z.object({
   version: z.number().default(1),
   theme: ThemeConfigSchema.default({ style: 'premium-minimal', primaryColor: '#000000', radius: 'medium', density: 'comfortable' }),
-  settings: PageSettingsSchema.default({ showFooterBranding: true }),
+  settings: PageSettingsSchema.default({ showFooterBranding: true, enableSmoothScrolling: false }),
   sections: z.array(z.any())
     .transform(items => {
       return items

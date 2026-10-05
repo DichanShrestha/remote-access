@@ -1,6 +1,6 @@
 "use server";
 
-import db from '@/db/prisma';
+import db from '@/lib/prisma';
 import { z } from 'zod';
 
 const LeadSubmissionSchema = z.object({

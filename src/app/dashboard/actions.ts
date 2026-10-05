@@ -1,13 +1,13 @@
 "use server";
 
-import db from '@/db/prisma';
+import db from '@/lib/prisma';
 import { authService } from '@/services/auth';
 import { TEMPLATES_MAP } from '@/lib/page-engine/templates';
 import { redirect } from 'next/navigation';
 
 export async function useTemplate(templateId: string) {
   const user = await authService.requireUser();
-  
+
   if (!user.profile) {
     throw new Error('Please create a profile first.');
   }

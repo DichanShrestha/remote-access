@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { AuthButton } from '@/components/auth-button'
-import prisma from '@/db/prisma'
+import prisma from '@/lib/prisma'
 
 export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   let dbUser = null
   if (user) {
     dbUser = await prisma.user.findUnique({
@@ -40,15 +40,15 @@ export default async function Home() {
             <span className="flex h-2 w-2 rounded-full bg-indigo-600"></span>
             Introducing BuilderStory 2.0
           </div>
-          
+
           <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-8 leading-tight">
             The platform for <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">indie builders</span>
           </h1>
-          
+
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
             Create stunning profiles, list your startups, verify your revenue, and share your journey with the world. Built for the modern maker.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {user ? (
               <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center gap-3">
@@ -84,7 +84,7 @@ export default async function Home() {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Everything you need to showcase your work</h2>
             <p className="text-lg text-gray-600">Powerful tools designed specifically for the indie hacker community.</p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {

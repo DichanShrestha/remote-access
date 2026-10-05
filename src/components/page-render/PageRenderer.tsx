@@ -2,14 +2,16 @@
 import { PageDocument, PageSection } from '@/lib/page-engine/schemas';
 import { renderSection } from './sections/AllSections';
 import { ReactLenis } from 'lenis/react';
+import { ChatbotWidget } from '../knowchat/ChatbotWidget';
 
 type PageRendererProps = {
   document: PageDocument;
   isPreview?: boolean;
   pageId?: string;
+  botId?: string;
 };
 
-export function PageRenderer({ document, isPreview, pageId }: PageRendererProps) {
+export function PageRenderer({ document, isPreview, pageId, botId }: PageRendererProps) {
   const { sections, theme, settings } = document;
 
   const content = (
@@ -23,10 +25,12 @@ export function PageRenderer({ document, isPreview, pageId }: PageRendererProps)
       </main>
 
       {settings.showFooterBranding && (
-        <footer className="py-8 text-center text-slate-400 text-sm">
+        <footer className="py-8 text-center text-slate-400 text-sm relative z-10">
           Powered by <a href="#" className="font-semibold hover:text-slate-600 dark:hover:text-slate-200 transition-colors">Smart Pages</a>
         </footer>
       )}
+
+      {!isPreview && botId && <ChatbotWidget botId={botId} />}
     </div>
   );
 

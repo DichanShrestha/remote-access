@@ -1,6 +1,6 @@
 "use server";
 
-import { dodo } from "@/lib/dodo";
+import { dodo } from "@/lib/dodopayments";
 import { createClient } from "@/lib/supabase/server";
 
 export async function createCheckoutSession(

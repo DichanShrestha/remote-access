@@ -9,7 +9,8 @@ import { composePage, editSection } from '@/app/editor/ai-actions';
 import { DraggableSectionList } from './DraggableSectionList';
 import { ComponentPicker } from './ComponentPicker';
 import { SectionInspector } from './SectionInspector';
-import { Send, Plus, Sparkles, Smartphone, Monitor, Undo, Settings } from 'lucide-react';
+import { Send, Plus, Sparkles, Smartphone, Monitor, Undo, Settings, MessageSquare } from 'lucide-react';
+import { BotSettingsPanel } from './BotSettingsPanel';
 
 
 export function EditorShell({
@@ -30,6 +31,7 @@ export function EditorShell({
   const [showPicker, setShowPicker] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [history, setHistory] = useState<PageDocument[]>([]);
+  const [activeTab, setActiveTab] = useState<'design' | 'chatbot'>('design');
 
   // Autosave
   const timeoutRef = useRef<NodeJS.Timeout>(null);
@@ -221,15 +223,27 @@ export function EditorShell({
       {/* RIGHT COLUMN: Inspector / AI */}
       <div className="w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col z-20">
         <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <h2 className="font-bold text-base tracking-tight flex items-center gap-2">
+          <h2 className="font-bold text-base tracking-tight flex items-center gap-4">
             {selectedSection ? (
               <>
                 <span className="text-xs font-bold uppercase tracking-wider text-blue-500">{ComponentRegistry[selectedSection.type]?.label}</span>
               </>
             ) : (
               <>
-                <Settings className="w-4 h-4 text-slate-400" />
-                Page Settings
+                <button 
+                  onClick={() => setActiveTab('design')}
+                  className={`flex items-center gap-1.5 transition-colors ${activeTab === 'design' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                >
+                  <Settings className="w-4 h-4" />
+                  Design
+                </button>
+                <button 
+                  onClick={() => setActiveTab('chatbot')}
+                  className={`flex items-center gap-1.5 transition-colors ${activeTab === 'chatbot' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  AI Chatbot
+                </button>
               </>
             )}
           </h2>
@@ -242,6 +256,7 @@ export function EditorShell({
 
         <div className="flex-1 overflow-y-auto p-4">
           {!selectedSection ? (
+            activeTab === 'design' ? (
             <div className="flex flex-col gap-6">
               {/* AI Composer */}
               <div className="flex flex-col gap-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl relative overflow-hidden">
@@ -343,6 +358,9 @@ export function EditorShell({
                 Select a section to edit its content.
               </div>
             </div>
+            ) : (
+              <BotSettingsPanel pageId={pageId} />
+            )
           ) : (
             <div className="flex flex-col gap-5">
               {/* AI Section Editor */}

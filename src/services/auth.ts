@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import db from '@/db/prisma';
+import db from '@/lib/prisma';
 import { UnauthorizedError } from '@/lib/errors';
 import { z } from 'zod';
 
@@ -17,17 +17,17 @@ export const authService = {
   async requireUser() {
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
-    
+
     if (error || !user) {
       throw new UnauthorizedError('User not authenticated');
     }
-    
+
     // Ensure user exists in our DB
     const dbUser = await db.user.findUnique({
       where: { id: user.id },
       include: { profile: true },
     });
-    
+
     if (!dbUser) {
       // Create user if they just signed up via Supabase but aren't in Prisma yet
       return await db.user.create({
@@ -38,35 +38,35 @@ export const authService = {
         include: { profile: true },
       });
     }
-    
+
     return dbUser;
   },
 
   async isUsernameAvailable(username: string): Promise<boolean> {
     const lowerUsername = username.toLowerCase();
-    
+
     if (RESERVED_USERNAMES.has(lowerUsername)) {
       return false;
     }
-    
+
     const parsed = usernameSchema.safeParse(lowerUsername);
     if (!parsed.success) {
       return false;
     }
-    
+
     const existing = await db.profile.findUnique({
       where: { username: lowerUsername },
     });
-    
+
     return !existing;
   },
-  
+
   async createProfile(userId: string, data: { username: string; displayName: string; type: 'CREATOR' | 'BUSINESS' }) {
     const isAvailable = await this.isUsernameAvailable(data.username);
     if (!isAvailable) {
       throw new Error('Username is not available or invalid');
     }
-    
+
     return await db.$transaction(async (tx) => {
       const profile = await tx.profile.create({
         data: {
@@ -76,7 +76,7 @@ export const authService = {
           type: data.type,
         },
       });
-      
+
       // Auto-create their first page
       await tx.page.create({
         data: {
@@ -84,7 +84,7 @@ export const authService = {
           draftConfig: {},
         },
       });
-      
+
       return profile;
     });
   }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { dodo } from '@/lib/dodo';
+import { dodo } from '@/lib/dodopayments';
 
 type DodoEvent = {
   event_id?: string;

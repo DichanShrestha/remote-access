@@ -17,7 +17,7 @@ export const TEMPLATE_CREATOR_PROFILE: PageDocument = {
     radius: 'medium',
     density: 'comfortable',
   },
-  settings: { showFooterBranding: true },
+  settings: { showFooterBranding: true, enableSmoothScrolling: false },
   sections: [
     // 1. Hero — Minimal Profile
     {
@@ -160,7 +160,7 @@ export const TEMPLATE_CREATOR_PORTFOLIO: PageDocument = {
     radius: 'small',
     density: 'spacious',
   },
-  settings: { showFooterBranding: true },
+  settings: { showFooterBranding: true, enableSmoothScrolling: false },
   sections: [
     // 1. Hero — Split
     {
@@ -323,7 +323,7 @@ export const TEMPLATE_CREATOR_NEWSLETTER: PageDocument = {
     radius: 'none',
     density: 'spacious',
   },
-  settings: { showFooterBranding: true },
+  settings: { showFooterBranding: true, enableSmoothScrolling: false },
   sections: [
     // 1. Hero — Editorial Center
     {
@@ -477,7 +477,7 @@ export const TEMPLATE_LOCAL_SERVICE: PageDocument = {
     radius: 'medium',
     density: 'comfortable',
   },
-  settings: { showFooterBranding: true },
+  settings: { showFooterBranding: true, enableSmoothScrolling: false },
   sections: [
     // 1. Hero — Split
     {
@@ -649,7 +649,7 @@ export const TEMPLATE_PRODUCT_BRAND: PageDocument = {
     radius: 'small',
     density: 'spacious',
   },
-  settings: { showFooterBranding: true },
+  settings: { showFooterBranding: true, enableSmoothScrolling: false },
   sections: [
     // 1. Hero — Split
     {
@@ -797,7 +797,7 @@ export const TEMPLATE_PROFESSIONAL_SERVICE: PageDocument = {
     radius: 'small',
     density: 'spacious',
   },
-  settings: { showFooterBranding: true },
+  settings: { showFooterBranding: true, enableSmoothScrolling: false },
   sections: [
     // 1. Hero — Asymmetric
     {

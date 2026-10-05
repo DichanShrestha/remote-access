@@ -5,21 +5,21 @@ import { openai } from '@ai-sdk/openai';
 import { PageDocumentSchema, PageSectionSchema } from '@/lib/page-engine/schemas';
 import { ComponentRegistry } from '@/lib/page-engine/registry';
 import { authService } from '@/services/auth';
-import db from '@/db/prisma';
+import db from '@/lib/prisma';
 
 export async function composePage(prompt: string, pageId: string) {
   if (pageId !== 'demo-id') {
     const user = await authService.requireUser();
-    
+
     // Basic usage accounting: ensure profile exists
     const profile = await db.profile.findUnique({
       where: { userId: user.id }
     });
-    
+
     if (!profile) {
       throw new Error("Profile not found");
     }
-    
+
     // Track usage (Chunk 7/8 requirement)
     await db.usage.upsert({
       where: { userId: user.id },
@@ -55,7 +55,7 @@ export async function editSection(prompt: string, section: any, pageId: string) 
     const user = await authService.requireUser();
     const profile = await db.profile.findUnique({ where: { userId: user.id } });
     if (!profile) throw new Error("Profile not found");
-    
+
     await db.usage.upsert({
       where: { userId: user.id },
       create: { userId: user.id, aiEdits: 1 },

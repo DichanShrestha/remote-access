@@ -12,15 +12,23 @@ enum ProfileType {
 }
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid // Matches Supabase auth.users UUID
-  email     String?  @unique
+  id        String  @id @default(uuid()) @db.Uuid // Matches Supabase auth.users UUID
+  email     String? @unique
   name      String?
   avatarUrl String?
-  
-  profile   Profile?
+
+  profile       Profile?
   subscriptions Subscription[]
-  usage     Usage?
-  
+  usage         Usage?
+
+  // Knowchat relations
+  bots         Bot[]
+  dataSources  DataSource[]
+  chunks       DocumentChunk[]
+  qaPairs      QAPair[]
+  apiKeys      UserApiKey[]
+  catalogItems CatalogItem[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -34,51 +42,63 @@ model Profile {
   displayName String
   bio         String?
   avatarUrl   String?
-  
-  page        Page?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  page Page?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Page {
-  id        String   @id @default(cuid())
-  profileId String   @unique
-  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  draftConfig     Json     @default("{}")
+  id        String  @id @default(cuid())
+  profileId String  @unique
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  draftConfig     Json    @default("{}")
   publishedConfig Json?
-  isPublished     Boolean  @default(false)
-  
+  isPublished     Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  leads     Lead[]
+
+  leads Lead[]
+
+  botId String? @unique @db.Uuid
+  bot   Bot?    @relation(fields: [botId], references: [id])
 }
 
 model Subscription {
-  id          String   @id @default(cuid())
-  userId      String   @db.Uuid
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  planId      String
-  status      String
-  currentPeriodEnd DateTime?
-  dodoSubscriptionId String? @unique
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  userId             String    @db.Uuid
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId             String
+  status             String
+  currentPeriodEnd   DateTime?
+  dodoSubscriptionId String?   @unique
+
+  // Knowchat fields
+  tier             String   @default("free") // free, starter, pro, business
+  creditWallet     Int      @default(0) @map("credit_wallet")
+  monthlyResetDate DateTime @default(now()) @map("monthly_reset_date") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Usage {
-  id          String   @id @default(cuid())
-  userId      String   @unique @db.Uuid
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pageGenerations Int @default(0)
-  aiEdits       Int @default(0)
-  chatMessages  Int @default(0)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String @id @default(cuid())
+  userId          String @unique @db.Uuid
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageGenerations Int    @default(0)
+  aiEdits         Int    @default(0)
+  chatMessages    Int    @default(0)
+
+  // Knowchat fields
+  monthlyMessages  Int @default(0) @map("monthly_messages")
+  storageUsedBytes Int @default(0) @map("storage_used_bytes")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model WebhookEvent {
@@ -91,26 +111,228 @@ model WebhookEvent {
 }
 
 model Lead {
-  id            String   @id @default(cuid())
+  id            String @id @default(cuid())
   pageId        String
-  page          Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  page          Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
   componentId   String
   componentType String
-  
-  name          String?
-  email         String?
-  phone         String?
-  message       String?  @db.Text
-  customData    Json?
-  
-  source        String?
-  referrer      String?
-  utmSource     String?
-  utmMedium     String?
-  utmCampaign   String?
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  name       String?
+  email      String?
+  phone      String?
+  message    String? @db.Text
+  customData Json?
+
+  source      String?
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([pageId, createdAt])
+}
+
+model Bot {
+  id                String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId            String          @map("user_id") @db.Uuid
+  name              String
+  description       String?
+  systemPrompt      String          @default("") @map("system_prompt")
+  welcomeMessage    String          @default("Hi! How can I help you today?") @map("welcome_message")
+  welcomeMessages   String[]        @default([]) @map("welcome_messages")
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  avatarEmoji       String          @default("bot") @map("avatar_emoji")
+  collectLeads      Boolean         @default(false) @map("collect_leads")
+  colorTheme        String          @default("#6366f1") @map("color_theme")
+  purpose           String          @default("general")
+  removeWatermark   Boolean         @default(false) @map("remove_watermark")
+  status            String          @default("draft")
+  tone              String          @default("friendly")
+  avatarUrl         String?         @map("avatar_url")
+  bookingLink       String?         @map("booking_link")
+  leadGenConfig     Json?           @map("lead_gen_config")
+  leadCaptureConfig Json?           @map("lead_capture_config")
+  rateLimitMessage  String          @default("Too many messages in a row") @map("rate_limit_message")
+  rateLimitMessages Int             @default(20) @map("rate_limit_messages")
+  rateLimitWindow   Int             @default(240) @map("rate_limit_window")
+  temperature       Float           @default(0.7) @map("temperature")
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatMessages      ChatMessage[]
+  dataSources       DataSource[]
+  chunks            DocumentChunk[]
+  leads             BotLead[]
+  qaPairs           QAPair[]
+  catalogItems      CatalogItem[]
+  bookingEvents     BookingEvent[]
+
+  page Page?
+
+  @@index([userId, updatedAt])
+  @@index([status])
+  @@map("bots")
+}
+
+model DataSource {
+  id           String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId        String          @map("bot_id") @db.Uuid
+  userId       String          @map("user_id") @db.Uuid
+  type         String
+  source       String
+  status       String          @default("pending")
+  errorMessage String?         @map("error_message")
+  filePath     String?         @map("file_path")
+  metadata     Json?
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  bot          Bot             @relation(fields: [botId], references: [id], onDelete: Cascade)
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chunks       DocumentChunk[]
+
+  @@index([botId, userId])
+  @@index([status])
+  @@map("data_sources")
+}
+
+model DocumentChunk {
+  id           String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId        String                 @map("bot_id") @db.Uuid
+  content      String
+  embedding    Unsupported("vector")?
+  metadata     Json?
+  createdAt    DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  dataSourceId String                 @map("data_source_id") @db.Uuid
+  userId       String                 @map("user_id") @db.Uuid
+  bot          Bot                    @relation(fields: [botId], references: [id], onDelete: Cascade)
+  dataSource   DataSource             @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([botId])
+  @@index([dataSourceId])
+  @@index([userId])
+  @@map("document_chunks")
+}
+
+model UserApiKey {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  provider     String   @default("openai")
+  encryptedKey String   @map("encrypted_key")
+  keyHint      String   @default("") @map("key_hint")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([userId])
+  @@map("user_api_keys")
+}
+
+model ChatMessage {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId     String   @map("bot_id") @db.Uuid
+  sessionId String   @map("session_id")
+  visitorId String?  @map("visitor_id")
+  role      String
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  bot       Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@index([botId, sessionId, createdAt])
+  @@index([botId])
+  @@index([botId, visitorId])
+  @@map("chat_messages")
+}
+
+model BotLead {
+  id                  String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId               String   @map("bot_id") @db.Uuid
+  visitorId           String?  @map("visitor_id")
+  name                String?
+  email               String?
+  metadata            Json?
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  conversationSnippet String?  @map("conversation_snippet") @db.Text
+  phone               String?
+  bot                 Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@index([botId])
+  @@index([createdAt])
+  @@index([botId, visitorId])
+  @@map("bot_leads")
+}
+
+model QAPair {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId      String   @map("bot_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  questions  String[]
+  answer     String
+  usageCount Int      @default(0) @map("usage_count")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  bot        Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([botId, userId])
+  @@map("qa_pairs")
+}
+
+model CatalogItem {
+  id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId          String   @map("bot_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  title          String   @default("Untitled")
+  description    String?
+  triggerQueries String[] @default([]) @map("trigger_queries")
+  category       String?
+  status         String   @default("processing")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  price          Float?   @map("price")
+  currency       String?  @map("currency")
+
+  publicUrl   String? @map("public_url")
+  redirectUrl String? @map("redirect_url")
+
+  images CatalogImage[]
+  bot    Bot            @relation(fields: [botId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([botId])
+  @@index([userId])
+  @@map("catalog_items")
+}
+
+model CatalogImage {
+  id            String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  catalogItemId String                       @map("catalog_item_id") @db.Uuid
+  publicUrl     String                       @map("public_url")
+  caption       String?
+  order         Int                          @default(0)
+  status        String                       @default("processing")
+  embedding     Unsupported("vector(3072)")?
+  createdAt     DateTime                     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  catalogItem CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+
+  @@index([catalogItemId])
+  @@map("catalog_images")
+}
+
+model BookingEvent {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  botId     String   @map("bot_id") @db.Uuid
+  event     String // "booking_link_shown" | "booking_link_clicked"
+  sessionId String?  @map("session_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  bot Bot @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@index([botId, event])
+  @@index([botId, createdAt])
+  @@map("booking_events")
 }
