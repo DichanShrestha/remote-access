@@ -1,34 +1,19 @@
-import { authService } from "@/services/auth";
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { authService } from "@/services/auth";
 import { prisma } from "@/lib/prisma";
+import type { ConversationSummary, ConversationMessage } from "@/types/conversations";
 
-export interface ConversationSummary {
-    sessionId: string;
-    firstMessage: string;
-    lastMessage: string;
-    messageCount: number;
-    createdAt: Date;
-    updatedAt: Date;
-}
-
-export interface ConversationMessage {
-    id: string;
-    role: string;
-    content: string;
-    createdAt: Date;
-}
 
 /**
  * Get all conversations (grouped by sessionId) for a bot.
  * Returns summary info for the sidebar list.
  */
 export async function getBotConversations(botId: string): Promise<ConversationSummary[]> {
-    
+
     const user = await authService.requireUser();
 
-    
+
 
     // Verify bot ownership
     const bot = await prisma.bot.findFirst({
@@ -93,10 +78,10 @@ export async function getConversationMessages(
     botId: string,
     sessionId: string
 ): Promise<ConversationMessage[]> {
-    
+
     const user = await authService.requireUser();
 
-    
+
 
     // Verify bot ownership
     const bot = await prisma.bot.findFirst({
@@ -127,10 +112,10 @@ export async function deleteConversation(
     botId: string,
     sessionId: string
 ): Promise<{ success: boolean }> {
-    
+
     const user = await authService.requireUser();
 
-    
+
 
     // Verify bot ownership
     const bot = await prisma.bot.findFirst({

@@ -1,7 +1,6 @@
-import { authService } from "@/services/auth";
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { authService } from "@/services/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { format } from "date-fns";
