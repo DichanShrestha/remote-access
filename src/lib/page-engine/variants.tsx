@@ -21,6 +21,8 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'corporate', label: 'Corporate', previewNode: <PlaceholderSVG /> },
     { id: 'centered', label: 'Centered', previewNode: <PlaceholderSVG /> },
     { id: 'minimal', label: 'Minimal', previewNode: <PlaceholderSVG /> },
+    { id: 'pill', label: 'Pill Navigation', previewNode: <PlaceholderSVG /> },
+    { id: 'overlay', label: 'Overlay', previewNode: <PlaceholderSVG /> },
   ],
   'site-footer': [
     { id: 'columns', label: 'Link Columns', previewNode: <PlaceholderSVG /> },
@@ -46,6 +48,7 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
   'feature-split': [
     { id: 'default', label: 'Framed Image', previewNode: <PlaceholderSVG /> },
     { id: 'editorial', label: 'Editorial Split', previewNode: <PlaceholderSVG /> },
+    { id: 'portfolio-about', label: 'Portfolio About', previewNode: <PlaceholderSVG /> },
   ],
   carousel: [
     { 
@@ -71,6 +74,8 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'bounce', label: 'Bounce Cards', previewNode: <PlaceholderSVG /> },
   ],
   services: [
+    { id: 'portfolio-band', label: 'Portfolio Band', previewNode: <PlaceholderSVG /> },
+    { id: 'architecture-accordion', label: 'Architecture Accordion', previewNode: <PlaceholderSVG /> },
     { id: 'minimal-border', label: 'Minimal Border', previewNode: <PlaceholderSVG /> },
     { id: 'glass-dark', label: 'Glass Dark', previewNode: <PlaceholderSVG /> },
     { id: 'asymmetric-bento', label: 'Asymmetric Bento', previewNode: <PlaceholderSVG /> },
@@ -92,6 +97,12 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
   ],
   'case-studies': [
     { id: 'default', label: 'Case Study Cards', previewNode: <PlaceholderSVG /> },
+    { id: 'editorial-rows', label: 'Editorial Rows', previewNode: <PlaceholderSVG /> },
+    { id: 'architecture-feature', label: 'Architecture Feature', previewNode: <PlaceholderSVG /> },
+  ],
+  'blog-list': [
+    { id: 'default', label: 'Editorial List', previewNode: <PlaceholderSVG /> },
+    { id: 'image-cards', label: 'Image Cards', previewNode: <PlaceholderSVG /> },
   ],
   contact: [
     { id: 'card-centered', label: 'Card Centered', previewNode: <PlaceholderSVG /> },

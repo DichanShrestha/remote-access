@@ -150,7 +150,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }],
     arrayFields: [{
       key: 'content.items', label: 'Services',
-      itemFields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'price', label: 'Price', type: 'text' }],
+      itemFields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'price', label: 'Price', type: 'text' }, { key: 'imageUrl', label: 'Image URL', type: 'url' }],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), title: '', description: '', price: '' }),
     }],
   },
@@ -181,12 +181,32 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
       key: 'content.items', label: 'Case Studies',
       itemFields: [
         { key: 'title', label: 'Title', type: 'text' },
+        { key: 'category', label: 'Category', type: 'text' },
+        { key: 'date', label: 'Date', type: 'text' },
+        { key: 'client', label: 'Client', type: 'text' },
+        { key: 'location', label: 'Location', type: 'text' },
         { key: 'description', label: 'Description', type: 'textarea' },
         { key: 'imageUrl', label: 'Image URL', type: 'url' },
         { key: 'url', label: 'Link URL', type: 'url' },
         { key: 'buttonText', label: 'Link Label', type: 'text' },
       ],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), title: '', description: '', imageUrl: '', url: '', buttonText: 'Read more' }),
+    }],
+  },
+  'blog-list': {
+    fields: [
+      { key: 'content.title', label: 'Section Title', type: 'text' },
+      { key: 'content.actionText', label: 'Action Label', type: 'text' },
+      { key: 'content.actionUrl', label: 'Action URL', type: 'url' },
+    ],
+    arrayFields: [{
+      key: 'content.items', label: 'Blog Posts',
+      itemFields: [
+        { key: 'category', label: 'Category', type: 'text' }, { key: 'date', label: 'Date', type: 'text' }, { key: 'imageUrl', label: 'Image URL', type: 'url' },
+        { key: 'title', label: 'Title', type: 'text' }, { key: 'description', label: 'Excerpt', type: 'textarea' },
+        { key: 'url', label: 'Post URL', type: 'url' },
+      ],
+      newItem: () => ({ id: Math.random().toString(36).slice(2, 11), category: 'Design', date: '', title: '', description: '', url: '#' }),
     }],
   },
   faq: {
@@ -870,6 +890,9 @@ function HeroVariantPicker({ currentVariant, onChange }: { currentVariant: strin
     )},
     { id: 'split', label: 'Split', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="4" y="6" width="22" height="3" rx="1.5" fill="currentColor" opacity="0.6"/><rect x="4" y="12" width="18" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="4" y="17" width="14" height="2" rx="1" fill="currentColor" opacity="0.2"/><rect x="4" y="23" width="10" height="3" rx="1.5" fill="currentColor" opacity="0.4"/><rect x="34" y="4" width="22" height="24" rx="3" fill="currentColor" opacity="0.15"/></svg>
+    )},
+    { id: 'portfolio-editorial', label: 'Portfolio', icon: (
+      <svg className="h-full w-full" viewBox="0 0 60 32" fill="none"><rect x="5" y="5" width="10" height="2" rx="1" fill="currentColor"/><rect x="5" y="13" width="10" height="2" rx="1" fill="currentColor" opacity=".3"/><rect x="26" y="9" width="29" height="5" rx="1" fill="currentColor" opacity=".65"/><rect x="26" y="16" width="23" height="5" rx="1" fill="currentColor" opacity=".5"/><circle cx="50" cy="27" r="3" stroke="currentColor" opacity=".4"/></svg>
     )},
     { id: 'split-wide', label: 'Wide Split', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="0" y="0" width="29" height="32" fill="currentColor" opacity="0.12"/><rect x="4" y="10" width="18" height="3" rx="1" fill="currentColor" opacity="0.55"/><rect x="4" y="16" width="13" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="31" y="0" width="29" height="32" fill="currentColor" opacity="0.2"/></svg>

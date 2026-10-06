@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import db from '@/lib/prisma';
 import { PageRenderer } from '@/components/page-render/PageRenderer';
 import { PageDocumentSchema } from '@/lib/page-engine/schemas';
-import { TEMPLATE_CREATOR_PROFILE, TEMPLATE_LOCAL_SERVICE } from '@/lib/page-engine/templates';
+import { TEMPLATE_CREATOR_PROFILE } from '@/lib/page-engine/templates';
 
 interface PublicPageProps {
   params: Promise<{
@@ -47,9 +47,6 @@ export default async function PublicPage({ params }: PublicPageProps) {
     return <PageRenderer document={TEMPLATE_CREATOR_PROFILE} />;
   }
 
-  if (username.toLowerCase() === 'acme') {
-    return <PageRenderer document={TEMPLATE_LOCAL_SERVICE} />;
-  }
 
   const profile = await db.profile.findUnique({
     where: { username: username.toLowerCase() },

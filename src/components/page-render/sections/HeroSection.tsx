@@ -479,7 +479,7 @@ function SplitHero({ content, theme, textContrast = 'auto', wide = false }: SubP
   const hasImage = Boolean(imageSrc);
 
   return (
-    <section className={cn('relative w-full px-6 py-14 @md:px-12 @md:py-20 @lg:py-24', wide && 'px-0 py-0')}>
+    <section className={cn('relative w-full', wide ? 'px-0 py-0' : 'px-6 py-14 @md:px-12 @md:py-20 @lg:py-24')}>
       <div
         className={cn(
           'relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-10',
@@ -567,6 +567,26 @@ function SplitHero({ content, theme, textContrast = 'auto', wide = false }: SubP
             </div>
           </BlurFade>
         )}
+      </div>
+    </section>
+  );
+}
+
+function PortfolioEditorialHero({ content }: SubProps) {
+  return (
+    <section className="w-full bg-[#f4f4f6] px-6 pb-12 pt-16 text-[#171717] sm:px-10 md:min-h-[min(90svh,960px)] md:px-[10%] md:pb-16 md:pt-24">
+      <div className="mx-auto grid min-h-[390px] max-w-6xl grid-cols-1 items-end gap-10 md:min-h-[min(68svh,720px)] md:grid-cols-[0.8fr_1.6fr] md:gap-16">
+        <div className="flex h-full flex-col items-start justify-between gap-8 md:pb-2">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">{content.title}</p>
+            <p className="mt-12 max-w-[16rem] text-[11px] leading-relaxed text-neutral-500">{content.subtitle}</p>
+          </div>
+          {content.buttonText && <a href={content.buttonUrl || '#contact'} className="inline-flex min-h-11 items-center rounded-full bg-neutral-900 px-8 text-[11px] font-semibold uppercase tracking-wide text-white">{content.buttonText}</a>}
+        </div>
+        <div className="pb-1">
+          <h1 className="max-w-4xl text-5xl font-normal leading-[0.98] tracking-[-0.065em] sm:text-6xl md:text-[clamp(3.5rem,6.2vw,6rem)]">{content.headline}</h1>
+          <a href="#services" className="mt-10 inline-flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.16em]">Scroll down <span className="grid h-11 w-11 place-items-center rounded-full border border-neutral-400 text-lg font-normal">↓</span></a>
+        </div>
       </div>
     </section>
   );
@@ -783,6 +803,7 @@ const VARIANT_MAP: Record<string, React.ComponentType<SubProps>> = {
   'default': EditorialCenter,
   'editorial-center': EditorialCenter,
   'split': SplitHero,
+  'portfolio-editorial': PortfolioEditorialHero,
   'split-wide': (props) => <SplitHero {...props} wide />,
   'immersive': ImmersiveHero,
   'minimal': MinimalProfile,

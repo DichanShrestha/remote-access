@@ -315,106 +315,7 @@ export const TEMPLATE_CREATOR_NEWSLETTER: PageDocument = {
   ],
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// 4. LOCAL SERVICE
-// ═══════════════════════════════════════════════════════════════════
-export const TEMPLATE_LOCAL_SERVICE: PageDocument = {
-  version: 1,
-  theme: {
-    style: 'premium-minimal',
-    primaryColor: '#059669',
-    radius: 'medium',
-    density: 'compact',
-  },
-  settings: { showFooterBranding: true, enableSmoothScrolling: true },
-  sections: [
-    {
-      id: 'hero-1',
-      type: 'hero',
-      variant: 'asymmetric',
-      layout: 'left',
-      isHidden: false,
-      content: {
-        title: 'Acme Landscaping',
-        eyebrow: 'SERVICING AUSTIN, TX',
-        headline: 'Beautiful outdoor spaces, expertly maintained.',
-        subtitle: 'Professional lawn care, landscaping, and hardscaping services for residential and commercial properties.',
-        buttonText: 'Book a consultation',
-        buttonUrl: '#booking',
-        secondaryButtonText: 'Our Services',
-        secondaryButtonUrl: '#services',
-        imageUrl: 'https://images.unsplash.com/photo-1558904541-efa843a96f0f?w=1000&q=80',
-        badge: 'Top Rated 2024',
-      },
-    },
-    {
-      id: 'services-1',
-      type: 'services',
-      variant: 'glass-dark',
-      isHidden: false,
-      content: {
-        title: 'What we do',
-        items: [
-          { id: 's-1', title: 'Lawn Maintenance', description: 'Weekly mowing, edging, and trimming to keep your property pristine.' },
-          { id: 's-2', title: 'Landscape Design', description: 'Custom designs featuring native plants and sustainable materials.' },
-          { id: 's-3', title: 'Hardscaping', description: 'Patios, walkways, retaining walls, and outdoor living areas.' },
-        ],
-      },
-    },
-    {
-      id: 'timeline-1',
-      type: 'timeline',
-      variant: 'stepper',
-      isHidden: false,
-      content: {
-        title: 'Our Process',
-        items: [
-          { id: 't-1', label: 'Consultation', description: 'We visit your property to understand your vision.' },
-          { id: 't-2', label: 'Design & Quote', description: 'Detailed proposal with timeline and costs.' },
-          { id: 't-3', label: 'Installation', description: 'Expert execution by our certified team.' },
-        ],
-      },
-    },
-    {
-      id: 'testimonials-1',
-      type: 'testimonials',
-      variant: 'marquee',
-      isHidden: false,
-      content: {
-        title: 'Happy Neighbors',
-        items: [
-          { id: 't-1', quote: 'Transformed our backyard completely. Highly recommend!', author: 'John D.' },
-          { id: 't-2', quote: 'Reliable, professional, and affordable.', author: 'Sarah M.' },
-          { id: 't-3', quote: 'Best landscaping crew in Austin.', author: 'Mike T.' },
-        ],
-      },
-    },
-    {
-      id: 'booking-1',
-      type: 'booking',
-      variant: 'premium',
-      isHidden: false,
-      content: {
-        title: 'Book a free estimate',
-        description: 'Select a time that works for you, and we will come take a look.',
-        provider: 'calendly',
-        link: 'https://calendly.com',
-      },
-    },
-    {
-      id: 'contact-1',
-      type: 'contact',
-      variant: 'spacious',
-      isHidden: false,
-      content: {
-        title: 'Contact Information',
-        email: 'hello@acmelandscaping.com',
-        phone: '(555) 123-4567',
-        address: '123 Green St, Austin, TX',
-      },
-    },
-  ],
-};
+
 
 // ═══════════════════════════════════════════════════════════════════
 // 5. PRODUCT BRAND
@@ -498,98 +399,7 @@ export const TEMPLATE_PRODUCT_BRAND: PageDocument = {
   ],
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// 6. PROFESSIONAL SERVICE
-// ═══════════════════════════════════════════════════════════════════
-export const TEMPLATE_PROFESSIONAL_SERVICE: PageDocument = {
-  version: 1,
-  theme: {
-    style: 'premium-minimal',
-    primaryColor: '#0F172A',
-    radius: 'none',
-    density: 'spacious',
-  },
-  settings: { showFooterBranding: true, enableSmoothScrolling: true },
-  sections: [
-    {
-      id: 'hero-1',
-      type: 'hero',
-      variant: 'split',
-      layout: 'split',
-      isHidden: false,
-      content: {
-        title: 'North & Co.',
-        eyebrow: 'STRATEGIC ADVISORY',
-        headline: 'Clarity for complex business challenges.',
-        subtitle: 'We advise enterprise leadership teams on digital transformation, operational efficiency, and market expansion.',
-        buttonText: 'Schedule Consultation',
-        buttonUrl: '#contact',
-        imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80',
-      },
-    },
-    {
-      id: 'social-1',
-      type: 'social-links',
-      variant: 'depth',
-      layout: 'row',
-      isHidden: false,
-      content: {
-        links: [
-          { id: 'sl-1', platform: 'LinkedIn', url: 'https://linkedin.com' },
-          { id: 'sl-2', platform: 'Twitter', url: 'https://x.com' },
-        ],
-      },
-    },
-    {
-      id: 'richtext-1',
-      type: 'rich-text',
-      variant: 'typewriter',
-      isHidden: false,
-      content: {
-        text: '<h2>Our Philosophy</h2><p>In a world of constant disruption, clarity is your ultimate competitive advantage. We help organizations cut through the noise to identify what actually matters, and execute with precision.</p>',
-      },
-    },
-    {
-      id: 'services-1',
-      type: 'services',
-      variant: 'minimal-border',
-      isHidden: false,
-      content: {
-        title: 'Practice Areas',
-        items: [
-          { id: 's-1', title: 'Digital Strategy', description: 'Modernizing legacy systems and business models.' },
-          { id: 's-2', title: 'Operations', description: 'Streamlining processes for maximum efficiency.' },
-          { id: 's-3', title: 'M&A Advisory', description: 'Due diligence and post-merger integration.' },
-        ],
-      },
-    },
-    {
-      id: 'testimonials-1',
-      type: 'testimonials',
-      variant: 'glare',
-      isHidden: false,
-      content: {
-        title: 'Client Outcomes',
-        items: [
-          { id: 't-1', quote: 'North & Co helped us navigate our hardest transition year with exceptional clarity.', author: 'James Wilson', role: 'CEO, Global Logistics' },
-          { id: 't-2', quote: 'Their strategic framework completely reshaped how we evaluate new market opportunities.', author: 'Elena Rodriguez', role: 'VP Strategy, TechCorp' },
-        ],
-      },
-    },
-    {
-      id: 'form-1',
-      type: 'lead-form',
-      variant: 'card-centered',
-      isHidden: false,
-      content: {
-        title: 'Get in touch',
-        description: 'Request a confidential briefing on our capabilities.',
-        buttonText: 'Contact Us',
-        successMessage: 'A partner will be in touch shortly.',
-      },
-    },
-  ],
-};
+
 
 // ═══════════════════════════════════════════════════════════════════
 // 7. DEVELOPER PORTFOLIO
@@ -604,6 +414,7 @@ export const TEMPLATE_DEVELOPER_PORTFOLIO: PageDocument = {
   },
   settings: { showFooterBranding: true, enableSmoothScrolling: true },
   sections: [
+    { id: 'site-header', type: 'site-navbar', variant: 'minimal', isHidden: false, backgroundColor: '#171717', textColor: '#f4f4f5', content: { logoText: 'solo', links: [{ id: 'n1', label: 'About', url: '#about' }, { id: 'n2', label: 'Blog', url: '#blogs' }, { id: 'n3', label: 'Projects', url: '#gallery-1' }, { id: 'n4', label: 'Resume', url: '#resume-1' }] } },
     {
       id: 'hero-1',
       type: 'hero',
@@ -739,6 +550,7 @@ export const TEMPLATE_BEAUTY_BRAND: PageDocument = {
   },
   settings: { showFooterBranding: true, enableSmoothScrolling: true },
   sections: [
+    { id: 'site-header', type: 'site-navbar', variant: 'corporate', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { logoText: 'Glowdia', links: [{ id: 'n1', label: 'Home', url: '#top' }, { id: 'n2', label: 'Shop', url: '#products-1' }, { id: 'n3', label: 'Trending', url: '#products-1' }, { id: 'n4', label: 'About', url: '#richtext-1' }, { id: 'n5', label: 'Contact', url: '#email-1' }] } },
     {
       id: 'hero-1',
       type: 'hero',
@@ -844,130 +656,7 @@ export const TEMPLATE_BEAUTY_BRAND: PageDocument = {
   ],
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// 9. ARCHITECTURE STUDIO
-// ═══════════════════════════════════════════════════════════════════
-export const TEMPLATE_ARCHITECTURE_STUDIO: PageDocument = {
-  version: 1,
-  theme: {
-    style: 'premium-minimal',
-    primaryColor: '#1B4D4A',
-    radius: 'none',
-    density: 'spacious',
-  },
-  settings: { showFooterBranding: true, enableSmoothScrolling: true },
-  sections: [
-    {
-      id: 'hero-1',
-      type: 'hero',
-      variant: 'immersive',
-      layout: 'center',
-      textContrast: 'light',
-      zoomReveal: true,
-      zoomWord: 'spaces',
-      isHidden: false,
-      content: {
-        title: 'Point Architecture',
-        headline: 'Spaces for a better life.',
-        subtitle: 'Award-winning architecture studio specializing in residential, commercial, and urban design. We create environments that inspire.',
-        buttonText: 'View Projects',
-        buttonUrl: '#gallery',
-        imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1600&q=80',
-      },
-    },
-    {
-      id: 'richtext-1',
-      type: 'rich-text',
-      variant: 'split',
-      isHidden: false,
-      content: {
-        text: '<h2>About Us</h2><p>We are a design-led architecture practice specializing in innovative and sustainable design. With over two decades of experience, our team brings a multidisciplinary approach to every project — balancing aesthetics, function, and environmental responsibility.</p>',
-      },
-    },
-    {
-      id: 'stats-1',
-      type: 'stats',
-      variant: 'count-up',
-      isHidden: false,
-      content: {
-        items: [
-          { id: 'st-1', value: '180', label: 'Projects Completed', suffix: '+' },
-          { id: 'st-2', value: '10', label: 'Design Awards', suffix: '+' },
-          { id: 'st-3', value: '25', label: 'Years Experience', suffix: '+' },
-          { id: 'st-4', value: '11', label: 'Team Members' },
-        ],
-      },
-    },
-    {
-      id: 'services-1',
-      type: 'services',
-      variant: 'minimal-border',
-      isHidden: false,
-      content: {
-        title: 'Our Services',
-        items: [
-          { id: 's-1', title: 'Residential Design', description: 'Bespoke homes that reflect how you live. From concept to completion, we design spaces that are uniquely yours.' },
-          { id: 's-2', title: 'Commercial Architecture', description: 'Office, retail, and hospitality spaces that elevate brand identity and optimize workflow.' },
-          { id: 's-3', title: 'Urban Planning', description: 'Master planning and urban design that builds thriving, sustainable communities.' },
-          { id: 's-4', title: 'Interior Design', description: 'Curated interiors that complement the architecture — materials, lighting, and furnishings.' },
-        ],
-      },
-    },
-    {
-      id: 'gallery-1',
-      type: 'gallery',
-      variant: 'masonry',
-      layout: 'masonry',
-      isHidden: false,
-      content: {
-        images: [
-          { id: 'g-1', url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80', caption: 'Sierra Plaza Tower' },
-          { id: 'g-2', url: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=800&q=80', caption: 'Harbor View Residence' },
-          { id: 'g-3', url: 'https://images.unsplash.com/photo-1431576901776-e539bd916ba2?w=800&q=80', caption: 'Meridian Arts Center' },
-          { id: 'g-4', url: 'https://images.unsplash.com/photo-1545558014-8692077e9b5c?w=800&q=80', caption: 'Greenview Campus' },
-        ],
-      },
-    },
-    {
-      id: 'testimonials-1',
-      type: 'testimonials',
-      variant: 'grid',
-      isHidden: false,
-      content: {
-        title: 'Words from clients',
-        items: [
-          { id: 't-1', quote: 'Point Architecture transformed our vision into a building that exceeded every expectation. Their attention to detail is extraordinary.', author: 'David Clarke', role: 'CEO, Meridian Group' },
-          { id: 't-2', quote: 'Collaborative, responsive, and genuinely brilliant. They designed our dream home and made the process enjoyable.', author: 'Naomi White', role: 'Homeowner' },
-          { id: 't-3', quote: 'Our new headquarters has become a recruitment tool — every candidate who visits wants to work here.', author: 'Hiroshi Yamamoto', role: 'Director, TechVentures' },
-        ],
-      },
-    },
-    {
-      id: 'form-1',
-      type: 'lead-form',
-      variant: 'card-centered',
-      isHidden: false,
-      content: {
-        title: 'Get in touch',
-        description: 'Have a project in mind? Tell us about your vision and we will schedule a consultation.',
-        buttonText: 'Send Inquiry',
-        successMessage: 'Thank you. Our team will be in touch within 48 hours.',
-      },
-    },
-    {
-      id: 'contact-1',
-      type: 'contact',
-      variant: 'minimal-footer',
-      isHidden: false,
-      content: {
-        title: 'Contact',
-        email: 'studio@pointarchitecture.com',
-        phone: '+1 (415) 555-0192',
-        address: '42 Design District, San Francisco, CA',
-      },
-    },
-  ],
-};
+
 
 // ═══════════════════════════════════════════════════════════════════
 // 10. RESTAURANT
@@ -982,6 +671,7 @@ export const TEMPLATE_RESTAURANT: PageDocument = {
   },
   settings: { showFooterBranding: true, enableSmoothScrolling: true },
   sections: [
+    { id: 'site-header', type: 'site-navbar', variant: 'minimal', isHidden: false, backgroundColor: '#171411', textColor: '#ffffff', content: { logoText: 'Osteria San Rocco', links: [{ id: 'n1', label: 'Menu', url: '#products-1' }, { id: 'n2', label: 'Our Story', url: '#timeline-1' }, { id: 'n3', label: 'Reservations', url: '#booking-1' }] } },
     {
       id: 'hero-1',
       type: 'hero',
@@ -1094,134 +784,7 @@ export const TEMPLATE_RESTAURANT: PageDocument = {
   ],
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// 11. CORPORATE ADVISORY
-// ═══════════════════════════════════════════════════════════════════
-export const TEMPLATE_CORPORATE_ADVISORY: PageDocument = {
-  version: 1,
-  theme: {
-    style: 'premium-minimal',
-    primaryColor: '#1A3D34',
-    radius: 'small',
-    density: 'spacious',
-  },
-  settings: { showFooterBranding: true, enableSmoothScrolling: true },
-  sections: [
-    {
-      id: 'hero-1',
-      type: 'hero',
-      variant: 'split',
-      layout: 'split',
-      zoomReveal: true,
-      zoomWord: 'future',
-      isHidden: false,
-      content: {
-        title: 'Evergreen Capital',
-        eyebrow: 'STRATEGIC ADVISORY',
-        headline: 'Build a sustainable future for your company.',
-        subtitle: 'We partner with leadership teams to drive growth, optimize operations, and navigate complex transitions with clarity and confidence.',
-        buttonText: 'Schedule Consultation',
-        buttonUrl: '#contact',
-        secondaryButtonText: 'Our Approach',
-        secondaryButtonUrl: '#services',
-        imageUrl: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=1200&q=80',
-      },
-    },
-    {
-      id: 'stats-1',
-      type: 'stats',
-      variant: 'count-up',
-      isHidden: false,
-      content: {
-        title: 'Your business goals are our top priority',
-        items: [
-          { id: 'st-1', value: '264', label: 'Companies Advised' },
-          { id: 'st-2', value: '255', label: 'Strategies Deployed' },
-          { id: 'st-3', value: '440', label: 'Million in Value Created', prefix: '$', suffix: 'M' },
-        ],
-      },
-    },
-    {
-      id: 'services-1',
-      type: 'services',
-      variant: 'glass-dark',
-      isHidden: false,
-      content: {
-        title: 'What We Offer',
-        items: [
-          { id: 's-1', title: 'Strategic Planning', description: 'Long-term growth roadmaps grounded in market analysis and competitive intelligence.' },
-          { id: 's-2', title: 'Financial Advisory', description: 'In-depth performance analysis, capital allocation strategy, and financial restructuring.' },
-          { id: 's-3', title: 'M&A Advisory', description: 'Expert guidance through mergers, acquisitions, and post-deal integration.' },
-          { id: 's-4', title: 'Operational Excellence', description: 'Streamlining processes and technology to maximize efficiency and reduce waste.' },
-        ],
-      },
-    },
-    {
-      id: 'image-1',
-      type: 'image',
-      variant: 'scroll-reveal',
-      layout: 'full',
-      isHidden: false,
-      content: {
-        url: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&q=80',
-        alt: 'Team collaboration',
-      },
-    },
-    {
-      id: 'testimonials-1',
-      type: 'testimonials',
-      variant: 'grid',
-      isHidden: false,
-      content: {
-        title: 'Client Success Stories',
-        items: [
-          { id: 't-1', quote: 'Evergreen helped us navigate a $200M acquisition with extraordinary precision and care.', author: 'Catherine Hayes', role: 'CEO, Meridian Industries' },
-          { id: 't-2', quote: 'Their strategic framework completely reshaped how we evaluate market opportunities.', author: 'Michael Torres', role: 'VP Strategy, NovaTech' },
-          { id: 't-3', quote: 'The ROI on their engagement was clear within the first quarter. Exceptional advisory team.', author: 'Robert Kim', role: 'CFO, Atlas Group' },
-        ],
-      },
-    },
-    {
-      id: 'faq-1',
-      type: 'faq',
-      isHidden: false,
-      content: {
-        title: 'Got a question? Get your answer.',
-        items: [
-          { id: 'f-1', question: 'What size companies do you work with?', answer: 'We primarily work with mid-market and enterprise companies with annual revenue between $10M and $500M.' },
-          { id: 'f-2', question: 'How long is a typical engagement?', answer: 'Most strategic engagements run 3–6 months, though we offer ongoing advisory retainers for long-term partnerships.' },
-          { id: 'f-3', question: 'Do you work across industries?', answer: 'Yes. Our team has deep expertise in technology, healthcare, financial services, manufacturing, and consumer goods.' },
-          { id: 'f-4', question: 'What does the initial consultation include?', answer: 'A complimentary 60-minute session where we assess your challenges, identify quick wins, and outline a potential engagement scope.' },
-        ],
-      },
-    },
-    {
-      id: 'form-1',
-      type: 'lead-form',
-      variant: 'split-layout',
-      isHidden: false,
-      content: {
-        title: 'We\'re here to help',
-        description: 'Ready to accelerate your business? Tell us about your challenges and we will schedule a confidential briefing.',
-        buttonText: 'Get Started',
-        successMessage: 'A senior advisor will contact you within 24 hours.',
-      },
-    },
-    {
-      id: 'social-1',
-      type: 'social-links',
-      variant: 'dock',
-      layout: 'row',
-      isHidden: false,
-      content: {
-        links: [
-          { id: 'sl-1', platform: 'LinkedIn', url: 'https://linkedin.com' },
-          { id: 'sl-2', platform: 'Twitter', url: 'https://x.com' },
-        ],
-      },
-    },
-  ],
-};
+
 
 // ═══════════════════════════════════════════════════════════════════
 // 12. CORPORATE CONSULTING
@@ -1265,11 +828,15 @@ export const TEMPLATE_CORPORATE_CONSULTING: PageDocument = {
         ],
       },
     },
-    { id: 'service-tabs', type: 'link-list', variant: 'tabs', isHidden: false, content: { links: [
-      { id: 'tab-planning', label: 'Financial planning', badge: 'New', isActive: false, url: '#financial-planning' },
-      { id: 'tab-analysis', label: 'Performance analysis', badge: 'New', isActive: false, url: '#performance-analysis' },
-      { id: 'tab-advisory', label: 'Investment advisory', badge: 'New', isActive: true, url: '#investment-advisory' },
-    ] } },
+    {
+      id: 'service-tabs', type: 'link-list', variant: 'tabs', isHidden: false, content: {
+        links: [
+          { id: 'tab-planning', label: 'Financial planning', badge: 'New', isActive: false, url: '#financial-planning' },
+          { id: 'tab-analysis', label: 'Performance analysis', badge: 'New', isActive: false, url: '#performance-analysis' },
+          { id: 'tab-advisory', label: 'Investment advisory', badge: 'New', isActive: true, url: '#investment-advisory' },
+        ]
+      }
+    },
     {
       id: 'financial-planning', isHidden: false, type: 'feature-split', variant: 'editorial', layout: 'image-right',
       content: {
@@ -1326,12 +893,14 @@ export const TEMPLATE_CORPORATE_CONSULTING: PageDocument = {
     },
     {
       id: 'faq', isHidden: false, type: 'faq', variant: 'default',
-      content: { title: 'Got a question? Get your answer', items: [
-        { id: '1', question: 'How can financial consulting benefit my business?', answer: 'Our consulting optimizes strategies for sustainable growth and improved financial performance.' },
-        { id: '2', question: 'What distinguishes your firm from others in the industry?', answer: 'We pair deep industry experience with tailored, practical financial guidance.' },
-        { id: '3', question: 'Do you offer services tailored to specific industries?', answer: 'Yes. Our team adapts each engagement to your industry, goals, and operating context.' },
-        { id: '4', question: 'How do you ensure confidentiality with client data?', answer: 'We use secure processes and clear governance to protect all client information.' },
-      ] },
+      content: {
+        title: 'Got a question? Get your answer', items: [
+          { id: '1', question: 'How can financial consulting benefit my business?', answer: 'Our consulting optimizes strategies for sustainable growth and improved financial performance.' },
+          { id: '2', question: 'What distinguishes your firm from others in the industry?', answer: 'We pair deep industry experience with tailored, practical financial guidance.' },
+          { id: '3', question: 'Do you offer services tailored to specific industries?', answer: 'Yes. Our team adapts each engagement to your industry, goals, and operating context.' },
+          { id: '4', question: 'How do you ensure confidentiality with client data?', answer: 'We use secure processes and clear governance to protect all client information.' },
+        ]
+      },
     },
     consultingGroup('contact', 'Contact and image', 'row', [
       consultingGroup('contact-card', 'Contact form', 'column', [{
@@ -1372,19 +941,80 @@ export const TEMPLATE_CORPORATE_CONSULTING: PageDocument = {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// 13. EDITORIAL DESIGNER PORTFOLIO (reference: Nandini Jaryal)
+// ═══════════════════════════════════════════════════════════════════
+export const TEMPLATE_EDITORIAL_PORTFOLIO: PageDocument = {
+  version: 1,
+  theme: { style: 'premium-minimal', primaryColor: '#171717', radius: 'small', density: 'spacious' },
+  settings: { showFooterBranding: false, enableSmoothScrolling: true },
+  sections: [
+    { id: 'site-header', type: 'site-navbar', variant: 'pill', isHidden: false, backgroundColor: '#f4f4f6', textColor: '#171717', content: { logoText: '', links: [{ id: 'nav-projects', label: 'Projects', url: '#projects' }, { id: 'nav-about', label: 'About', url: '#about' }, { id: 'nav-blogs', label: 'Blogs', url: '#blogs' }, { id: 'nav-contact', label: 'Contact', url: '#contact' }] } },
+    { id: 'hero', type: 'hero', variant: 'portfolio-editorial', layout: 'split', isHidden: false, backgroundColor: '#f4f4f6', textColor: '#171717', content: { title: 'Nandini Jaryal', eyebrow: 'INDEPENDENT DESIGNER', headline: 'Web Developer and Digital Designer', subtitle: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Est aerat aperiam quibusdam.', buttonText: 'Contact me', buttonUrl: '#contact' } },
+    { id: 'services', type: 'services', variant: 'portfolio-band', isHidden: false, backgroundColor: '#171717', textColor: '#ffffff', content: { title: 'Services', items: [{ id: 's1', title: 'Web Design', description: '' }, { id: 's2', title: 'Product Design', description: '' }, { id: 's3', title: 'UI/UX Design', description: '' }, { id: 's4', title: 'Graphic Design', description: '' }, { id: 's5', title: 'Art Direction', description: '' }, { id: 's6', title: 'Brand Design', description: '' }], socialLinks: [{ id: 'so1', title: 'Facebook', url: '#' }, { id: 'so2', title: 'Twitter', url: '#' }, { id: 'so3', title: 'Instagram', url: '#' }] } },
+    { id: 'projects', type: 'case-studies', variant: 'editorial-rows', isHidden: false, backgroundColor: '#f4f4f6', textColor: '#171717', content: { title: 'Projects', items: [{ id: 'p1', title: 'Project 1 Web App', category: 'Selected work', date: 'MAR 2025', description: 'A considered product experience for a growing digital service.', imageUrl: 'https://images.unsplash.com/photo-1559028012-481c04fa702d?auto=format&fit=crop&w=1200&q=85', url: '#', buttonText: 'View live' }, { id: 'p2', title: 'Project 2 Mobile App', category: 'Selected work', date: 'DEC 2025', description: 'A mobile-first experience with a bold, confident visual identity.', imageUrl: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=1200&q=85', url: '#', buttonText: 'View live' }, { id: 'p3', title: 'Project 3 Mobile App', category: 'Selected work', date: 'AUG 2025', description: 'A campaign designed to make everyday actions feel simple.', imageUrl: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?auto=format&fit=crop&w=1200&q=85', url: '#', buttonText: 'View live' }], actionText: 'Browse all projects', actionUrl: '#projects' } },
+    { id: 'about', type: 'feature-split', variant: 'portfolio-about', layout: 'image-left', isHidden: false, backgroundColor: '#f4f4f6', textColor: '#171717', content: { eyebrow: 'ABOUT ME', title: 'About me', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Elit purus nisl turpis mi pharetra eros curabitur pellentesque. Pulvinar sed vulputate eget non, convallis elit leo fringilla pharetra. Mollis quis nibh cursus pellentesque quam facilisis nisi.', imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=85', imageAlt: 'Portrait of the designer', checkpoints: [], buttonText: 'More about me', buttonUrl: '#contact' } },
+    { id: 'blogs', type: 'blog-list', isHidden: false, backgroundColor: '#f4f4f6', textColor: '#171717', content: { title: 'Blogs', actionText: 'Browse blogs', actionUrl: '#blogs', items: [{ id: 'b1', category: 'Web Design', date: 'November 19, 2025', title: 'Click here to — Read Blog number one', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sit lacus nisi, erat sed porta. Sem bibendum eu dui convallis. Et id.' }, { id: 'b2', category: 'Web Design', date: 'November 18, 2025', title: 'Blogs vs Articles — What is the difference? How to write both?', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sit lacus nisi, erat sed porta. Sem bibendum eu dui convallis. Et id.' }, { id: 'b3', category: 'Web Design', date: 'November 19, 2025', title: 'This is the third and last example of blogs section', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sit lacus nisi, erat sed porta. Sem bibendum eu dui convallis. Et id.' }] } },
+    { id: 'contact', type: 'cta', variant: 'portfolio-footer', isHidden: false, backgroundColor: '#171717', textColor: '#ffffff', content: { title: 'Get in touch to work together', text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sit lacus nisi, erat sed porta. Sem bibendum eu dui convallis.', buttonText: 'Send me a message', buttonUrl: 'mailto:hello@example.com' } },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// 14. LUXURY SKINCARE (reference: Luxury Sci-Care)
+// ═══════════════════════════════════════════════════════════════════
+export const TEMPLATE_LUXURY_SKINCARE: PageDocument = {
+  version: 1,
+  theme: { style: 'premium-minimal', primaryColor: '#171717', radius: 'none', density: 'spacious' },
+  settings: { showFooterBranding: false, enableSmoothScrolling: true },
+  sections: [
+    { id: 'site-header', type: 'site-navbar', variant: 'centered', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { logoText: 'LUXURY', links: [{ id: 'n1', label: 'Home', url: '#top' }, { id: 'n2', label: 'About', url: '#about' }, { id: 'n3', label: 'Shop', url: '#products' }, { id: 'n4', label: 'Journal', url: '#journal' }, { id: 'n5', label: 'Contact', url: '#contact' }] } },
+    { id: 'hero', type: 'hero', variant: 'split', layout: 'split', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'Luxury Sci-Care', eyebrow: 'CLINICALLY INSPIRED SKINCARE', headline: 'Thoughtful care, backed by science.', subtitle: 'Experience clinically inspired skincare powered by advanced collagen technology and naturally active ingredients.', buttonText: 'Explore all products', buttonUrl: '#products', imageUrl: 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1600&q=85' } },
+    { id: 'about', type: 'rich-text', variant: 'split', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { text: '<h2>Thoughtfully crafted skincare for every skin type</h2><p>We create modern skincare essentials that combine effective active ingredients with gentle botanical extracts. Every formula is developed to support healthier-looking skin without compromising comfort.</p>' } },
+    { id: 'products', type: 'products', variant: 'default', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'Daily essentials your skin will love', items: [{ id: 'p1', title: 'Hydrating Cleanser', description: 'A gentle daily cleanse.', price: '$20', imageUrl: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=700&q=85' }, { id: 'p2', title: 'Daily Moisturizer', description: 'Comforting barrier support.', price: '$20', imageUrl: 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85' }, { id: 'p3', title: 'Vitamin C Serum', description: 'A brightening daily serum.', price: '$24', imageUrl: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=700&q=85' }] } },
+    { id: 'stats', type: 'stats', variant: 'editorial-band', isHidden: false, backgroundColor: '#f5f5f5', textColor: '#171717', content: { title: 'Proven results', items: [{ id: 'st1', value: '10K+', label: 'Satisfied customers' }, { id: 'st2', value: '26%', label: 'Reported softer skin' }, { id: 'st3', value: '50%', label: 'Would recommend us' }] } },
+    { id: 'benefits', type: 'services', variant: 'minimal-border', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'Why choose us', items: [{ id: 's1', title: 'Gentle formula', description: 'Suitable for all skin types, including sensitive skin.' }, { id: 's2', title: 'Deep hydration', description: 'Helps maintain healthy moisture levels throughout the day.' }, { id: 's3', title: 'Skin barrier support', description: 'Strengthens and protects against environmental stress.' }, { id: 's4', title: 'Dermatologist tested', description: 'Developed with skin safety and effectiveness in mind.' }] } },
+    { id: 'testimonials', type: 'testimonials', variant: 'grid', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'Real results with scientific skincare', items: [{ id: 't1', quote: 'My skin has never felt this soft. The cleanser and moisturizer have completely changed my morning routine.', author: 'Sophia Lee', role: 'Verified customer' }, { id: 't2', quote: 'The Vitamin C serum made my skin look brighter in just a few weeks.', author: 'Michael Smith', role: 'Verified customer' }] } },
+    { id: 'offer', type: 'feature-split', variant: 'editorial', layout: 'image-left', isHidden: false, backgroundColor: '#f5f5f5', textColor: '#171717', content: { eyebrow: 'EXCLUSIVE OFFER', title: 'Enjoy 20% off your first order', description: 'Join our skincare community and receive a welcome discount.', imageUrl: 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1000&q=85', imageAlt: 'Skincare essentials', checkpoints: [], buttonText: 'Claim your discount', buttonUrl: '#subscribe' } },
+    { id: 'faq', type: 'faq', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'Frequently asked questions', items: [{ id: 'f1', question: 'Are the products suitable for sensitive skin?', answer: 'Our formulas are designed to be gentle. Review the ingredient list and patch test before use.' }, { id: 'f2', question: 'How should I start a skincare routine?', answer: 'Begin with cleanser, moisturizer, and sunscreen, then introduce active ingredients gradually.' }] } },
+    { id: 'footer', type: 'site-footer', variant: 'columns', isHidden: false, backgroundColor: '#f5f5f5', textColor: '#171717', content: { logoText: 'LUXURY', description: 'Beauty and wellness, backed by science.', links: [{ id: 'l1', group: 'Shop', label: 'Marine Collagen', url: '#products' }, { id: 'l2', group: 'Shop', label: 'Beauty Collection', url: '#products' }, { id: 'l3', group: 'Company', label: 'About Us', url: '#about' }, { id: 'l4', group: 'Support', label: 'FAQs', url: '#faq' }], socialLinks: [], legalLinks: [{ id: 'legal1', label: 'Privacy Policy', url: '#privacy' }, { id: 'legal2', label: 'Terms', url: '#terms' }] } },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// 15. POINT+ ARCHITECTURE (reference: ref 6.png)
+// ═══════════════════════════════════════════════════════════════════
+export const TEMPLATE_POINT_ARCHITECTURE: PageDocument = {
+  version: 1,
+  theme: { style: 'premium-minimal', primaryColor: '#0b4039', radius: 'small', density: 'spacious' },
+  settings: { showFooterBranding: false, enableSmoothScrolling: true },
+  sections: [
+    { id: 'site-header', type: 'site-navbar', variant: 'overlay', isHidden: false, textColor: '#ffffff', content: { logoText: 'POINT+', links: [{ id: 'n1', label: 'About us', url: '#about' }, { id: 'n2', label: 'Services', url: '#services' }, { id: 'n3', label: 'Projects', url: '#projects' }, { id: 'n4', label: 'Blog', url: '#news' }, { id: 'n5', label: 'Contact', url: '#contact' }] } },
+    { id: 'hero', type: 'hero', variant: 'immersive', layout: 'center', textContrast: 'light', isHidden: false, backgroundColor: '#344d5d', content: { title: 'POINT+', headline: 'Spaces for better life', subtitle: 'Architecture shaped around people, place, and possibility.', buttonText: 'See more', buttonUrl: '#about', imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1800&q=85' } },
+    consultingGroup('about-impact', 'About and impact', 'row', [
+      consultingGroup('about-copy', 'About us', 'column', [{ id: 'about', type: 'rich-text', variant: 'architecture-about', isHidden: false, content: { text: '<h2>We are specializing in innovative and sustainable design.</h2><p>We listen closely to your needs, study the nuances of each site, and combine these insights with creative ingenuity to deliver extraordinary results.</p><p>We are dedicated to leaving a meaningful impact on communities and lives. At the heart of what we do is a passion for creating spaces that enrich experiences and stand the test of time.</p>' } }], { width: 'custom', customWidth: 35, padding: 'custom', customPadding: 0 }),
+      consultingGroup('studio-metrics', 'Studio facts', 'column', [{ id: 'stats', type: 'stats', variant: 'default', isHidden: false, content: { items: [{ id: 'st1', value: '160+', label: 'Projects delivered' }, { id: 'st2', value: '10+', label: 'Years of experience' }, { id: 'st3', value: '25+', label: 'Awards won' }, { id: 'st4', value: '11', label: 'Countries reached' }] } }], { width: 'custom', customWidth: 60, padding: 'custom', customPadding: 0 }),
+    ], { backgroundColor: '#ffffff', textColor: '#123b38', direction: 'row', gap: 'large', customGap: 40, padding: 'large', customPadding: 56, mobileDirection: 'column', verticalAlign: 'top' }),
+    { id: 'services', type: 'services', variant: 'architecture-accordion', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Our services', items: [{ id: 's1', title: 'Residential', description: 'Homes shaped around the rituals of everyday life, from concept planning through construction.', imageUrl: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=500&q=80' }, { id: 's2', title: 'Commercial', description: 'From retail stores to office complexes, we design commercial spaces that are both inviting and productive. Our solutions align with branding and operational goals to maximize impact and usability.', imageUrl: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=500&q=80' }, { id: 's3', title: 'Urban planning', description: 'Places and public realms planned for long-term community value and connection.' }, { id: 's4', title: 'Interior', description: 'Material, light, and detail combine to make each interior feel purposeful and lasting.' }] } },
+    { id: 'projects', type: 'case-studies', variant: 'architecture-feature', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Curated works we’re proud of', actionText: 'See more', actionUrl: '#projects', items: [{ id: 'p1', title: 'Metro Plaza', description: 'A commercial hub designed for productivity and style.', client: 'Metro Group', location: 'Tokyo, Japan', imageUrl: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85', url: '#projects' }, { id: 'p2', title: 'Harbor House', description: 'A calm residence connected to its coastal landscape.', client: 'Private client', location: 'Kanagawa, Japan', imageUrl: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=85', url: '#projects' }, { id: 'p3', title: 'Civic Arts Hall', description: 'A welcoming cultural destination for the whole city.', client: 'City Arts Council', location: 'Kyoto, Japan', imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=800&q=85', url: '#projects' }] } },
+    { id: 'testimonials', type: 'testimonials', variant: 'grid', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Words from clients', items: [{ id: 't1', quote: 'The interior design for our office has completely transformed the way our team works. Point+ Agency created a space that is both functional and inspiring.', author: 'David Stone', role: 'Corporate client' }, { id: 't2', quote: 'Our commercial building project was handled with exceptional professionalism by Point+ Agency. They understood our requirements perfectly.', author: 'Hiroshi Yamamoto', role: 'Business owner' }, { id: 't3', quote: 'Point+ Agency brought our dream home to life. They listened carefully to what we wanted and created a design that exceeded expectations.', author: 'Naoko Ishida', role: 'Homeowner' }, { id: 't4', quote: 'Their interior design work elevated our retail store to a whole new level.', author: 'Rika Sato', role: 'Retail business owner' }] } },
+    { id: 'news', type: 'blog-list', variant: 'image-cards', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Latest news and insight', actionText: 'More articles', actionUrl: '#news', items: [{ id: 'b1', category: 'Urban planning', date: 'December 20', title: 'Why Urban Planning Matters', description: 'New perspectives on places designed for thriving communities.', imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=85', url: '#news' }, { id: 'b2', category: 'Architecture', date: 'December 18', title: 'The Art of Blending Elements', description: 'How materials and landscape shape a memorable building.', imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=900&q=85', url: '#news' }, { id: 'b3', category: 'Design', date: 'December 16', title: 'Key Considerations When Designing for Place', description: 'A few questions we return to on every project.', imageUrl: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=900&q=85', url: '#news' }] } },
+    { id: 'contact', type: 'lead-form', variant: 'editorial-panel', isHidden: false, backgroundColor: '#0b4039', textColor: '#ffffff', buttonColor: '#c4d8e9', buttonTextColor: '#123b38', content: { title: 'Get in touch', description: 'Have a project in mind? Tell us what you are imagining.', buttonText: 'Send message', successMessage: 'Thank you. We will be in touch soon.' } },
+    { id: 'footer', type: 'site-footer', variant: 'compact', isHidden: false, backgroundColor: '#0b4039', textColor: '#ffffff', content: { logoText: 'POINT+', description: 'Spaces for better life. Architecture, interiors, and urban planning.', links: [{ id: 'f1', group: 'Explore', label: 'About us', url: '#about' }, { id: 'f2', group: 'Explore', label: 'Services', url: '#services' }, { id: 'f3', group: 'Explore', label: 'Projects', url: '#projects' }, { id: 'f4', group: 'Explore', label: 'Journal', url: '#news' }, { id: 'f5', group: 'Contact', label: 'pointplus@info.com', url: 'mailto:pointplus@info.com' }, { id: 'f6', group: 'Contact', label: '+81 877 8990', url: 'tel:+818778990' }], socialLinks: [{ id: 'social1', label: 'Instagram', url: '#' }, { id: 'social2', label: 'Behance', url: '#' }], legalLinks: [{ id: 'legal1', label: '© 2025 Point+ Agency. All Rights Reserved.', url: '#' }, { id: 'legal2', label: 'Back to top', url: '#top' }] } },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // TEMPLATE MAP — for lookup by ID
 // ═══════════════════════════════════════════════════════════════════
 export const TEMPLATES_MAP: Record<string, PageDocument> = {
   'creator-profile': TEMPLATE_CREATOR_PROFILE,
   'creator-portfolio': TEMPLATE_CREATOR_PORTFOLIO,
   'creator-newsletter': TEMPLATE_CREATOR_NEWSLETTER,
-  'local-service': TEMPLATE_LOCAL_SERVICE,
   'product-brand': TEMPLATE_PRODUCT_BRAND,
-  'professional-service': TEMPLATE_PROFESSIONAL_SERVICE,
   'developer-portfolio': TEMPLATE_DEVELOPER_PORTFOLIO,
   'beauty-brand': TEMPLATE_BEAUTY_BRAND,
-  'architecture-studio': TEMPLATE_ARCHITECTURE_STUDIO,
   'restaurant': TEMPLATE_RESTAURANT,
-  'corporate-advisory': TEMPLATE_CORPORATE_ADVISORY,
   'corporate-consulting': TEMPLATE_CORPORATE_CONSULTING,
+  'editorial-portfolio': TEMPLATE_EDITORIAL_PORTFOLIO,
+  'luxury-skincare': TEMPLATE_LUXURY_SKINCARE,
+  'point-architecture': TEMPLATE_POINT_ARCHITECTURE,
 };

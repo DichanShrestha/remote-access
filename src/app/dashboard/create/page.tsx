@@ -40,6 +40,16 @@ const TEMPLATES: TemplateInfo[] = [
     sections: ['Carousel', 'Services', 'Resume', 'Testimonials', 'Lead Form'],
   },
   {
+    id: 'editorial-portfolio',
+    name: 'Editorial Portfolio',
+    description: 'A calm, image-led portfolio for independent designers and creative developers.',
+    category: 'Creator',
+    icon: Palette,
+    previewUrl: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800&q=80',
+    heroVariant: 'Editorial + Split',
+    sections: ['Services', 'Projects', 'About', 'Journal', 'Contact'],
+  },
+  {
     id: 'creator-newsletter',
     name: 'Creator Newsletter',
     description: 'For writers, educators, podcasters, and newsletter creators.',
@@ -61,16 +71,7 @@ const TEMPLATES: TemplateInfo[] = [
   },
 
   // ── Business ─────────────────────────────────────────────────
-  {
-    id: 'local-service',
-    name: 'Local Service',
-    description: 'For tattoo shops, salons, restaurants, clinics, and studios.',
-    category: 'Business',
-    icon: MapPin,
-    previewUrl: 'https://images.unsplash.com/photo-1558904541-efa843a96f0f?w=800&q=80',
-    heroVariant: 'Asymmetric',
-    sections: ['Services', 'Timeline', 'Testimonials', 'Booking', 'Contact'],
-  },
+
   {
     id: 'product-brand',
     name: 'Product Brand',
@@ -81,16 +82,7 @@ const TEMPLATES: TemplateInfo[] = [
     heroVariant: 'Immersive + Zoom Reveal',
     sections: ['Marquee', 'Products', 'Carousel', 'Email Collection'],
   },
-  {
-    id: 'professional-service',
-    name: 'Professional Service',
-    description: 'For agencies, consultants, coaches, and B2B service providers.',
-    category: 'Business',
-    icon: Briefcase,
-    previewUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80',
-    heroVariant: 'Split',
-    sections: ['Services', 'Testimonials', 'Lead Form', 'Social Links'],
-  },
+
   {
     id: 'beauty-brand',
     name: 'Beauty & Skincare',
@@ -102,14 +94,25 @@ const TEMPLATES: TemplateInfo[] = [
     sections: ['Products', 'Stats', 'Testimonials', 'FAQ', 'Email Collection'],
   },
   {
-    id: 'architecture-studio',
-    name: 'Architecture Studio',
-    description: 'For architects, interior designers, and design studios.',
+    id: 'luxury-skincare',
+    name: 'Luxury Skincare',
+    description: 'For premium beauty and skincare brands with product, results, and routine storytelling.',
+    category: 'Business',
+    icon: Heart,
+    previewUrl: 'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=800&q=80',
+    heroVariant: 'Editorial Product Story',
+    sections: ['Products', 'Results', 'Benefits', 'Reviews', 'FAQ'],
+  },
+
+  {
+    id: 'point-architecture',
+    name: 'Point+ Architecture',
+    description: 'A refined architecture agency page for studios showcasing services, projects, client stories, and insights.',
     category: 'Business',
     icon: Building2,
-    previewUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&q=80',
-    heroVariant: 'Immersive + Zoom Reveal',
-    sections: ['Stats', 'Services', 'Gallery', 'Testimonials', 'Lead Form', 'Contact'],
+    previewUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1000&q=85',
+    heroVariant: 'Architectural Image Hero',
+    sections: ['Studio Overview', 'Services Accordion', 'Featured Project', 'Testimonials', 'News', 'Contact'],
   },
   {
     id: 'restaurant',
@@ -121,16 +124,7 @@ const TEMPLATES: TemplateInfo[] = [
     heroVariant: 'Immersive + Zoom Reveal',
     sections: ['Products', 'Carousel', 'Booking', 'Timeline', 'Testimonials', 'Contact'],
   },
-  {
-    id: 'corporate-advisory',
-    name: 'Corporate Advisory',
-    description: 'For consulting firms, financial advisors, and corporate strategy teams.',
-    category: 'Business',
-    icon: TrendingUp,
-    previewUrl: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=800&q=80',
-    heroVariant: 'Split + Zoom Reveal',
-    sections: ['Stats', 'Services', 'Testimonials', 'FAQ', 'Lead Form'],
-  },
+
   {
     id: 'corporate-consulting',
     name: 'Corporate Consulting',
@@ -183,22 +177,20 @@ function TemplatePreviewModal({
             <div className="flex items-center bg-slate-100 rounded-lg p-1 gap-0.5">
               <button
                 onClick={() => setViewMode('desktop')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  viewMode === 'desktop'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${viewMode === 'desktop'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+                  }`}
               >
                 <Monitor className="w-3.5 h-3.5" />
                 Desktop
               </button>
               <button
                 onClick={() => setViewMode('mobile')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                  viewMode === 'mobile'
-                    ? 'bg-white text-slate-900 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${viewMode === 'mobile'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+                  }`}
               >
                 <Smartphone className="w-3.5 h-3.5" />
                 Mobile
@@ -227,11 +219,10 @@ function TemplatePreviewModal({
         {/* Preview content — iframe gives the page its own viewport so scroll-based effects (zoom reveal) work */}
         <div className="flex-1 overflow-hidden bg-slate-100 flex justify-center">
           <div
-            className={`transition-all duration-300 bg-white shadow-lg h-full ${
-              viewMode === 'mobile'
-                ? 'w-[390px] my-6 rounded-2xl border border-slate-200 overflow-hidden'
-                : 'w-full'
-            }`}
+            className={`transition-all duration-300 bg-white shadow-lg h-full ${viewMode === 'mobile'
+              ? 'w-[390px] my-6 rounded-2xl border border-slate-200 overflow-hidden'
+              : 'w-full'
+              }`}
           >
             <iframe
               src={`/template-preview?id=${templateId}`}
@@ -286,11 +277,10 @@ export default function TemplateGallery() {
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-              selectedCategory === cat
-                ? 'bg-slate-900 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+            className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === cat
+              ? 'bg-slate-900 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
           >
             {cat}
           </button>
@@ -314,11 +304,10 @@ export default function TemplateGallery() {
                     <div
                       key={template.id}
                       onClick={() => setSelectedTemplate(template.id)}
-                      className={`group flex flex-col bg-white border rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer ${
-                        isSelected
-                          ? 'border-blue-500 shadow-lg shadow-blue-500/10 ring-1 ring-blue-500'
-                          : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
-                      }`}
+                      className={`group flex flex-col bg-white border rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer ${isSelected
+                        ? 'border-blue-500 shadow-lg shadow-blue-500/10 ring-1 ring-blue-500'
+                        : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
+                        }`}
                     >
                       {/* Preview image */}
                       <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden">
@@ -385,11 +374,10 @@ export default function TemplateGallery() {
                           <button
                             disabled={isCreating}
                             onClick={(e) => { e.stopPropagation(); handleUseTemplate(template.id); }}
-                            className={`flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                              isSelected
-                                ? 'bg-blue-600 text-white shadow hover:bg-blue-700'
-                                : 'bg-slate-900 text-white hover:bg-slate-800'
-                            }`}
+                            className={`flex-1 py-2.5 rounded-lg font-semibold text-sm transition-all ${isSelected
+                              ? 'bg-blue-600 text-white shadow hover:bg-blue-700'
+                              : 'bg-slate-900 text-white hover:bg-slate-800'
+                              }`}
                           >
                             {isCreating && isSelected ? 'Creating...' : 'Use template'}
                           </button>

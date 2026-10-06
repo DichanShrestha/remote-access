@@ -241,6 +241,11 @@ export const ComponentRegistry: Record<SectionType, ComponentMetadata> = {
     categories: ['trust'],
     defaultData: () => ({ type: 'case-studies', content: { title: 'Selected work', items: [{ id: '1', title: 'A better way to grow', description: 'How a focused strategy helped this team reach its next milestone.', imageUrl: 'https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&q=80&w=900' }] } }),
   },
+  'blog-list': {
+    type: 'blog-list', label: 'Blog List', category: 'story',
+    categories: ['story', 'showcase'],
+    defaultData: () => ({ type: 'blog-list', content: { title: 'Latest writing', items: [{ id: '1', category: 'Design', date: 'November 19, 2025', title: 'A thoughtful design process', description: 'Ideas and notes from recent work.' }] } }),
+  },
   'site-footer': {
     type: 'site-footer', label: 'Footer', category: 'organize',
     categories: ['organize'],

@@ -23,6 +23,15 @@ export function RichTextSection({ section, theme }: RichTextProps) {
   const { variant = 'default', content } = section;
   const rawText = stripHtml(content.text);
 
+  if (variant === 'architecture-about') {
+    return <section className="w-full bg-white px-6 py-16 text-[#123b38] sm:px-10 md:px-[10%] md:py-20">
+      <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-[0.7fr_1.3fr] md:gap-12">
+        <p className="text-[10px] font-semibold uppercase">About us</p>
+        <div className="prose prose-sm max-w-none prose-headings:mb-4 prose-headings:text-2xl prose-headings:font-semibold prose-headings:leading-tight prose-headings:tracking-tight prose-p:text-[10px] prose-p:leading-relaxed prose-p:text-neutral-600" dangerouslySetInnerHTML={{ __html: content.text }} />
+      </div>
+    </section>;
+  }
+
   if (variant === 'split') {
     return (
       <section className="py-8 px-6 w-full max-w-3xl mx-auto text-xl md:text-3xl font-bold text-center">

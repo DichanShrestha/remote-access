@@ -13,17 +13,19 @@ export function SiteNavbar({ section, theme }: { section: NavbarSection; theme: 
   const { content } = section;
   const centered = section.variant === 'centered';
   const minimal = section.variant === 'minimal';
+  const pill = section.variant === 'pill';
+  const overlay = section.variant === 'overlay';
 
   return (
-    <header className="w-full px-5 py-3 text-current @md:px-8">
-      <div className={`mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 ${centered ? '@md:flex-col @md:justify-center' : ''}`}>
-        <a href="#top" className="inline-flex min-h-9 items-center text-lg font-bold tracking-tight" aria-label={content.logoText}>
+    <header className={`w-full px-5 py-3 text-current @md:px-8 ${pill ? 'absolute left-0 top-0 z-20 flex justify-center' : overlay ? 'absolute left-0 top-0 z-20' : ''}`}>
+      <div className={`mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 ${centered ? '@md:flex-col @md:justify-center' : ''} ${pill ? 'w-fit rounded-full border border-neutral-200/70 bg-white/90 px-1.5 py-1 text-[9px] shadow-sm backdrop-blur' : ''}`}>
+        {!pill && <a href="#top" className="inline-flex min-h-9 items-center text-lg font-bold tracking-tight" aria-label={content.logoText}>
           {content.logoUrl ? <img src={content.logoUrl} alt={content.logoText} className="max-h-9 max-w-40 object-contain" /> : content.logoText}
-        </a>
+        </a>}
 
         <button
           type="button"
-          className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border border-current/20 @md:hidden"
+          className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border border-current/20 ${pill ? 'hidden' : '@md:hidden'}`}
           aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen(value => !value)}
@@ -31,10 +33,10 @@ export function SiteNavbar({ section, theme }: { section: NavbarSection; theme: 
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
 
-        <div className={`${menuOpen ? 'flex' : 'hidden'} w-full flex-col gap-4 py-4 @md:flex @md:w-auto @md:flex-row @md:items-center @md:gap-6 @md:py-0 ${centered ? '@md:mt-3' : '@md:ml-auto'}`}>
-          <nav aria-label="Main navigation" className={`flex flex-col gap-1 @md:flex-row @md:items-center @md:gap-6 ${centered ? '@md:justify-center' : ''}`}>
+        <div className={`${menuOpen ? 'flex' : 'hidden'} w-full flex-col gap-4 py-4 @md:flex @md:w-auto @md:flex-row @md:items-center @md:gap-6 @md:py-0 ${centered ? '@md:mt-3' : '@md:ml-auto'} ${pill ? '!flex w-auto p-0' : ''}`}>
+          <nav aria-label="Main navigation" className={`flex flex-col gap-1 @md:flex-row @md:items-center @md:gap-6 ${centered ? '@md:justify-center' : ''} ${pill ? 'flex-row gap-0 @md:gap-0' : ''}`}>
             {content.links.map(link => (
-              <a key={link.id} href={link.url} onClick={() => setMenuOpen(false)} className="rounded-sm py-2 text-sm font-medium transition-opacity hover:opacity-65 @md:py-1">
+              <a key={link.id} href={link.url} onClick={() => setMenuOpen(false)} className={`rounded-sm py-2 text-sm font-medium transition-opacity hover:opacity-65 @md:py-1 ${pill ? 'rounded-full px-2.5 py-1 text-[9px] font-normal @md:py-1' : ''}`}>
                 {link.label}
               </a>
             ))}

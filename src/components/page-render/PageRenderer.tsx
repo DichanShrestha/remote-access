@@ -17,8 +17,8 @@ export function PageRenderer({ document, isPreview, pageId, botId }: PageRendere
   const { sections, theme, settings } = document;
 
   const content = (
-    <div className={`@container min-h-screen flex flex-col font-sans bg-slate-50 dark:bg-slate-900 transition-colors duration-500`}>
-      <main className="flex-1 flex flex-col pb-24 relative">
+    <div id="top" className={`@container min-h-screen flex flex-col font-sans bg-slate-50 dark:bg-slate-900 transition-colors duration-500`}>
+      <main className="flex-1 flex flex-col relative">
         {sections.map(node => renderNode(node, theme, isPreview, pageId))}
       </main>
 

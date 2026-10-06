@@ -190,7 +190,9 @@ export const ServicesSectionSchema = BaseSectionSchema.extend({
       description: z.string(),
       price: z.string().optional(),
       icon: z.string().optional(),
+      imageUrl: z.string().optional(),
     })),
+    socialLinks: z.array(z.object({ id: z.string(), title: z.string(), url: z.string() })).optional(),
   }),
 });
 
@@ -235,8 +237,24 @@ export const CaseStudiesSectionSchema = BaseSectionSchema.extend({
       title: z.string(),
       description: z.string(),
       imageUrl: z.string(),
+      category: z.string().optional(),
+      date: z.string().optional(),
+      client: z.string().optional(),
+      location: z.string().optional(),
       url: z.string().optional(),
       buttonText: z.string().optional(),
+    })),
+  }),
+});
+
+export const BlogListSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('blog-list'),
+  content: z.object({
+    title: z.string(),
+    actionText: z.string().optional(),
+    actionUrl: z.string().optional(),
+    items: z.array(z.object({
+      id: z.string(), category: z.string(), date: z.string(), title: z.string(), description: z.string(), imageUrl: z.string().optional(), url: z.string().optional(),
     })),
   }),
 });
@@ -464,6 +482,7 @@ export const PageSectionSchema = z.discriminatedUnion('type', [
   ProductsSectionSchema,
   TestimonialsSectionSchema,
   CaseStudiesSectionSchema,
+  BlogListSectionSchema,
   FaqSectionSchema,
   AnnouncementSectionSchema,
   LeadFormSectionSchema,

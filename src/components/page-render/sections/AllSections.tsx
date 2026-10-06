@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { z } from 'zod';
-import { PageSection, ThemeConfig, FeatureSplitSectionSchema, ValueCardsSectionSchema, CaseStudiesSectionSchema, ContactSectionSchema, StatsSectionSchema, SiteFooterSectionSchema, SiteNavbarSectionSchema } from '@/lib/page-engine/schemas';
+import { PageSection, ThemeConfig, FeatureSplitSectionSchema, ValueCardsSectionSchema, CaseStudiesSectionSchema, ContactSectionSchema, StatsSectionSchema, SiteFooterSectionSchema, SiteNavbarSectionSchema, BlogListSectionSchema } from '@/lib/page-engine/schemas';
 import { HeroSection } from './HeroSection';
 import { RichTextSection } from './RichTextSection';
 import { LinkListSection } from './LinkListSection';
@@ -128,6 +128,7 @@ export function FileButtonSection({ section, theme }: { section: any; theme: The
 // ── CTA ────────────────────────────────────────────────────────
 export function CtaSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, text, buttonText, buttonUrl } = section.content;
+  if (section.variant === 'portfolio-footer') return <section className="w-full bg-[#171717] px-6 py-20 text-center text-white md:py-28"><div className="mx-auto max-w-xl"><h2 className="text-2xl font-bold uppercase leading-tight tracking-[0.08em] md:text-3xl">{title}</h2>{text && <p className="mx-auto mt-4 max-w-md text-[10px] leading-relaxed text-white/60">{text}</p>}<a href={buttonUrl} data-page-button className="mt-7 inline-flex rounded-full bg-white px-9 py-3 text-[9px] font-bold uppercase tracking-wide text-neutral-900">{buttonText}</a></div></section>;
   return (
     <section className="py-20 px-4 md:px-8">
       <div className="max-w-3xl mx-auto text-center">
@@ -550,6 +551,41 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
   const variant = section.variant || 'minimal-border';
 
   const renderDescription = (desc?: string) => desc || <span className="opacity-60">Premium service offering tailored to your unique requirements and goals.</span>;
+
+  if (variant === 'portfolio-band') {
+    return (
+      <section className="w-full bg-[#171717] px-6 py-12 text-white sm:px-10 md:px-[10%] md:py-16">
+        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-[1.45fr_0.7fr] md:gap-12">
+          <div>
+            <p className="mb-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">Services</p>
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+              {items.map((item: any) => <p key={item.id} className="text-base font-semibold tracking-tight sm:text-lg">{item.title}</p>)}
+            </div>
+          </div>
+          <div className="border-t border-white/20 pt-6 md:border-l md:border-t-0 md:pl-10 md:pt-0">
+            <p className="mb-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">Follow me</p>
+            <div className="flex flex-col items-start gap-2">
+              {(section.content.socialLinks || [{ id: 'fb', title: 'Facebook' }, { id: 'tw', title: 'Twitter' }, { id: 'ig', title: 'Instagram' }]).map((link: any) => <a key={link.id} href={link.url || '#'} className="w-full max-w-48 border-b border-white/70 pb-1 text-sm font-medium">{link.title || link.platform || link.label}<span className="float-right">↗</span></a>)}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === 'architecture-accordion') {
+    return <section className="w-full bg-white px-6 py-16 text-[#123b38] sm:px-10 md:px-[10%] md:py-20">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8 flex items-center justify-between"><p className="text-[10px] font-semibold uppercase tracking-wide">Our services</p><a href="#contact" className="border-b border-current/50 pb-1 text-[9px] uppercase">Get in touch&nbsp; ↘</a></div>
+        <div className="border-t border-[#123b38]/30">
+          {items.map((item: any, index: number) => <details key={item.id} open={index === 1} className="group border-b border-[#123b38]/30">
+            <summary className="flex cursor-pointer list-none items-center gap-3 py-4 marker:hidden [&::-webkit-details-marker]:hidden"><span className="text-[9px] font-semibold">{String(index + 1).padStart(2, '0')}</span><span className="flex-1 text-2xl font-medium uppercase leading-none tracking-[-0.04em] text-[#bdd1e0] sm:text-3xl md:text-4xl">{item.title}</span><span className="text-2xl font-light group-open:text-[#123b38]"><span className="group-open:hidden">+</span><span className="hidden group-open:inline">−</span></span></summary>
+            <div className="grid gap-4 pb-5 pl-8 md:grid-cols-[1fr_1.2fr] md:pl-12">{item.imageUrl && <img src={item.imageUrl} alt="" className="h-20 w-full object-cover md:h-24 md:max-w-36" />}<div><p className="max-w-xl text-[10px] leading-relaxed text-neutral-600">{item.description}</p><div className="mt-3 flex flex-wrap gap-2 text-[8px] text-[#123b38]"><span className="rounded-full border border-current/30 px-2 py-1">Ongoing Support</span><span className="rounded-full border border-current/30 px-2 py-1">Space Planning</span><span className="rounded-full border border-current/30 px-2 py-1">Sustainable Design</span></div></div></div>
+          </details>)}
+        </div>
+      </div>
+    </section>;
+  }
 
   if (variant === 'glass-dark') {
     return (
@@ -1534,6 +1570,35 @@ export function StatsSection({ section, theme }: { section: z.infer<typeof Stats
 
 export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseStudiesSectionSchema> }) {
   const { title, description, actionText, actionUrl, items } = section.content;
+  if (section.variant === 'editorial-rows') {
+    return (
+      <section className="w-full bg-[#f4f4f6] px-6 py-16 text-[#171717] sm:px-10 md:px-[15%] md:py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10"><h2 className="text-2xl font-bold uppercase tracking-[0.08em]">{title || 'Projects'}</h2></div>
+          <div className="space-y-10 md:space-y-12">
+            {items.map((item: any) => <article key={item.id} className="grid items-center gap-5 md:grid-cols-[1.25fr_0.75fr] md:gap-8">
+              <a href={item.url || '#'} className="group block aspect-[1.65/1] overflow-hidden bg-neutral-200"><img src={item.imageUrl} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" /></a>
+              <div><p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-neutral-400">{item.date || item.category || 'Selected work'}</p><h3 className="max-w-xs text-xl font-bold uppercase leading-[1.05] tracking-[0.07em] sm:text-2xl">{item.title}</h3><p className="mt-3 text-[10px] leading-relaxed text-neutral-600">{item.description}</p><a href={item.url || '#'} className="mt-4 inline-flex items-center gap-3 text-[9px] font-semibold uppercase">{item.buttonText || 'View live'} <span className="grid h-8 w-8 place-items-center rounded-full border border-neutral-300 text-base">›</span></a></div>
+            </article>)}
+          </div>
+          {actionText && <a href={actionUrl || '#'} className="mt-8 inline-flex rounded-full bg-neutral-900 px-7 py-3 text-[9px] font-semibold uppercase tracking-wide text-white">{actionText}</a>}
+        </div>
+      </section>
+    );
+  }
+  if (section.variant === 'architecture-feature') {
+    const [feature, ...previews] = items;
+    if (!feature) return null;
+    return <section className="w-full bg-white px-6 py-16 text-[#123b38] sm:px-10 md:px-[10%] md:py-20">
+      <div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><p className="text-[10px] font-semibold uppercase">Curated works we’re proud of</p>{actionText && <a href={actionUrl || '#'} className="border-b border-current/50 pb-1 text-[9px] uppercase">{actionText} ↘</a>}</div>
+        <div className="grid items-center gap-6 md:grid-cols-[0.75fr_1.5fr_0.45fr]">
+          <div><h3 className="text-xl font-semibold">{feature.title}</h3><p className="mt-2 text-[10px] leading-relaxed text-neutral-600">{feature.description}</p><p className="mt-3 text-[9px]">Client <strong>{feature.client}</strong></p><p className="mt-1 text-[9px]">{feature.location}</p><a href={feature.url || '#'} className="mt-3 inline-block border-b border-current pb-1 text-[9px] uppercase">See detail ↘</a><div className="mt-8 flex gap-6 text-sm"><span>←</span><span className="text-[9px]">01 / {String(items.length).padStart(2, '0')}</span><span>→</span></div></div>
+          <a href={feature.url || '#'} className="block aspect-[1.35/1] overflow-hidden rounded-md bg-neutral-100"><img src={feature.imageUrl} alt={feature.title} className="h-full w-full object-cover" /></a>
+          <div className="hidden flex-col gap-3 md:flex">{previews.slice(0, 2).map(item => <a key={item.id} href={item.url || '#'} className="block aspect-[1.15/1] overflow-hidden rounded-md bg-neutral-100"><img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" /></a>)}</div>
+        </div>
+      </div>
+    </section>;
+  }
   return (
     <section className="w-full px-6 py-16 text-current md:px-10 md:py-20">
       <div className="mx-auto max-w-6xl">
@@ -1559,14 +1624,29 @@ export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseSt
   );
 }
 
+export function BlogListSection({ section }: { section: z.infer<typeof BlogListSectionSchema> }) {
+  const { title, actionText, actionUrl, items } = section.content;
+  if (section.variant === 'image-cards') return <section className="w-full bg-white px-6 py-16 text-[#123b38] sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="text-[10px] font-semibold uppercase">{title}</h2>{actionText && <a href={actionUrl || '#'} className="border-b border-current/50 pb-1 text-[9px] uppercase">{actionText} ↘</a>}</div><div className="grid gap-5 md:grid-cols-3">{items.map(item => <article key={item.id} className="min-w-0"><a href={item.url || '#'} className="block aspect-[1.35/1] overflow-hidden rounded-md bg-neutral-100"><img src={item.imageUrl} alt="" className="h-full w-full object-cover" /></a><p className="mt-3 text-[8px] text-[#123b38]/60">{item.date} &nbsp; • &nbsp; by Julie Hill</p><a href={item.url || '#'} className="line-clamp-2 text-sm font-semibold leading-snug text-neutral-900">{item.title}</a></article>)}</div></div></section>;
+  return <section className="w-full rounded-b-[2rem] border-t border-neutral-400 bg-[#f4f4f6] px-6 py-14 text-[#171717] sm:px-10 md:px-[15%] md:py-20">
+    <div className="mx-auto max-w-6xl">
+      <div className="mb-8 flex items-center justify-between"><h2 className="text-2xl font-bold uppercase tracking-[0.08em]">{title}</h2>{actionText && <a href={actionUrl || '#'} className="rounded-full bg-neutral-900 px-6 py-3 text-[9px] font-semibold uppercase tracking-wide text-white">{actionText}</a>}</div>
+      <div>{items.map(item => <article key={item.id} className="grid gap-4 border-b border-neutral-400 py-6 first:border-t md:grid-cols-[1fr_0.8fr] md:gap-10">
+        <div><p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-500">{item.category}<span className="mx-3">/</span>{item.date}</p><a href={item.url || '#'} className="max-w-sm text-sm font-bold leading-snug hover:underline">{item.title}</a></div>
+        <p className="max-w-md text-[10px] leading-relaxed text-neutral-600">{item.description}</p>
+      </article>)}</div>
+    </div>
+  </section>;
+}
+
 // ── Central Dispatcher ─────────────────────────────────────────
 function FeatureSplitSection({ section, theme }: { section: z.infer<typeof FeatureSplitSectionSchema>; theme: ThemeConfig }) {
   const { content, layout = 'image-left' } = section;
   const isImageLeft = layout === 'image-left';
-  const editorial = section.variant === 'editorial';
+  const portfolioPortrait = section.variant === 'portfolio-about';
+  const editorial = section.variant === 'editorial' || portfolioPortrait;
 
   return (
-    <section className={`w-full px-6 py-16 sm:px-10 md:py-20 ${editorial ? 'text-current' : 'bg-white lg:px-24'}`}>
+    <section className={`w-full px-6 py-16 sm:px-10 md:py-20 ${portfolioPortrait ? 'border-y border-neutral-400' : ''} ${editorial ? 'text-current' : 'bg-white lg:px-24'}`}>
       <div className={cn(
         "mx-auto flex max-w-6xl flex-col items-center gap-10 md:gap-16",
         isImageLeft ? "lg:flex-row" : "lg:flex-row-reverse"
@@ -1575,7 +1655,7 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
         {/* Image Side */}
         <div className="w-full lg:w-1/2">
           {content.imageUrl ? (
-            <div className={`relative w-full overflow-hidden ${editorial ? 'aspect-square' : 'aspect-square rounded-xl shadow-2xl'}`}>
+            <div className={`relative w-full overflow-hidden ${portfolioPortrait ? 'aspect-[3/4] max-w-sm' : editorial ? 'aspect-square' : 'aspect-square rounded-xl shadow-2xl'}`}>
               <img src={content.imageUrl} alt={content.imageAlt || content.title} className="w-full h-full object-cover" />
             </div>
           ) : (
@@ -1712,6 +1792,7 @@ export function renderSection(section: PageSection, theme: ThemeConfig, isPrevie
     case 'products': return <ProductsSection key={section.id} section={section} theme={theme} />;
     case 'testimonials': return <TestimonialsSection key={section.id} section={section} theme={theme} />;
     case 'case-studies': return <CaseStudiesSection key={section.id} section={section} />;
+    case 'blog-list': return <BlogListSection key={section.id} section={section as z.infer<typeof BlogListSectionSchema>} />;
     case 'announcement': return <AnnouncementSection key={section.id} section={section} theme={theme} />;
     case 'lead-form': return <LeadFormSection key={section.id} section={section} theme={theme} pageId={pageId} />;
     case 'collect-emails': return <CollectEmailsSection key={section.id} section={section} theme={theme} pageId={pageId} />;
