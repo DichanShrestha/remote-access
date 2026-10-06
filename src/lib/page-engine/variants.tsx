@@ -17,6 +17,15 @@ const PlaceholderSVG = () => (
 );
 
 export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> = {
+  'site-navbar': [
+    { id: 'corporate', label: 'Corporate', previewNode: <PlaceholderSVG /> },
+    { id: 'centered', label: 'Centered', previewNode: <PlaceholderSVG /> },
+    { id: 'minimal', label: 'Minimal', previewNode: <PlaceholderSVG /> },
+  ],
+  'site-footer': [
+    { id: 'columns', label: 'Link Columns', previewNode: <PlaceholderSVG /> },
+    { id: 'compact', label: 'Compact', previewNode: <PlaceholderSVG /> },
+  ],
   // Hero uses its own built-in variant picker in HeroInspector
   'rich-text': [
     { id: 'default', label: 'Standard', previewNode: <PlaceholderSVG /> },

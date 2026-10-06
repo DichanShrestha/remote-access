@@ -1231,16 +1231,17 @@ export const TEMPLATE_CORPORATE_CONSULTING: PageDocument = {
   theme: { style: 'premium-minimal', primaryColor: '#093326', radius: 'none', density: 'spacious' },
   settings: { showFooterBranding: false, enableSmoothScrolling: true },
   sections: [
-    consultingGroup('site-header', 'Header', 'row', [
-      { id: 'brand', type: 'rich-text', isHidden: false, content: { text: '<p><strong>LOGO</strong></p>' } },
-      { id: 'main-navigation', type: 'link-list', variant: 'navigation', isHidden: false, content: { links: [
-        { id: 'nav-about', label: 'About us', url: '#hero' }, { id: 'nav-services', label: 'Services', url: '#service-tabs' }, { id: 'nav-pricing', label: 'Pricing', url: '#value-cards' }, { id: 'nav-news', label: 'News', url: '#success-stories' }, { id: 'nav-contact', label: 'Contact', url: '#contact' },
-      ] } },
-      consultingGroup('header-actions', 'Header actions', 'row', [
-        { id: 'header-consult', type: 'url-button', layout: 'outline', isHidden: false, content: { label: 'Free consultation', url: '#contact' } },
-        { id: 'header-start', type: 'url-button', layout: 'filled', isHidden: false, buttonColor: '#101010', content: { label: 'Get started', url: '#contact' } },
-      ], { width: 'fit', horizontalAlign: 'right', mobileDirection: 'row', gap: 'small', customGap: 8 }),
-    ], { backgroundColor: '#ffffff', textColor: '#151515', padding: 'small', customPadding: 12, gap: 'large', customGap: 32 }),
+    {
+      id: 'site-header', type: 'site-navbar', variant: 'corporate', isHidden: false,
+      backgroundColor: '#ffffff', textColor: '#151515', buttonColor: '#101010',
+      content: {
+        logoText: 'LOGO',
+        links: [
+          { id: 'nav-about', label: 'About us', url: '#hero' }, { id: 'nav-services', label: 'Services', url: '#service-tabs' }, { id: 'nav-pricing', label: 'Pricing', url: '#value-cards' }, { id: 'nav-news', label: 'News', url: '#success-stories' }, { id: 'nav-contact', label: 'Contact', url: '#contact' },
+        ],
+        secondaryLabel: 'Free consultation', secondaryUrl: '#contact', primaryLabel: 'Get started', primaryUrl: '#contact',
+      },
+    },
     {
       id: 'hero', isHidden: false, type: 'hero', variant: 'split-wide', layout: 'split',
       backgroundColor: '#f5f2f0', textColor: '#171717',
@@ -1338,19 +1339,35 @@ export const TEMPLATE_CORPORATE_CONSULTING: PageDocument = {
         content: { title: 'We’re here to help', description: 'Need help with a project, have a question about our work? We’re here.', buttonText: 'Submit', email: 'hello@consulting.com', phone: '+1 (555) 000-0000' },
       }], { width: 'custom', customWidth: 52, backgroundColor: '#f5f2f0', textColor: '#171717', padding: 'medium', customPadding: 24 }),
       consultingGroup('contact-photo', 'Contact photo', 'column', [{
-        id: 'contact-image', type: 'image', layout: 'full', isHidden: false,
+        id: 'contact-image', type: 'image', layout: 'cover', isHidden: false,
         content: { url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=85&w=1000', alt: 'Financial consultant ready to help' },
       }], { width: 'custom', customWidth: 48, backgroundColor: '#f5f2f0', padding: 'custom', customPadding: 0 }),
     ], { backgroundColor: '#062f26', textColor: '#ffffff', gap: 'custom', customGap: 0, padding: 'custom', customPadding: 0, mobileDirection: 'column' }),
-    consultingGroup('site-footer', 'Footer', 'column', [
-      consultingGroup('footer-columns', 'Footer links', 'row', [
-        { id: 'footer-brand', type: 'rich-text', isHidden: false, content: { text: '<h3>LOGO</h3><p>Our primary goal is to empower business owners, agencies, and freelancers with maximum creative freedom.</p>' } },
-        { id: 'footer-builder', type: 'rich-text', isHidden: false, content: { text: '<p><strong>Page builder</strong></p><p>Theme options<br/>Theme builder<br/>Template library</p>' } },
-        { id: 'footer-support', type: 'rich-text', isHidden: false, content: { text: '<p><strong>Support center</strong></p><p>Documentation<br/>Community<br/>Hosting</p>' } },
-        { id: 'footer-social', type: 'rich-text', isHidden: false, content: { text: '<p><strong>Follow us</strong></p><p>f　♥　in</p>' } },
-      ], { gap: 'large', customGap: 32, mobileDirection: 'column', verticalAlign: 'top' }),
-      { id: 'footer-legal', type: 'rich-text', isHidden: false, content: { text: '<p>Terms &amp; Conditions　 Privacy Policy</p>' } },
-    ], { backgroundColor: '#062f26', textColor: '#ffffff', padding: 'large', customPadding: 48, horizontalAlign: 'left' }),
+    {
+      id: 'site-footer', type: 'site-footer', variant: 'columns', isHidden: false,
+      backgroundColor: '#062f26', textColor: '#ffffff',
+      content: {
+        logoText: 'LOGO',
+        description: 'Our primary goal is to empower business owners, agencies, and freelancers with maximum creative freedom.',
+        links: [
+          { id: 'builder-themes', group: 'Page builder', label: 'Theme options', url: '#services' },
+          { id: 'builder-builder', group: 'Page builder', label: 'Theme builder', url: '#services' },
+          { id: 'builder-templates', group: 'Page builder', label: 'Template library', url: '#services' },
+          { id: 'support-docs', group: 'Support center', label: 'Documentation', url: '#faq' },
+          { id: 'support-community', group: 'Support center', label: 'Community', url: '#contact' },
+          { id: 'support-hosting', group: 'Support center', label: 'Hosting', url: '#contact' },
+        ],
+        socialLinks: [
+          { id: 'social-facebook', label: 'f', url: 'https://facebook.com' },
+          { id: 'social-twitter', label: '𝕏', url: 'https://x.com' },
+          { id: 'social-linkedin', label: 'in', url: 'https://linkedin.com' },
+        ],
+        legalLinks: [
+          { id: 'terms', label: 'Terms & Conditions', url: '#terms' },
+          { id: 'privacy', label: 'Privacy Policy', url: '#privacy' },
+        ],
+      },
+    },
   ],
 };
 

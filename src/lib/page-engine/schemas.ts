@@ -131,7 +131,7 @@ export const ImageSectionSchema = BaseSectionSchema.extend({
     alt: z.string().optional(),
     caption: z.string().optional(),
   }),
-  layout: z.enum(['full', 'contained']).default('contained'),
+  layout: z.enum(['full', 'contained', 'cover']).default('contained'),
 });
 
 export const GallerySectionSchema = BaseSectionSchema.extend({
@@ -295,6 +295,30 @@ export const LinkListSectionSchema = BaseSectionSchema.extend({
   }),
 });
 
+export const SiteNavbarSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('site-navbar'),
+  content: z.object({
+    logoText: z.string(),
+    logoUrl: z.string().optional(),
+    links: z.array(z.object({ id: z.string(), label: z.string(), url: z.string() })),
+    primaryLabel: z.string().optional(),
+    primaryUrl: z.string().optional(),
+    secondaryLabel: z.string().optional(),
+    secondaryUrl: z.string().optional(),
+  }),
+});
+
+export const SiteFooterSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('site-footer'),
+  content: z.object({
+    logoText: z.string(),
+    description: z.string(),
+    links: z.array(z.object({ id: z.string(), group: z.string(), label: z.string(), url: z.string() })),
+    socialLinks: z.array(z.object({ id: z.string(), label: z.string(), url: z.string() })),
+    legalLinks: z.array(z.object({ id: z.string(), label: z.string(), url: z.string() })),
+  }),
+});
+
 
 
 export const ContactSectionSchema = BaseSectionSchema.extend({
@@ -446,6 +470,8 @@ export const PageSectionSchema = z.discriminatedUnion('type', [
   CollectEmailsSectionSchema,
   BookingSectionSchema,
   LinkListSectionSchema,
+  SiteNavbarSectionSchema,
+  SiteFooterSectionSchema,
 
   ContactSectionSchema,
   QuoteSectionSchema,

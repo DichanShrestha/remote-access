@@ -101,7 +101,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
       { key: 'content.url', label: 'Image URL', type: 'url' },
       { key: 'content.alt', label: 'Alt Text', type: 'text' },
       { key: 'content.caption', label: 'Caption', type: 'text' },
-      { key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Contained', value: 'contained' }, { label: 'Full Width', value: 'full' }] },
+      { key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Contained', value: 'contained' }, { label: 'Full Width', value: 'full' }, { label: 'Cover Frame', value: 'cover' }] },
     ],
   },
   gallery: {
@@ -235,6 +235,44 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
       itemFields: [{ key: 'label', label: 'Label', type: 'text' }, { key: 'url', label: 'URL', type: 'url' }, { key: 'badge', label: 'Badge', type: 'text' }, { key: 'isActive', label: 'Active tab', type: 'toggle' }],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), label: '', url: '', isActive: false }),
     }],
+  },
+  'site-navbar': {
+    fields: [
+      { key: 'content.logoText', label: 'Logo Text', type: 'text' },
+      { key: 'content.logoUrl', label: 'Logo Image URL', type: 'url' },
+      { key: 'content.secondaryLabel', label: 'Secondary Button', type: 'text' },
+      { key: 'content.secondaryUrl', label: 'Secondary Button URL', type: 'url' },
+      { key: 'content.primaryLabel', label: 'Primary Button', type: 'text' },
+      { key: 'content.primaryUrl', label: 'Primary Button URL', type: 'url' },
+    ],
+    arrayFields: [{
+      key: 'content.links', label: 'Navigation Links',
+      itemFields: [{ key: 'label', label: 'Label', type: 'text' }, { key: 'url', label: 'URL', type: 'url' }],
+      newItem: () => ({ id: Math.random().toString(36).slice(2, 11), label: 'New link', url: '#' }),
+    }],
+  },
+  'site-footer': {
+    fields: [
+      { key: 'content.logoText', label: 'Logo Text', type: 'text' },
+      { key: 'content.description', label: 'Description', type: 'textarea' },
+    ],
+    arrayFields: [
+      {
+        key: 'content.links', label: 'Footer Links',
+        itemFields: [{ key: 'group', label: 'Column Heading', type: 'text' }, { key: 'label', label: 'Link Label', type: 'text' }, { key: 'url', label: 'URL', type: 'url' }],
+        newItem: () => ({ id: Math.random().toString(36).slice(2, 11), group: 'Resources', label: 'New link', url: '#' }),
+      },
+      {
+        key: 'content.socialLinks', label: 'Social Links',
+        itemFields: [{ key: 'label', label: 'Name', type: 'text' }, { key: 'url', label: 'URL', type: 'url' }],
+        newItem: () => ({ id: Math.random().toString(36).slice(2, 11), label: 'Social', url: '#' }),
+      },
+      {
+        key: 'content.legalLinks', label: 'Legal Links',
+        itemFields: [{ key: 'label', label: 'Label', type: 'text' }, { key: 'url', label: 'URL', type: 'url' }],
+        newItem: () => ({ id: Math.random().toString(36).slice(2, 11), label: 'Privacy', url: '#' }),
+      },
+    ],
   },
 
   contact: {
@@ -732,7 +770,7 @@ function HeroInspector({ section, onChange }: { section: PageSection; onChange: 
 
 function SectionAppearance({ section, onChange }: { section: PageSection; onChange: (updated: PageSection) => void }) {
   const inputClass = "w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50";
-  const supportsButtonColors = ['hero', 'cta', 'url-button', 'image-button', 'email-button', 'file-button', 'lead-form', 'collect-emails', 'booking', 'feature-split', 'contact'].includes(section.type);
+  const supportsButtonColors = ['hero', 'cta', 'url-button', 'image-button', 'email-button', 'file-button', 'lead-form', 'collect-emails', 'booking', 'feature-split', 'contact', 'site-navbar'].includes(section.type);
 
   return (
     <div className="mt-1 pt-6 border-t border-slate-200 dark:border-slate-700/50">

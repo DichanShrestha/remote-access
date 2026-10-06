@@ -39,9 +39,9 @@ export function PageRenderer({ document, isPreview, pageId, botId }: PageRendere
   return content;
 }
 
-function renderNode(node: PageNode, theme: PageDocument['theme'], isPreview?: boolean, pageId?: string): ReactNode {
+function renderNode(node: PageNode, theme: PageDocument['theme'], isPreview?: boolean, pageId?: string, isNested = false): ReactNode {
   if (isGroup(node)) {
-    return <LayoutGroup key={node.id} group={node} theme={theme} isPreview={isPreview} pageId={pageId} />;
+    return <LayoutGroup key={node.id} group={node} theme={theme} isPreview={isPreview} pageId={pageId} isNested={isNested} />;
   }
 
   if (node.isHidden) return null;
@@ -56,6 +56,7 @@ function renderNode(node: PageNode, theme: PageDocument['theme'], isPreview?: bo
       id={`preview-section-${node.id}`}
       className="page-component-frame relative group/preview-section scroll-mt-6 min-w-0"
       data-page-anchor={node.id}
+      data-full-screen-hero={node.type === 'hero' && node.variant === 'split-wide' ? 'true' : undefined}
       data-custom-background-color={node.backgroundColor ? 'custom' : undefined}
       data-section-padding={node.sectionPadding}
       data-content-width={node.contentWidth}
@@ -75,7 +76,7 @@ function renderNode(node: PageNode, theme: PageDocument['theme'], isPreview?: bo
   );
 }
 
-function LayoutGroup({ group, theme, isPreview, pageId }: { group: GroupNode; theme: PageDocument['theme']; isPreview?: boolean; pageId?: string }) {
+function LayoutGroup({ group, theme, isPreview, pageId, isNested }: { group: GroupNode; theme: PageDocument['theme']; isPreview?: boolean; pageId?: string; isNested?: boolean }) {
   const gap = group.gap === 'custom' ? `${group.customGap}px` : ({ small: '8px', medium: '16px', large: '32px' } as const)[group.gap];
   const padding = group.padding === 'custom' ? `${group.customPadding}px` : ({ small: '8px', medium: '16px', large: '32px' } as const)[group.padding];
   const width = group.width === 'fit' ? 'fit-content' : group.width === 'custom' ? `${group.customWidth}%` : '100%';
@@ -94,7 +95,7 @@ function LayoutGroup({ group, theme, isPreview, pageId }: { group: GroupNode; th
       style={{
         backgroundColor: group.backgroundColor,
         color: group.textColor,
-        width,
+        width: isNested ? '100%' : width,
         '--layout-gap': gap,
         '--layout-padding': padding,
         '--layout-horizontal': horizontal,
@@ -112,7 +113,7 @@ function LayoutGroup({ group, theme, isPreview, pageId }: { group: GroupNode; th
           data-child-width={childIsGroup ? child.width : undefined}
           style={childIsGroup ? { '--child-layout-width': childWidth } as CSSProperties : undefined}
         >
-          {renderNode(child, theme, isPreview, pageId)}
+          {renderNode(child, theme, isPreview, pageId, true)}
         </div>
       })}
     </div>

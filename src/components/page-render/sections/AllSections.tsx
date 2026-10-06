@@ -1,11 +1,12 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { z } from 'zod';
-import { PageSection, ThemeConfig, FeatureSplitSectionSchema, ValueCardsSectionSchema, CaseStudiesSectionSchema, ContactSectionSchema, StatsSectionSchema } from '@/lib/page-engine/schemas';
+import { PageSection, ThemeConfig, FeatureSplitSectionSchema, ValueCardsSectionSchema, CaseStudiesSectionSchema, ContactSectionSchema, StatsSectionSchema, SiteFooterSectionSchema, SiteNavbarSectionSchema } from '@/lib/page-engine/schemas';
 import { HeroSection } from './HeroSection';
 import { RichTextSection } from './RichTextSection';
 import { LinkListSection } from './LinkListSection';
 import { FaqSection } from './FaqSection';
+import { SiteFooter, SiteNavbar } from './SiteChromeSections';
 import { FaTwitter, FaInstagram, FaGithub, FaLinkedin, FaYoutube, FaTiktok, FaDribbble, FaBehance, FaSpotify, FaFacebook, FaLink } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { motion, useScroll, useTransform, useInView } from 'motion/react';
@@ -203,6 +204,17 @@ export function SocialLinksSection({ section, theme }: { section: any; theme: Th
 export function ImageSection({ section }: { section: any; theme: ThemeConfig }) {
   const { url, alt, caption } = section.content;
   const { layout, variant = 'default' } = section;
+
+  if (layout === 'cover') {
+    return (
+      <section className="h-full min-h-72 w-full p-0">
+        <figure className="h-full min-h-72 w-full">
+          <img src={url} alt={alt || caption || 'Image'} className="aspect-[4/3] h-full min-h-72 w-full object-cover md:aspect-auto" />
+          {caption && <figcaption className="sr-only">{caption}</figcaption>}
+        </figure>
+      </section>
+    );
+  }
 
   if (variant === 'scroll-reveal') {
     return (
@@ -1681,6 +1693,8 @@ export function renderSection(section: PageSection, theme: ThemeConfig, isPrevie
     case 'hero': return <HeroSection key={section.id} section={section} theme={theme} isPreview={isPreview} />;
     case 'rich-text': return <RichTextSection key={section.id} section={section as any} theme={theme} />;
     case 'link-list': return <LinkListSection key={section.id} section={section as any} theme={theme} />;
+    case 'site-navbar': return <SiteNavbar key={section.id} section={section as z.infer<typeof SiteNavbarSectionSchema>} theme={theme} />;
+    case 'site-footer': return <SiteFooter key={section.id} section={section as z.infer<typeof SiteFooterSectionSchema>} />;
     case 'faq': return <FaqSection key={section.id} section={section as any} theme={theme} />;
     case 'url-button': return <UrlButtonSection key={section.id} section={section} theme={theme} />;
     case 'image-button': return <ImageButtonSection key={section.id} section={section} theme={theme} />;

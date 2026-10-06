@@ -92,6 +92,11 @@ export const ComponentRegistry: Record<SectionType, ComponentMetadata> = {
     categories: ['share'],
     defaultData: () => ({ type: 'link-list', content: { links: [{ id: '1', label: 'My Website', url: 'https://example.com' }] } }),
   },
+  'site-navbar': {
+    type: 'site-navbar', label: 'Navigation Bar', category: 'popular',
+    categories: ['popular', 'organize'],
+    defaultData: () => ({ type: 'site-navbar', variant: 'corporate', content: { logoText: 'Your brand', links: [{ id: '1', label: 'About', url: '#about' }, { id: '2', label: 'Services', url: '#services' }], primaryLabel: 'Get started', primaryUrl: '#contact' } }),
+  },
 
   // ── Showcase my work ────────────────────────────────────────
   'image': {
@@ -234,6 +239,11 @@ export const ComponentRegistry: Record<SectionType, ComponentMetadata> = {
   'case-studies': {
     type: 'case-studies', label: 'Case Studies', category: 'trust',
     categories: ['trust'],
-    defaultData: () => ({ type: 'case-studies', content: { title: 'Selected work', items: [{ id: '1', title: 'A better way to grow', description: 'How a focused strategy helped this team reach its next milestone.', imageUrl: '' }] } }),
+    defaultData: () => ({ type: 'case-studies', content: { title: 'Selected work', items: [{ id: '1', title: 'A better way to grow', description: 'How a focused strategy helped this team reach its next milestone.', imageUrl: 'https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&q=80&w=900' }] } }),
+  },
+  'site-footer': {
+    type: 'site-footer', label: 'Footer', category: 'organize',
+    categories: ['organize'],
+    defaultData: () => ({ type: 'site-footer', variant: 'columns', content: { logoText: 'Your brand', description: 'Tell visitors what your business does.', links: [], socialLinks: [], legalLinks: [] } }),
   }
 };
