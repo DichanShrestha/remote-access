@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { PageSection, ThemeConfig } from '@/lib/page-engine/schemas';
+import { z } from 'zod';
+import { PageSection, ThemeConfig, FeatureSplitSectionSchema, ValueCardsSectionSchema } from '@/lib/page-engine/schemas';
 import { HeroSection } from './HeroSection';
 import { RichTextSection } from './RichTextSection';
 import { LinkListSection } from './LinkListSection';
@@ -315,6 +316,8 @@ import FlexCarousel from '@/components/FlexCarousel';
 import CircularCarousel from '@/components/CircularCarousel';
 import DepthCarousel from '@/components/DepthCarousel';
 import { BlurFade } from '@/components/ui/blur-fade';
+import { cn } from '@/lib/utils';
+import { Check } from 'lucide-react';
 
 // ── Carousel ───────────────────────────────────────────────────
 export function CarouselSection({ section, theme }: { section: any; theme: ThemeConfig }) {
@@ -787,7 +790,7 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: 
   const [activeChips, setActiveChips] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  
+
   const chips = ['Web Design', 'Branding', 'Growth', 'Other'];
 
   const toggleChip = (chip: string) => {
@@ -797,13 +800,13 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!pageId) return;
-    
+
     setLoading(true);
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const message = formData.get('message') as string;
-    
+
     await submitLead({
       pageId,
       componentId: sectionId,
@@ -813,7 +816,7 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: 
       message,
       customData: { services: activeChips },
     });
-    
+
     setSuccess(true);
     setLoading(false);
   };
@@ -1049,7 +1052,7 @@ function ContactForm({ theme, pageId, sectionId }: { theme: ThemeConfig; pageId?
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const message = formData.get('message') as string;
-    
+
     await submitLead({
       pageId,
       componentId: sectionId,
@@ -1059,7 +1062,7 @@ function ContactForm({ theme, pageId, sectionId }: { theme: ThemeConfig; pageId?
       message,
       customData: { interest: activeChips },
     });
-    
+
     setSuccess(true);
     setLoading(false);
   };
@@ -1472,6 +1475,130 @@ export function StatsSection({ section, theme }: { section: any; theme: ThemeCon
 }
 
 // ── Central Dispatcher ─────────────────────────────────────────
+function FeatureSplitSection({ section, theme }: { section: z.infer<typeof FeatureSplitSectionSchema>; theme: ThemeConfig }) {
+  const { content, layout = 'image-left' } = section;
+  const isImageLeft = layout === 'image-left';
+
+  return (
+    <section className="w-full bg-white py-20 px-6 sm:px-12 lg:px-24">
+      <div className={cn(
+        "max-w-7xl mx-auto flex flex-col gap-12 lg:gap-24 items-center",
+        isImageLeft ? "lg:flex-row" : "lg:flex-row-reverse"
+      )}>
+
+        {/* Image Side */}
+        <div className="w-full lg:w-1/2">
+          {content.imageUrl ? (
+            <div className="relative w-full aspect-square md:aspect-[4/3] rounded-xl overflow-hidden shadow-2xl">
+              <img src={content.imageUrl} alt={content.imageAlt || content.title} className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div className="w-full aspect-square md:aspect-[4/3] bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">
+              No Image
+            </div>
+          )}
+        </div>
+
+        {/* Content Side */}
+        <div className="w-full lg:w-1/2 flex flex-col items-start text-left">
+          {content.eyebrow && (
+            <span className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: theme.primaryColor }}>
+              {content.eyebrow}
+            </span>
+          )}
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-slate-900 tracking-tight leading-tight mb-6">
+            {content.title}
+          </h2>
+          {content.description && (
+            <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+              {content.description}
+            </p>
+          )}
+
+          {content.checkpoints && content.checkpoints.length > 0 && (
+            <ul className="flex flex-col gap-4 mb-10 w-full">
+              {content.checkpoints.map((cp: any) => (
+                <li key={cp.id} className="flex items-start gap-3">
+                  <div className="mt-1 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center bg-green-100/50" style={{ color: theme.primaryColor }}>
+                    <Check className="w-4 h-4" />
+                  </div>
+                  <span className="text-slate-700 text-lg">{cp.text}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {content.buttonText && content.buttonUrl && (
+            <a
+              href={content.buttonUrl}
+              className="inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white rounded-lg transition-all shadow-sm hover:shadow-md"
+              style={{ backgroundColor: theme.primaryColor, borderRadius: theme.radius === 'none' ? '0' : theme.radius === 'small' ? '0.375rem' : theme.radius === 'medium' ? '0.5rem' : theme.radius === 'large' ? '0.75rem' : '9999px' }}
+            >
+              {content.buttonText}
+            </a>
+          )}
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
+function ValueCardsSection({ section, theme }: { section: z.infer<typeof ValueCardsSectionSchema>; theme: ThemeConfig }) {
+  const { content } = section;
+
+  return (
+    <section className="w-full bg-[#F7F5F0] py-24 px-6 sm:px-12 lg:px-24">
+      <div className="max-w-7xl mx-auto">
+        {(content.title || content.description) && (
+          <div className="max-w-3xl mb-16">
+            {content.title && (
+              <h2 className="text-3xl md:text-5xl font-semibold text-slate-900 tracking-tight mb-6">
+                {content.title}
+              </h2>
+            )}
+            {content.description && (
+              <p className="text-lg text-slate-600">
+                {content.description}
+              </p>
+            )}
+          </div>
+        )}
+
+        {content.cards && content.cards.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {content.cards.map((card: any) => (
+              <div key={card.id} className="bg-white p-8 shadow-sm flex flex-col justify-between" style={{ borderRadius: theme.radius === 'none' ? '0' : theme.radius === 'small' ? '0.375rem' : theme.radius === 'medium' ? '0.5rem' : theme.radius === 'large' ? '1rem' : '1.5rem' }}>
+                <div>
+                  <div className="flex items-center gap-4 mb-6">
+                    {card.avatarUrl && (
+                      <img src={card.avatarUrl} alt={card.author} className="w-12 h-12 rounded-full object-cover" />
+                    )}
+                    <div>
+                      <div className="font-semibold text-slate-900">{card.author}</div>
+                      {card.role && <div className="text-sm text-slate-500">{card.role}</div>}
+                    </div>
+                  </div>
+                  <p className="text-slate-700 italic mb-10 text-lg">"{card.quote}"</p>
+                </div>
+
+                <div className="border-t border-slate-100 pt-8 mt-auto">
+                  <div className="text-4xl lg:text-5xl font-semibold tracking-tight text-slate-900 mb-2">
+                    {card.metric}
+                  </div>
+                  <div className="text-sm font-medium text-slate-500 uppercase tracking-wider">
+                    {card.label}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export function renderSection(section: PageSection, theme: ThemeConfig, isPreview?: boolean, pageId?: string) {
   if (section.isHidden) return null;
 
@@ -1508,6 +1635,8 @@ export function renderSection(section: PageSection, theme: ThemeConfig, isPrevie
     case 'timeline': return <TimelineSection key={section.id} section={section} theme={theme} />;
     case 'divider': return <DividerSection key={section.id} section={section} theme={theme} />;
     case 'spacer': return <SpacerSection key={section.id} section={section} theme={theme} />;
+    case 'feature-split': return <FeatureSplitSection key={section.id} section={section} theme={theme} />;
+    case 'value-cards': return <ValueCardsSection key={section.id} section={section} theme={theme} />;
     default: {
       const _exhaustive: never = section;
       return <div key={(section as any).id} className="p-4 text-center text-red-500">Unknown: {(section as any).type}</div>;

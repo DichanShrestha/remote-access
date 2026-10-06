@@ -5,7 +5,7 @@ import { Plus, Trash, ChevronDown, ChevronUp, Image as ImageIcon, X, Link2, Type
 import { createClient } from '@/lib/supabase/client';
 
 // ── Field definition system ────────────────────────────────────
-type FieldType = 'text' | 'textarea' | 'url' | 'select' | 'color' | 'email' | 'number' | 'toggle' | 'datetime';
+type FieldType = 'text' | 'textarea' | 'url' | 'select' | 'color' | 'email' | 'number' | 'toggle' | 'datetime' | 'segmented-control';
 
 type FieldDef = {
   key: string;
@@ -277,12 +277,65 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), value: '', label: '', prefix: '', suffix: '' }),
     }],
   },
+  'feature-split': {
+    fields: [
+      { key: 'layout', label: 'Layout', type: 'segmented-control' as FieldType, options: [{ label: 'Image Left', value: 'image-left' }, { label: 'Image Right', value: 'image-right' }] },
+      { key: 'content.eyebrow', label: 'Eyebrow', type: 'text' },
+      { key: 'content.title', label: 'Title', type: 'text' },
+      { key: 'content.description', label: 'Description', type: 'textarea' },
+      { key: 'content.imageUrl', label: 'Image URL', type: 'url' },
+      { key: 'content.buttonText', label: 'Button Text', type: 'text' },
+      { key: 'content.buttonUrl', label: 'Button URL', type: 'url' },
+    ],
+    arrayFields: [{
+      key: 'content.checkpoints', label: 'Checkpoints',
+      itemFields: [{ key: 'text', label: 'Text', type: 'text' }],
+      newItem: () => ({ id: Math.random().toString(36).substr(2, 9), text: '' }),
+    }],
+  },
+  'value-cards': {
+    fields: [
+      { key: 'content.title', label: 'Section Title', type: 'text' },
+      { key: 'content.description', label: 'Section Description', type: 'textarea' },
+    ],
+    arrayFields: [{
+      key: 'content.cards', label: 'Cards',
+      itemFields: [
+        { key: 'author', label: 'Name', type: 'text' },
+        { key: 'role', label: 'Role', type: 'text' },
+        { key: 'avatarUrl', label: 'Avatar URL', type: 'url' },
+        { key: 'quote', label: 'Review / Quote', type: 'textarea' },
+        { key: 'metric', label: 'Large Metric', type: 'text', placeholder: 'e.g. +120%' },
+        { key: 'label', label: 'Metric Label', type: 'text', placeholder: 'e.g. Revenue' },
+      ],
+      newItem: () => ({ id: Math.random().toString(36).substr(2, 9), author: '', quote: '', metric: '', label: '' }),
+    }],
+  },
 };
 
 // ── Field renderer (shared) ────────────────────────────────────
 function InspectorField({ field, value, onChange }: { field: FieldDef; value: any; onChange: (v: any) => void }) {
   const base = "w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition placeholder:text-slate-400";
   switch (field.type) {
+    case 'segmented-control':
+      return (
+        <div className="flex bg-slate-100 p-1 rounded-lg">
+          {field.options?.map(o => (
+            <button
+              key={o.value}
+              onClick={() => onChange(o.value)}
+              className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-2 px-1 rounded-md text-xs font-medium transition ${value === o.value ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+            >
+              {o.value === 'image-left' ? (
+                <svg className="w-5 h-5 opacity-75" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" /></svg>
+              ) : o.value === 'image-right' ? (
+                <svg className="w-5 h-5 opacity-75" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M15 21V9" /></svg>
+              ) : null}
+              {o.label}
+            </button>
+          ))}
+        </div>
+      );
     case 'textarea':
       return <textarea value={value || ''} onChange={e => onChange(e.target.value)} placeholder={field.placeholder} rows={3} className={base + " resize-y"} />;
     case 'select':
@@ -753,6 +806,47 @@ export function SectionInspector({ section, onChange }: { section: PageSection; 
           ))}
         </div>
       )}
+
+      {/* ── Section Appearance ── */}
+      <div className="mt-4 pt-6 border-t border-slate-200 dark:border-slate-700/50">
+        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 block">Section Appearance</label>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-medium text-slate-500 mb-1.5 block">Background Color</label>
+            <div className="flex items-center gap-2">
+              <input 
+                type="color" 
+                value={section.backgroundColor || '#ffffff'} 
+                onChange={(e) => onChange({ ...section, backgroundColor: e.target.value })} 
+                className="w-8 h-8 rounded cursor-pointer border-0 p-0" 
+              />
+              <button 
+                onClick={() => onChange({ ...section, backgroundColor: undefined })}
+                className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-500 mb-1.5 block">Text Color</label>
+            <div className="flex items-center gap-2">
+              <input 
+                type="color" 
+                value={section.textColor || '#000000'} 
+                onChange={(e) => onChange({ ...section, textColor: e.target.value })} 
+                className="w-8 h-8 rounded cursor-pointer border-0 p-0" 
+              />
+              <button 
+                onClick={() => onChange({ ...section, textColor: undefined })}
+                className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

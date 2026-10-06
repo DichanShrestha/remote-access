@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { useTemplate } from '../actions';
-import { Check, User, Palette, Mail, MapPin, ShoppingBag, Briefcase, X, Eye, Monitor, Smartphone } from 'lucide-react';
+import { Check, User, Palette, Mail, MapPin, ShoppingBag, Briefcase, X, Eye, Monitor, Smartphone, Code, Heart, Building2, UtensilsCrossed, TrendingUp } from 'lucide-react';
 
 type TemplateCategory = 'All' | 'Creator' | 'Business';
 
@@ -49,6 +49,16 @@ const TEMPLATES: TemplateInfo[] = [
     heroVariant: 'Editorial Center',
     sections: ['Stats', 'Email Collection', 'Audio', 'Social Links'],
   },
+  {
+    id: 'developer-portfolio',
+    name: 'Developer Portfolio',
+    description: 'For software engineers, full-stack developers, and technical freelancers.',
+    category: 'Creator',
+    icon: Code,
+    previewUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80',
+    heroVariant: 'Split + Zoom Reveal',
+    sections: ['Services', 'Stats', 'Gallery', 'Resume', 'Testimonials', 'Lead Form'],
+  },
 
   // ── Business ─────────────────────────────────────────────────
   {
@@ -80,6 +90,56 @@ const TEMPLATES: TemplateInfo[] = [
     previewUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80',
     heroVariant: 'Split',
     sections: ['Services', 'Testimonials', 'Lead Form', 'Social Links'],
+  },
+  {
+    id: 'beauty-brand',
+    name: 'Beauty & Skincare',
+    description: 'For skincare, cosmetics, wellness, and clean beauty brands.',
+    category: 'Business',
+    icon: Heart,
+    previewUrl: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800&q=80',
+    heroVariant: 'Split',
+    sections: ['Products', 'Stats', 'Testimonials', 'FAQ', 'Email Collection'],
+  },
+  {
+    id: 'architecture-studio',
+    name: 'Architecture Studio',
+    description: 'For architects, interior designers, and design studios.',
+    category: 'Business',
+    icon: Building2,
+    previewUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&q=80',
+    heroVariant: 'Immersive + Zoom Reveal',
+    sections: ['Stats', 'Services', 'Gallery', 'Testimonials', 'Lead Form', 'Contact'],
+  },
+  {
+    id: 'restaurant',
+    name: 'Restaurant',
+    description: 'For restaurants, cafés, bistros, bars, and fine dining.',
+    category: 'Business',
+    icon: UtensilsCrossed,
+    previewUrl: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80',
+    heroVariant: 'Immersive + Zoom Reveal',
+    sections: ['Products', 'Carousel', 'Booking', 'Timeline', 'Testimonials', 'Contact'],
+  },
+  {
+    id: 'corporate-advisory',
+    name: 'Corporate Advisory',
+    description: 'For consulting firms, financial advisors, and corporate strategy teams.',
+    category: 'Business',
+    icon: TrendingUp,
+    previewUrl: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=800&q=80',
+    heroVariant: 'Split + Zoom Reveal',
+    sections: ['Stats', 'Services', 'Testimonials', 'FAQ', 'Lead Form'],
+  },
+  {
+    id: 'corporate-consulting',
+    name: 'Corporate Consulting',
+    description: 'For consulting agencies focused on tangible results and methodology.',
+    category: 'Business',
+    icon: TrendingUp,
+    previewUrl: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80',
+    heroVariant: 'Split',
+    sections: ['Stats', 'Feature Split', 'Testimonials', 'Value Cards', 'FAQ', 'Contact'],
   },
 ];
 

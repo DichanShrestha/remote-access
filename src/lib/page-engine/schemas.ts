@@ -4,6 +4,8 @@ export const BaseSectionSchema = z.object({
   id: z.string(),
   isHidden: z.boolean().default(false),
   variant: z.string().optional(),
+  backgroundColor: z.string().optional(),
+  textColor: z.string().optional(),
 });
 
 export const ThemeConfigSchema = z.object({
@@ -356,6 +358,41 @@ export const SpacerSectionSchema = BaseSectionSchema.extend({
   layout: z.enum(['small', 'medium', 'large', 'xl']).default('medium'),
 });
 
+export const FeatureSplitSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('feature-split'),
+  content: z.object({
+    eyebrow: z.string().optional(),
+    title: z.string(),
+    description: z.string().optional(),
+    checkpoints: z.array(z.object({
+      id: z.string(),
+      text: z.string(),
+    })).default([]),
+    imageUrl: z.string(),
+    imageAlt: z.string().optional(),
+    buttonText: z.string().optional(),
+    buttonUrl: z.string().optional(),
+  }),
+  layout: z.enum(['image-left', 'image-right']).default('image-left'),
+});
+
+export const ValueCardsSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('value-cards'),
+  content: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    cards: z.array(z.object({
+      id: z.string(),
+      metric: z.string(),
+      label: z.string(),
+      quote: z.string(),
+      author: z.string(),
+      role: z.string().optional(),
+      avatarUrl: z.string().optional(),
+    })).default([]),
+  }),
+});
+
 // ─── Master Union ────────────────────────────────────────────────
 
 export const PageSectionSchema = z.discriminatedUnion('type', [
@@ -392,6 +429,8 @@ export const PageSectionSchema = z.discriminatedUnion('type', [
   TimelineSectionSchema,
   DividerSectionSchema,
   SpacerSectionSchema,
+  FeatureSplitSectionSchema,
+  ValueCardsSectionSchema,
 ]);
 
 export type PageSection = z.infer<typeof PageSectionSchema>;

@@ -221,4 +221,14 @@ export const ComponentRegistry: Record<SectionType, ComponentMetadata> = {
     categories: ['organize'],
     defaultData: () => ({ type: 'spacer', layout: 'medium', content: {} }),
   },
+  'feature-split': {
+    type: 'feature-split', label: 'Feature Split', category: 'trust',
+    categories: ['trust'],
+    defaultData: () => ({ type: 'feature-split', layout: 'image-left', content: { title: 'Feature', checkpoints: [{ id: '1', text: 'Point 1' }], imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800' } }),
+  },
+  'value-cards': {
+    type: 'value-cards', label: 'Value Cards', category: 'trust',
+    categories: ['trust'],
+    defaultData: () => ({ type: 'value-cards', content: { title: 'Our Results', cards: [{ id: '1', metric: '+120%', label: 'Growth', quote: 'Amazing.', author: 'John' }] } }),
+  }
 };

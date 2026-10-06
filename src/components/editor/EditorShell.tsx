@@ -261,14 +261,14 @@ export function EditorShell({
               </>
             ) : (
               <>
-                <button 
+                <button
                   onClick={() => setActiveTab('design')}
                   className={`flex items-center gap-1.5 transition-colors ${activeTab === 'design' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                 >
                   <Settings className="w-4 h-4" />
                   Design
                 </button>
-                <button 
+                <button
                   onClick={() => setActiveTab('chatbot')}
                   className={`flex items-center gap-1.5 transition-colors ${activeTab === 'chatbot' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                 >
@@ -288,134 +288,87 @@ export function EditorShell({
         <div className="flex-1 overflow-y-auto p-4">
           {!selectedSection ? (
             activeTab === 'design' ? (
-            <div className="flex flex-col gap-6">
-              {/* AI Composer */}
-              <div className="flex flex-col gap-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl relative overflow-hidden">
-                <div className="absolute -top-4 -right-4 opacity-5">
-                  <Sparkles className="w-24 h-24 text-blue-500" />
-                </div>
-                <h3 className="font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2 relative z-10 text-sm">
-                  <Sparkles className="w-4 h-4" />
-                  AI Page Composer
-                </h3>
-                <p className="text-xs text-blue-600/70 dark:text-blue-400/70 relative z-10">
-                  Describe your page and AI will generate it instantly.
-                </p>
-                <textarea
-                  value={composePrompt}
-                  onChange={e => setComposePrompt(e.target.value)}
-                  placeholder="e.g. A portfolio for a fashion photographer with gallery, testimonials, and booking…"
-                  className="w-full p-3 text-sm rounded-lg border border-blue-200 dark:border-blue-700 bg-white dark:bg-slate-900 relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                  rows={3}
-                />
-                <button
-                  onClick={handleCompose}
-                  disabled={isComposing || !composePrompt.trim()}
-                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow transition-all disabled:opacity-50 relative z-10 flex items-center justify-center gap-2"
-                >
-                  {isComposing ? <span className="animate-spin text-base leading-none">⟳</span> : <Sparkles className="w-4 h-4" />}
-                  {isComposing ? 'Generating…' : 'Generate Page'}
-                </button>
-              </div>
+              <div className="flex flex-col gap-6">
+                {/* AI Composer */}
 
-              {/* Theme Settings */}
-              <div className="flex flex-col gap-4">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Theme</h3>
-                <div>
-                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Style</label>
-                  <select
-                    value={doc.theme.style}
-                    onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, style: e.target.value as any } }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
-                  >
-                    <option value="premium-minimal">Premium Minimal</option>
-                    <option value="bold">Bold</option>
-                    <option value="playful">Playful</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Primary Color</label>
-                  <div className="flex items-center gap-3">
-                    <input type="color" value={doc.theme.primaryColor} onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))} className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0" />
-                    <input type="text" value={doc.theme.primaryColor} onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))} className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 font-mono" />
+
+                {/* Theme Settings */}
+                <div className="flex flex-col gap-4">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Theme</h3>
+                  <div>
+                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Style</label>
+                    <select
+                      value={doc.theme.style}
+                      onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, style: e.target.value as any } }))}
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                    >
+                      <option value="premium-minimal">Premium Minimal</option>
+                      <option value="bold">Bold</option>
+                      <option value="playful">Playful</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Primary Color</label>
+                    <div className="flex items-center gap-3">
+                      <input type="color" value={doc.theme.primaryColor} onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))} className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0" />
+                      <input type="text" value={doc.theme.primaryColor} onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))} className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 font-mono" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Border Radius</label>
+                    <select
+                      value={doc.theme.radius}
+                      onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, radius: e.target.value as any } }))}
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                    >
+                      <option value="none">None</option>
+                      <option value="small">Small</option>
+                      <option value="medium">Medium</option>
+                      <option value="large">Large</option>
+                      <option value="full">Full</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Density</label>
+                    <select
+                      value={doc.theme.density}
+                      onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, density: e.target.value as any } }))}
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                    >
+                      <option value="compact">Compact</option>
+                      <option value="comfortable">Comfortable</option>
+                      <option value="spacious">Spacious</option>
+                    </select>
                   </div>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Border Radius</label>
-                  <select
-                    value={doc.theme.radius}
-                    onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, radius: e.target.value as any } }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
-                  >
-                    <option value="none">None</option>
-                    <option value="small">Small</option>
-                    <option value="medium">Medium</option>
-                    <option value="large">Large</option>
-                    <option value="full">Full</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Density</label>
-                  <select
-                    value={doc.theme.density}
-                    onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, density: e.target.value as any } }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
-                  >
-                    <option value="compact">Compact</option>
-                    <option value="comfortable">Comfortable</option>
-                    <option value="spacious">Spacious</option>
-                  </select>
-                </div>
-              </div>
 
-              {/* Page Features */}
-              <div className="flex flex-col gap-4 mt-2">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Features</h3>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="smoothScroll"
-                    checked={!!doc.settings.enableSmoothScrolling}
-                    onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, enableSmoothScrolling: e.target.checked } }))}
-                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
-                  <label htmlFor="smoothScroll" className="text-sm font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
-                    Enable Smooth Scrolling
-                  </label>
+                {/* Page Features */}
+                <div className="flex flex-col gap-4 mt-2">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Features</h3>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="smoothScroll"
+                      checked={!!doc.settings.enableSmoothScrolling}
+                      onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, enableSmoothScrolling: e.target.checked } }))}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <label htmlFor="smoothScroll" className="text-sm font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
+                      Enable Smooth Scrolling
+                    </label>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-sm text-slate-400 text-center">
+                  Select a section to edit its content.
                 </div>
               </div>
-
-              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-sm text-slate-400 text-center">
-                Select a section to edit its content.
-              </div>
-            </div>
             ) : (
               <BotSettingsPanel pageId={pageId} />
             )
           ) : (
             <div className="flex flex-col gap-5">
-              {/* AI Section Editor */}
-              <div className="flex flex-col gap-2 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl relative overflow-hidden">
-                <h3 className="font-bold text-purple-800 dark:text-purple-300 flex items-center gap-2 text-sm">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  AI Edit
-                </h3>
-                <textarea
-                  value={editPrompt}
-                  onChange={e => setEditPrompt(e.target.value)}
-                  placeholder="e.g. Make the title more engaging…"
-                  className="w-full p-2 text-sm rounded-lg border border-purple-200 dark:border-purple-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
-                  rows={2}
-                />
-                <button
-                  onClick={handleAiEdit}
-                  disabled={isEditingSection || !editPrompt.trim()}
-                  className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isEditingSection ? <span className="animate-spin leading-none">⟳</span> : <Sparkles className="w-3 h-3" />}
-                  {isEditingSection ? 'Applying…' : 'Apply Edit'}
-                </button>
-              </div>
+
 
               {/* Data-driven Inspector */}
               <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
