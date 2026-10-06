@@ -436,16 +436,65 @@ export const PageSectionSchema = z.discriminatedUnion('type', [
 export type PageSection = z.infer<typeof PageSectionSchema>;
 export type SectionType = PageSection['type'];
 
+export interface GroupNode {
+  kind: 'group';
+  id: string;
+  name: string;
+  backgroundColor?: string;
+  textColor?: string;
+  direction: 'row' | 'column';
+  horizontalAlign: 'left' | 'center' | 'right' | 'space-between';
+  verticalAlign: 'top' | 'center' | 'bottom';
+  width: 'fit' | 'full' | 'custom';
+  customWidth: number;
+  gap: 'small' | 'medium' | 'large' | 'custom';
+  customGap: number;
+  padding: 'small' | 'medium' | 'large' | 'custom';
+  customPadding: number;
+  mobileDirection: 'row' | 'column';
+  children: PageNode[];
+}
+
+export type PageNode = PageSection | GroupNode;
+
+export const PageNodeSchema: z.ZodType<PageNode> = z.lazy(() => z.union([PageSectionSchema, GroupNodeSchema]));
+export const GroupNodeSchema: z.ZodType<GroupNode> = z.lazy(() => z.object({
+  kind: z.literal('group'),
+  id: z.string(),
+  name: z.string().default('Layout Group'),
+  backgroundColor: z.string().optional(),
+  textColor: z.string().optional(),
+  direction: z.enum(['row', 'column']).default('column'),
+  horizontalAlign: z.enum(['left', 'center', 'right', 'space-between']).default('left'),
+  verticalAlign: z.enum(['top', 'center', 'bottom']).default('top'),
+  width: z.enum(['fit', 'full', 'custom']).default('full'),
+  customWidth: z.number().min(10).max(100).default(100),
+  gap: z.enum(['small', 'medium', 'large', 'custom']).default('medium'),
+  customGap: z.number().min(0).max(96).default(24),
+  padding: z.enum(['small', 'medium', 'large', 'custom']).default('medium'),
+  customPadding: z.number().min(0).max(128).default(24),
+  mobileDirection: z.enum(['row', 'column']).default('column'),
+  children: z.array(PageNodeSchema).default([]),
+}));
+
+function hasSupportedGroupDepth(node: PageNode, depth = 0): boolean {
+  if (!('kind' in node) || node.kind !== 'group') return true;
+  const nextDepth = depth + 1;
+  return nextDepth <= 4 && node.children.every(child => hasSupportedGroupDepth(child, nextDepth));
+}
+
 export const PageDocumentSchema = z.object({
   version: z.number().default(1),
   theme: ThemeConfigSchema.default({ style: 'premium-minimal', primaryColor: '#000000', radius: 'medium', density: 'comfortable' }),
   settings: PageSettingsSchema.default({ showFooterBranding: true, enableSmoothScrolling: false }),
   sections: z.array(z.any())
     .transform(items => {
-      return items
-        .map(item => PageSectionSchema.safeParse(item))
-        .filter(res => res.success)
-        .map(res => (res as any).data as PageSection);
+      const nodes: PageNode[] = [];
+      for (const item of items) {
+        const parsed = PageNodeSchema.safeParse(item);
+        if (parsed.success && hasSupportedGroupDepth(parsed.data)) nodes.push(parsed.data);
+      }
+      return nodes;
     })
     .default([]),
 });

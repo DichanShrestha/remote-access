@@ -1,6 +1,8 @@
 "use client";
 import React, { useState } from 'react';
-import { PageSection, SectionType } from '@/lib/page-engine/schemas';
+import { PageNode, PageSection, SectionType } from '@/lib/page-engine/schemas';
+import { isGroup } from '@/lib/page-engine/operations';
+import { LayoutGroupInspector } from './LayoutGroupInspector';
 import { Plus, Trash, ChevronDown, ChevronUp, Image as ImageIcon, X, Link2, Type, Layout, MousePointerClick, Eye, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -654,6 +656,8 @@ function HeroInspector({ section, onChange }: { section: PageSection; onChange: 
         )}
       </InspectorGroup>
 
+      <SectionAppearance section={section} onChange={onChange} />
+
       {/* 2. Typography & Content */}
       <InspectorGroup title="Typography & Content" icon={<Type className="w-3.5 h-3.5" />} defaultOpen={true}>
         <HeroInput label="Eyebrow" value={deepGet(section, 'content.eyebrow') || ''} onChange={v => handleFieldChange('content.eyebrow', v)} placeholder="e.g. Designer · Writer · Creator" />
@@ -697,6 +701,51 @@ function HeroInspector({ section, onChange }: { section: PageSection; onChange: 
           urlPlaceholder="#portfolio"
         />
       </InspectorGroup>
+
+    </div>
+  );
+}
+
+function SectionAppearance({ section, onChange }: { section: PageSection; onChange: (updated: PageSection) => void }) {
+  return (
+    <div className="mt-1 pt-6 border-t border-slate-200 dark:border-slate-700/50">
+      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 block">Section Appearance</label>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs font-medium text-slate-500 mb-1.5 block">Background Color</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={section.backgroundColor || '#ffffff'}
+              onChange={e => onChange({ ...section, backgroundColor: e.target.value })}
+              className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+            />
+            <button
+              onClick={() => onChange({ ...section, backgroundColor: undefined })}
+              className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+        <div>
+          <label className="text-xs font-medium text-slate-500 mb-1.5 block">Text Color</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={section.textColor || '#000000'}
+              onChange={e => onChange({ ...section, textColor: e.target.value })}
+              className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+            />
+            <button
+              onClick={() => onChange({ ...section, textColor: undefined })}
+              className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -752,7 +801,11 @@ function HeroVariantPicker({ currentVariant, onChange }: { currentVariant: strin
 import { SECTION_VARIANTS } from '@/lib/page-engine/variants';
 
 // ── Main Inspector ─────────────────────────────────────────────
-export function SectionInspector({ section, onChange }: { section: PageSection; onChange: (updated: PageSection) => void }) {
+export function SectionInspector({ section, onChange }: { section: PageNode; onChange: (updated: PageNode) => void }) {
+  if (isGroup(section)) {
+    return <LayoutGroupInspector group={section} onChange={onChange} />;
+  }
+
   // HERO gets its own premium inspector
   if (section.type === 'hero') {
     return <HeroInspector section={section} onChange={onChange} />;
@@ -807,46 +860,7 @@ export function SectionInspector({ section, onChange }: { section: PageSection; 
         </div>
       )}
 
-      {/* ── Section Appearance ── */}
-      <div className="mt-4 pt-6 border-t border-slate-200 dark:border-slate-700/50">
-        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 block">Section Appearance</label>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs font-medium text-slate-500 mb-1.5 block">Background Color</label>
-            <div className="flex items-center gap-2">
-              <input 
-                type="color" 
-                value={section.backgroundColor || '#ffffff'} 
-                onChange={(e) => onChange({ ...section, backgroundColor: e.target.value })} 
-                className="w-8 h-8 rounded cursor-pointer border-0 p-0" 
-              />
-              <button 
-                onClick={() => onChange({ ...section, backgroundColor: undefined })}
-                className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-500 mb-1.5 block">Text Color</label>
-            <div className="flex items-center gap-2">
-              <input 
-                type="color" 
-                value={section.textColor || '#000000'} 
-                onChange={(e) => onChange({ ...section, textColor: e.target.value })} 
-                className="w-8 h-8 rounded cursor-pointer border-0 p-0" 
-              />
-              <button 
-                onClick={() => onChange({ ...section, textColor: undefined })}
-                className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <SectionAppearance section={section} onChange={onChange} />
     </div>
   );
 }

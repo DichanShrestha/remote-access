@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
-import { PageDocument, PageSection, SectionType } from '@/lib/page-engine/schemas';
-import { addSection, removeSection, updateSection, duplicateSection, toggleSectionVisibility } from '@/lib/page-engine/operations';
+import { GroupNode, PageDocument, PageNode, PageSection, SectionType } from '@/lib/page-engine/schemas';
+import { findNode, findNodeParentId, insertNode, isGroup, moveNode, removeSection, updateNode, updateSection, duplicateSection, toggleSectionVisibility, getNodeDepth } from '@/lib/page-engine/operations';
 import { ComponentRegistry } from '@/lib/page-engine/registry';
 
 import { saveDraftConfig, publishPage } from '@/app/editor/actions';
@@ -9,7 +9,7 @@ import { composePage, editSection } from '@/app/editor/ai-actions';
 import { DraggableSectionList } from './DraggableSectionList';
 import { ComponentPicker } from './ComponentPicker';
 import { SectionInspector } from './SectionInspector';
-import { Send, Plus, Sparkles, Smartphone, Monitor, Undo, Settings, MessageSquare } from 'lucide-react';
+import { Send, Plus, Sparkles, Smartphone, Monitor, Undo, Settings, MessageSquare, Layers } from 'lucide-react';
 import { BotSettingsPanel } from './BotSettingsPanel';
 
 
@@ -22,6 +22,7 @@ export function EditorShell({
 }) {
   const [doc, setDoc] = useState<PageDocument>(initialDocument);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [insertionGroupId, setInsertionGroupId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
@@ -125,8 +126,36 @@ export function EditorShell({
       isHidden: false,
       ...meta.defaultData()
     } as PageSection;
-    updateDoc(prev => addSection(prev, newSection));
+    const insertionTarget = insertionGroupId ? findNode(doc.sections, insertionGroupId) : undefined;
+    const parent = insertionTarget && isGroup(insertionTarget) ? insertionTarget.id : undefined;
+    updateDoc(prev => insertNode(prev, newSection, parent));
     setSelectedSectionId(newSection.id);
+  };
+
+  const handleAddGroup = (parentId?: string) => {
+    const currentSelection = selectedSectionId ? findNode(doc.sections, selectedSectionId) : undefined;
+    const requestedParent = parentId ?? (currentSelection && isGroup(currentSelection) ? currentSelection.id : insertionGroupId ?? undefined);
+    const parentDepth = requestedParent ? getNodeDepth(doc.sections, requestedParent) : 0;
+    if (requestedParent && (parentDepth === undefined || parentDepth >= 4)) return;
+    const group: GroupNode = {
+      kind: 'group',
+      id: Math.random().toString(36).slice(2, 11),
+      name: 'Layout Group',
+      direction: 'column',
+      horizontalAlign: 'left',
+      verticalAlign: 'top',
+      width: 'full',
+      customWidth: 100,
+      gap: 'medium',
+      customGap: 24,
+      padding: 'medium',
+      customPadding: 24,
+      mobileDirection: 'column',
+      children: [],
+    };
+    updateDoc(prev => insertNode(prev, group, requestedParent));
+    setSelectedSectionId(group.id);
+    setInsertionGroupId(group.id);
   };
 
   const handleCompose = async () => {
@@ -147,13 +176,13 @@ export function EditorShell({
 
   const handleAiEdit = async () => {
     if (!editPrompt.trim() || !selectedSectionId) return;
-    const section = doc.sections.find(s => s.id === selectedSectionId);
-    if (!section) return;
+    const section = findNode(doc.sections, selectedSectionId);
+    if (!section || isGroup(section)) return;
 
     setIsEditingSection(true);
     try {
       const updatedSection = await editSection(editPrompt, section, pageId);
-      updateDoc(prev => updateSection(prev, section.id, updatedSection as any));
+      updateDoc(prev => updateSection(prev, section.id, updatedSection as Partial<PageSection>));
       setEditPrompt('');
     } catch (error) {
       alert("Failed to edit section with AI. Please try again.");
@@ -163,7 +192,7 @@ export function EditorShell({
     }
   };
 
-  const selectedSection = doc.sections.find(s => s.id === selectedSectionId);
+  const selectedSection = selectedSectionId ? findNode(doc.sections, selectedSectionId) : undefined;
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans">
@@ -171,7 +200,7 @@ export function EditorShell({
       {/* LEFT COLUMN: Section List */}
       <div className="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-20">
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-          <h2 className="font-bold text-base tracking-tight">Sections</h2>
+          <h2 className="font-bold text-base tracking-tight">Layers</h2>
           <div className="flex items-center gap-2 text-xs text-slate-400">
             {isSaving ? <span className="animate-pulse text-blue-500">Saving…</span> : <span>Saved</span>}
           </div>
@@ -179,24 +208,36 @@ export function EditorShell({
 
         <div className="flex-1 overflow-y-auto p-3">
           <DraggableSectionList
-            sections={doc.sections}
-            selectedSectionId={selectedSectionId}
-            onSelect={id => setSelectedSectionId(id)}
-            onReorder={sections => updateDoc(prev => ({ ...prev, sections }))}
-            onRemove={id => { updateDoc(prev => removeSection(prev, id)); if (selectedSectionId === id) setSelectedSectionId(null); }}
+            nodes={doc.sections}
+            selectedNodeId={selectedSectionId}
+            onSelect={id => {
+              setSelectedSectionId(id);
+              const node = findNode(doc.sections, id);
+              setInsertionGroupId(node && isGroup(node) ? node.id : findNodeParentId(doc.sections, id) ?? null);
+            }}
+            onMove={(id, parentId, index) => updateDoc(prev => moveNode(prev, id, parentId, index))}
+            onRemove={id => {
+              const removed = findNode(doc.sections, id);
+              updateDoc(prev => removeSection(prev, id));
+              if (selectedSectionId === id || (removed && isGroup(removed) && selectedSectionId && findNode(removed.children, selectedSectionId))) setSelectedSectionId(null);
+              if (insertionGroupId === id || (removed && isGroup(removed) && insertionGroupId && findNode(removed.children, insertionGroupId))) setInsertionGroupId(null);
+            }}
             onDuplicate={id => updateDoc(prev => duplicateSection(prev, id))}
             onToggleHide={id => updateDoc(prev => toggleSectionVisibility(prev, id))}
+            onAddGroup={handleAddGroup}
+            onAddComponent={parentId => { setInsertionGroupId(parentId ?? null); if (parentId) setSelectedSectionId(parentId); setShowPicker(true); }}
           />
         </div>
 
         <div className="p-3 border-t border-slate-200 dark:border-slate-800">
-          <button
-            onClick={() => setShowPicker(true)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-sm rounded-xl hover:opacity-90 transition"
-          >
-            <Plus className="w-4 h-4" />
-            Add Component
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => handleAddGroup()} className="flex flex-1 items-center justify-center gap-1 rounded-xl border border-slate-200 py-2.5 text-xs font-semibold hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+              <Layers className="h-4 w-4" /> Group
+            </button>
+            <button onClick={() => setShowPicker(true)} className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-slate-900 py-2.5 text-xs font-semibold text-white hover:opacity-90 dark:bg-white dark:text-slate-900">
+              <Plus className="h-4 w-4" /> {insertionGroupId ? 'Add to Group' : 'Component'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -257,7 +298,7 @@ export function EditorShell({
           <h2 className="font-bold text-base tracking-tight flex items-center gap-4">
             {selectedSection ? (
               <>
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-500">{ComponentRegistry[selectedSection.type]?.label}</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-500">{isGroup(selectedSection) ? selectedSection.name || 'Layout Group' : ComponentRegistry[selectedSection.type]?.label}</span>
               </>
             ) : (
               <>
@@ -279,7 +320,7 @@ export function EditorShell({
             )}
           </h2>
           {selectedSection && (
-            <button onClick={() => setSelectedSectionId(null)} className="text-xs text-blue-500 hover:underline">
+            <button onClick={() => { setSelectedSectionId(null); setInsertionGroupId(null); }} className="text-xs text-blue-500 hover:underline">
               ← Back
             </button>
           )}
@@ -375,7 +416,7 @@ export function EditorShell({
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Properties</h3>
                 <SectionInspector
                   section={selectedSection}
-                  onChange={updated => updateDoc(prev => updateSection(prev, selectedSection.id, updated))}
+                  onChange={updated => updateDoc(prev => updateNode(prev, selectedSection.id, updated as Partial<PageNode>))}
                 />
               </div>
             </div>

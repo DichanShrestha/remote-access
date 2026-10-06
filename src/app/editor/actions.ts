@@ -1,6 +1,7 @@
 "use server";
 
 import db from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { PageDocumentSchema } from '@/lib/page-engine/schemas';
 import { authService } from '@/services/auth';
 import { revalidatePath } from 'next/cache';
@@ -27,7 +28,7 @@ export async function saveDraftConfig(pageId: string, rawConfig: any) {
   await db.page.update({
     where: { id: pageId },
     data: {
-      draftConfig: parsed.data,
+      draftConfig: parsed.data as unknown as Prisma.InputJsonValue,
     }
   });
 
