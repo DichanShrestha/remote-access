@@ -25,6 +25,19 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'shiny', label: 'Shiny Text', previewNode: <PlaceholderSVG /> },
     { id: 'typewriter', label: 'Typewriter', previewNode: <PlaceholderSVG /> },
   ],
+  'link-list': [
+    { id: 'default', label: 'Link Cards', previewNode: <PlaceholderSVG /> },
+    { id: 'navigation', label: 'Navigation', previewNode: <PlaceholderSVG /> },
+    { id: 'tabs', label: 'Section Tabs', previewNode: <PlaceholderSVG /> },
+  ],
+  stats: [
+    { id: 'default', label: 'Stats Grid', previewNode: <PlaceholderSVG /> },
+    { id: 'editorial-band', label: 'Editorial Band', previewNode: <PlaceholderSVG /> },
+  ],
+  'feature-split': [
+    { id: 'default', label: 'Framed Image', previewNode: <PlaceholderSVG /> },
+    { id: 'editorial', label: 'Editorial Split', previewNode: <PlaceholderSVG /> },
+  ],
   carousel: [
     { 
       id: 'default', 
@@ -68,9 +81,13 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'grid', label: 'Masonry Grid', previewNode: <PlaceholderSVG /> },
     { id: 'marquee', label: 'Infinite Marquee', previewNode: <PlaceholderSVG /> },
   ],
+  'case-studies': [
+    { id: 'default', label: 'Case Study Cards', previewNode: <PlaceholderSVG /> },
+  ],
   contact: [
     { id: 'card-centered', label: 'Card Centered', previewNode: <PlaceholderSVG /> },
     { id: 'split-layout', label: 'Split Layout', previewNode: <PlaceholderSVG /> },
+    { id: 'editorial-panel', label: 'Editorial Panel', previewNode: <PlaceholderSVG /> },
     { id: 'minimal-footer', label: 'Minimal Footer', previewNode: <PlaceholderSVG /> },
   ],
   'lead-form': [

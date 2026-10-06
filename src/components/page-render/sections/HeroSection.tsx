@@ -157,6 +157,7 @@ function HeroCTA({ content, theme, colors, className }: SubProps & { colors: Ret
       {/* Primary */}
       <a
         href={buttonUrl || '#'}
+        data-page-button
         className="group inline-flex items-center justify-center gap-2.5 font-sans font-semibold text-white transition-all duration-300 hover:-translate-y-px active:translate-y-0"
         style={{
           backgroundColor: theme.primaryColor,
@@ -174,6 +175,7 @@ function HeroCTA({ content, theme, colors, className }: SubProps & { colors: Ret
       {secondaryButtonText && (
         <a
           href={secondaryButtonUrl || '#'}
+          data-page-button
           className={cn(
             'inline-flex items-center justify-center gap-2 font-sans font-semibold transition-all duration-300 border',
             colors.secondaryBtn
@@ -471,23 +473,24 @@ function ImmersiveHero({ content, theme, textContrast = 'auto' }: SubProps) {
 //  - Vertical padding reduced
 //  - Image is not wrapped in the animated element that shifts the shape
 // ---------------------------------------------------------------------------
-function SplitHero({ content, theme, textContrast = 'auto' }: SubProps) {
+function SplitHero({ content, theme, textContrast = 'auto', wide = false }: SubProps & { wide?: boolean }) {
   const colors = useContrastColors(textContrast, 'split');
   const imageSrc = content.imageUrl || content.avatarUrl;
   const hasImage = Boolean(imageSrc);
 
   return (
-    <section className="relative w-full px-6 @md:px-12 py-14 @md:py-20 @lg:py-24">
+    <section className={cn('relative w-full px-6 py-14 @md:px-12 @md:py-20 @lg:py-24', wide && 'px-0 py-0')}>
       <div
         className={cn(
           'relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-10',
           hasImage
             ? '@lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] @lg:gap-12 @xl:gap-16'
-            : 'max-w-3xl'
+            : 'max-w-3xl',
+          wide && hasImage && 'mx-0 max-w-none items-stretch gap-0 @lg:grid-cols-2'
         )}
       >
         {/* Left: Text content */}
-        <div className="flex flex-col items-start text-left order-1">
+        <div className={cn('order-1 flex flex-col items-start text-left', wide && 'justify-center px-8 py-14 @md:px-12 @lg:px-16 @xl:px-24')}>
           <BlurFade delay={0} inView direction="right">
             <div className="flex flex-wrap items-center gap-3">
               <HeroBadge text={content.badge} theme={theme} isLight={colors.isLight} />
@@ -547,11 +550,11 @@ function SplitHero({ content, theme, textContrast = 'auto' }: SubProps) {
               Padding on the wrapper reserves room for the offset shape, so it
               never gets clipped or pushes the layout sideways.
             */}
-            <div className="relative w-full pr-3 pb-3 @lg:pr-4 @lg:pb-4">
+            <div className={cn('relative w-full pr-3 pb-3 @lg:pr-4 @lg:pb-4', wide && 'h-full min-h-80 p-0')}>
               {/* Decorative shape: same radius as the photo, offset evenly down-right */}
               <div
                 aria-hidden
-                className="absolute inset-0 left-3 top-3 @lg:left-4 @lg:top-4 rounded-2xl opacity-[0.1]"
+                className={cn('absolute inset-0 left-3 top-3 @lg:left-4 @lg:top-4 rounded-2xl opacity-[0.1]', wide && 'hidden')}
                 style={{ backgroundColor: theme.primaryColor }}
               />
               <img
@@ -559,7 +562,7 @@ function SplitHero({ content, theme, textContrast = 'auto' }: SubProps) {
                 alt=""
                 fetchPriority="high"
                 decoding="async"
-                className="relative block w-full aspect-[4/3] @lg:aspect-[5/4] object-cover object-center rounded-2xl shadow-xl ring-1 ring-slate-900/5"
+                className={cn('relative block w-full aspect-[4/3] @lg:aspect-[5/4] object-cover object-center rounded-2xl shadow-xl ring-1 ring-slate-900/5', wide && 'h-full min-h-80 aspect-[4/3] rounded-none shadow-none ring-0 @lg:aspect-auto')}
               />
             </div>
           </BlurFade>
@@ -780,6 +783,7 @@ const VARIANT_MAP: Record<string, React.ComponentType<SubProps>> = {
   'default': EditorialCenter,
   'editorial-center': EditorialCenter,
   'split': SplitHero,
+  'split-wide': (props) => <SplitHero {...props} wide />,
   'immersive': ImmersiveHero,
   'minimal': MinimalProfile,
   'asymmetric': AsymmetricHero,
@@ -803,4 +807,3 @@ export function HeroSection({ section, theme, isPreview }: HeroProps & { isPrevi
     </>
   );
 }
-

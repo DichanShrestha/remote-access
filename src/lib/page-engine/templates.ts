@@ -1,4 +1,14 @@
-import { PageDocument } from './schemas';
+import { GroupNode, PageDocument, PageNode } from './schemas';
+
+function consultingGroup(id: string, name: string, direction: GroupNode['direction'], children: PageNode[], options: Partial<GroupNode> = {}): GroupNode {
+  return {
+    kind: 'group', id, name, direction,
+    horizontalAlign: 'left', verticalAlign: 'center',
+    width: 'full', customWidth: 100, gap: 'medium', customGap: 16,
+    padding: 'custom', customPadding: 0, mobileDirection: 'column',
+    children, ...options,
+  };
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // 1. CREATOR PROFILE
@@ -1218,185 +1228,130 @@ export const TEMPLATE_CORPORATE_ADVISORY: PageDocument = {
 // ═══════════════════════════════════════════════════════════════════
 export const TEMPLATE_CORPORATE_CONSULTING: PageDocument = {
   version: 1,
-  theme: {
-    style: 'premium-minimal',
-    primaryColor: '#093326',
-    radius: 'none',
-    density: 'spacious',
-  },
-  settings: {
-    showFooterBranding: true,
-    enableSmoothScrolling: true,
-  },
+  theme: { style: 'premium-minimal', primaryColor: '#093326', radius: 'none', density: 'spacious' },
+  settings: { showFooterBranding: false, enableSmoothScrolling: true },
   sections: [
+    consultingGroup('site-header', 'Header', 'row', [
+      { id: 'brand', type: 'rich-text', isHidden: false, content: { text: '<p><strong>LOGO</strong></p>' } },
+      { id: 'main-navigation', type: 'link-list', variant: 'navigation', isHidden: false, content: { links: [
+        { id: 'nav-about', label: 'About us', url: '#hero' }, { id: 'nav-services', label: 'Services', url: '#service-tabs' }, { id: 'nav-pricing', label: 'Pricing', url: '#value-cards' }, { id: 'nav-news', label: 'News', url: '#success-stories' }, { id: 'nav-contact', label: 'Contact', url: '#contact' },
+      ] } },
+      consultingGroup('header-actions', 'Header actions', 'row', [
+        { id: 'header-consult', type: 'url-button', layout: 'outline', isHidden: false, content: { label: 'Free consultation', url: '#contact' } },
+        { id: 'header-start', type: 'url-button', layout: 'filled', isHidden: false, buttonColor: '#101010', content: { label: 'Get started', url: '#contact' } },
+      ], { width: 'fit', horizontalAlign: 'right', mobileDirection: 'row', gap: 'small', customGap: 8 }),
+    ], { backgroundColor: '#ffffff', textColor: '#151515', padding: 'small', customPadding: 12, gap: 'large', customGap: 32 }),
     {
-      id: 'hero',
-      isHidden: false,
-      type: 'hero',
-      variant: 'split',
-      layout: 'split',
+      id: 'hero', isHidden: false, type: 'hero', variant: 'split-wide', layout: 'split',
+      backgroundColor: '#f5f2f0', textColor: '#171717',
       content: {
-        title: 'Build a sustainable future for your company',
-        headline: '',
-        subtitle: 'A clear process that identifies your goals, shapes your strategy, and guides your growth.',
-        buttonText: 'Free consultation',
-        buttonUrl: '#contact',
-        secondaryButtonText: 'Our methodology',
-        secondaryButtonUrl: '#services',
-        imageUrl: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&q=80',
+        eyebrow: 'Financial services', title: 'Build a sustainable future for your company', headline: '',
+        subtitle: 'Unlock success with tailored financial consulting solutions for your business growth.',
+        buttonText: 'Free consultation', buttonUrl: '#contact', secondaryButtonText: 'Watch video', secondaryButtonUrl: '#service-tabs',
+        imageUrl: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&q=85&w=1400',
       },
     },
     {
-      id: 'stats',
-      isHidden: false,
-      type: 'stats',
-      variant: 'dark-veil',
+      id: 'stats', isHidden: false, type: 'stats', variant: 'editorial-band', backgroundColor: '#062f26', textColor: '#ffffff',
       content: {
         title: 'Your business goals are our top priority',
+        description: 'We embody unwavering expertise, powered through years of industry mastery. Our teams embrace knowledge and fresh ideas across diverse sectors, fostering trust and delivering excellence.',
         items: [
-          { id: '1', value: '14+', label: 'Years of direct experience' },
-          { id: '2', value: '244', label: 'Satisfied clients globally' },
-          { id: '3', value: '256', label: 'Active business partners' },
-          { id: '4', value: '440', label: 'Millions generated in revenue' },
+          { id: '1', value: '14', suffix: '+', label: 'Years of industry experience' },
+          { id: '2', value: '244', label: 'Digital projects completed' },
+          { id: '3', value: '293', label: 'Data transferred monthly' },
+          { id: '4', value: '440', suffix: '+', label: 'Certified financial advisors' },
         ],
       },
     },
+    { id: 'service-tabs', type: 'link-list', variant: 'tabs', isHidden: false, content: { links: [
+      { id: 'tab-planning', label: 'Financial planning', badge: 'New', isActive: false, url: '#financial-planning' },
+      { id: 'tab-analysis', label: 'Performance analysis', badge: 'New', isActive: false, url: '#performance-analysis' },
+      { id: 'tab-advisory', label: 'Investment advisory', badge: 'New', isActive: true, url: '#investment-advisory' },
+    ] } },
     {
-      id: 'feature1',
-      isHidden: false,
-      type: 'feature-split',
-      layout: 'image-right',
+      id: 'financial-planning', isHidden: false, type: 'feature-split', variant: 'editorial', layout: 'image-right',
       content: {
-        eyebrow: 'Our Services',
-        title: 'Strategic planning for optimal growth',
-        description: 'Understand the market forces that influence your business decisions.',
-        checkpoints: [
-          { id: '1', text: 'Market positioning and dynamics' },
-          { id: '2', text: 'Pricing strategy and margins' },
-          { id: '3', text: 'Growth roadmap execution' },
-        ],
-        buttonText: 'Learn more',
-        buttonUrl: '#',
-        imageUrl: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&q=80',
+        eyebrow: 'Financial planning', title: 'Strategic planning for optimal growth',
+        description: 'Crafting precise financial roadmaps aligned with your business objectives.',
+        checkpoints: [{ id: '1', text: 'Optimize resource allocation' }, { id: '2', text: 'Adapt to market changes' }, { id: '3', text: 'Achieve long-term goals' }],
+        buttonText: 'Learn more', buttonUrl: '#financial-planning',
+        imageUrl: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&q=85&w=1000',
       },
     },
     {
-      id: 'feature2',
-      isHidden: false,
-      type: 'feature-split',
-      layout: 'image-left',
+      id: 'performance-analysis', isHidden: false, type: 'feature-split', variant: 'editorial', layout: 'image-left',
       content: {
-        eyebrow: 'Financial Insight',
-        title: 'In-depth financial performance analysis',
-        description: 'Maximize your investment returns with precise methodology.',
-        checkpoints: [
-          { id: '1', text: 'Investment strategy execution' },
-          { id: '2', text: 'Cash flow stability measures' },
-          { id: '3', text: 'Risk assessment profiles' },
-        ],
-        buttonText: 'Learn more',
-        buttonUrl: '#',
-        imageUrl: 'https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&q=80',
+        eyebrow: 'Performance analysis', title: 'In-depth financial performance analysis',
+        description: 'Analyze and enhance financial performance for sustained growth.',
+        checkpoints: [{ id: '1', text: 'Identify strengths and weaknesses' }, { id: '2', text: 'Optimize operational efficiency' }, { id: '3', text: 'Increase revenue streams' }],
+        buttonText: 'Learn more', buttonUrl: '#performance-analysis',
+        imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=85&w=1000',
       },
     },
     {
-      id: 'success-stories',
-      isHidden: false,
-      type: 'testimonials',
-      variant: 'masonry',
+      id: 'investment-advisory', isHidden: false, type: 'feature-split', variant: 'editorial', layout: 'image-right',
+      content: {
+        eyebrow: 'Investment advisory', title: 'Expert advisory tailored for maximum returns',
+        description: 'Tailored investment strategies for optimal returns and risk management.',
+        checkpoints: [{ id: '1', text: 'Capitalize on market opportunities' }, { id: '2', text: 'Minimize investment risks' }, { id: '3', text: 'Realize growth potential' }],
+        buttonText: 'Learn more', buttonUrl: '#investment-advisory',
+        imageUrl: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=85&w=1000',
+      },
+    },
+    {
+      id: 'success-stories', isHidden: false, type: 'case-studies', backgroundColor: '#062f26', textColor: '#ffffff',
       content: {
         title: 'Our customer success stories',
+        description: 'Discover how businesses like yours transformed with our expertise. Real stories of growth, innovation, and success.', actionText: 'View case studies', actionUrl: '#contact',
         items: [
-          {
-            id: '1',
-            quote: 'They transformed our operations. We saw an immediate impact on our margins and team efficiency.',
-            author: 'Sarah Jenkins',
-            role: 'CEO, TechFlow',
-            avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80',
-          },
-          {
-            id: '2',
-            quote: 'The strategic planning phase was eye-opening. We are now expanding into three new markets with confidence.',
-            author: 'Michael Chang',
-            role: 'Founder, Origin',
-            avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80',
-          },
-          {
-            id: '3',
-            quote: 'A true partnership. They did not just advise us, they helped us implement every single step.',
-            author: 'Elena Rodriguez',
-            role: 'Director, Vertex',
-            avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80',
-          }
+          { id: '1', title: 'Identifying growth opportunities for Prosper: financial strategies', description: 'Discover how our consulting empowered Prosper to identify growth opportunities, optimize financial operations and achieve a 120% revenue surge within a year.', imageUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=85&w=900', url: '#', buttonText: 'Read more' },
+          { id: '2', title: 'Helping SummitEdge navigate challenges: regulatory compliance', description: 'Explore our partnership with SummitEdge, navigating complex regulations and enabling efficient operations, cost savings, and sustained growth.', imageUrl: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=85&w=900', url: '#', buttonText: 'Read more' },
+          { id: '3', title: 'Improving EvolveVision efficiency: streamlining processes', description: 'Witness how our consulting streamlined processes for EvolveVision, improving operational efficiency and driving sustainable growth.', imageUrl: 'https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&q=85&w=900', url: '#', buttonText: 'Read more' },
         ],
       },
     },
     {
-      id: 'value-cards',
-      isHidden: false,
-      type: 'value-cards',
+      id: 'value-cards', isHidden: false, type: 'value-cards', backgroundColor: '#f5f2f0', textColor: '#171717',
       content: {
         title: 'Tangible results shared here',
-        description: 'Do not just take our word for it. Here are the numbers behind the growth.',
+        description: 'Discover how our financial expertise transformed businesses like yours, delivering exceptional results and growth.',
         cards: [
-          {
-            id: '1',
-            author: 'Peter Smith',
-            role: 'Global Director',
-            avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80',
-            quote: 'We didn\'t just meet our targets, we exceeded them by 120%.',
-            metric: '+ 120 %',
-            label: 'Increase in conversion rates'
-          },
-          {
-            id: '2',
-            author: 'Julia Chen',
-            role: 'Head of Growth',
-            avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80',
-            quote: 'Our user base grew steadily while maintaining high retention.',
-            metric: '8,350 +',
-            label: 'New engaged users this year'
-          },
-          {
-            id: '3',
-            author: 'David Park',
-            role: 'Operations Lead',
-            avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80',
-            quote: 'The efficiency gains allowed us to cut operational costs significantly.',
-            metric: '- 35 %',
-            label: 'Reduction in operating costs'
-          }
+          { id: '1', author: 'Frederic Hill', role: 'Founder & CEO', avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80', quote: 'Helped navigate regulatory challenges. Valued advisors for strategic financial decisions.', metric: '+ 120 %', label: 'Increase in customer growth rate' },
+          { id: '2', author: 'Fatima Sampson', role: 'Account Executive', avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80', quote: 'Stellar support in navigating market complexities. Trusted partners for financial growth.', metric: '$ 250 k', label: 'Saved in operational costs' },
+          { id: '3', author: 'Brendan Buck', role: 'Business Manager', avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80', quote: 'Innovative solutions tailored to our needs. A reliable partner for our financial excellence.', metric: '+ 25 %', label: 'Increase in company revenue' },
         ],
       },
     },
     {
-      id: 'faq',
-      isHidden: false,
-      type: 'faq',
-      variant: 'default',
-      content: {
-        title: 'Got a question? Get your answer',
-        items: [
-          { id: '1', question: 'How do you price your consulting services?', answer: 'We offer custom quotes based on the scope of the project.' },
-          { id: '2', question: 'How long does a typical engagement last?', answer: 'Usually between 3 to 6 months depending on goals.' },
-          { id: '3', question: 'Do you implement the strategies or just advise?', answer: 'We do both. We believe in executing the plans we create with you.' },
-          { id: '4', question: 'Can we hire your team for ongoing support?', answer: 'Yes, we offer retainer agreements for long-term growth.' },
-        ],
-      },
+      id: 'faq', isHidden: false, type: 'faq', variant: 'default',
+      content: { title: 'Got a question? Get your answer', items: [
+        { id: '1', question: 'How can financial consulting benefit my business?', answer: 'Our consulting optimizes strategies for sustainable growth and improved financial performance.' },
+        { id: '2', question: 'What distinguishes your firm from others in the industry?', answer: 'We pair deep industry experience with tailored, practical financial guidance.' },
+        { id: '3', question: 'Do you offer services tailored to specific industries?', answer: 'Yes. Our team adapts each engagement to your industry, goals, and operating context.' },
+        { id: '4', question: 'How do you ensure confidentiality with client data?', answer: 'We use secure processes and clear governance to protect all client information.' },
+      ] },
     },
-    {
-      id: 'contact',
-      isHidden: false,
-      type: 'contact',
-      variant: 'default',
-      content: {
-        title: 'We\'re here to help',
-        email: 'hello@consulting.com',
-        phone: '+1 (555) 000-0000',
-        address: '123 Business Avenue, Suite 100, New York, NY 10001',
-      },
-    }
-  ]
+    consultingGroup('contact', 'Contact and image', 'row', [
+      consultingGroup('contact-card', 'Contact form', 'column', [{
+        id: 'contact-form', isHidden: false, type: 'contact', variant: 'editorial-panel',
+        content: { title: 'We’re here to help', description: 'Need help with a project, have a question about our work? We’re here.', buttonText: 'Submit', email: 'hello@consulting.com', phone: '+1 (555) 000-0000' },
+      }], { width: 'custom', customWidth: 52, backgroundColor: '#f5f2f0', textColor: '#171717', padding: 'medium', customPadding: 24 }),
+      consultingGroup('contact-photo', 'Contact photo', 'column', [{
+        id: 'contact-image', type: 'image', layout: 'full', isHidden: false,
+        content: { url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=85&w=1000', alt: 'Financial consultant ready to help' },
+      }], { width: 'custom', customWidth: 48, backgroundColor: '#f5f2f0', padding: 'custom', customPadding: 0 }),
+    ], { backgroundColor: '#062f26', textColor: '#ffffff', gap: 'custom', customGap: 0, padding: 'custom', customPadding: 0, mobileDirection: 'column' }),
+    consultingGroup('site-footer', 'Footer', 'column', [
+      consultingGroup('footer-columns', 'Footer links', 'row', [
+        { id: 'footer-brand', type: 'rich-text', isHidden: false, content: { text: '<h3>LOGO</h3><p>Our primary goal is to empower business owners, agencies, and freelancers with maximum creative freedom.</p>' } },
+        { id: 'footer-builder', type: 'rich-text', isHidden: false, content: { text: '<p><strong>Page builder</strong></p><p>Theme options<br/>Theme builder<br/>Template library</p>' } },
+        { id: 'footer-support', type: 'rich-text', isHidden: false, content: { text: '<p><strong>Support center</strong></p><p>Documentation<br/>Community<br/>Hosting</p>' } },
+        { id: 'footer-social', type: 'rich-text', isHidden: false, content: { text: '<p><strong>Follow us</strong></p><p>f　♥　in</p>' } },
+      ], { gap: 'large', customGap: 32, mobileDirection: 'column', verticalAlign: 'top' }),
+      { id: 'footer-legal', type: 'rich-text', isHidden: false, content: { text: '<p>Terms &amp; Conditions　 Privacy Policy</p>' } },
+    ], { backgroundColor: '#062f26', textColor: '#ffffff', padding: 'large', customPadding: 48, horizontalAlign: 'left' }),
+  ],
 };
 
 // ═══════════════════════════════════════════════════════════════════

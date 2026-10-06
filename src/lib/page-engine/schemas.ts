@@ -6,6 +6,11 @@ export const BaseSectionSchema = z.object({
   variant: z.string().optional(),
   backgroundColor: z.string().optional(),
   textColor: z.string().optional(),
+  sectionPadding: z.enum(['none', 'small', 'medium', 'large', 'custom']).optional(),
+  customSectionPadding: z.number().min(0).max(160).optional(),
+  contentWidth: z.enum(['narrow', 'standard', 'wide', 'full']).optional(),
+  buttonColor: z.string().optional(),
+  buttonTextColor: z.string().optional(),
 });
 
 export const ThemeConfigSchema = z.object({
@@ -218,6 +223,24 @@ export const TestimonialsSectionSchema = BaseSectionSchema.extend({
   }),
 });
 
+export const CaseStudiesSectionSchema = BaseSectionSchema.extend({
+  type: z.literal('case-studies'),
+  content: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    actionText: z.string().optional(),
+    actionUrl: z.string().optional(),
+    items: z.array(z.object({
+      id: z.string(),
+      title: z.string(),
+      description: z.string(),
+      imageUrl: z.string(),
+      url: z.string().optional(),
+      buttonText: z.string().optional(),
+    })),
+  }),
+});
+
 export const FaqSectionSchema = BaseSectionSchema.extend({
   type: z.literal('faq'),
   content: z.object({
@@ -268,7 +291,7 @@ export const BookingSectionSchema = BaseSectionSchema.extend({
 export const LinkListSectionSchema = BaseSectionSchema.extend({
   type: z.literal('link-list'),
   content: z.object({
-    links: z.array(z.object({ id: z.string(), label: z.string(), url: z.string() })),
+    links: z.array(z.object({ id: z.string(), label: z.string(), url: z.string(), badge: z.string().optional(), isActive: z.boolean().optional() })),
   }),
 });
 
@@ -278,6 +301,8 @@ export const ContactSectionSchema = BaseSectionSchema.extend({
   type: z.literal('contact'),
   content: z.object({
     title: z.string().optional(),
+    description: z.string().optional(),
+    buttonText: z.string().optional(),
     email: z.string().optional(),
     phone: z.string().optional(),
     address: z.string().optional(),
@@ -324,6 +349,7 @@ export const StatsSectionSchema = BaseSectionSchema.extend({
   type: z.literal('stats'),
   content: z.object({
     title: z.string().optional(),
+    description: z.string().optional(),
     items: z.array(z.object({
       id: z.string(),
       value: z.string(),
@@ -413,6 +439,7 @@ export const PageSectionSchema = z.discriminatedUnion('type', [
   ServicesSectionSchema,
   ProductsSectionSchema,
   TestimonialsSectionSchema,
+  CaseStudiesSectionSchema,
   FaqSectionSchema,
   AnnouncementSectionSchema,
   LeadFormSectionSchema,

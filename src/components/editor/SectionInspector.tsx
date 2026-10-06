@@ -170,6 +170,25 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), quote: '', author: '', role: '' }),
     }],
   },
+  'case-studies': {
+    fields: [
+      { key: 'content.title', label: 'Section Title', type: 'text' },
+      { key: 'content.description', label: 'Description', type: 'textarea' },
+      { key: 'content.actionText', label: 'Top Action Label', type: 'text' },
+      { key: 'content.actionUrl', label: 'Top Action URL', type: 'url' },
+    ],
+    arrayFields: [{
+      key: 'content.items', label: 'Case Studies',
+      itemFields: [
+        { key: 'title', label: 'Title', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+        { key: 'imageUrl', label: 'Image URL', type: 'url' },
+        { key: 'url', label: 'Link URL', type: 'url' },
+        { key: 'buttonText', label: 'Link Label', type: 'text' },
+      ],
+      newItem: () => ({ id: Math.random().toString(36).substr(2, 9), title: '', description: '', imageUrl: '', url: '', buttonText: 'Read more' }),
+    }],
+  },
   faq: {
     fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }],
     arrayFields: [{
@@ -213,14 +232,16 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [],
     arrayFields: [{
       key: 'content.links', label: 'Links',
-      itemFields: [{ key: 'label', label: 'Label', type: 'text' }, { key: 'url', label: 'URL', type: 'url' }],
-      newItem: () => ({ id: Math.random().toString(36).substr(2, 9), label: '', url: '' }),
+      itemFields: [{ key: 'label', label: 'Label', type: 'text' }, { key: 'url', label: 'URL', type: 'url' }, { key: 'badge', label: 'Badge', type: 'text' }, { key: 'isActive', label: 'Active tab', type: 'toggle' }],
+      newItem: () => ({ id: Math.random().toString(36).substr(2, 9), label: '', url: '', isActive: false }),
     }],
   },
 
   contact: {
     fields: [
       { key: 'content.title', label: 'Title', type: 'text' },
+      { key: 'content.description', label: 'Description', type: 'textarea' },
+      { key: 'content.buttonText', label: 'Button Label', type: 'text' },
       { key: 'content.email', label: 'Email', type: 'email' },
       { key: 'content.phone', label: 'Phone', type: 'text' },
       { key: 'content.address', label: 'Address', type: 'textarea' },
@@ -267,7 +288,10 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [{ key: 'layout', label: 'Size', type: 'select', options: [{ label: 'Small', value: 'small' }, { label: 'Medium', value: 'medium' }, { label: 'Large', value: 'large' }, { label: 'XL', value: 'xl' }] }],
   },
   stats: {
-    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }],
+    fields: [
+      { key: 'content.title', label: 'Section Title', type: 'text' },
+      { key: 'content.description', label: 'Description', type: 'textarea' },
+    ],
     arrayFields: [{
       key: 'content.items', label: 'Stats',
       itemFields: [
@@ -707,10 +731,42 @@ function HeroInspector({ section, onChange }: { section: PageSection; onChange: 
 }
 
 function SectionAppearance({ section, onChange }: { section: PageSection; onChange: (updated: PageSection) => void }) {
+  const inputClass = "w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50";
+  const supportsButtonColors = ['hero', 'cta', 'url-button', 'image-button', 'email-button', 'file-button', 'lead-form', 'collect-emails', 'booking', 'feature-split', 'contact'].includes(section.type);
+
   return (
     <div className="mt-1 pt-6 border-t border-slate-200 dark:border-slate-700/50">
-      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 block">Section Appearance</label>
-      <div className="grid grid-cols-2 gap-4">
+      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 block">Section Design</label>
+      <div className="flex flex-col gap-4">
+        <div>
+          <label className="text-xs font-medium text-slate-500 mb-1.5 block">Section Padding</label>
+          <select value={section.sectionPadding || ''} onChange={e => onChange({ ...section, sectionPadding: e.target.value ? e.target.value as NonNullable<PageSection['sectionPadding']> : undefined })} className={inputClass}>
+            <option value="">Component default</option>
+            <option value="none">None</option>
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+            <option value="custom">Custom</option>
+          </select>
+          {section.sectionPadding === 'custom' && (
+            <div className="mt-2">
+              <label className="text-[11px] text-slate-400 mb-1 block">Padding (px)</label>
+              <input type="number" min={0} max={160} value={section.customSectionPadding ?? 32} onChange={e => onChange({ ...section, customSectionPadding: Math.max(0, Math.min(160, Number(e.target.value))) })} className={inputClass} />
+            </div>
+          )}
+        </div>
+        <div>
+          <label className="text-xs font-medium text-slate-500 mb-1.5 block">Content Width</label>
+          <select value={section.contentWidth || ''} onChange={e => onChange({ ...section, contentWidth: e.target.value ? e.target.value as NonNullable<PageSection['contentWidth']> : undefined })} className={inputClass}>
+            <option value="">Component default</option>
+            <option value="narrow">Narrow</option>
+            <option value="standard">Standard</option>
+            <option value="wide">Wide</option>
+            <option value="full">Full</option>
+          </select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 mt-4">
         <div>
           <label className="text-xs font-medium text-slate-500 mb-1.5 block">Background Color</label>
           <div className="flex items-center gap-2">
@@ -746,6 +802,24 @@ function SectionAppearance({ section, onChange }: { section: PageSection; onChan
           </div>
         </div>
       </div>
+      {supportsButtonColors && (
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="text-xs font-medium text-slate-500 mb-1.5 block">Button Color</label>
+            <div className="flex items-center gap-2">
+              <input type="color" value={section.buttonColor || '#000000'} onChange={e => onChange({ ...section, buttonColor: e.target.value })} className="w-8 h-8 rounded cursor-pointer border-0 p-0" />
+              <button onClick={() => onChange({ ...section, buttonColor: undefined })} className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">Clear</button>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-500 mb-1.5 block">Button Text</label>
+            <div className="flex items-center gap-2">
+              <input type="color" value={section.buttonTextColor || '#ffffff'} onChange={e => onChange({ ...section, buttonTextColor: e.target.value })} className="w-8 h-8 rounded cursor-pointer border-0 p-0" />
+              <button onClick={() => onChange({ ...section, buttonTextColor: undefined })} className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">Clear</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -758,6 +832,9 @@ function HeroVariantPicker({ currentVariant, onChange }: { currentVariant: strin
     )},
     { id: 'split', label: 'Split', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="4" y="6" width="22" height="3" rx="1.5" fill="currentColor" opacity="0.6"/><rect x="4" y="12" width="18" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="4" y="17" width="14" height="2" rx="1" fill="currentColor" opacity="0.2"/><rect x="4" y="23" width="10" height="3" rx="1.5" fill="currentColor" opacity="0.4"/><rect x="34" y="4" width="22" height="24" rx="3" fill="currentColor" opacity="0.15"/></svg>
+    )},
+    { id: 'split-wide', label: 'Wide Split', icon: (
+      <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="0" y="0" width="29" height="32" fill="currentColor" opacity="0.12"/><rect x="4" y="10" width="18" height="3" rx="1" fill="currentColor" opacity="0.55"/><rect x="4" y="16" width="13" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="31" y="0" width="29" height="32" fill="currentColor" opacity="0.2"/></svg>
     )},
     { id: 'immersive', label: 'Immersive', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="0" y="0" width="60" height="32" rx="2" fill="currentColor" opacity="0.12"/><rect x="6" y="18" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.6"/><rect x="6" y="23" width="20" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="6" y="27" width="12" height="3" rx="1.5" fill="currentColor" opacity="0.4"/></svg>

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { z } from 'zod';
-import { PageSection, ThemeConfig, FeatureSplitSectionSchema, ValueCardsSectionSchema } from '@/lib/page-engine/schemas';
+import { PageSection, ThemeConfig, FeatureSplitSectionSchema, ValueCardsSectionSchema, CaseStudiesSectionSchema, ContactSectionSchema, StatsSectionSchema } from '@/lib/page-engine/schemas';
 import { HeroSection } from './HeroSection';
 import { RichTextSection } from './RichTextSection';
 import { LinkListSection } from './LinkListSection';
@@ -64,6 +64,7 @@ export function UrlButtonSection({ section, theme }: { section: any; theme: Them
         href={url}
         target="_blank"
         rel="noopener noreferrer"
+        data-page-button
         className={`group flex items-center justify-between w-full px-6 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 ${styles[layout] || styles.filled}`}
         style={layout === 'filled' ? { backgroundColor: theme.primaryColor } : layout === 'outline' ? { borderColor: theme.primaryColor, color: theme.primaryColor } : {}}
       >
@@ -102,7 +103,7 @@ export function EmailButtonSection({ section, theme }: { section: any; theme: Th
   const href = `mailto:${email}${subject ? `?subject=${encodeURIComponent(subject)}` : ''}`;
   return (
     <section className="py-4 px-4 md:px-8 max-w-xl mx-auto">
-      <a href={href} className="group flex items-center justify-between w-full px-6 py-4 rounded-2xl font-semibold text-lg border-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg" style={{ borderColor: theme.primaryColor, color: theme.primaryColor }}>
+      <a href={href} data-page-button className="group flex items-center justify-between w-full px-6 py-4 rounded-2xl font-semibold text-lg border-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg" style={{ borderColor: theme.primaryColor, color: theme.primaryColor }}>
         <span>{label}</span>
         <svg className="w-5 h-5 opacity-60 group-hover:opacity-100 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
       </a>
@@ -115,7 +116,7 @@ export function FileButtonSection({ section, theme }: { section: any; theme: The
   const { label, fileUrl } = section.content;
   return (
     <section className="py-4 px-4 md:px-8 max-w-xl mx-auto">
-      <a href={fileUrl} download className="group flex items-center justify-between w-full px-6 py-4 rounded-2xl font-semibold text-lg border-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg" style={{ borderColor: theme.primaryColor, color: theme.primaryColor }}>
+      <a href={fileUrl} download data-page-button className="group flex items-center justify-between w-full px-6 py-4 rounded-2xl font-semibold text-lg border-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg" style={{ borderColor: theme.primaryColor, color: theme.primaryColor }}>
         <span>{label}</span>
         <svg className="w-5 h-5 opacity-60 group-hover:opacity-100 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
       </a>
@@ -131,7 +132,7 @@ export function CtaSection({ section, theme }: { section: any; theme: ThemeConfi
       <div className="max-w-3xl mx-auto text-center">
         <h2 className="text-4xl md:text-5xl font-extrabold mb-6 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">{title}</h2>
         {text && <p className="text-xl text-slate-500 dark:text-slate-400 mb-10 max-w-xl mx-auto leading-relaxed">{text}</p>}
-        <a href={buttonUrl} className="inline-block px-10 py-4 text-white font-bold text-lg rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" style={{ backgroundColor: theme.primaryColor }}>
+          <a href={buttonUrl} data-page-button className="inline-block px-10 py-4 text-white font-bold text-lg rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" style={{ backgroundColor: theme.primaryColor }}>
           {buttonText}
         </a>
       </div>
@@ -868,7 +869,7 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: 
       </div>
 
       {/* CTA Button */}
-      <button type="submit" disabled={loading} className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-1 disabled:opacity-70">
+      <button type="submit" data-page-button disabled={loading} style={{ backgroundColor: theme.primaryColor }} className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-1 disabled:opacity-70">
         {loading ? 'Sending...' : buttonText || 'Send Message'}
         {!loading && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
       </button>
@@ -939,6 +940,19 @@ export function LeadFormSection({ section, theme, pageId }: { section: any; them
     );
   }
 
+  if (variant === 'editorial-panel') {
+    return (
+      <section className="w-full p-8 md:p-10">
+        <div className="mb-6">
+          <span className="mb-2 inline-block rounded-sm bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-900">Let’s connect</span>
+          <h2 className="text-3xl font-semibold tracking-tight text-current">{title || 'We’re here to help'}</h2>
+          {description && <p className="mt-2 max-w-sm text-sm leading-relaxed text-current/70">{description}</p>}
+        </div>
+        <ContactForm theme={theme} pageId={pageId} sectionId={section.id} submitLabel={buttonText || 'Submit'} showInterestOptions={false} showStatusNote={false} />
+      </section>
+    );
+  }
+
   // Default: card-centered
   return (
     <section className="py-20 px-6 w-full">
@@ -990,7 +1004,7 @@ export function CollectEmailsSection({ section, theme, pageId }: { section: any;
           ) : (
             <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto" onSubmit={handleSubmit}>
               <input name="email" type="email" required placeholder={placeholder || 'Your email'} className="flex-1 px-6 py-4 rounded-none border-b-2 border-slate-200 dark:border-slate-700 bg-transparent text-base focus:outline-none focus:border-slate-800 dark:focus:border-slate-400 transition-colors text-center sm:text-left" />
-              <button type="submit" disabled={loading} className="px-8 py-4 rounded-none font-bold text-white text-sm tracking-widest uppercase transition-all flex-shrink-0 disabled:opacity-70" style={{ backgroundColor: theme.primaryColor }}>
+              <button type="submit" data-page-button disabled={loading} className="px-8 py-4 rounded-none font-bold text-white text-sm tracking-widest uppercase transition-all flex-shrink-0 disabled:opacity-70" style={{ backgroundColor: theme.primaryColor }}>
                 {loading ? '...' : buttonText}
               </button>
             </form>
@@ -1008,7 +1022,7 @@ export function CollectEmailsSection({ section, theme, pageId }: { section: any;
       ) : (
         <form className="flex gap-2" onSubmit={handleSubmit}>
           <input name="email" type="email" required placeholder={placeholder || 'Your email'} className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2" />
-          <button type="submit" disabled={loading} className="px-6 py-3 rounded-xl font-bold text-white text-sm shadow-lg hover:shadow-xl transition-all flex-shrink-0 disabled:opacity-70" style={{ backgroundColor: theme.primaryColor }}>
+          <button type="submit" data-page-button disabled={loading} className="px-6 py-3 rounded-xl font-bold text-white text-sm shadow-lg hover:shadow-xl transition-all flex-shrink-0 disabled:opacity-70" style={{ backgroundColor: theme.primaryColor }}>
             {loading ? '...' : buttonText}
           </button>
         </form>
@@ -1025,7 +1039,7 @@ export function BookingSection({ section, theme }: { section: any; theme: ThemeC
       <div className="p-10 rounded-3xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-800/30 border border-slate-200 dark:border-slate-700">
         <h2 className="text-2xl font-bold mb-3">{title}</h2>
         {description && <p className="text-slate-500 dark:text-slate-400 mb-8 text-sm">{description}</p>}
-        <a href={link} target="_blank" rel="noopener noreferrer" className="inline-block px-10 py-4 rounded-full font-bold text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" style={{ backgroundColor: theme.primaryColor }}>
+        <a href={link} target="_blank" rel="noopener noreferrer" data-page-button className="inline-block px-10 py-4 rounded-full font-bold text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" style={{ backgroundColor: theme.primaryColor }}>
           Book Now
         </a>
       </div>
@@ -1034,7 +1048,7 @@ export function BookingSection({ section, theme }: { section: any; theme: ThemeC
 }
 
 // ── Contact ────────────────────────────────────────────────────
-function ContactForm({ theme, pageId, sectionId }: { theme: ThemeConfig; pageId?: string; sectionId: string }) {
+function ContactForm({ theme, pageId, sectionId, submitLabel = 'Send Message', showInterestOptions = true, showStatusNote = true }: { theme: ThemeConfig; pageId?: string; sectionId: string; submitLabel?: string; showInterestOptions?: boolean; showStatusNote?: boolean }) {
   const [activeChips, setActiveChips] = useState<string[]>([]);
   const chips = ['Web Design', 'Branding', 'Growth', 'Other'];
   const [loading, setLoading] = useState(false);
@@ -1081,7 +1095,7 @@ function ContactForm({ theme, pageId, sectionId }: { theme: ThemeConfig; pageId?
 
   return (
     <form className="flex flex-col gap-5 w-full" onSubmit={handleSubmit}>
-      <div className="flex flex-wrap gap-2 mb-2">
+      {showInterestOptions && <div className="flex flex-wrap gap-2 mb-2">
         {chips.map(chip => (
           <button
             key={chip}
@@ -1092,7 +1106,7 @@ function ContactForm({ theme, pageId, sectionId }: { theme: ThemeConfig; pageId?
             {chip}
           </button>
         ))}
-      </div>
+      </div>}
       <div>
         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Name</label>
         <input name="name" required type="text" placeholder="John Doe" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
@@ -1105,20 +1119,20 @@ function ContactForm({ theme, pageId, sectionId }: { theme: ThemeConfig; pageId?
         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Message</label>
         <textarea name="message" required placeholder="How can we help?" rows={4} className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm resize-none" />
       </div>
-      <button type="submit" disabled={loading} className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-2 disabled:opacity-70">
-        {loading ? 'Sending...' : 'Send Message'}
+      <button type="submit" data-page-button disabled={loading} style={{ backgroundColor: theme.primaryColor }} className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-2 disabled:opacity-70">
+        {loading ? 'Sending...' : submitLabel}
         {!loading && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
       </button>
-      <div className="flex items-center justify-center gap-4 mt-2 opacity-70">
+      {showStatusNote && <div className="flex items-center justify-center gap-4 mt-2 opacity-70">
         <div className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">⚡ Avg. response: &lt; 24h</div>
         <div className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">🔒 100% Privacy</div>
-      </div>
+      </div>}
     </form>
   );
 }
 
-export function ContactSection({ section, theme, pageId }: { section: any; theme: ThemeConfig; pageId?: string }) {
-  const { title, email, phone, address } = section.content;
+export function ContactSection({ section, theme, pageId }: { section: z.infer<typeof ContactSectionSchema>; theme: ThemeConfig; pageId?: string }) {
+  const { title, description, buttonText, email, phone, address } = section.content;
   const variant = section.variant || 'card-centered';
 
   if (variant === 'minimal-footer') {
@@ -1200,7 +1214,7 @@ export function ContactSection({ section, theme, pageId }: { section: any; theme
             Fill out the form below and our team will get back to you within 24 hours.
           </p>
         </div>
-        <ContactForm theme={theme} pageId={pageId} sectionId={section.id} />
+        <ContactForm theme={theme} pageId={pageId} sectionId={section.id} submitLabel={buttonText || 'Send Message'} />
       </div>
     </section>
   );
@@ -1453,8 +1467,40 @@ export function SpacerSection({ section }: { section: any; theme: ThemeConfig })
   return <div className={`w-full ${height}`} />;
 }
 // ── Stats ──────────────────────────────────────────────────────
-export function StatsSection({ section, theme }: { section: any; theme: ThemeConfig }) {
-  const { title, items } = section.content;
+export function StatsSection({ section, theme }: { section: z.infer<typeof StatsSectionSchema>; theme: ThemeConfig }) {
+  const { title, description, items } = section.content;
+  if (section.variant === 'editorial-band') {
+    return (
+      <section className="w-full px-6 py-16 md:px-10 md:py-20 text-current">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 grid gap-6 md:grid-cols-2 md:items-end">
+            <div>
+              <span className="mb-3 inline-flex rounded-sm bg-white/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide">Commitment</span>
+              {title && <h2 className="max-w-xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{title}</h2>}
+            </div>
+            <div>
+              <div className="mb-3 flex gap-2 text-[10px] font-semibold">
+                <span className="rounded-sm bg-white px-3 py-2 text-slate-900">Expertise</span>
+                <span className="rounded-sm bg-white/10 px-3 py-2">Innovation</span>
+                <span className="rounded-sm bg-white/10 px-3 py-2">Accountability</span>
+              </div>
+              {description && <p className="max-w-xl text-xs leading-relaxed text-current/75">{description}</p>}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {items.map((item: any) => (
+              <div key={item.id} className="flex min-h-28 flex-col justify-end border border-white/10 bg-white/[0.06] p-4 text-left md:min-h-32">
+                <p className="whitespace-pre-wrap text-2xl font-medium tracking-tight">
+                  {item.prefix}<NumberTicker value={parseInt(item.value) || 0} />{item.suffix}
+                </p>
+                <div className="mt-2 text-[10px] leading-snug text-current/70">{item.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
   return (
     <section className="py-16 px-4 md:px-8 max-w-6xl mx-auto text-center">
       {title && <h2 className="text-3xl font-bold mb-10 text-center">{title}</h2>}
@@ -1474,26 +1520,54 @@ export function StatsSection({ section, theme }: { section: any; theme: ThemeCon
   );
 }
 
+export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseStudiesSectionSchema> }) {
+  const { title, description, actionText, actionUrl, items } = section.content;
+  return (
+    <section className="w-full px-6 py-16 text-current md:px-10 md:py-20">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-10 grid gap-5 md:grid-cols-[1fr_1fr_auto] md:items-center">
+          <h2 className="max-w-md text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{title}</h2>
+          {description && <p className="max-w-md text-xs leading-relaxed text-current/70">{description}</p>}
+          {actionText && <a href={actionUrl || '#'} className="justify-self-start border border-current/40 px-4 py-2 text-[10px] font-semibold transition hover:bg-white hover:text-slate-900">{actionText}</a>}
+        </div>
+        <div className="grid gap-5 md:grid-cols-3">
+          {items.map((item: any) => (
+            <article key={item.id} className="min-w-0">
+              <a href={item.url || '#'} className="group block aspect-[4/3] overflow-hidden bg-white/10">
+                <img src={item.imageUrl} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+              </a>
+              <h3 className="mt-4 text-sm font-semibold leading-snug">{item.title}</h3>
+              <p className="mt-2 text-[11px] leading-relaxed text-current/70">{item.description}</p>
+              {item.url && <a href={item.url} className="mt-3 inline-block text-[10px] font-semibold underline decoration-current/40 underline-offset-4">{item.buttonText || 'Read more'}</a>}
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── Central Dispatcher ─────────────────────────────────────────
 function FeatureSplitSection({ section, theme }: { section: z.infer<typeof FeatureSplitSectionSchema>; theme: ThemeConfig }) {
   const { content, layout = 'image-left' } = section;
   const isImageLeft = layout === 'image-left';
+  const editorial = section.variant === 'editorial';
 
   return (
-    <section className="w-full bg-white py-20 px-6 sm:px-12 lg:px-24">
+    <section className={`w-full px-6 py-16 sm:px-10 md:py-20 ${editorial ? 'text-current' : 'bg-white lg:px-24'}`}>
       <div className={cn(
-        "max-w-7xl mx-auto flex flex-col gap-12 lg:gap-24 items-center",
+        "mx-auto flex max-w-6xl flex-col items-center gap-10 md:gap-16",
         isImageLeft ? "lg:flex-row" : "lg:flex-row-reverse"
       )}>
 
         {/* Image Side */}
         <div className="w-full lg:w-1/2">
           {content.imageUrl ? (
-            <div className="relative w-full aspect-square md:aspect-[4/3] rounded-xl overflow-hidden shadow-2xl">
+            <div className={`relative w-full overflow-hidden ${editorial ? 'aspect-square' : 'aspect-square rounded-xl shadow-2xl'}`}>
               <img src={content.imageUrl} alt={content.imageAlt || content.title} className="w-full h-full object-cover" />
             </div>
           ) : (
-            <div className="w-full aspect-square md:aspect-[4/3] bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">
+            <div className="flex aspect-square w-full items-center justify-center bg-slate-100 text-slate-400">
               No Image
             </div>
           )}
@@ -1506,11 +1580,11 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
               {content.eyebrow}
             </span>
           )}
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-slate-900 tracking-tight leading-tight mb-6">
+          <h2 className={`mb-5 text-3xl font-semibold leading-tight tracking-tight md:text-4xl ${editorial ? 'text-current' : 'text-slate-900 lg:text-5xl'}`}>
             {content.title}
           </h2>
           {content.description && (
-            <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+            <p className={`mb-7 text-base leading-relaxed ${editorial ? 'text-current/75' : 'text-slate-600 text-lg'}`}>
               {content.description}
             </p>
           )}
@@ -1522,7 +1596,7 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
                   <div className="mt-1 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center bg-green-100/50" style={{ color: theme.primaryColor }}>
                     <Check className="w-4 h-4" />
                   </div>
-                  <span className="text-slate-700 text-lg">{cp.text}</span>
+                  <span className={editorial ? 'text-current/85' : 'text-slate-700 text-lg'}>{cp.text}</span>
                 </li>
               ))}
             </ul>
@@ -1531,6 +1605,7 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
           {content.buttonText && content.buttonUrl && (
             <a
               href={content.buttonUrl}
+              data-page-button
               className="inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white rounded-lg transition-all shadow-sm hover:shadow-md"
               style={{ backgroundColor: theme.primaryColor, borderRadius: theme.radius === 'none' ? '0' : theme.radius === 'small' ? '0.375rem' : theme.radius === 'medium' ? '0.5rem' : theme.radius === 'large' ? '0.75rem' : '9999px' }}
             >
@@ -1622,6 +1697,7 @@ export function renderSection(section: PageSection, theme: ThemeConfig, isPrevie
     case 'services': return <ServicesSection key={section.id} section={section} theme={theme} />;
     case 'products': return <ProductsSection key={section.id} section={section} theme={theme} />;
     case 'testimonials': return <TestimonialsSection key={section.id} section={section} theme={theme} />;
+    case 'case-studies': return <CaseStudiesSection key={section.id} section={section} />;
     case 'announcement': return <AnnouncementSection key={section.id} section={section} theme={theme} />;
     case 'lead-form': return <LeadFormSection key={section.id} section={section} theme={theme} pageId={pageId} />;
     case 'collect-emails': return <CollectEmailsSection key={section.id} section={section} theme={theme} pageId={pageId} />;

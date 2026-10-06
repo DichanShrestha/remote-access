@@ -45,14 +45,32 @@ function renderNode(node: PageNode, theme: PageDocument['theme'], isPreview?: bo
   }
 
   if (node.isHidden) return null;
+  const sectionTheme = node.buttonColor ? { ...theme, primaryColor: node.buttonColor } : theme;
+  const padding = node.sectionPadding === 'custom'
+    ? `${node.customSectionPadding ?? 32}px`
+    : ({ none: '0px', small: '16px', medium: '32px', large: '64px' } as const)[node.sectionPadding as 'none' | 'small' | 'medium' | 'large'] || undefined;
+  const contentWidth = ({ narrow: '48rem', standard: '64rem', wide: '80rem', full: '100%' } as const)[node.contentWidth as 'narrow' | 'standard' | 'wide' | 'full'] || undefined;
   return (
     <div
       key={node.id}
       id={`preview-section-${node.id}`}
-      className="relative group/preview-section scroll-mt-6 min-w-0"
-      style={{ backgroundColor: node.backgroundColor, color: node.textColor }}
+      className="page-component-frame relative group/preview-section scroll-mt-6 min-w-0"
+      data-page-anchor={node.id}
+      data-custom-background-color={node.backgroundColor ? 'custom' : undefined}
+      data-section-padding={node.sectionPadding}
+      data-content-width={node.contentWidth}
+      data-custom-text-color={node.textColor ? 'custom' : undefined}
+      data-button-text-color={node.buttonTextColor ? 'custom' : undefined}
+      style={{
+        backgroundColor: node.backgroundColor,
+        color: node.textColor,
+        '--section-padding': padding,
+        '--section-content-width': contentWidth,
+        '--section-button-text': node.buttonTextColor,
+      } as CSSProperties}
     >
-      {renderSection(node, theme, isPreview, pageId)}
+      <span id={node.id} className="pointer-events-none absolute -top-20" aria-hidden="true" />
+      {renderSection(node, sectionTheme, isPreview, pageId)}
     </div>
   );
 }
@@ -68,8 +86,11 @@ function LayoutGroup({ group, theme, isPreview, pageId }: { group: GroupNode; th
     <div
       id={`preview-section-${group.id}`}
       className="layout-group relative group/preview-section scroll-mt-6 min-w-0"
+      data-page-anchor={group.id}
+      data-custom-background-color={group.backgroundColor ? 'custom' : undefined}
       data-direction={group.direction}
       data-mobile-direction={group.mobileDirection}
+      data-custom-text-color={group.textColor ? 'custom' : undefined}
       style={{
         backgroundColor: group.backgroundColor,
         color: group.textColor,
@@ -80,6 +101,7 @@ function LayoutGroup({ group, theme, isPreview, pageId }: { group: GroupNode; th
         '--layout-vertical': vertical,
       } as CSSProperties}
     >
+      <span id={group.id} className="pointer-events-none absolute -top-20" aria-hidden="true" />
       {group.children.map(child => {
         const childIsGroup = isGroup(child);
         const childWidth = childIsGroup ? (child.width === 'custom' ? `${child.customWidth}%` : child.width === 'fit' ? 'fit-content' : '100%') : undefined;

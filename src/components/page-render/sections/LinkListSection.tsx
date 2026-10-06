@@ -11,6 +11,40 @@ type LinkListProps = {
 export function LinkListSection({ section, theme }: LinkListProps) {
   const { content } = section;
 
+  if (section.variant === 'navigation') {
+    return (
+      <nav aria-label="Main navigation" className="w-full flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-current">
+        {content.links.map(link => (
+          <a key={link.id} href={link.url} className="transition-opacity hover:opacity-60">{link.label}</a>
+        ))}
+      </nav>
+    );
+  }
+
+  if (section.variant === 'tabs') {
+    return (
+      <nav aria-label="Section navigation" className="w-full border-y border-slate-200/80 dark:border-slate-700">
+        <div className="mx-auto flex max-w-6xl items-stretch justify-between gap-2 overflow-x-auto px-4">
+          {content.links.map(link => {
+            const isActive = Boolean(link.isActive);
+            return (
+              <a
+                key={link.id}
+                href={link.url}
+                aria-current={isActive ? 'page' : undefined}
+                className={`relative flex min-h-12 shrink-0 items-center gap-2 px-4 text-[11px] font-medium transition-colors ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+              >
+                {link.label}
+                {link.badge && <span className="rounded-sm bg-emerald-50 px-1 py-0.5 text-[8px] font-bold uppercase text-emerald-800">{link.badge}</span>}
+                {isActive && <span className="absolute inset-x-3 bottom-0 h-px" style={{ backgroundColor: theme.primaryColor }} />}
+              </a>
+            );
+          })}
+        </div>
+      </nav>
+    );
+  }
+
   return (
     <section className="py-8 px-6 w-full max-w-2xl mx-auto flex flex-col gap-4">
       {content.links.map((link, i) => (

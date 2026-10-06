@@ -230,5 +230,10 @@ export const ComponentRegistry: Record<SectionType, ComponentMetadata> = {
     type: 'value-cards', label: 'Value Cards', category: 'trust',
     categories: ['trust'],
     defaultData: () => ({ type: 'value-cards', content: { title: 'Our Results', cards: [{ id: '1', metric: '+120%', label: 'Growth', quote: 'Amazing.', author: 'John' }] } }),
+  },
+  'case-studies': {
+    type: 'case-studies', label: 'Case Studies', category: 'trust',
+    categories: ['trust'],
+    defaultData: () => ({ type: 'case-studies', content: { title: 'Selected work', items: [{ id: '1', title: 'A better way to grow', description: 'How a focused strategy helped this team reach its next milestone.', imageUrl: '' }] } }),
   }
 };
