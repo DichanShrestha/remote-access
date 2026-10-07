@@ -4,7 +4,6 @@ import db from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { PageDocumentSchema } from '@/lib/page-engine/schemas';
 import { authService } from '@/services/auth';
-import { revalidatePath } from 'next/cache';
 
 export async function saveDraftConfig(pageId: string, rawConfig: any) {
   const user = await authService.requireUser();
@@ -32,29 +31,5 @@ export async function saveDraftConfig(pageId: string, rawConfig: any) {
     }
   });
 
-  return { success: true };
-}
-
-export async function publishPage(pageId: string) {
-  const user = await authService.requireUser();
-
-  const page = await db.page.findUnique({
-    where: { id: pageId },
-    include: { profile: true }
-  });
-
-  if (!page || page.profile.userId !== user.id) {
-    throw new Error('Unauthorized');
-  }
-
-  await db.page.update({
-    where: { id: pageId },
-    data: {
-      publishedConfig: page.draftConfig as any,
-      isPublished: true,
-    }
-  });
-
-  revalidatePath(`/${page.profile.username}`);
   return { success: true };
 }

@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { GroupNode, PageDocument, PageNode, PageSection, SectionType } from '@/lib/page-engine/schemas';
 import { findNode, findNodeParentId, insertNode, isGroup, moveNode, removeSection, updateNode, updateSection, duplicateSection, toggleSectionVisibility, getNodeDepth } from '@/lib/page-engine/operations';
 import { ComponentRegistry } from '@/lib/page-engine/registry';
 
-import { saveDraftConfig, publishPage } from '@/app/editor/actions';
+import { saveDraftConfig } from '@/app/editor/actions';
 import { composePage, editSection } from '@/app/editor/ai-actions';
 import { DraggableSectionList } from './DraggableSectionList';
 import { ComponentPicker } from './ComponentPicker';
@@ -20,6 +21,7 @@ export function EditorShell({
   initialDocument: PageDocument;
   pageId: string
 }) {
+  const router = useRouter();
   const [doc, setDoc] = useState<PageDocument>(initialDocument);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [insertionGroupId, setInsertionGroupId] = useState<string | null>(null);
@@ -113,10 +115,14 @@ export function EditorShell({
       return;
     }
     setIsPublishing(true);
-    await saveDraftConfig(pageId, doc);
-    await publishPage(pageId);
-    setIsPublishing(false);
-    alert('Page published successfully!');
+    try {
+      await saveDraftConfig(pageId, doc);
+      router.push('/onboarding/claim');
+    } catch (error) {
+      console.error(error);
+      setIsPublishing(false);
+      alert('Your changes could not be saved. Please try again.');
+    }
   };
 
   const handleAddSection = (type: SectionType) => {

@@ -11,7 +11,7 @@ export function AuthButton({ user, label, className }: { user: any; label?: stri
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${location.origin}/api/auth/callback?next=/dashboard`,
+        redirectTo: `${location.origin}/api/auth/callback?next=/onboarding`,
       },
     })
   }

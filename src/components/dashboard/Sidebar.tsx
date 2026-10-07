@@ -173,15 +173,15 @@ export function Sidebar() {
             "flex items-center h-12 rounded-md transition-all",
             visuallyCollapsed ? (isEditor ? "justify-center group-hover:justify-start group-hover:px-3" : "justify-center") : "px-3 gap-3"
           )}>
-            <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-xs font-semibold text-slate-600">
-              U
+            <div className="w-8 h-8 rounded-full bg-[#e7e4da] flex-shrink-0 flex items-center justify-center text-xs font-semibold text-[#66695f]">
+              S
             </div>
             <div className={cn(
               "flex-col overflow-hidden transition-all duration-300",
               visuallyCollapsed ? (isEditor ? "opacity-0 w-0 hidden group-hover:flex group-hover:w-auto group-hover:opacity-100 group-hover:ml-3" : "hidden") : "flex"
             )}>
-              <span className="text-sm font-medium leading-none whitespace-nowrap">User Account</span>
-              <span className="text-xs text-slate-500 mt-1 whitespace-nowrap">Pro Plan</span>
+              <span className="text-sm font-medium leading-none whitespace-nowrap">Your workspace</span>
+              <span className="text-xs text-slate-500 mt-1 whitespace-nowrap">Smart Page</span>
             </div>
           </div>
         </div>
