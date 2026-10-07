@@ -15,6 +15,16 @@ export function SiteNavbar({ section, theme }: { section: NavbarSection; theme: 
   const minimal = section.variant === 'minimal';
   const pill = section.variant === 'pill';
   const overlay = section.variant === 'overlay';
+  const restaurant = section.variant === 'restaurant-overlay';
+
+  if (restaurant) return <header className="absolute left-0 top-0 z-20 w-full px-5 py-4 text-white sm:px-8 md:px-12">
+    <div className="mx-auto flex max-w-6xl items-center justify-between">
+      <button type="button" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? 'Close menu' : 'Open menu'} className="grid h-10 w-10 place-items-center"><span className="text-2xl font-light">{menuOpen ? '×' : '☰'}</span></button>
+      <a href="#top" className="absolute left-1/2 -translate-x-1/2 whitespace-pre-line text-center font-serif text-sm leading-tight sm:text-base">{content.logoText}</a>
+      <a href={content.primaryUrl || '#booking'} className="text-[8px] uppercase tracking-wide underline underline-offset-4 sm:text-[9px]">{content.primaryLabel || 'Prenotazioni'}</a>
+    </div>
+    {menuOpen && <nav aria-label="Main navigation" className="absolute left-5 top-14 flex min-w-40 flex-col gap-3 bg-black/80 p-5 text-xs backdrop-blur sm:left-8">{content.links.map(link => <a key={link.id} href={link.url} onClick={() => setMenuOpen(false)}>{link.label}</a>)}</nav>}
+  </header>;
 
   return (
     <header className={`w-full px-5 py-3 text-current @md:px-8 ${pill ? 'absolute left-0 top-0 z-20 flex justify-center' : overlay ? 'absolute left-0 top-0 z-20' : ''}`}>
@@ -69,6 +79,8 @@ export function SiteFooter({ section }: { section: FooterSection }) {
     groups.set(link.group, group);
     return groups;
   }, new Map());
+
+  if (section.variant === 'restaurant') return <footer className="w-full bg-[#c8ad78] px-6 py-10 text-white sm:px-10 md:px-[10%] md:py-14"><div className="mx-auto max-w-6xl"><div className="grid gap-8 md:grid-cols-[1.2fr_0.8fr_1fr_1.2fr]"><div className="font-serif text-2xl leading-[0.9]">{content.logoText}</div>{[...linkGroups.entries()].map(([name, links]) => <nav key={name} aria-label={name}><h2 className="mb-3 text-[8px] font-semibold uppercase tracking-wide">{name}</h2><ul className="space-y-2">{links.map(link => <li key={link.id}><a href={link.url} className="text-[9px] opacity-90 hover:opacity-100">{link.label}</a></li>)}</ul></nav>)}<div><p className="text-[9px] leading-relaxed">{content.description}</p>{content.socialLinks.length > 0 && <div className="mt-5 flex gap-2">{content.socialLinks.map(link => <a key={link.id} href={link.url} aria-label={link.label} className="grid h-7 w-7 place-items-center rounded-full border border-white/70 text-[9px]">{link.label.slice(0, 1)}</a>)}</div>}</div></div><div className="mt-8 flex flex-wrap justify-between gap-3 border-t border-white/60 pt-4 text-[8px]"><span>{content.legalLinks[0]?.label || '© 2025 Osteria San Rocco'}</span><div className="flex gap-4">{content.legalLinks.slice(1).map(link => <a key={link.id} href={link.url}>{link.label}</a>)}</div></div></div></footer>;
 
   return (
     <footer className="w-full px-6 py-12 text-current @md:px-10 @md:py-16">

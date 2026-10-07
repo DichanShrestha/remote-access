@@ -592,6 +592,14 @@ function PortfolioEditorialHero({ content }: SubProps) {
   );
 }
 
+function RestaurantCoverHero({ content }: SubProps) {
+  return <section className="relative flex min-h-[54svh] w-full items-end justify-center overflow-hidden bg-neutral-900 text-white md:min-h-[620px]">
+    {content.imageUrl && <img src={content.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+    <div className="absolute inset-0 bg-black/35" />
+    <div className="relative z-10 px-6 pb-5 text-center"><a href={content.buttonUrl || '#menu'} className="border-b border-white/70 pb-1 text-[9px] font-medium uppercase tracking-wide text-white">{content.buttonText || 'Scopri il menu'} ↓</a></div>
+  </section>;
+}
+
 // ─── Variant 4: Minimal Profile ────────────────────────────────
 function MinimalProfile({ content, theme, textContrast = 'auto' }: SubProps) {
   const colors = useContrastColors(textContrast, 'minimal');
@@ -804,6 +812,7 @@ const VARIANT_MAP: Record<string, React.ComponentType<SubProps>> = {
   'editorial-center': EditorialCenter,
   'split': SplitHero,
   'portfolio-editorial': PortfolioEditorialHero,
+  'restaurant-cover': RestaurantCoverHero,
   'split-wide': (props) => <SplitHero {...props} wide />,
   'immersive': ImmersiveHero,
   'minimal': MinimalProfile,

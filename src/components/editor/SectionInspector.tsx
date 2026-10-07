@@ -155,10 +155,10 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     }],
   },
   products: {
-    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }],
+    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }, { key: 'content.menuImageUrl', label: 'Menu Image URL', type: 'url' }],
     arrayFields: [{
       key: 'content.items', label: 'Products',
-      itemFields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'price', label: 'Price', type: 'text' }, { key: 'imageUrl', label: 'Image URL', type: 'url' }, { key: 'url', label: 'Product URL', type: 'url' }],
+      itemFields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'category', label: 'Category', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'price', label: 'Price', type: 'text' }, { key: 'imageUrl', label: 'Image URL', type: 'url' }, { key: 'url', label: 'Product URL', type: 'url' }],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), title: '', description: '', price: '', imageUrl: '', url: '' }),
     }],
   },
@@ -244,6 +244,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [
       { key: 'content.title', label: 'Title', type: 'text' },
       { key: 'content.description', label: 'Description', type: 'textarea' },
+      { key: 'content.imageUrl', label: 'Reservation Image URL', type: 'url' },
       { key: 'content.provider', label: 'Provider', type: 'select', options: [{ label: 'Cal.com', value: 'cal.com' }, { label: 'Calendly', value: 'calendly' }, { label: 'Custom', value: 'custom' }] },
       { key: 'content.link', label: 'Booking Link', type: 'url' },
     ],
@@ -332,10 +333,10 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     ],
   },
   timeline: {
-    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }],
+    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }, { key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Vertical', value: 'vertical' }, { label: 'History', value: 'restaurant-history' }] }],
     arrayFields: [{
       key: 'content.items', label: 'Steps',
-      itemFields: [{ key: 'label', label: 'Label', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }],
+      itemFields: [{ key: 'label', label: 'Label', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'imageUrl', label: 'Image URL', type: 'url' }],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), label: '', description: '' }),
     }],
   },
@@ -368,6 +369,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
       { key: 'content.title', label: 'Title', type: 'text' },
       { key: 'content.description', label: 'Description', type: 'textarea' },
       { key: 'content.imageUrl', label: 'Image URL', type: 'url' },
+      { key: 'content.secondaryImageUrl', label: 'Secondary Image URL', type: 'url' },
       { key: 'content.buttonText', label: 'Button Text', type: 'text' },
       { key: 'content.buttonUrl', label: 'Button URL', type: 'url' },
     ],
@@ -899,6 +901,9 @@ function HeroVariantPicker({ currentVariant, onChange }: { currentVariant: strin
     )},
     { id: 'immersive', label: 'Immersive', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="0" y="0" width="60" height="32" rx="2" fill="currentColor" opacity="0.12"/><rect x="6" y="18" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.6"/><rect x="6" y="23" width="20" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="6" y="27" width="12" height="3" rx="1.5" fill="currentColor" opacity="0.4"/></svg>
+    )},
+    { id: 'restaurant-cover', label: 'Restaurant', icon: (
+      <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect width="60" height="32" rx="2" fill="currentColor" opacity="0.14"/><path d="M0 23 18 9l12 12L43 6l17 17v9H0z" fill="currentColor" opacity="0.3"/><rect x="5" y="24" width="18" height="2" rx="1" fill="currentColor" opacity="0.8"/><rect x="5" y="27" width="11" height="1.5" rx=".75" fill="currentColor" opacity="0.55"/></svg>
     )},
     { id: 'minimal', label: 'Minimal', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><circle cx="30" cy="8" r="5" fill="currentColor" opacity="0.2"/><rect x="18" y="16" width="24" height="3" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="22" y="21" width="16" height="2" rx="1" fill="currentColor" opacity="0.2"/><rect x="24" y="26" width="12" height="3" rx="1.5" fill="currentColor" opacity="0.3"/></svg>

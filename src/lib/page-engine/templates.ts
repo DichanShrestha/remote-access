@@ -663,124 +663,18 @@ export const TEMPLATE_BEAUTY_BRAND: PageDocument = {
 // ═══════════════════════════════════════════════════════════════════
 export const TEMPLATE_RESTAURANT: PageDocument = {
   version: 1,
-  theme: {
-    style: 'premium-minimal',
-    primaryColor: '#B8944E',
-    radius: 'small',
-    density: 'spacious',
-  },
-  settings: { showFooterBranding: true, enableSmoothScrolling: true },
+  theme: { style: 'premium-minimal', primaryColor: '#c6a66b', radius: 'none', density: 'spacious' },
+  settings: { showFooterBranding: false, enableSmoothScrolling: true },
   sections: [
-    { id: 'site-header', type: 'site-navbar', variant: 'minimal', isHidden: false, backgroundColor: '#171411', textColor: '#ffffff', content: { logoText: 'Osteria San Rocco', links: [{ id: 'n1', label: 'Menu', url: '#products-1' }, { id: 'n2', label: 'Our Story', url: '#timeline-1' }, { id: 'n3', label: 'Reservations', url: '#booking-1' }] } },
-    {
-      id: 'hero-1',
-      type: 'hero',
-      variant: 'immersive',
-      layout: 'center',
-      textContrast: 'light',
-      zoomReveal: true,
-      zoomWord: 'Osteria',
-      isHidden: false,
-      content: {
-        title: 'Osteria San Marco',
-        headline: 'Authentic Italian, crafted with soul.',
-        subtitle: 'A seasonal menu celebrating the finest Italian traditions. Every dish tells a story of heritage, quality ingredients, and culinary passion.',
-        buttonText: 'Reserve a Table',
-        buttonUrl: '#booking',
-        secondaryButtonText: 'View Menu',
-        secondaryButtonUrl: '#menu',
-        imageUrl: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=80',
-      },
-    },
-    {
-      id: 'richtext-1',
-      type: 'rich-text',
-      variant: 'split',
-      isHidden: false,
-      content: {
-        text: '<h2>Our Philosophy</h2><p>At Osteria San Marco, we believe great food starts with exceptional ingredients. Every morning, our chef sources the freshest produce from local farms and imports specialty items directly from Italy. Our pasta is made by hand, our sauces are slow-simmered, and our desserts are baked in-house. This is not just a restaurant — it is a celebration of the Italian table.</p>',
-      },
-    },
-    {
-      id: 'products-1',
-      type: 'products',
-      variant: 'blur-fade',
-      isHidden: false,
-      content: {
-        title: 'Signature Dishes',
-        items: [
-          { id: 'p-1', title: 'Risotto ai Funghi Porcini', description: 'Arborio rice slow-cooked with wild porcini mushrooms, finished with aged Parmigiano.', price: '$32', imageUrl: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=500&q=80', url: '#' },
-          { id: 'p-2', title: 'Bistecca alla Fiorentina', description: 'Prime T-bone steak, charcoal-grilled, served with rosemary potatoes and seasonal greens.', price: '$58', imageUrl: 'https://images.unsplash.com/photo-1558030006-450675393462?w=500&q=80', url: '#' },
-          { id: 'p-3', title: 'Tagliatelle al Ragù', description: 'Hand-rolled pasta with our signature Bolognese, slow-braised for eight hours.', price: '$26', imageUrl: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&q=80', url: '#' },
-        ],
-      },
-    },
-    {
-      id: 'carousel-1',
-      type: 'carousel',
-      variant: 'flex',
-      isHidden: false,
-      content: {
-        images: [
-          { id: 'c-1', url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1000&q=80', caption: 'The Dining Room' },
-          { id: 'c-2', url: 'https://images.unsplash.com/photo-1428515613728-6b4607e44363?w=1000&q=80', caption: 'Our Kitchen' },
-          { id: 'c-3', url: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1000&q=80', caption: 'Wine Cellar' },
-          { id: 'c-4', url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&q=80', caption: 'Garden Terrace' },
-        ],
-      },
-    },
-    {
-      id: 'booking-1',
-      type: 'booking',
-      variant: 'premium',
-      isHidden: false,
-      content: {
-        title: 'Reserve a Table',
-        description: 'Book your table online. We recommend reserving at least 48 hours in advance for weekend dining.',
-        provider: 'calendly',
-        link: 'https://calendly.com',
-      },
-    },
-    {
-      id: 'timeline-1',
-      type: 'timeline',
-      variant: 'stepper',
-      isHidden: false,
-      content: {
-        title: 'Our Story',
-        items: [
-          { id: 't-1', label: '1999', description: 'Chef Marco Rossi opens the first Osteria in a converted farmhouse in Tuscany.' },
-          { id: 't-2', label: '2008', description: 'Awarded our first Michelin star. Expanded to a second location in the city center.' },
-          { id: 't-3', label: '2019', description: 'Opened our flagship New York location, bringing authentic Tuscan cuisine across the Atlantic.' },
-        ],
-      },
-    },
-    {
-      id: 'testimonials-1',
-      type: 'testimonials',
-      variant: 'marquee',
-      isHidden: false,
-      content: {
-        title: 'Guest Reviews',
-        items: [
-          { id: 'r-1', quote: 'The best Italian food outside of Italy. Every visit feels like a journey to Tuscany.', author: 'The New York Times' },
-          { id: 'r-2', quote: 'Impeccable service, extraordinary food, and a wine list that makes you weep with joy.', author: 'Food & Wine Magazine' },
-          { id: 'r-3', quote: 'We celebrated our anniversary here and it was absolute perfection from start to finish.', author: 'Sarah & Tom K.' },
-        ],
-      },
-    },
-    {
-      id: 'contact-1',
-      type: 'contact',
-      variant: 'spacious',
-      isHidden: false,
-      content: {
-        title: 'Visit Us',
-        email: 'reservations@osteriasanmarco.com',
-        phone: '+1 (212) 555-0147',
-        address: '87 Prince Street, SoHo, New York, NY 10012',
-      },
-    },
+    { id: 'site-header', type: 'site-navbar', variant: 'restaurant-overlay', isHidden: false, textColor: '#ffffff', content: { logoText: 'Osteria\nSan Rocco', primaryLabel: 'Prenotazioni', primaryUrl: '#booking', links: [{ id: 'n1', label: 'La cucina', url: '#story' }, { id: 'n2', label: 'Menu', url: '#menu' }, { id: 'n3', label: 'Prenota un tavolo', url: '#booking' }, { id: 'n4', label: 'La nostra storia', url: '#history' }] } },
+    { id: 'hero-1', type: 'hero', variant: 'restaurant-cover', layout: 'center', textContrast: 'light', isHidden: false, content: { title: 'Osteria San Rocco', headline: '', buttonText: 'Scopri le specialità', buttonUrl: '#story', imageUrl: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=1800&q=90' } },
+    { id: 'story', type: 'feature-split', variant: 'restaurant-story', layout: 'image-left', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { eyebrow: 'Ingredienti scelti con cura', title: 'Una cucina di tradizione e passione', description: 'Con amore e maestria, selezioniamo i migliori tagli di carne e verdure fresche, che vengono delicatamente grigliati per offrire un’esperienza di gusto in ogni boccone. Dalla succulenta bistecca alla fiorentina alle verdure alla griglia, ogni piatto è preparato con cura e passione per garantire un’esperienza gastronomica indimenticabile.', imageUrl: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=1100&q=85', secondaryImageUrl: 'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=800&q=85', imageAlt: 'Bistecca appena grigliata', checkpoints: [] } },
+    { id: 'menu', type: 'products', variant: 'restaurant-menu', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'Menu', menuImageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1000&q=85', items: [{ id: 'm1', category: 'Antipasti', title: 'Salumi misti e insalata russa', description: 'Selezione della casa con verdure fresche.', price: '€14' }, { id: 'm2', category: 'Primi piatti', title: 'Tartare di limousin al coltello', description: 'Cipolla rossa caramellata e maionese.', price: '€15' }, { id: 'm3', category: 'Primi piatti', title: 'Tortino di melanzane', description: 'Con pomodoro e salsa cremosa.', price: '€13' }, { id: 'm4', category: 'Secondi piatti', title: 'Uovo poché con crema di patate', description: 'Al sentore di acciuga.', price: '€12' }, { id: 'm5', category: 'Contorni', title: 'Acciughe del Mar Cantabrico', description: 'Con burro della Normandia e crostini.', price: '€15' }] } },
+    { id: 'pasta-story', type: 'feature-split', variant: 'restaurant-story', layout: 'image-right', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { eyebrow: 'Fatto a mano ogni giorno', title: 'La semplicità degli ingredienti', description: 'Usiamo soltanto i migliori ingredienti e tecniche tradizionali per creare piatti unici e irresistibili, capaci di soddisfare i palati più esigenti. La nostra pasta fresca fatta a mano è un’esperienza di gusto autentica.', imageUrl: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=1100&q=85', secondaryImageUrl: 'https://images.unsplash.com/photo-1556761223-4c4282c73f77?auto=format&fit=crop&w=800&q=85', imageAlt: 'Pasta fresca preparata a mano', checkpoints: [] } },
+    { id: 'booking', type: 'booking', variant: 'restaurant-reservation', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'Prenota un tavolo', description: 'Scegli il numero di ospiti, la data e l’orario.', provider: 'custom', link: 'mailto:info@osteriasanrocco.com', imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1100&q=85' } },
+    { id: 'history', type: 'timeline', layout: 'restaurant-history', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'La nostra storia', items: [{ id: 't1', label: '1999', description: 'L’Osteria San Rocco nasce nel cuore della città: una cucina di famiglia, fatta di gesti semplici e ingredienti sinceri.', imageUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=900&q=85' }, { id: 't2', label: '2002', description: 'La cantina si amplia e accoglie etichette italiane selezionate, diventando un punto di incontro per gli amanti del buon vino.', imageUrl: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=900&q=85' }, { id: 't3', label: '2010', description: 'Una nuova generazione rinnova la tradizione, portando in tavola ricette autentiche con uno sguardo contemporaneo.', imageUrl: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=900&q=85' }] } },
+    { id: 'featured-dish', type: 'carousel', variant: 'restaurant-featured', isHidden: false, content: { images: [{ id: 'd1', url: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=1500&q=85', caption: 'La pasta fresca' }, { id: 'd2', url: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=900&q=85', caption: 'Il risotto' }, { id: 'd3', url: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=900&q=85', caption: 'La bistecca' }] } },
+    { id: 'footer', type: 'site-footer', variant: 'restaurant', isHidden: false, backgroundColor: '#c8ad78', textColor: '#ffffff', content: { logoText: 'Osteria\nSan Rocco', description: 'Via Roma 2, 20154 Milano\n02 765 9090\ninfo@osteriasanrocco.it\n\nLunedì e Martedì: chiuso\nMercoledì – Domenica: 12:30–14:30 · 19:00–23:30', links: [{ id: 'f1', group: 'Menu', label: 'La cucina', url: '#menu' }, { id: 'f2', group: 'Menu', label: 'Carta dei vini', url: '#menu' }, { id: 'f3', group: 'Menu', label: 'Prenotazioni', url: '#booking' }, { id: 'f4', group: 'Menu', label: 'La nostra storia', url: '#history' }, { id: 'f5', group: 'Contatti', label: 'Via Roma 2, Milano', url: '#contact' }, { id: 'f6', group: 'Contatti', label: 'info@osteriasanrocco.it', url: 'mailto:info@osteriasanrocco.it' }], socialLinks: [{ id: 's1', label: 'Instagram', url: '#' }, { id: 's2', label: 'Facebook', url: '#' }], legalLinks: [{ id: 'legal1', label: '© 2025 Osteria San Rocco · P.IVA 112233445566', url: '#' }, { id: 'legal2', label: 'Privacy policy', url: '#' }, { id: 'legal3', label: 'Cookie policy', url: '#' }] } },
   ],
 };
 

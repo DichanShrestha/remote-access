@@ -367,6 +367,8 @@ export function CarouselSection({ section, theme }: { section: any; theme: Theme
     return <section className="py-10 px-4 text-center text-slate-400 text-sm">Add images to your carousel</section>;
   }
 
+  if (variant === 'restaurant-featured') return <section className="w-full bg-white px-6 py-10 sm:px-10 md:px-[10%] md:py-14"><div className="mx-auto grid max-w-6xl grid-cols-[1fr_64px] gap-2 sm:grid-cols-[1fr_100px] md:gap-3"><div className="relative aspect-[1.65/1] overflow-hidden bg-neutral-100"><img src={images[currentIndex % images.length].url} alt={images[currentIndex % images.length].caption || ''} className="h-full w-full object-cover" /><span className="absolute right-4 top-1/2 grid h-14 w-14 -translate-y-1/2 place-items-center rounded-full bg-[#c6a66b] text-[8px] font-semibold uppercase text-white">{images[currentIndex % images.length].caption || 'Scopri'}</span><div className="absolute bottom-4 left-4 flex gap-2"><button onClick={() => setCurrentIndex(index => (index - 1 + images.length) % images.length)} aria-label="Previous dish" className="grid h-8 w-8 place-items-center rounded-full bg-white/90">←</button><button onClick={() => setCurrentIndex(index => (index + 1) % images.length)} aria-label="Next dish" className="grid h-8 w-8 place-items-center rounded-full bg-white/90">→</button></div></div><div className="flex flex-col gap-2">{images.filter((_: any, index: number) => index !== currentIndex % images.length).slice(0, 2).map((image: any) => <button key={image.id} onClick={() => setCurrentIndex(images.findIndex((item: any) => item.id === image.id))} className="min-h-0 flex-1 overflow-hidden"><img src={image.url} alt={image.caption || ''} className="h-full w-full object-cover" /></button>)}</div></div></section>;
+
   if (variant === 'flex') {
     return (
       <section className="py-12 px-4 md:px-8 max-w-6xl mx-auto h-[600px] relative w-full">
@@ -663,6 +665,16 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
 export function ProductsSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, items } = section.content;
   const variant = section.variant || 'default';
+
+  if (variant === 'restaurant-menu') {
+    const categories = Array.from(new Set(items.map((item: any) => item.category || 'Menu')));
+    return <section className="w-full bg-white px-6 py-14 text-neutral-900 sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[0.8fr_1fr] md:gap-12">
+      {section.content.menuImageUrl && <img src={section.content.menuImageUrl} alt="A selection from our kitchen" className="aspect-[0.8/1] w-full object-cover" />}
+      <div><div className="mb-5 flex items-end justify-between"><h2 className="font-serif text-4xl">{title || 'Menu'}</h2><a href="#menu" className="text-[8px] uppercase underline underline-offset-4">Vedi tutto</a></div><nav aria-label="Menu categories" className="mb-6 flex flex-wrap gap-x-3 text-[8px] uppercase text-[#bd9d62]">{categories.map((category: any, index: number) => <a key={category} href={`#menu-${index}`} className="whitespace-nowrap">{category}{index < categories.length - 1 && <span className="ml-3 text-neutral-400">/</span>}</a>)}</nav>
+        {categories.map((category: any, index: number) => <div key={category} id={`menu-${index}`} className="mb-5 scroll-mt-6"><h3 className="sr-only">{category}</h3><div className="border-t border-neutral-400">{items.filter((item: any) => (item.category || 'Menu') === category).map((item: any) => <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3 border-b border-neutral-300 py-3 text-[9px]"><div><p className="font-medium">{item.title}</p><p className="mt-1 text-[8px] leading-relaxed text-neutral-500">{item.description}</p></div><span className="whitespace-nowrap text-neutral-500">{item.price}</span></div>)}</div></div>)}
+      </div>
+    </div></section>;
+  }
 
   if (variant === 'glare') {
     return (
@@ -1082,6 +1094,28 @@ export function CollectEmailsSection({ section, theme, pageId }: { section: any;
 // ── Booking ────────────────────────────────────────────────────
 export function BookingSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, description, link } = section.content;
+  const [step, setStep] = useState(0);
+  const [guests, setGuests] = useState(2);
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('19:00');
+  if (section.variant === 'restaurant-reservation') {
+    const steps = ['Persone', 'Data', 'Ora'];
+    const sendReservation = () => {
+      const subject = encodeURIComponent(`Table reservation for ${guests}`);
+      const body = encodeURIComponent(`Guests: ${guests}\nDate: ${date}\nTime: ${time}`);
+      window.location.href = `${link || 'mailto:info@osteriasanrocco.com'}?subject=${subject}&body=${body}`;
+    };
+    return <section className="w-full bg-white px-6 py-12 text-neutral-900 sm:px-10 md:px-[10%] md:py-16"><h2 className="mb-8 text-center font-serif text-4xl md:mb-10 md:text-5xl">{title || 'Prenota un tavolo'}</h2><div className="mx-auto grid max-w-6xl gap-2 md:grid-cols-2 md:gap-3">
+      <div className="min-h-[340px] bg-[#c8ad78] p-5 text-white sm:p-7">
+        <div className="mb-7 grid grid-cols-3 border border-white/60 text-center text-[9px]"><span className="bg-white py-2 font-semibold text-[#9a7d48]">{steps[0]}</span>{steps.slice(1).map((label, index) => <span key={label} className={`py-2 ${step >= index + 1 ? 'bg-white/20' : ''}`}>{label}</span>)}</div>
+        {step === 0 && <><p className="mb-4 font-serif text-lg">Per quante persone?</p><div className="grid grid-cols-3 gap-1.5">{[1, 2, 3, 4, 5, 6, 9].map(count => <button key={count} onClick={() => setGuests(count)} className={`h-9 border border-white/70 text-xs ${guests === count ? 'bg-white text-[#9a7d48]' : 'hover:bg-white/15'}`}>{count === 9 ? '9+' : count}</button>)}</div></>}
+        {step === 1 && <label className="block font-serif text-lg">Scegli una data<input type="date" value={date} onChange={event => setDate(event.target.value)} className="mt-5 block h-12 w-full border border-white/70 bg-transparent px-3 font-sans text-sm text-white [color-scheme:light]" /></label>}
+        {step === 2 && <label className="block font-serif text-lg">Scegli un orario<select value={time} onChange={event => setTime(event.target.value)} className="mt-5 block h-12 w-full border border-white/70 bg-transparent px-3 font-sans text-sm text-[#6c5837]"><option>18:00</option><option>18:30</option><option>19:00</option><option>19:30</option><option>20:00</option><option>20:30</option></select></label>}
+        <div className="mt-8 flex gap-2">{step > 0 && <button onClick={() => setStep(value => value - 1)} className="h-10 border border-white/70 px-5 text-[9px] font-semibold uppercase">Indietro</button>}{step < 2 ? <button onClick={() => setStep(value => value + 1)} className="h-10 flex-1 bg-white text-[9px] font-semibold uppercase tracking-wide text-[#81683e]">Continua</button> : <button onClick={sendReservation} className="h-10 flex-1 bg-white text-[9px] font-semibold uppercase tracking-wide text-[#81683e]">Richiedi prenotazione</button>}</div>
+      </div>
+      {section.content.imageUrl && <img src={section.content.imageUrl} alt="A table set for dinner" className="min-h-[340px] w-full object-cover" />}
+    </div></section>;
+  }
   return (
     <section className="py-16 px-4 md:px-8 max-w-xl mx-auto text-center">
       <div className="p-10 rounded-3xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-800/30 border border-slate-200 dark:border-slate-700">
@@ -1455,6 +1489,8 @@ export function TimelineSection({ section, theme }: { section: any; theme: Theme
 
   const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
+  if (layout === 'restaurant-history') return <section className="w-full bg-white px-6 py-14 text-neutral-900 sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="font-serif text-4xl md:text-5xl">{title || 'La nostra storia'}</h2><div className="flex gap-2 text-sm text-[#c6a66b]"><button aria-label="Previous years" className="grid h-8 w-8 place-items-center rounded-full border border-current">←</button><button aria-label="Next years" className="grid h-8 w-8 place-items-center rounded-full border border-current">→</button></div></div><div className="mb-5 flex min-w-max items-end gap-10 border-b border-neutral-400 px-5">{items.map((item: any, index: number) => <a key={item.id} href={`#history-${item.id}`} className={`relative pb-3 font-serif text-3xl italic ${index === 0 ? 'text-[#c6a66b]' : 'text-neutral-900'}`}>{item.label}<span className={`absolute -bottom-1 left-0 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-[#c6a66b]' : 'bg-neutral-900'}`} /></a>)}</div><div className="grid gap-4 md:grid-cols-3">{items.map((item: any) => <article id={`history-${item.id}`} key={item.id} className="scroll-mt-8">{item.imageUrl && <img src={item.imageUrl} alt="" className="mb-3 aspect-[1.35/1] w-full object-cover" />}<p className="text-[9px] leading-relaxed text-neutral-600">{item.description}</p></article>)}</div></div></section>;
+
   if (layout === 'horizontal-cards') {
     return (
       <section className="max-w-7xl mx-auto px-6 py-20">
@@ -1644,6 +1680,11 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
   const isImageLeft = layout === 'image-left';
   const portfolioPortrait = section.variant === 'portfolio-about';
   const editorial = section.variant === 'editorial' || portfolioPortrait;
+
+  if (section.variant === 'restaurant-story') return <section className="w-full bg-white px-6 py-12 text-neutral-900 sm:px-10 md:px-[10%] md:py-16"><div className={`mx-auto grid max-w-6xl items-center gap-6 md:grid-cols-2 md:gap-10 ${isImageLeft ? '' : 'md:[&>div:first-child]:order-2'}`}>
+    <div className="aspect-[1.05/1] overflow-hidden"><img src={content.imageUrl} alt={content.imageAlt || content.title} className="h-full w-full object-cover" /></div>
+    <div className="flex flex-col gap-6">{content.eyebrow && <p className="text-[8px] uppercase tracking-[0.16em] text-[#b99c65]">{content.eyebrow}</p>}{content.title && <h2 className="font-serif text-3xl leading-tight md:text-4xl">{content.title}</h2>}{content.description && <p className="max-w-md text-[10px] leading-relaxed text-neutral-600">{content.description}</p>}{content.secondaryImageUrl && <img src={content.secondaryImageUrl} alt="" className="mt-1 aspect-[1.5/1] w-full object-cover md:max-w-sm" />}</div>
+  </div></section>;
 
   return (
     <section className={`w-full px-6 py-16 sm:px-10 md:py-20 ${portfolioPortrait ? 'border-y border-neutral-400' : ''} ${editorial ? 'text-current' : 'bg-white lg:px-24'}`}>

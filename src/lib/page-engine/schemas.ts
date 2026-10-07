@@ -200,6 +200,7 @@ export const ProductsSectionSchema = BaseSectionSchema.extend({
   type: z.literal('products'),
   content: z.object({
     title: z.string().optional(),
+    menuImageUrl: z.string().optional(),
     items: z.array(z.object({
       id: z.string(),
       title: z.string(),
@@ -207,6 +208,7 @@ export const ProductsSectionSchema = BaseSectionSchema.extend({
       price: z.string(),
       imageUrl: z.string().optional(),
       url: z.string().optional(),
+      category: z.string().optional(),
     })),
   }),
 });
@@ -303,6 +305,7 @@ export const BookingSectionSchema = BaseSectionSchema.extend({
     description: z.string().optional(),
     provider: z.enum(['cal.com', 'calendly', 'custom']).default('cal.com'),
     link: z.string(),
+    imageUrl: z.string().optional(),
   }),
 });
 
@@ -410,8 +413,10 @@ export const TimelineSectionSchema = BaseSectionSchema.extend({
       id: z.string(),
       label: z.string(),
       description: z.string().optional(),
+      imageUrl: z.string().optional(),
     })),
   }),
+  layout: z.enum(['vertical', 'horizontal-cards', 'restaurant-history']).default('vertical'),
 });
 
 export const DividerSectionSchema = BaseSectionSchema.extend({
@@ -437,6 +442,7 @@ export const FeatureSplitSectionSchema = BaseSectionSchema.extend({
       text: z.string(),
     })).default([]),
     imageUrl: z.string(),
+    secondaryImageUrl: z.string().optional(),
     imageAlt: z.string().optional(),
     buttonText: z.string().optional(),
     buttonUrl: z.string().optional(),
