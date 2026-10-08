@@ -11,7 +11,7 @@ export default async function DashboardTemplatesPage() {
   const allTemplates = getAvailableTemplates();
   
   return (
-    <div className="max-w-6xl mx-auto pb-20 animate-in fade-in duration-500">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 animate-in fade-in duration-500">
       <div className="mb-10">
         <h1 className="text-[32px] font-semibold tracking-tight text-[#292A25] mb-2 font-serif">
           Templates
