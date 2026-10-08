@@ -592,6 +592,45 @@ function PortfolioEditorialHero({ content }: SubProps) {
   );
 }
 
+function FashionEditorialHero({ content }: SubProps) {
+  return (
+    <section className="w-full bg-white px-6 py-10 text-[#171717] sm:px-10 md:px-[7%] md:py-16">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 md:min-h-[500px] md:grid-cols-[1.15fr_0.85fr] md:gap-12">
+        <div className="relative mx-auto w-full max-w-[620px] pb-7 pr-7 md:pb-9 md:pr-9">
+          {content.imageUrl && <img src={content.imageUrl} alt={content.title ? `${content.title} — style portrait` : 'Style portrait'} className="ml-auto aspect-[0.92/1] w-[72%] object-cover" />}
+          {content.avatarUrl && <img src={content.avatarUrl} alt="A detail from the latest style story" className="absolute bottom-0 left-0 aspect-[1.3/1] w-[52%] border-[6px] border-white object-cover md:border-[10px]" />}
+          <span aria-hidden="true" className="absolute right-0 top-0 -z-0 h-1/3 w-1/3 bg-[#f4f2ee]" />
+        </div>
+        <div className="max-w-md md:pl-2">
+          {content.eyebrow && <p className="mb-5 text-[9px] font-medium uppercase tracking-[0.24em] text-neutral-500">{content.eyebrow}</p>}
+          <h1 className="font-serif text-4xl font-normal leading-[1.02] tracking-[-0.035em] sm:text-5xl md:text-[clamp(2.75rem,4vw,4.25rem)]">{content.headline || content.title}</h1>
+          {content.subtitle && <p className="mt-5 max-w-sm text-[11px] leading-relaxed text-neutral-500 md:text-xs">{content.subtitle}</p>}
+          {content.buttonText && <a href={content.buttonUrl || '#outfits'} className="mt-7 inline-flex items-center gap-4 text-[9px] font-semibold uppercase tracking-[0.2em]">{content.buttonText}<span aria-hidden="true" className="h-px w-9 bg-current" /></a>}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SpeakerEditorialHero({ content }: SubProps) {
+  return (
+    <section className="relative isolate w-full overflow-hidden bg-[#ff735e] text-[#171717] md:min-h-[540px]">
+      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_75%_15%,#ffd5ca_0%,transparent_42%),linear-gradient(135deg,#ffe9df_0%,#ff8b72_55%,#ff604f_100%)]" />
+      {content.imageUrl && <img src={content.imageUrl} alt={content.title ? `Portrait of ${content.title}` : 'Speaker portrait'} className="absolute inset-y-0 left-0 -z-0 h-full w-full object-cover object-top opacity-25 md:w-[53%] md:opacity-100 md:[mask-image:linear-gradient(to_right,black_65%,transparent_100%)]" />}
+      <div className="relative z-10 mx-auto grid min-h-[440px] max-w-6xl items-center px-6 py-16 sm:px-10 md:min-h-[540px] md:grid-cols-[1.05fr_0.95fr] md:px-12">
+        <div className="hidden md:block" aria-hidden="true" />
+        <div className="max-w-lg rounded-sm bg-white/70 p-6 backdrop-blur-[2px] md:bg-transparent md:p-0 md:backdrop-blur-0">
+          {content.title && <p className="mb-4 text-[9px] font-semibold uppercase tracking-[0.22em]">{content.title}</p>}
+          <h1 className="font-serif text-4xl font-bold leading-[1.02] tracking-[-0.04em] sm:text-5xl md:text-[clamp(3rem,5vw,5rem)]">{content.headline || content.title}</h1>
+          {content.subtitle && <p className="mt-5 max-w-md text-xs leading-relaxed text-neutral-800/80">{content.subtitle}</p>}
+          {content.buttonText && <a href={content.buttonUrl || '#events'} className="mt-7 inline-flex min-h-10 items-center bg-[#ff634f] px-6 text-[9px] font-semibold uppercase tracking-wide text-white">{content.buttonText}</a>}
+          {content.secondaryButtonText && <a href={content.secondaryButtonUrl || '#newsletter'} className="ml-3 mt-7 inline-flex min-h-10 items-center border border-neutral-900/30 px-5 text-[9px] font-semibold uppercase tracking-wide">{content.secondaryButtonText}</a>}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function RestaurantCoverHero({ content }: SubProps) {
   return <section className="relative flex min-h-[54svh] w-full items-end justify-center overflow-hidden bg-neutral-900 text-white md:min-h-[620px]">
     {content.imageUrl && <img src={content.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />}
@@ -812,6 +851,8 @@ const VARIANT_MAP: Record<string, React.ComponentType<SubProps>> = {
   'editorial-center': EditorialCenter,
   'split': SplitHero,
   'portfolio-editorial': PortfolioEditorialHero,
+  'fashion-editorial': FashionEditorialHero,
+  'speaker-editorial': SpeakerEditorialHero,
   'restaurant-cover': RestaurantCoverHero,
   'split-wide': (props) => <SplitHero {...props} wide />,
   'immersive': ImmersiveHero,

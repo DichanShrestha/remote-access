@@ -18,6 +18,8 @@ const details: Record<string, TemplateDetails> = {
   'creator-newsletter': { name: 'Creator Newsletter', description: 'Turn a passing visit into a reader who comes back each week.', category: 'CREATOR', mood: 'Writing · Community' },
   'developer-portfolio': { name: 'Developer Portfolio', description: 'Put your work, expertise, and availability in one confident place.', category: 'CREATOR', mood: 'Digital · Minimal' },
   'editorial-portfolio': { name: 'Editorial Portfolio', description: 'A quiet, image-led portfolio made for independent creative work.', category: 'CREATOR', mood: 'Editorial · Artful' },
+  'creator-fashion': { name: 'Fashion Creator', description: 'A personal style journal for outfit stories, travel notes, and favourite finds.', category: 'CREATOR', mood: 'Fashion · Editorial' },
+  'creator-speaker': { name: 'Speaker & Author', description: 'Bring your talks, writing, audience stories, and booking details together.', category: 'CREATOR', mood: 'Ideas · Speaking' },
   'product-brand': { name: 'Product Brand', description: 'Bring your products, story, and launch links into a cohesive storefront.', category: 'BUSINESS', mood: 'Product · Modern' },
   'beauty-brand': { name: 'Beauty & Skincare', description: 'Showcase your routine, products, and customer love with clarity.', category: 'BUSINESS', mood: 'Beauty · Soft' },
   'luxury-skincare': { name: 'Luxury Skincare', description: 'A polished product story for premium skincare and daily rituals.', category: 'BUSINESS', mood: 'Beauty · Premium' },

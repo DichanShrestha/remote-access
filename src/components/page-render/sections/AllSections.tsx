@@ -367,6 +367,16 @@ export function CarouselSection({ section, theme }: { section: any; theme: Theme
     return <section className="py-10 px-4 text-center text-slate-400 text-sm">Add images to your carousel</section>;
   }
 
+  if (variant === 'fashion-strip') return <section className="w-full overflow-hidden border-y border-neutral-200 bg-white py-10 text-[#171717] md:py-14">
+    <div className="mb-5 flex items-center justify-between px-6 sm:px-10 md:px-[7%]"><p className="text-[8px] font-semibold uppercase tracking-[0.22em]">The outfit diary</p><p className="text-[8px] uppercase tracking-[0.18em] text-neutral-400">Scroll to explore&nbsp; →</p></div>
+    <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-10 md:gap-6 md:px-[7%]">
+      {images.map((image: any) => <article key={image.id} className="w-[72vw] flex-none snap-start sm:w-[42vw] md:w-[calc((86vw-4.5rem)/4)] md:max-w-[280px]">
+        <img src={image.url} alt={image.caption || 'Outfit inspiration'} className="aspect-[0.78/1] w-full object-cover" />
+        <p className="mt-3 text-center text-[8px] uppercase tracking-[0.15em] text-neutral-500">OUTFIT&nbsp; / &nbsp;{image.caption}</p>
+      </article>)}
+    </div>
+  </section>;
+
   if (variant === 'restaurant-featured') return <section className="w-full bg-white px-6 py-10 sm:px-10 md:px-[10%] md:py-14"><div className="mx-auto grid max-w-6xl grid-cols-[1fr_64px] gap-2 sm:grid-cols-[1fr_100px] md:gap-3"><div className="relative aspect-[1.65/1] overflow-hidden bg-neutral-100"><img src={images[currentIndex % images.length].url} alt={images[currentIndex % images.length].caption || ''} className="h-full w-full object-cover" /><span className="absolute right-4 top-1/2 grid h-14 w-14 -translate-y-1/2 place-items-center rounded-full bg-[#c6a66b] text-[8px] font-semibold uppercase text-white">{images[currentIndex % images.length].caption || 'Scopri'}</span><div className="absolute bottom-4 left-4 flex gap-2"><button onClick={() => setCurrentIndex(index => (index - 1 + images.length) % images.length)} aria-label="Previous dish" className="grid h-8 w-8 place-items-center rounded-full bg-white/90">←</button><button onClick={() => setCurrentIndex(index => (index + 1) % images.length)} aria-label="Next dish" className="grid h-8 w-8 place-items-center rounded-full bg-white/90">→</button></div></div><div className="flex flex-col gap-2">{images.filter((_: any, index: number) => index !== currentIndex % images.length).slice(0, 2).map((image: any) => <button key={image.id} onClick={() => setCurrentIndex(images.findIndex((item: any) => item.id === image.id))} className="min-h-0 flex-1 overflow-hidden"><img src={image.url} alt={image.caption || ''} className="h-full w-full object-cover" /></button>)}</div></div></section>;
 
   if (variant === 'flex') {
@@ -1606,6 +1616,11 @@ export function StatsSection({ section, theme }: { section: z.infer<typeof Stats
 
 export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseStudiesSectionSchema> }) {
   const { title, description, actionText, actionUrl, items } = section.content;
+  if (section.variant === 'speaker-events') return <section className="w-full bg-[#ff715c] px-6 py-14 text-[#171717] sm:px-10 md:px-[8%] md:py-16">
+    <div className="mx-auto max-w-6xl"><div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="mb-2 text-[8px] font-semibold uppercase tracking-[0.2em]">Ideas in motion</p><h2 className="font-serif text-3xl font-bold leading-tight md:text-4xl">{title || 'Seminars & lectures'}</h2>{description && <p className="mt-3 max-w-lg text-[10px] leading-relaxed text-neutral-800/75">{description}</p>}</div>{actionText && <a href={actionUrl || '#events'} className="bg-sky-500 px-5 py-3 text-[8px] font-semibold uppercase tracking-wide text-white">{actionText} &nbsp; →</a>}</div>
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">{items.map((item: any) => <article key={item.id} className="group relative min-h-[270px] overflow-hidden rounded-xl bg-neutral-900 text-white"><img src={item.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" /><div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent" /><div className="absolute left-3 top-3 bg-[#ff715c] px-2.5 py-2 text-center text-[8px] font-bold uppercase leading-tight">{item.date || 'LIVE'}<br /><span className="text-[7px] font-medium">{item.category || 'EVENT'}</span></div><div className="absolute inset-x-4 bottom-4"><p className="text-[7px] font-semibold uppercase tracking-[0.16em] text-white/70">{item.client || 'Talks & conversations'}</p><h3 className="mt-1 font-serif text-xl font-bold leading-tight">{item.title}</h3><p className="mt-1 line-clamp-2 text-[9px] leading-relaxed text-white/75">{item.description}</p>{item.url && <a href={item.url} className="mt-3 inline-block text-[8px] font-semibold uppercase tracking-wide underline underline-offset-4">{item.buttonText || 'Reserve a seat'}</a>}</div></article>)}</div>
+    </div>
+  </section>;
   if (section.variant === 'editorial-rows') {
     return (
       <section className="w-full bg-[#f4f4f6] px-6 py-16 text-[#171717] sm:px-10 md:px-[15%] md:py-20">
