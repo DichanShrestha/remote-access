@@ -10,8 +10,8 @@ import { composePage, editSection } from '@/app/editor/ai-actions';
 import { DraggableSectionList } from './DraggableSectionList';
 import { ComponentPicker } from './ComponentPicker';
 import { SectionInspector } from './SectionInspector';
-import { Send, Plus, Sparkles, Smartphone, Monitor, Undo, Settings, MessageSquare, Layers } from 'lucide-react';
-import { BotSettingsPanel } from './BotSettingsPanel';
+import { Send, Plus, Sparkles, Smartphone, Monitor, Undo, Settings, Bot, Layers } from 'lucide-react';
+import { BotSettingsDrawer } from './BotSettingsDrawer';
 
 
 export function EditorShell({
@@ -34,7 +34,7 @@ export function EditorShell({
   const [showPicker, setShowPicker] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [history, setHistory] = useState<PageDocument[]>([]);
-  const [activeTab, setActiveTab] = useState<'design' | 'chatbot'>('design');
+  const [showBotDrawer, setShowBotDrawer] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Autosave
@@ -275,9 +275,18 @@ export function EditorShell({
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowBotDrawer(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#F3F2EA] hover:bg-[#E8E7E1] dark:bg-slate-800 dark:hover:bg-slate-700 text-[#292A25] dark:text-slate-100 font-semibold text-xs rounded-xl border border-[#E8E7E1] dark:border-slate-700 transition-all cursor-pointer shadow-xs"
+              title="Configure AI Chatbot"
+            >
+              <Bot className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              AI Chatbot
+            </button>
+
+            <button
               onClick={handlePublish}
               disabled={isPublishing}
-              className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50 cursor-pointer"
             >
               {isPublishing ? <span className="animate-spin text-base leading-none">⟳</span> : <Send className="w-4 h-4" />}
               Publish
@@ -298,31 +307,19 @@ export function EditorShell({
         </div>
       </div>
 
-      {/* RIGHT COLUMN: Inspector / AI */}
+      {/* RIGHT COLUMN: Inspector */}
       <div className="w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col z-20">
         <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <h2 className="font-bold text-base tracking-tight flex items-center gap-4">
             {selectedSection ? (
-              <>
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-500">{isGroup(selectedSection) ? selectedSection.name || 'Layout Group' : ComponentRegistry[selectedSection.type]?.label}</span>
-              </>
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-500">
+                {isGroup(selectedSection) ? selectedSection.name || 'Layout Group' : ComponentRegistry[selectedSection.type]?.label}
+              </span>
             ) : (
-              <>
-                <button
-                  onClick={() => setActiveTab('design')}
-                  className={`flex items-center gap-1.5 transition-colors ${activeTab === 'design' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                >
-                  <Settings className="w-4 h-4" />
-                  Design
-                </button>
-                <button
-                  onClick={() => setActiveTab('chatbot')}
-                  className={`flex items-center gap-1.5 transition-colors ${activeTab === 'chatbot' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  AI Chatbot
-                </button>
-              </>
+              <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <Settings className="w-4 h-4 text-slate-400" />
+                Design Settings
+              </span>
             )}
           </h2>
           {selectedSection && (
@@ -334,89 +331,80 @@ export function EditorShell({
 
         <div className="flex-1 overflow-y-auto p-4">
           {!selectedSection ? (
-            activeTab === 'design' ? (
-              <div className="flex flex-col gap-6">
-                {/* AI Composer */}
-
-
-                {/* Theme Settings */}
-                <div className="flex flex-col gap-4">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Theme</h3>
-                  <div>
-                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Style</label>
-                    <select
-                      value={doc.theme.style}
-                      onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, style: e.target.value as any } }))}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
-                    >
-                      <option value="premium-minimal">Premium Minimal</option>
-                      <option value="bold">Bold</option>
-                      <option value="playful">Playful</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Primary Color</label>
-                    <div className="flex items-center gap-3">
-                      <input type="color" value={doc.theme.primaryColor} onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))} className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0" />
-                      <input type="text" value={doc.theme.primaryColor} onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))} className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 font-mono" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Border Radius</label>
-                    <select
-                      value={doc.theme.radius}
-                      onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, radius: e.target.value as any } }))}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
-                    >
-                      <option value="none">None</option>
-                      <option value="small">Small</option>
-                      <option value="medium">Medium</option>
-                      <option value="large">Large</option>
-                      <option value="full">Full</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Density</label>
-                    <select
-                      value={doc.theme.density}
-                      onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, density: e.target.value as any } }))}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
-                    >
-                      <option value="compact">Compact</option>
-                      <option value="comfortable">Comfortable</option>
-                      <option value="spacious">Spacious</option>
-                    </select>
+            <div className="flex flex-col gap-6">
+              {/* Theme Settings */}
+              <div className="flex flex-col gap-4">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Theme</h3>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Style</label>
+                  <select
+                    value={doc.theme.style}
+                    onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, style: e.target.value as any } }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                  >
+                    <option value="premium-minimal">Premium Minimal</option>
+                    <option value="bold">Bold</option>
+                    <option value="playful">Playful</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Primary Color</label>
+                  <div className="flex items-center gap-3">
+                    <input type="color" value={doc.theme.primaryColor} onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))} className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0" />
+                    <input type="text" value={doc.theme.primaryColor} onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, primaryColor: e.target.value } }))} className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 font-mono" />
                   </div>
                 </div>
-
-                {/* Page Features */}
-                <div className="flex flex-col gap-4 mt-2">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Features</h3>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="smoothScroll"
-                      checked={!!doc.settings.enableSmoothScrolling}
-                      onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, enableSmoothScrolling: e.target.checked } }))}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                    />
-                    <label htmlFor="smoothScroll" className="text-sm font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
-                      Enable Smooth Scrolling
-                    </label>
-                  </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Border Radius</label>
+                  <select
+                    value={doc.theme.radius}
+                    onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, radius: e.target.value as any } }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                  >
+                    <option value="none">None</option>
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                    <option value="full">Full</option>
+                  </select>
                 </div>
-
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-sm text-slate-400 text-center">
-                  Select a section to edit its content.
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Density</label>
+                  <select
+                    value={doc.theme.density}
+                    onChange={e => updateDoc(prev => ({ ...prev, theme: { ...prev.theme, density: e.target.value as any } }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                  >
+                    <option value="compact">Compact</option>
+                    <option value="comfortable">Comfortable</option>
+                    <option value="spacious">Spacious</option>
+                  </select>
                 </div>
               </div>
-            ) : (
-              <BotSettingsPanel pageId={pageId} />
-            )
+
+              {/* Page Features */}
+              <div className="flex flex-col gap-4 mt-2">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Features</h3>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="smoothScroll"
+                    checked={!!doc.settings.enableSmoothScrolling}
+                    onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, enableSmoothScrolling: e.target.checked } }))}
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <label htmlFor="smoothScroll" className="text-sm font-medium text-slate-600 dark:text-slate-300 cursor-pointer">
+                    Enable Smooth Scrolling
+                  </label>
+                </div>
+              </div>
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-sm text-slate-400 text-center">
+                Select a section to edit its content.
+              </div>
+            </div>
           ) : (
             <div className="flex flex-col gap-5">
-
-
               {/* Data-driven Inspector */}
               <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Properties</h3>
@@ -434,6 +422,13 @@ export function EditorShell({
       {showPicker && (
         <ComponentPicker onAdd={handleAddSection} onClose={() => setShowPicker(false)} />
       )}
+
+      {/* AI Chatbot Slide-Over Drawer */}
+      <BotSettingsDrawer
+        pageId={pageId}
+        isOpen={showBotDrawer}
+        onClose={() => setShowBotDrawer(false)}
+      />
     </div>
   );
 }

@@ -33,7 +33,7 @@ const NAV_GROUPS = [
   {
     label: 'Page',
     items: [
-      { name: 'My Page', href: '/dashboard/my-page', icon: Globe },
+      { name: 'Templates', href: '/dashboard/templates', icon: Globe },
       { name: 'Editor', href: '/editor', icon: PenTool },
     ]
   },

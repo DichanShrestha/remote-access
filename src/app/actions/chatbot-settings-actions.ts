@@ -48,6 +48,7 @@ export async function updateBotSettings(botId: string, data: any) {
             systemPrompt: data.systemPrompt,
             colorTheme: data.colorTheme,
             collectLeads: data.collectLeads,
+            ...(data.status ? { status: data.status } : {})
         }
     });
 }

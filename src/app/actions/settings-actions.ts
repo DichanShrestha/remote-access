@@ -1,178 +1,145 @@
 "use server";
+
 import { authService } from "@/services/auth";
-
+import db from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
-import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import crypto from "crypto";
 
 /**
- * Settings server actions.
- * Handles BYOK (Bring Your Own Key) encrypted storage and profile updates.
+ * Settings Server Actions
+ * Handles:
+ * 1. Debounced Username Availability Check
+ * 2. Account Name & Username Updates
+ * 3. Permanent Page Deletion
+ * 4. Permanent Account Deletion
+ * 5. Helper export for API chat key lookup
  */
 
-const ALGORITHM = "aes-256-gcm";
-
-function getEncryptionKey(): Buffer {
-    const secret = process.env.ENCRYPTION_SECRET;
-    if (!secret) throw new Error("ENCRYPTION_SECRET not configured");
-    // Create a 32-byte key from the secret
-    return crypto.createHash("sha256").update(secret).digest();
-}
-
-/**
- * Encrypt an API key before storing.
- */
-function encryptKey(plainKey: string): string {
-    const key = getEncryptionKey();
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
-
-    let encrypted = cipher.update(plainKey, "utf8", "hex");
-    encrypted += cipher.final("hex");
-
-    const authTag = cipher.getAuthTag().toString("hex");
-
-    // Store as: iv:authTag:encrypted
-    return `${iv.toString("hex")}:${authTag}:${encrypted}`;
-}
-
-/**
- * Decrypt a stored API key.
- */
-function decryptKey(encryptedData: string): string {
-    const key = getEncryptionKey();
-    const [ivHex, authTagHex, encrypted] = encryptedData.split(":");
-
-    const iv = Buffer.from(ivHex, "hex");
-    const authTag = Buffer.from(authTagHex, "hex");
-    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
-    decipher.setAuthTag(authTag);
-
-    let decrypted = decipher.update(encrypted, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-
-    return decrypted;
-}
-
-/**
- * Save a user's OpenAI API key (encrypted).
- */
-export async function saveApiKey(apiKey: string) {
-
+export async function checkUsernameAvailability(username: string): Promise<{ state: "available" | "unavailable" | "current" | "invalid" }> {
+  try {
     const user = await authService.requireUser();
+    const cleanUsername = username.trim().toLowerCase();
 
-
-
-    // Validate key format
-    if (!apiKey.startsWith("sk-") || apiKey.length < 20) {
-        throw new Error("Invalid OpenAI API key format");
+    if (!cleanUsername || cleanUsername.length < 3 || cleanUsername.length > 30) {
+      return { state: "invalid" };
     }
 
-    const encrypted = encryptKey(apiKey);
-    const hint = `sk-...${apiKey.slice(-4)}`; // Show only last 4 chars
-
-    await prisma.userApiKey.upsert({
-        where: {
-            userId_provider: {
-                userId: user.id,
-                provider: "openai",
-            },
-        },
-        create: {
-            userId: user.id,
-            provider: "openai",
-            encryptedKey: encrypted,
-            keyHint: hint,
-        },
-        update: {
-            encryptedKey: encrypted,
-            keyHint: hint,
-        },
-    });
-
-    revalidatePath("/dashboard");
-    return { success: true, hint };
-}
-
-/**
- * Get the user's API key hint (not the actual key).
- */
-export async function getApiKeyHint() {
-
-    const user = await authService.requireUser();
-
-
-
-    const key = await prisma.userApiKey.findUnique({
-        where: {
-            userId_provider: {
-                userId: user.id,
-                provider: "openai",
-            },
-        },
-        select: { keyHint: true },
-    });
-
-    return key?.keyHint ?? null;
-}
-
-/**
- * Get the decrypted API key for internal use (server-side only).
- */
-export async function getUserApiKey(userId: string): Promise<string | null> {
-    const key = await prisma.userApiKey.findUnique({
-        where: {
-            userId_provider: {
-                userId,
-                provider: "openai",
-            },
-        },
-    });
-
-    if (!key) return null;
-
-    try {
-        return decryptKey(key.encryptedKey);
-    } catch {
-        console.error("[Settings] Failed to decrypt API key for user:", userId);
-        return null;
+    if (user.profile && cleanUsername === user.profile.username) {
+      return { state: "current" };
     }
+
+    const available = await authService.isUsernameAvailable(cleanUsername);
+    return { state: available ? "available" : "unavailable" };
+  } catch {
+    return { state: "unavailable" };
+  }
 }
 
-/**
- * Delete the user's stored API key.
- */
-export async function deleteApiKey() {
-
+export async function updateAccountProfile(data: { name: string; username: string }): Promise<{ success?: boolean; error?: string }> {
+  try {
     const user = await authService.requireUser();
+    const trimmedName = data.name.trim();
+    const newUsername = data.username.trim().toLowerCase();
 
+    if (!trimmedName) {
+      return { error: "Name cannot be empty." };
+    }
+    if (trimmedName.length > 80) {
+      return { error: "Name cannot exceed 80 characters." };
+    }
 
+    if (!user.profile) {
+      return { error: "Profile not found." };
+    }
 
-    await prisma.userApiKey.deleteMany({
-        where: { userId: user.id, provider: "openai" },
-    });
+    // Validate username if changed
+    if (newUsername !== user.profile.username) {
+      const isAvailable = await authService.isUsernameAvailable(newUsername);
+      if (!isAvailable) {
+        return { error: "Username is unavailable, reserved, or invalid (use 3–30 letters, numbers, dashes, or underscores)." };
+      }
+    }
 
-    revalidatePath("/dashboard");
-    return { success: true };
-}
-
-/**
- * Update user profile.
- */
-export async function updateProfile(data: { fullName?: string }) {
-
-    const user = await authService.requireUser();
-
-
-
-    await prisma.profile.update({
+    await db.$transaction(async (tx) => {
+      await tx.user.update({
         where: { id: user.id },
-        data: {
-            ...(data.fullName && { fullName: data.fullName }),
+        data: { name: trimmedName },
+      });
+
+      await tx.profile.update({
+        where: { id: user.profile!.id },
+        data: { 
+          displayName: trimmedName,
+          username: newUsername,
         },
+      });
+    });
+
+    revalidatePath("/dashboard/settings");
+    revalidatePath("/dashboard");
+    revalidatePath(`/${newUsername}`);
+    return { success: true };
+  } catch (err: any) {
+    return { error: err?.message || "Failed to update profile." };
+  }
+}
+
+export async function updateAccountName(name: string): Promise<{ success?: boolean; error?: string }> {
+  return updateAccountProfile({ name, username: "" });
+}
+
+export async function deleteUserPage(): Promise<{ success?: boolean; error?: string }> {
+  try {
+    const user = await authService.requireUser();
+    
+    if (!user.profile) {
+      return { error: "No profile found for this account." };
+    }
+
+    // Server-side authorization check: verify ownership of page
+    const page = await db.page.findUnique({
+      where: { profileId: user.profile.id },
+    });
+
+    if (!page) {
+      return { error: "No page found to delete." };
+    }
+
+    await db.page.delete({
+      where: { id: page.id },
     });
 
     revalidatePath("/dashboard");
+    revalidatePath("/dashboard/settings");
     return { success: true };
+  } catch (err: any) {
+    return { error: err?.message || "Failed to delete page." };
+  }
+}
+
+export async function deleteUserAccount(): Promise<{ success?: boolean; error?: string }> {
+  try {
+    const user = await authService.requireUser();
+
+    // Permanently delete user from Prisma DB.
+    // Cascades to Profile, Page, Subscriptions, Usage, Bots, Leads, etc.
+    await db.user.delete({
+      where: { id: user.id },
+    });
+
+    // Log the user out from Supabase Auth session
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+
+    return { success: true };
+  } catch (err: any) {
+    return { error: err?.message || "Failed to delete account." };
+  }
+}
+
+/**
+ * Helper exported for chat route compatibility
+ */
+export async function getUserApiKey(_userId: string): Promise<string | null> {
+  return null;
 }

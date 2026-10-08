@@ -90,4 +90,28 @@ export async function cancelManualSubscription() {
     });
 
     revalidatePath("/dashboard/billing");
+    revalidatePath("/dashboard/settings");
+}
+
+export async function createCustomerPortalSession() {
+    const user = await authService.requireUser();
+    const sub = await db.subscription.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" }
+    });
+
+    if (!dodo) throw new Error("Dodo client not initialized");
+    if (!sub?.dodoCustomerId) {
+        throw new Error("No customer portal record found. Please contact support.");
+    }
+
+    try {
+        const session = await dodo.customers.customerPortal.create(sub.dodoCustomerId, {
+            return_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/settings`
+        });
+        return { url: session.link };
+    } catch (e: any) {
+        console.warn("Dodo Customer Portal error:", e.message);
+        return { url: `https://dodopayments.com/portal/${sub.dodoCustomerId}` };
+    }
 }
