@@ -72,8 +72,15 @@ model Subscription {
   userId             String    @db.Uuid
   user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   planId             String
-  status             String
+  status             String    // trialing, active, past_due, canceled, expired
+  billingMethod      String    @default("none") // none, dodo, manual
+  
   currentPeriodEnd   DateTime?
+  trialStart         DateTime?
+  trialEnd           DateTime?
+  cancelAtPeriodEnd  Boolean   @default(false)
+  
+  dodoCustomerId     String?
   dodoSubscriptionId String?   @unique
 
   // Knowchat fields
