@@ -46,6 +46,7 @@
     "react-dom": "19.2.8",
     "react-icons": "^5.7.0",
     "robots-parser": "^3.0.1",
+    "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0",
     "three": "^0.180.0",
     "uuid": "^14.0.2",

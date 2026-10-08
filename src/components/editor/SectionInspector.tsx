@@ -7,7 +7,7 @@ import { Plus, Trash, ChevronDown, ChevronUp, Image as ImageIcon, X, Link2, Type
 import { createClient } from '@/lib/supabase/client';
 
 // ── Field definition system ────────────────────────────────────
-type FieldType = 'text' | 'textarea' | 'url' | 'select' | 'color' | 'email' | 'number' | 'toggle' | 'datetime' | 'segmented-control';
+type FieldType = 'text' | 'textarea' | 'url' | 'image' | 'select' | 'color' | 'email' | 'number' | 'toggle' | 'datetime' | 'segmented-control';
 
 type FieldDef = {
   key: string;
@@ -69,7 +69,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
   },
   'image-button': {
     fields: [
-      { key: 'content.imageUrl', label: 'Image URL', type: 'url' },
+      { key: 'content.imageUrl', label: 'Image URL', type: 'image' },
       { key: 'content.label', label: 'Label', type: 'text' },
       { key: 'content.url', label: 'Link URL', type: 'url' },
     ],
@@ -98,7 +98,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
   },
   image: {
     fields: [
-      { key: 'content.url', label: 'Image URL', type: 'url' },
+      { key: 'content.url', label: 'Image', type: 'image' },
       { key: 'content.alt', label: 'Alt Text', type: 'text' },
       { key: 'content.caption', label: 'Caption', type: 'text' },
       { key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Contained', value: 'contained' }, { label: 'Full Width', value: 'full' }, { label: 'Cover Frame', value: 'cover' }] },
@@ -108,7 +108,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [{ key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Grid', value: 'grid' }, { label: 'Masonry', value: 'masonry' }] }],
     arrayFields: [{
       key: 'content.images', label: 'Images',
-      itemFields: [{ key: 'url', label: 'Image URL', type: 'url' }, { key: 'caption', label: 'Caption', type: 'text' }],
+      itemFields: [{ key: 'url', label: 'Image', type: 'image' }, { key: 'caption', label: 'Caption', type: 'text' }],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), url: '', caption: '' }),
     }],
   },
@@ -116,7 +116,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [],
     arrayFields: [{
       key: 'content.images', label: 'Images',
-      itemFields: [{ key: 'url', label: 'Image URL', type: 'url' }, { key: 'caption', label: 'Caption', type: 'text' }],
+      itemFields: [{ key: 'url', label: 'Image', type: 'image' }, { key: 'caption', label: 'Caption', type: 'text' }],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), url: '', caption: '' }),
     }],
   },
@@ -150,15 +150,15 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }],
     arrayFields: [{
       key: 'content.items', label: 'Services',
-      itemFields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'price', label: 'Price', type: 'text' }, { key: 'imageUrl', label: 'Image URL', type: 'url' }],
+      itemFields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'price', label: 'Price', type: 'text' }, { key: 'imageUrl', label: 'Image', type: 'image' }],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), title: '', description: '', price: '' }),
     }],
   },
   products: {
-    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }, { key: 'content.menuImageUrl', label: 'Menu Image URL', type: 'url' }],
+    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }, { key: 'content.menuImageUrl', label: 'Menu Image', type: 'image' }],
     arrayFields: [{
       key: 'content.items', label: 'Products',
-      itemFields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'category', label: 'Category', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'price', label: 'Price', type: 'text' }, { key: 'imageUrl', label: 'Image URL', type: 'url' }, { key: 'url', label: 'Product URL', type: 'url' }],
+      itemFields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'category', label: 'Category', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'price', label: 'Price', type: 'text' }, { key: 'imageUrl', label: 'Image', type: 'image' }, { key: 'url', label: 'Product URL', type: 'url' }],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), title: '', description: '', price: '', imageUrl: '', url: '' }),
     }],
   },
@@ -166,7 +166,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }],
     arrayFields: [{
       key: 'content.items', label: 'Testimonials',
-      itemFields: [{ key: 'quote', label: 'Quote', type: 'textarea' }, { key: 'author', label: 'Author', type: 'text' }, { key: 'role', label: 'Role', type: 'text' }, { key: 'avatarUrl', label: 'Avatar URL', type: 'url' }],
+      itemFields: [{ key: 'quote', label: 'Quote', type: 'textarea' }, { key: 'author', label: 'Author', type: 'text' }, { key: 'role', label: 'Role', type: 'text' }, { key: 'avatarUrl', label: 'Avatar', type: 'image' }],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), quote: '', author: '', role: '' }),
     }],
   },
@@ -186,7 +186,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
         { key: 'client', label: 'Client', type: 'text' },
         { key: 'location', label: 'Location', type: 'text' },
         { key: 'description', label: 'Description', type: 'textarea' },
-        { key: 'imageUrl', label: 'Image URL', type: 'url' },
+        { key: 'imageUrl', label: 'Image', type: 'image' },
         { key: 'url', label: 'Link URL', type: 'url' },
         { key: 'buttonText', label: 'Link Label', type: 'text' },
       ],
@@ -202,7 +202,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     arrayFields: [{
       key: 'content.items', label: 'Blog Posts',
       itemFields: [
-        { key: 'category', label: 'Category', type: 'text' }, { key: 'date', label: 'Date', type: 'text' }, { key: 'imageUrl', label: 'Image URL', type: 'url' },
+        { key: 'category', label: 'Category', type: 'text' }, { key: 'date', label: 'Date', type: 'text' }, { key: 'imageUrl', label: 'Image', type: 'image' },
         { key: 'title', label: 'Title', type: 'text' }, { key: 'description', label: 'Excerpt', type: 'textarea' },
         { key: 'url', label: 'Post URL', type: 'url' },
       ],
@@ -244,7 +244,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [
       { key: 'content.title', label: 'Title', type: 'text' },
       { key: 'content.description', label: 'Description', type: 'textarea' },
-      { key: 'content.imageUrl', label: 'Reservation Image URL', type: 'url' },
+      { key: 'content.imageUrl', label: 'Reservation Image', type: 'image' },
       { key: 'content.provider', label: 'Provider', type: 'select', options: [{ label: 'Cal.com', value: 'cal.com' }, { label: 'Calendly', value: 'calendly' }, { label: 'Custom', value: 'custom' }] },
       { key: 'content.link', label: 'Booking Link', type: 'url' },
     ],
@@ -260,7 +260,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
   'site-navbar': {
     fields: [
       { key: 'content.logoText', label: 'Logo Text', type: 'text' },
-      { key: 'content.logoUrl', label: 'Logo Image URL', type: 'url' },
+      { key: 'content.logoUrl', label: 'Logo Image', type: 'image' },
       { key: 'content.secondaryLabel', label: 'Secondary Button', type: 'text' },
       { key: 'content.secondaryUrl', label: 'Secondary Button URL', type: 'url' },
       { key: 'content.primaryLabel', label: 'Primary Button', type: 'text' },
@@ -336,7 +336,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }, { key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Vertical', value: 'vertical' }, { label: 'History', value: 'restaurant-history' }] }],
     arrayFields: [{
       key: 'content.items', label: 'Steps',
-      itemFields: [{ key: 'label', label: 'Label', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'imageUrl', label: 'Image URL', type: 'url' }],
+      itemFields: [{ key: 'label', label: 'Label', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'imageUrl', label: 'Image', type: 'image' }],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), label: '', description: '' }),
     }],
   },
@@ -368,8 +368,8 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
       { key: 'content.eyebrow', label: 'Eyebrow', type: 'text' },
       { key: 'content.title', label: 'Title', type: 'text' },
       { key: 'content.description', label: 'Description', type: 'textarea' },
-      { key: 'content.imageUrl', label: 'Image URL', type: 'url' },
-      { key: 'content.secondaryImageUrl', label: 'Secondary Image URL', type: 'url' },
+      { key: 'content.imageUrl', label: 'Image', type: 'image' },
+      { key: 'content.secondaryImageUrl', label: 'Secondary Image', type: 'image' },
       { key: 'content.buttonText', label: 'Button Text', type: 'text' },
       { key: 'content.buttonUrl', label: 'Button URL', type: 'url' },
     ],
@@ -389,7 +389,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
       itemFields: [
         { key: 'author', label: 'Name', type: 'text' },
         { key: 'role', label: 'Role', type: 'text' },
-        { key: 'avatarUrl', label: 'Avatar URL', type: 'url' },
+        { key: 'avatarUrl', label: 'Avatar', type: 'image' },
         { key: 'quote', label: 'Review / Quote', type: 'textarea' },
         { key: 'metric', label: 'Large Metric', type: 'text', placeholder: 'e.g. +120%' },
         { key: 'label', label: 'Metric Label', type: 'text', placeholder: 'e.g. Revenue' },
@@ -422,6 +422,8 @@ function InspectorField({ field, value, onChange }: { field: FieldDef; value: an
           ))}
         </div>
       );
+    case 'image':
+      return <MediaPicker label="" value={value || ''} onChange={onChange} />;
     case 'textarea':
       return <textarea value={value || ''} onChange={e => onChange(e.target.value)} placeholder={field.placeholder} rows={3} className={base + " resize-y"} />;
     case 'select':

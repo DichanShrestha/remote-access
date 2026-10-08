@@ -10,7 +10,8 @@ import { composePage, editSection } from '@/app/editor/ai-actions';
 import { DraggableSectionList } from './DraggableSectionList';
 import { ComponentPicker } from './ComponentPicker';
 import { SectionInspector } from './SectionInspector';
-import { Send, Plus, Sparkles, Smartphone, Monitor, Undo, Settings, Bot, Layers, Layout } from 'lucide-react';
+import { Send, Plus, Sparkles, Smartphone, Monitor, Undo, Settings, Bot, Layers, Layout, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { BotSettingsDrawer } from './BotSettingsDrawer';
 import { TemplatePickerModal } from './TemplatePickerModal';
 import { previewTemplate } from '@/app/actions/template-actions';
@@ -112,17 +113,19 @@ export function EditorShell({
 
   const handlePublish = async () => {
     if (pageId === "demo-id") {
-      alert("Cannot publish in demo mode.");
+      toast.error("Cannot publish in demo mode.");
       return;
     }
     setIsPublishing(true);
     try {
+      toast.loading("Publishing your page...", { id: 'publish' });
       const result = await publishDraftConfig(pageId, doc);
+      toast.success("Page published successfully!", { id: 'publish' });
       router.push(result.redirectTo);
     } catch (error) {
       console.error(error);
       setIsPublishing(false);
-      alert('Your changes could not be saved. Please try again.');
+      toast.error('Your changes could not be saved. Please try again.', { id: 'publish' });
     }
   };
 
@@ -174,7 +177,7 @@ export function EditorShell({
       setComposePrompt('');
       setSelectedSectionId(null);
     } catch (error) {
-      alert("Failed to compose page. Please try again.");
+      toast.error("Failed to compose page. Please try again.");
       console.error(error);
     } finally {
       setIsComposing(false);
@@ -192,7 +195,7 @@ export function EditorShell({
       updateDoc(prev => updateSection(prev, section.id, updatedSection as Partial<PageSection>));
       setEditPrompt('');
     } catch (error) {
-      alert("Failed to edit section with AI. Please try again.");
+      toast.error("Failed to edit section with AI. Please try again.");
       console.error(error);
     } finally {
       setIsEditingSection(false);
@@ -205,7 +208,7 @@ export function EditorShell({
       updateDoc(() => mergedDoc);
       setShowTemplatePicker(false);
     } catch (error) {
-      alert("Failed to preview template. Please try again.");
+      toast.error("Failed to preview template. Please try again.");
       console.error(error);
     }
   };
@@ -309,7 +312,7 @@ export function EditorShell({
               disabled={isPublishing}
               className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50 cursor-pointer"
             >
-              {isPublishing ? <span className="animate-spin text-base leading-none">⟳</span> : <Send className="w-4 h-4" />}
+              {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               Publish
             </button>
           </div>

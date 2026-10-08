@@ -3,6 +3,7 @@
 import React, { useState, useTransition } from 'react';
 import { ArrowUpRight, ArrowRight, Loader2, Check } from 'lucide-react';
 import { applyTemplateToPage } from '@/app/actions/template-actions';
+import { toast } from 'sonner';
 
 type TemplateProps = {
   id: string;
@@ -20,10 +21,12 @@ export function TemplatesClient({ templates }: { templates: TemplateProps[] }) {
     setActiveTemplate(templateId);
     startTransition(async () => {
       try {
+        toast.loading("Applying template...", { id: 'apply-template' });
         await applyTemplateToPage(templateId);
+        toast.success("Template applied successfully!", { id: 'apply-template' });
       } catch (e) {
         console.error(e);
-        alert('Failed to apply template. Please try again.');
+        toast.error('Failed to apply template. Please try again.', { id: 'apply-template' });
         setActiveTemplate(null);
       }
     });
