@@ -599,7 +599,7 @@ function FashionEditorialHero({ content }: SubProps) {
         <div className="relative mx-auto w-full max-w-[620px] pb-7 pr-7 md:pb-9 md:pr-9">
           {content.imageUrl && <img src={content.imageUrl} alt={content.title ? `${content.title} — style portrait` : 'Style portrait'} className="ml-auto aspect-[0.92/1] w-[72%] object-cover" />}
           {content.avatarUrl && <img src={content.avatarUrl} alt="A detail from the latest style story" className="absolute bottom-0 left-0 aspect-[1.3/1] w-[52%] border-[6px] border-white object-cover md:border-[10px]" />}
-          <span aria-hidden="true" className="absolute right-0 top-0 -z-0 h-1/3 w-1/3 bg-[#f4f2ee]" />
+          {content.secondaryImageUrl && <img src={content.secondaryImageUrl} alt="Another look from the latest style story" className="absolute right-0 top-0 z-10 aspect-[1.25/1] w-[32%] border-[6px] border-white object-cover md:border-[10px]" />}
         </div>
         <div className="max-w-md md:pl-2">
           {content.eyebrow && <p className="mb-5 text-[9px] font-medium uppercase tracking-[0.24em] text-neutral-500">{content.eyebrow}</p>}

@@ -5,7 +5,7 @@ import { GroupNode, PageDocument, PageNode, PageSection, SectionType } from '@/l
 import { findNode, findNodeParentId, insertNode, isGroup, moveNode, removeSection, updateNode, updateSection, duplicateSection, toggleSectionVisibility, getNodeDepth } from '@/lib/page-engine/operations';
 import { ComponentRegistry } from '@/lib/page-engine/registry';
 
-import { saveDraftConfig } from '@/app/editor/actions';
+import { publishDraftConfig, saveDraftConfig } from '@/app/editor/actions';
 import { composePage, editSection } from '@/app/editor/ai-actions';
 import { DraggableSectionList } from './DraggableSectionList';
 import { ComponentPicker } from './ComponentPicker';
@@ -117,8 +117,8 @@ export function EditorShell({
     }
     setIsPublishing(true);
     try {
-      await saveDraftConfig(pageId, doc);
-      router.push('/onboarding/claim');
+      const result = await publishDraftConfig(pageId, doc);
+      router.push(result.redirectTo);
     } catch (error) {
       console.error(error);
       setIsPublishing(false);

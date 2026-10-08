@@ -44,6 +44,7 @@ export const HeroSectionSchema = BaseSectionSchema.extend({
     secondaryButtonUrl: z.string().optional(),
     imageUrl: z.string().optional(),
     avatarUrl: z.string().optional(),
+    secondaryImageUrl: z.string().optional(),
     location: z.string().optional(),
     badge: z.string().optional(),
     metric: z.string().optional(),

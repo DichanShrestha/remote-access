@@ -762,6 +762,7 @@ function HeroInspector({ section, onChange }: { section: PageSection; onChange: 
       <InspectorGroup title="Media & Assets" icon={<ImageIcon className="w-3.5 h-3.5" />} defaultOpen={false}>
         <MediaPicker label="Hero Image" value={deepGet(section, 'content.imageUrl') || ''} onChange={v => handleFieldChange('content.imageUrl', v)} />
         <MediaPicker label="Avatar / Photo" value={deepGet(section, 'content.avatarUrl') || ''} onChange={v => handleFieldChange('content.avatarUrl', v)} />
+        {section.variant === 'fashion-editorial' && <MediaPicker label="Collage Photo" value={deepGet(section, 'content.secondaryImageUrl') || ''} onChange={v => handleFieldChange('content.secondaryImageUrl', v)} />}
       </InspectorGroup>
 
       {/* 4. Actions */}
