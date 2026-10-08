@@ -10,10 +10,10 @@ import { composePage, editSection } from '@/app/editor/ai-actions';
 import { DraggableSectionList } from './DraggableSectionList';
 import { ComponentPicker } from './ComponentPicker';
 import { SectionInspector } from './SectionInspector';
-import { Send, Plus, Sparkles, Smartphone, Monitor, Undo, Settings, Bot, Layers } from 'lucide-react';
+import { Send, Plus, Sparkles, Smartphone, Monitor, Undo, Settings, Bot, Layers, Layout } from 'lucide-react';
 import { BotSettingsDrawer } from './BotSettingsDrawer';
-
-
+import { TemplatePickerModal } from './TemplatePickerModal';
+import { previewTemplate } from '@/app/actions/template-actions';
 export function EditorShell({
   initialDocument,
   pageId
@@ -35,6 +35,7 @@ export function EditorShell({
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [history, setHistory] = useState<PageDocument[]>([]);
   const [showBotDrawer, setShowBotDrawer] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Autosave
@@ -198,6 +199,17 @@ export function EditorShell({
     }
   };
 
+  const handleTemplateChange = async (templateId: string) => {
+    try {
+      const mergedDoc = await previewTemplate(doc, templateId);
+      updateDoc(() => mergedDoc);
+      setShowTemplatePicker(false);
+    } catch (error) {
+      alert("Failed to preview template. Please try again.");
+      console.error(error);
+    }
+  };
+
   const selectedSection = selectedSectionId ? findNode(doc.sections, selectedSectionId) : undefined;
 
   return (
@@ -281,6 +293,15 @@ export function EditorShell({
             >
               <Bot className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               AI Chatbot
+            </button>
+
+            <button
+              onClick={() => setShowTemplatePicker(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-xs"
+              title="Change Template"
+            >
+              <Layout className="w-4 h-4" />
+              Change Template
             </button>
 
             <button
@@ -421,6 +442,11 @@ export function EditorShell({
       {/* Component Picker Modal */}
       {showPicker && (
         <ComponentPicker onAdd={handleAddSection} onClose={() => setShowPicker(false)} />
+      )}
+
+      {/* Template Picker Modal */}
+      {showTemplatePicker && (
+        <TemplatePickerModal onSelect={handleTemplateChange} onClose={() => setShowTemplatePicker(false)} />
       )}
 
       {/* AI Chatbot Slide-Over Drawer */}

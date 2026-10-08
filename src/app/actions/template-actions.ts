@@ -2,11 +2,23 @@
 
 import { authService } from '@/services/auth';
 import db from '@/lib/prisma';
-import { getTemplateDetails } from '@/lib/page-engine/template-catalog';
+import { getTemplateDetails, getAvailableTemplates } from '@/lib/page-engine/template-catalog';
 import { PageDocument, PageSection, GroupNode, PageNode } from '@/lib/page-engine/schemas';
 import { isGroup } from '@/lib/page-engine/operations';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+
+export async function getAvailableTemplatesForClient() {
+  const templates = getAvailableTemplates();
+  return templates.map(t => ({
+    id: t.id,
+    name: t.name,
+    description: t.description,
+    mood: t.mood,
+    category: t.category
+  }));
+}
+
 
 export async function mergeTemplateContent(oldDoc: PageDocument, templateId: string): Promise<PageDocument> {
   const template = getTemplateDetails(templateId);
