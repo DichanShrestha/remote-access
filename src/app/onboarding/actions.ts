@@ -96,7 +96,7 @@ export async function onboardingTemplateIds() {
   return getAvailableTemplates(user.profile?.type).map(({ id }) => id);
 }
 
-export async function startCurrentFreeTrial() {
+export async function startCurrentFreeTrial(planId: string = 'smart_page') {
   const user = await authService.requireUser();
   if (!user.profile) return { error: 'Your profile is not ready yet.' };
   const page = await db.page.findUnique({ where: { profileId: user.profile.id } });
@@ -104,13 +104,13 @@ export async function startCurrentFreeTrial() {
 
   const trialEndsAt = new Date(user.createdAt.getTime() + 14 * 24 * 60 * 60 * 1000);
   if (Date.now() >= trialEndsAt.getTime()) return { error: 'This account’s 14-day trial has ended. Contact support to choose the next step.' };
-  const existing = await db.subscription.findFirst({ where: { userId: user.id, tier: 'free' }, orderBy: { updatedAt: 'desc' } });
+  const existing = await db.subscription.findFirst({ where: { userId: user.id }, orderBy: { updatedAt: 'desc' } });
   await db.$transaction(async (tx) => {
     await tx.page.update({ where: { id: page.id }, data: { publishedConfig: page.draftConfig as any, isPublished: true } });
     if (existing) {
-      await tx.subscription.update({ where: { id: existing.id }, data: { status: 'trialing', planId: 'free-trial', currentPeriodEnd: trialEndsAt, tier: 'free' } });
+      await tx.subscription.update({ where: { id: existing.id }, data: { status: 'trialing', planId, currentPeriodEnd: trialEndsAt, tier: planId } });
     } else {
-      await tx.subscription.create({ data: { userId: user.id, status: 'trialing', planId: 'free-trial', currentPeriodEnd: trialEndsAt, tier: 'free' } });
+      await tx.subscription.create({ data: { userId: user.id, status: 'trialing', planId, currentPeriodEnd: trialEndsAt, tier: planId } });
     }
   });
   revalidatePath('/dashboard');
