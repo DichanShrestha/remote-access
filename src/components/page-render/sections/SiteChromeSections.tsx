@@ -27,15 +27,15 @@ export function SiteNavbar({ section, theme }: { section: NavbarSection; theme: 
   </header>;
 
   return (
-    <header className={`w-full px-5 py-3 text-current @md:px-8 ${pill ? 'absolute left-0 top-0 z-20 flex justify-center' : overlay ? 'absolute left-0 top-0 z-20' : ''}`}>
-      <div className={`mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 ${centered ? '@md:flex-col @md:justify-center' : ''} ${pill ? 'w-fit rounded-full border border-neutral-200/70 bg-white/90 px-1.5 py-1 text-[9px] shadow-sm backdrop-blur' : ''}`}>
+    <header className={`w-full px-5 py-3 text-current @md:px-8 ${pill ? 'absolute left-0 top-0 z-20 flex justify-center mt-2' : overlay ? 'absolute left-0 top-0 z-20' : ''}`}>
+      <div className={`mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 ${centered ? '@md:flex-col @md:justify-center' : ''} ${pill ? `relative w-fit transition-all duration-300 border border-neutral-200/70 bg-white/90 px-1.5 py-1 text-sm shadow-sm backdrop-blur ${menuOpen ? 'rounded-[2rem] @md:rounded-full' : 'rounded-full'}` : ''}`}>
         {!pill && <a href="#top" className="inline-flex min-h-9 items-center text-lg font-bold tracking-tight" aria-label={content.logoText}>
           {content.logoUrl ? <img src={content.logoUrl} alt={content.logoText} className="max-h-9 max-w-40 object-contain" /> : content.logoText}
         </a>}
 
         <button
           type="button"
-          className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border border-current/20 ${pill ? 'hidden' : '@md:hidden'}`}
+          className={`min-h-10 min-w-10 items-center justify-center border border-current/20 @md:hidden ${pill ? 'flex rounded-full border-none' : 'inline-flex rounded-md'}`}
           aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen(value => !value)}
@@ -43,23 +43,23 @@ export function SiteNavbar({ section, theme }: { section: NavbarSection; theme: 
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
 
-        <div className={`${menuOpen ? 'flex' : 'hidden'} w-full flex-col gap-4 py-4 @md:flex @md:w-auto @md:flex-row @md:items-center @md:gap-6 @md:py-0 ${centered ? '@md:mt-3' : '@md:ml-auto'} ${pill ? '!flex w-auto p-0' : ''}`}>
-          <nav aria-label="Main navigation" className={`flex flex-col gap-1 @md:flex-row @md:items-center @md:gap-6 ${centered ? '@md:justify-center' : ''} ${pill ? 'flex-row gap-0 @md:gap-0' : ''}`}>
+        <div className={`${menuOpen ? 'flex' : 'hidden'} w-full flex-col gap-4 py-4 @md:flex @md:w-auto @md:flex-row @md:items-center @md:gap-6 @md:py-0 ${centered ? '@md:mt-3' : '@md:ml-auto'} ${pill ? 'w-auto px-4 pb-4 pt-2 @md:px-0 @md:py-0' : ''}`}>
+          <nav aria-label="Main navigation" className={`flex flex-col gap-3 @md:flex-row @md:items-center @md:gap-6 ${centered ? '@md:justify-center' : ''} ${pill ? 'gap-2 @md:gap-0' : ''}`}>
             {content.links.map(link => (
-              <a key={link.id} href={link.url} onClick={() => setMenuOpen(false)} className={`rounded-sm py-2 text-sm font-medium transition-opacity hover:opacity-65 @md:py-1 ${pill ? 'rounded-full px-2.5 py-1 text-[9px] font-normal @md:py-1' : ''}`}>
+              <a key={link.id} href={link.url} onClick={() => setMenuOpen(false)} className={`rounded-sm py-2 text-sm font-medium transition-opacity hover:opacity-65 @md:py-1 ${pill ? 'rounded-full px-4 py-2 text-sm font-normal hover:bg-neutral-100 @md:px-3 @md:py-1.5 @md:hover:bg-transparent' : ''}`}>
                 {link.label}
               </a>
             ))}
           </nav>
           {(content.secondaryLabel || content.primaryLabel) && (
-            <div className="flex flex-col gap-2 @sm:flex-row @md:items-center">
+            <div className={`flex flex-col gap-2 @sm:flex-row @md:items-center ${pill ? 'mt-2 border-t border-neutral-200 pt-4 @md:mt-0 @md:ml-2 @md:border-none @md:pt-0' : ''}`}>
               {!minimal && content.secondaryLabel && content.secondaryUrl && (
-                <a href={content.secondaryUrl} className="inline-flex min-h-10 items-center justify-center border border-current/25 px-4 py-2 text-sm font-semibold transition-colors hover:bg-current/5">
+                <a href={content.secondaryUrl} className={`inline-flex min-h-10 items-center justify-center border border-current/25 px-4 py-2 text-sm font-semibold transition-colors hover:bg-current/5 ${pill ? 'rounded-full' : ''}`}>
                   {content.secondaryLabel}
                 </a>
               )}
               {content.primaryLabel && content.primaryUrl && (
-                <a href={content.primaryUrl} data-page-button className="inline-flex min-h-10 items-center justify-center px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-85" style={{ backgroundColor: theme.primaryColor }}>
+                <a href={content.primaryUrl} data-page-button className={`inline-flex min-h-10 items-center justify-center px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-85 ${pill ? 'rounded-full' : ''}`} style={{ backgroundColor: theme.primaryColor }}>
                   {content.primaryLabel}
                 </a>
               )}

@@ -114,117 +114,7 @@ export const TEMPLATE_CREATOR_PROFILE: PageDocument = {
   ],
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// 2. CREATOR PORTFOLIO
-// ═══════════════════════════════════════════════════════════════════
-export const TEMPLATE_CREATOR_PORTFOLIO: PageDocument = {
-  version: 1,
-  theme: {
-    style: 'bold',
-    primaryColor: '#4F46E5',
-    radius: 'large',
-    density: 'comfortable',
-  },
-  settings: { showFooterBranding: true, enableSmoothScrolling: true },
-  sections: [
-    {
-      id: 'hero-1',
-      type: 'hero',
-      variant: 'split',
-      layout: 'split',
-      zoomReveal: true,
-      zoomWord: 'Design',
-      isHidden: false,
-      content: {
-        title: 'Jordan Lee',
-        eyebrow: 'PRODUCT DESIGNER',
-        headline: 'I design digital products that people actually want to use.',
-        subtitle: 'Currently designing the future of work at Stripe. Previously at Figma and Airbnb.',
-        buttonText: 'View my work',
-        buttonUrl: '#services',
-        secondaryButtonText: 'Download Resume',
-        secondaryButtonUrl: '#resume',
-        imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1000&q=80',
-      },
-    },
-    {
-      id: 'image-1',
-      type: 'image',
-      variant: 'scroll-reveal',
-      layout: 'full',
-      isHidden: false,
-      content: {
-        url: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=1600&q=80',
-        alt: 'Portfolio showcase',
-      },
-    },
-    {
-      id: 'services-1',
-      type: 'services',
-      variant: 'asymmetric-bento',
-      isHidden: false,
-      content: {
-        title: 'My Expertise',
-        items: [
-          { id: 's-1', title: 'Product Design', description: 'End-to-end design from research to high-fidelity prototyping.' },
-          { id: 's-2', title: 'Design Systems', description: 'Building scalable components and guidelines.' },
-          { id: 's-3', title: 'User Research', description: 'Usability testing, interviews, and data-driven insights.' },
-        ],
-      },
-    },
-    {
-      id: 'carousel-1',
-      type: 'carousel',
-      variant: 'bounce',
-      isHidden: false,
-      content: {
-        images: [
-          { id: 'c-1', url: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=1000&q=80', caption: 'Fintech App' },
-          { id: 'c-2', url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1000&q=80', caption: 'Data Dashboard' },
-          { id: 'c-3', url: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=1000&q=80', caption: 'Mobile UI' },
-        ],
-      },
-    },
-    {
-      id: 'resume-1',
-      type: 'resume',
-      isHidden: false,
-      content: {
-        title: 'Experience',
-        items: [
-          { id: 'r-1', role: 'Senior Product Designer', company: 'Stripe', period: '2022 - Present', description: 'Leading design for core payment flows.' },
-          { id: 'r-2', role: 'Product Designer', company: 'Figma', period: '2019 - 2022', description: 'Designed collaboration features.' },
-          { id: 'r-3', role: 'UI/UX Designer', company: 'Airbnb', period: '2017 - 2019', description: 'Guest experience team.' },
-        ],
-      },
-    },
-    {
-      id: 'testimonials-1',
-      type: 'testimonials',
-      variant: 'magic-card',
-      isHidden: false,
-      content: {
-        title: 'What people say',
-        items: [
-          { id: 't-1', quote: "Jordan is one of the most thoughtful designers I've ever worked with.", author: 'Sarah Chen', role: 'VP Product' },
-          { id: 't-2', quote: "An absolute powerhouse when it comes to system design and prototyping.", author: 'Mike Ross', role: 'Engineering Lead' },
-        ],
-      },
-    },
-    {
-      id: 'form-1',
-      type: 'lead-form',
-      variant: 'split-layout',
-      isHidden: false,
-      content: {
-        title: 'Let\'s collaborate',
-        description: 'Currently accepting freelance projects for Q3. Reach out to discuss your next big idea.',
-        buttonText: 'Send Message',
-        successMessage: 'Thanks! I will reply within 24 hours.',
-      },
-    },
-  ],
-};
+
 
 // ═══════════════════════════════════════════════════════════════════
 // 3. CREATOR NEWSLETTER
@@ -399,143 +289,6 @@ export const TEMPLATE_PRODUCT_BRAND: PageDocument = {
   ],
 };
 
-
-
-// ═══════════════════════════════════════════════════════════════════
-// 7. DEVELOPER PORTFOLIO
-// ═══════════════════════════════════════════════════════════════════
-export const TEMPLATE_DEVELOPER_PORTFOLIO: PageDocument = {
-  version: 1,
-  theme: {
-    style: 'bold',
-    primaryColor: '#171717',
-    radius: 'small',
-    density: 'spacious',
-  },
-  settings: { showFooterBranding: true, enableSmoothScrolling: true },
-  sections: [
-    { id: 'site-header', type: 'site-navbar', variant: 'minimal', isHidden: false, backgroundColor: '#171717', textColor: '#f4f4f5', content: { logoText: 'solo', links: [{ id: 'n1', label: 'About', url: '#about' }, { id: 'n2', label: 'Blog', url: '#blogs' }, { id: 'n3', label: 'Projects', url: '#gallery-1' }, { id: 'n4', label: 'Resume', url: '#resume-1' }] } },
-    {
-      id: 'hero-1',
-      type: 'hero',
-      variant: 'split',
-      layout: 'split',
-      zoomReveal: true,
-      zoomWord: 'Build',
-      isHidden: false,
-      content: {
-        title: 'Ren Nakamura',
-        eyebrow: 'FULL-STACK DEVELOPER & DESIGNER',
-        headline: 'I build useful things for the web.',
-        subtitle: 'Full-stack developer based in Tokyo. Specializing in React, TypeScript, and design systems. Currently freelancing and open to new projects.',
-        buttonText: 'See my work',
-        buttonUrl: '#services',
-        secondaryButtonText: 'Get in touch',
-        secondaryButtonUrl: '#contact',
-        imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1000&q=80',
-        badge: 'Available for work',
-        socialLinks: [
-          { id: 'sl-1', platform: 'GitHub', url: 'https://github.com' },
-          { id: 'sl-2', platform: 'Twitter', url: 'https://x.com' },
-          { id: 'sl-3', platform: 'LinkedIn', url: 'https://linkedin.com' },
-        ],
-      },
-    },
-    {
-      id: 'services-1',
-      type: 'services',
-      variant: 'asymmetric-bento',
-      isHidden: false,
-      content: {
-        title: 'What I can offer',
-        items: [
-          { id: 's-1', title: 'Frontend Development', description: 'Pixel-perfect interfaces with React, Next.js, and TypeScript. Obsessed with performance and accessibility.', icon: '💻' },
-          { id: 's-2', title: 'Backend & APIs', description: 'Scalable server architecture with Node.js, PostgreSQL, and cloud infrastructure.', icon: '⚡' },
-          { id: 's-3', title: 'Design Systems', description: 'Component libraries and design tokens that keep teams moving fast without sacrificing consistency.', icon: '🎨' },
-          { id: 's-4', title: 'Technical Consulting', description: 'Architecture reviews, code audits, and hands-on guidance for engineering teams.', icon: '🧠' },
-        ],
-      },
-    },
-    {
-      id: 'stats-1',
-      type: 'stats',
-      variant: 'count-up',
-      isHidden: false,
-      content: {
-        items: [
-          { id: 'st-1', value: '8', label: 'Years Experience', suffix: '+' },
-          { id: 'st-2', value: '40', label: 'Projects Shipped', suffix: '+' },
-          { id: 'st-3', value: '15', label: 'Happy Clients' },
-          { id: 'st-4', value: '99', label: 'Uptime SLA', suffix: '%' },
-        ],
-      },
-    },
-    {
-      id: 'gallery-1',
-      type: 'gallery',
-      variant: 'masonry',
-      layout: 'masonry',
-      isHidden: false,
-      content: {
-        images: [
-          { id: 'g-1', url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80', caption: 'Analytics Dashboard' },
-          { id: 'g-2', url: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&q=80', caption: 'Mobile Banking App' },
-          { id: 'g-3', url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80', caption: 'E-commerce Platform' },
-          { id: 'g-4', url: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80', caption: 'Code Architecture' },
-        ],
-      },
-    },
-    {
-      id: 'richtext-1',
-      type: 'rich-text',
-      variant: 'split',
-      isHidden: false,
-      content: {
-        text: '<h2>About me</h2><p>I started coding at 16, building ugly websites that somehow worked. Today, I architect production systems that serve millions of users. My approach is simple: understand the problem deeply, build the simplest solution that works, then iterate. I believe the best software is invisible — users should never think about the technology, only the experience.</p>',
-      },
-    },
-    {
-      id: 'resume-1',
-      type: 'resume',
-      variant: 'stepper',
-      isHidden: false,
-      content: {
-        title: 'Experience',
-        items: [
-          { id: 'r-1', role: 'Senior Frontend Engineer', company: 'Vercel', period: '2022 – Present', description: 'Building next-generation deployment tooling and developer experience.' },
-          { id: 'r-2', role: 'Full-Stack Developer', company: 'Stripe', period: '2019 – 2022', description: 'Core payments team — built internal tools used by 500+ engineers.' },
-          { id: 'r-3', role: 'Frontend Developer', company: 'Shopify', period: '2017 – 2019', description: 'Merchant admin redesign, improving onboarding conversion by 23%.' },
-        ],
-      },
-    },
-    {
-      id: 'testimonials-1',
-      type: 'testimonials',
-      variant: 'marquee',
-      isHidden: false,
-      content: {
-        title: 'What clients say',
-        items: [
-          { id: 't-1', quote: 'Ren delivered a production-ready app in 3 weeks that our internal team estimated would take 3 months.', author: 'David Park', role: 'CTO, Luminary AI' },
-          { id: 't-2', quote: 'The cleanest codebase I have ever inherited. Documentation was impeccable.', author: 'Maria Santos', role: 'Lead Engineer, Fintech Co' },
-          { id: 't-3', quote: 'A rare combination of deep technical skill and genuine design sensibility.', author: 'James Liu', role: 'Founder, DevStudio' },
-        ],
-      },
-    },
-    {
-      id: 'form-1',
-      type: 'lead-form',
-      variant: 'split-layout',
-      isHidden: false,
-      content: {
-        title: 'Let\'s work together',
-        description: 'Have a project in mind? Drop me a line and I will get back to you within 24 hours.',
-        buttonText: 'Send Message',
-        successMessage: 'Thanks! I will reply soon.',
-      },
-    },
-  ],
-};
 
 // ═══════════════════════════════════════════════════════════════════
 // 8. BEAUTY BRAND
@@ -906,30 +659,46 @@ export const TEMPLATE_CREATOR_FASHION: PageDocument = {
   sections: [
     { id: 'site-header', type: 'site-navbar', variant: 'minimal', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { logoText: 'LEONIE HANNE', links: [{ id: 'nav-press', label: 'Press', url: '#press' }, { id: 'nav-studio', label: 'LA Studio', url: '#studio' }, { id: 'nav-shop', label: 'Shop', url: '#favorites' }, { id: 'nav-journal', label: 'Journal', url: '#journal' }] } },
     { id: 'hero', type: 'hero', variant: 'fashion-editorial', layout: 'split', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'Leonie Hanne', eyebrow: 'LONDON · FASHION · TRAVEL', headline: 'Hi, I’m Leonie. A German-born fashion blogger.', subtitle: 'A daily edit of personal style, special places, and the little details that make a life feel beautiful.', buttonText: 'See my outfits', buttonUrl: '#outfits', imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=85', avatarUrl: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=700&q=85', secondaryImageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=700&q=85', location: 'London' } },
-    { id: 'outfits', type: 'carousel', variant: 'fashion-strip', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { images: [
-      { id: 'look-1', url: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=900&q=85', caption: 'Style snapshots · Velvet & sparkles' },
-      { id: 'look-2', url: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85', caption: 'London style · Coat season' },
-      { id: 'look-3', url: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=85', caption: 'The look · Prada in London' },
-      { id: 'look-4', url: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=85', caption: 'Everyday dressing' },
-    ] } },
+    {
+      id: 'outfits', type: 'carousel', variant: 'fashion-strip', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: {
+        images: [
+          { id: 'look-1', url: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=900&q=85', caption: 'Style snapshots · Velvet & sparkles' },
+          { id: 'look-2', url: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85', caption: 'London style · Coat season' },
+          { id: 'look-3', url: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=85', caption: 'The look · Prada in London' },
+          { id: 'look-4', url: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=85', caption: 'Everyday dressing' },
+        ]
+      }
+    },
     { id: 'about', type: 'feature-split', variant: 'editorial', layout: 'image-left', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { eyebrow: 'A NOTE FROM LEONIE', title: 'London style, wherever I go.', description: 'I share the pieces I reach for, the places I return to, and the people who make every trip memorable. Consider this your personal invitation to come along.', imageUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=85', imageAlt: 'Street style in London', checkpoints: [], buttonText: 'A little more about me', buttonUrl: '#studio' } },
-    { id: 'journal', type: 'blog-list', variant: 'image-cards', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'From the journal', actionText: 'All stories', actionUrl: '#journal', items: [
-      { id: 'story-1', category: 'Outfit', date: 'London', title: 'The soft layers I wear on repeat', description: 'A few favorite textures for the in-between days.', imageUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85', url: '#outfits' },
-      { id: 'story-2', category: 'Travel', date: 'Paris', title: 'A weekend made for wandering', description: 'Slow mornings, little cafés, and a very good coat.', imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=85', url: '#journal' },
-      { id: 'story-3', category: 'Beauty', date: 'The edit', title: 'What’s in my everyday bag', description: 'The things I keep close from morning to evening.', imageUrl: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=85', url: '#journal' },
-    ] } },
-    { id: 'favorites', type: 'products', variant: 'default', isHidden: false, backgroundColor: '#f6f5f2', textColor: '#171717', content: { title: 'My favourites', items: [
-      { id: 'fav-1', title: 'The everyday coat', description: 'A forever layer for city days.', price: 'Shop the look', imageUrl: 'https://images.unsplash.com/photo-1548126032-079a0fb0099d?auto=format&fit=crop&w=700&q=85', url: '#favorites', category: 'Style' },
-      { id: 'fav-2', title: 'The little black bag', description: 'The piece that goes everywhere.', price: 'Shop the look', imageUrl: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=700&q=85', url: '#favorites', category: 'Accessories' },
-      { id: 'fav-3', title: 'A golden detail', description: 'A little something to keep.', price: 'Shop the look', imageUrl: 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=700&q=85', url: '#favorites', category: 'Jewellery' },
-    ] } },
+    {
+      id: 'journal', type: 'blog-list', variant: 'image-cards', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: {
+        title: 'From the journal', actionText: 'All stories', actionUrl: '#journal', items: [
+          { id: 'story-1', category: 'Outfit', date: 'London', title: 'The soft layers I wear on repeat', description: 'A few favorite textures for the in-between days.', imageUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=85', url: '#outfits' },
+          { id: 'story-2', category: 'Travel', date: 'Paris', title: 'A weekend made for wandering', description: 'Slow mornings, little cafés, and a very good coat.', imageUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=85', url: '#journal' },
+          { id: 'story-3', category: 'Beauty', date: 'The edit', title: 'What’s in my everyday bag', description: 'The things I keep close from morning to evening.', imageUrl: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=85', url: '#journal' },
+        ]
+      }
+    },
+    {
+      id: 'favorites', type: 'products', variant: 'default', isHidden: false, backgroundColor: '#f6f5f2', textColor: '#171717', content: {
+        title: 'My favourites', items: [
+          { id: 'fav-1', title: 'The everyday coat', description: 'A forever layer for city days.', price: 'Shop the look', imageUrl: 'https://images.unsplash.com/photo-1548126032-079a0fb0099d?auto=format&fit=crop&w=700&q=85', url: '#favorites', category: 'Style' },
+          { id: 'fav-2', title: 'The little black bag', description: 'The piece that goes everywhere.', price: 'Shop the look', imageUrl: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=700&q=85', url: '#favorites', category: 'Accessories' },
+          { id: 'fav-3', title: 'A golden detail', description: 'A little something to keep.', price: 'Shop the look', imageUrl: 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=700&q=85', url: '#favorites', category: 'Jewellery' },
+        ]
+      }
+    },
     { id: 'studio', type: 'feature-split', variant: 'editorial', layout: 'image-right', isHidden: false, backgroundColor: '#1c1c1c', textColor: '#ffffff', content: { eyebrow: 'BEHIND THE LENS', title: 'LA Studio, a creative home.', description: 'A small creative studio for big ideas, thoughtful collaborations, and stories worth telling. For partnerships and press, I would love to hear from you.', imageUrl: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=1100&q=85', imageAlt: 'Fashion event and creative studio', checkpoints: [], buttonText: 'Get in touch', buttonUrl: '#contact' } },
-    { id: 'gallery', type: 'gallery', variant: 'default', layout: 'grid', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { images: [
-      { id: 'life-1', url: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=700&q=85', caption: 'At the table' },
-      { id: 'life-2', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=700&q=85', caption: 'On the way' },
-      { id: 'life-3', url: 'https://images.unsplash.com/photo-1511988617509-a57c8a288659?auto=format&fit=crop&w=700&q=85', caption: 'A little celebration' },
-      { id: 'life-4', url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=700&q=85', caption: 'Somewhere lovely' },
-    ] } },
+    {
+      id: 'gallery', type: 'gallery', variant: 'default', layout: 'grid', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: {
+        images: [
+          { id: 'life-1', url: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=700&q=85', caption: 'At the table' },
+          { id: 'life-2', url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=700&q=85', caption: 'On the way' },
+          { id: 'life-3', url: 'https://images.unsplash.com/photo-1511988617509-a57c8a288659?auto=format&fit=crop&w=700&q=85', caption: 'A little celebration' },
+          { id: 'life-4', url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=700&q=85', caption: 'Somewhere lovely' },
+        ]
+      }
+    },
     { id: 'social', type: 'social-links', variant: 'react-bits', layout: 'row', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { links: [{ id: 'social-instagram', platform: 'Instagram', url: 'https://instagram.com' }, { id: 'social-tiktok', platform: 'TikTok', url: 'https://tiktok.com' }, { id: 'social-pinterest', platform: 'Pinterest', url: 'https://pinterest.com' }] } },
     { id: 'footer', type: 'site-footer', variant: 'compact', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { logoText: 'LEONIE HANNE', description: 'Fashion, travel, and the beautiful in-between.', links: [{ id: 'footer-about', group: 'Explore', label: 'About', url: '#about' }, { id: 'footer-journal', group: 'Explore', label: 'Journal', url: '#journal' }, { id: 'footer-favorites', group: 'Explore', label: 'My favourites', url: '#favorites' }, { id: 'footer-contact', group: 'Say hello', label: 'Contact', url: '#contact' }], socialLinks: [{ id: 'footer-instagram', label: 'Instagram', url: 'https://instagram.com' }, { id: 'footer-tiktok', label: 'TikTok', url: 'https://tiktok.com' }], legalLinks: [{ id: 'footer-copy', label: '© 2026 Leonie Hanne', url: '#top' }, { id: 'footer-privacy', label: 'Privacy', url: '#privacy' }] } },
   ],
@@ -948,23 +717,35 @@ export const TEMPLATE_CREATOR_SPEAKER: PageDocument = {
     { id: 'newsletter', type: 'collect-emails', variant: 'split-layout', isHidden: false, backgroundColor: '#fff7f3', textColor: '#171717', content: { title: 'A useful note for your inbox', placeholder: 'Your email address', buttonText: 'Subscribe', successMessage: 'You’re on the list. Look out for the next note.' } },
     { id: 'about', type: 'feature-split', variant: 'editorial', layout: 'image-left', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { eyebrow: 'THE WORK', title: 'Stories with practical strategies.', description: 'Jordan brings timeless ideas into the present, helping teams and individuals build courage, focus, and a stronger sense of purpose. His books and talks turn big questions into useful next steps.', imageUrl: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1200&q=85', imageAlt: 'Speaker addressing an audience', checkpoints: [], buttonText: 'Explore the work', buttonUrl: '#resources' } },
     { id: 'impact', type: 'stats', variant: 'editorial-band', isHidden: false, backgroundColor: '#171717', textColor: '#ffffff', content: { title: 'Ideas that travel', description: 'A growing body of work shared with readers, teams, and curious people around the world.', items: [{ id: 'stat-books', value: '12', label: 'Books published' }, { id: 'stat-readers', value: '1M+', label: 'Readers reached' }, { id: 'stat-talks', value: '250+', label: 'Talks & events' }, { id: 'stat-years', value: '20', label: 'Years of practice' }] } },
-    { id: 'events', type: 'case-studies', variant: 'speaker-events', isHidden: false, content: { title: 'Seminars & lectures', description: 'Live conversations on leadership, creative practice, and doing the work that matters.', actionText: 'All events', actionUrl: '#booking', items: [
-      { id: 'event-1', title: 'The courage to begin', category: 'MAY', date: '18', client: 'Leadership Forum · New York', description: 'A practical talk about starting before you feel ready.', imageUrl: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1000&q=85', url: '#booking', buttonText: 'Reserve a seat' },
-      { id: 'event-2', title: 'Making space for deep work', category: 'JUN', date: '06', client: 'Ideas Summit · Chicago', description: 'How to protect attention and make room for better thinking.', imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1000&q=85', url: '#booking', buttonText: 'Reserve a seat' },
-      { id: 'event-3', title: 'A more resilient team', category: 'JUL', date: '21', client: 'People & Purpose · Online', description: 'Small habits that help teams navigate change together.', imageUrl: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=1000&q=85', url: '#booking', buttonText: 'Reserve a seat' },
-    ] } },
+    {
+      id: 'events', type: 'case-studies', variant: 'speaker-events', isHidden: false, content: {
+        title: 'Seminars & lectures', description: 'Live conversations on leadership, creative practice, and doing the work that matters.', actionText: 'All events', actionUrl: '#booking', items: [
+          { id: 'event-1', title: 'The courage to begin', category: 'MAY', date: '18', client: 'Leadership Forum · New York', description: 'A practical talk about starting before you feel ready.', imageUrl: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1000&q=85', url: '#booking', buttonText: 'Reserve a seat' },
+          { id: 'event-2', title: 'Making space for deep work', category: 'JUN', date: '06', client: 'Ideas Summit · Chicago', description: 'How to protect attention and make room for better thinking.', imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1000&q=85', url: '#booking', buttonText: 'Reserve a seat' },
+          { id: 'event-3', title: 'A more resilient team', category: 'JUL', date: '21', client: 'People & Purpose · Online', description: 'Small habits that help teams navigate change together.', imageUrl: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=1000&q=85', url: '#booking', buttonText: 'Reserve a seat' },
+        ]
+      }
+    },
     { id: 'bridge', type: 'feature-split', variant: 'editorial', layout: 'image-right', isHidden: false, backgroundColor: '#fff7f3', textColor: '#171717', content: { eyebrow: 'FOR YOUR ORGANIZATION', title: 'Bridge your professional and personal life.', description: 'A meaningful career and a full life can strengthen each other. Jordan’s workshops help teams reconnect with their values, make room for what matters, and move forward with intention.', imageUrl: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=85', imageAlt: 'People sharing a conversation', checkpoints: [], buttonText: 'Explore workshops', buttonUrl: '#booking' } },
-    { id: 'resources', type: 'blog-list', variant: 'image-cards', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'Blog & resources', actionText: 'Read more articles', actionUrl: '#resources', items: [
-      { id: 'article-1', category: 'Leadership', date: 'Field notes', title: 'The synergy equation: unlocking your team’s collective power', description: 'A practical guide to better collaboration.', imageUrl: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=900&q=85', url: '#resources' },
-      { id: 'article-2', category: 'Work', date: 'Ideas', title: 'The art of alignment: how great teams achieve goals', description: 'Bring purpose and everyday work closer together.', imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=900&q=85', url: '#resources' },
-      { id: 'article-3', category: 'Culture', date: 'Reading list', title: 'Building bridges between disciplines', description: 'Why our best answers often come from elsewhere.', imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=85', url: '#resources' },
-    ] } },
-    { id: 'audience', type: 'testimonials', variant: 'marquee', isHidden: false, backgroundColor: '#ff715c', textColor: '#171717', content: { title: 'A word from the audience', items: [
-      { id: 'quote-1', quote: 'Jordan has a rare gift for making a room feel both thoughtful and energized.', author: 'Lisa Mitchell', role: 'Conference Director', avatarUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=300&q=80' },
-      { id: 'quote-2', quote: 'The ideas stayed with our team long after the event ended.', author: 'Robert Finns', role: 'People & Culture Lead', avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80' },
-      { id: 'quote-3', quote: 'A clear, warm, and genuinely useful conversation about doing better work.', author: 'Maya Chen', role: 'Author', avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' },
-      { id: 'quote-4', quote: 'Our audience left inspired and with practical steps they could use the next morning.', author: 'Daniel Brooks', role: 'Event Producer', avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80' },
-    ] } },
+    {
+      id: 'resources', type: 'blog-list', variant: 'image-cards', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: {
+        title: 'Blog & resources', actionText: 'Read more articles', actionUrl: '#resources', items: [
+          { id: 'article-1', category: 'Leadership', date: 'Field notes', title: 'The synergy equation: unlocking your team’s collective power', description: 'A practical guide to better collaboration.', imageUrl: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=900&q=85', url: '#resources' },
+          { id: 'article-2', category: 'Work', date: 'Ideas', title: 'The art of alignment: how great teams achieve goals', description: 'Bring purpose and everyday work closer together.', imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=900&q=85', url: '#resources' },
+          { id: 'article-3', category: 'Culture', date: 'Reading list', title: 'Building bridges between disciplines', description: 'Why our best answers often come from elsewhere.', imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=85', url: '#resources' },
+        ]
+      }
+    },
+    {
+      id: 'audience', type: 'testimonials', variant: 'marquee', isHidden: false, backgroundColor: '#ff715c', textColor: '#171717', content: {
+        title: 'A word from the audience', items: [
+          { id: 'quote-1', quote: 'Jordan has a rare gift for making a room feel both thoughtful and energized.', author: 'Lisa Mitchell', role: 'Conference Director', avatarUrl: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=300&q=80' },
+          { id: 'quote-2', quote: 'The ideas stayed with our team long after the event ended.', author: 'Robert Finns', role: 'People & Culture Lead', avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=80' },
+          { id: 'quote-3', quote: 'A clear, warm, and genuinely useful conversation about doing better work.', author: 'Maya Chen', role: 'Author', avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' },
+          { id: 'quote-4', quote: 'Our audience left inspired and with practical steps they could use the next morning.', author: 'Daniel Brooks', role: 'Event Producer', avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80' },
+        ]
+      }
+    },
     { id: 'partners', type: 'marquee', layout: 'left', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { text: 'GOOGLE · NETFLIX · AMAZON · SLACK · JOTFORM · GOOGLE · NETFLIX · AMAZON · SLACK · JOTFORM' } },
     { id: 'booking', type: 'booking', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { title: 'Book a speaking engagement', description: 'Tell us about your event, audience, and the ideas you want to explore together.', provider: 'custom', link: 'mailto:hello@example.com' } },
     { id: 'footer', type: 'site-footer', variant: 'compact', isHidden: false, backgroundColor: '#171717', textColor: '#ffffff', content: { logoText: 'JORDAN REEVES', description: 'Author and speaker on resilience, leadership, and a life of purpose.', links: [{ id: 'footer-home', group: 'Explore', label: 'Home', url: '#top' }, { id: 'footer-events', group: 'Explore', label: 'Speaking', url: '#events' }, { id: 'footer-resources', group: 'Explore', label: 'Writing', url: '#resources' }, { id: 'footer-about', group: 'Explore', label: 'About', url: '#about' }, { id: 'footer-contact', group: 'Contact', label: 'Book an event', url: '#booking' }], socialLinks: [{ id: 'footer-instagram', label: 'Instagram', url: 'https://instagram.com' }, { id: 'footer-youtube', label: 'YouTube', url: 'https://youtube.com' }, { id: 'footer-linkedin', label: 'LinkedIn', url: 'https://linkedin.com' }], legalLinks: [{ id: 'footer-copy', label: '© 2026 Jordan Reeves', url: '#top' }, { id: 'footer-privacy', label: 'Privacy', url: '#privacy' }] } },
@@ -976,10 +757,8 @@ export const TEMPLATE_CREATOR_SPEAKER: PageDocument = {
 // ═══════════════════════════════════════════════════════════════════
 export const TEMPLATES_MAP: Record<string, PageDocument> = {
   'creator-profile': TEMPLATE_CREATOR_PROFILE,
-  'creator-portfolio': TEMPLATE_CREATOR_PORTFOLIO,
   'creator-newsletter': TEMPLATE_CREATOR_NEWSLETTER,
   'product-brand': TEMPLATE_PRODUCT_BRAND,
-  'developer-portfolio': TEMPLATE_DEVELOPER_PORTFOLIO,
   'beauty-brand': TEMPLATE_BEAUTY_BRAND,
   'restaurant': TEMPLATE_RESTAURANT,
   'corporate-consulting': TEMPLATE_CORPORATE_CONSULTING,

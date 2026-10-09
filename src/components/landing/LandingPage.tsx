@@ -8,11 +8,12 @@ import { AuthButton } from '@/components/auth-button'
 type User = { id: string; email?: string } | null
 
 const templates = [
-  { id: 'creator-profile', name: 'The Creator', type: 'Creator · Editorial', color: 'rose' },
-  { id: 'beauty-brand', name: 'Soft Ritual', type: 'Beauty · Commerce', color: 'cream' },
-  { id: 'creator-portfolio', name: 'Jordan Lee', type: 'Portfolio · Studio', color: 'blue' },
-  { id: 'restaurant', name: 'Casa Nera', type: 'Hospitality · Menu', color: 'olive' },
+  { id: 'creator-fashion', name: 'The Creator', type: 'Creator · Fashion', color: 'rose' },
+  { id: 'restaurant', name: 'Casa Nera', type: 'Restaurant · Menu', color: 'olive' },
   { id: 'luxury-skincare', name: 'Form & Field', type: 'Beauty · Product', color: 'lavender' },
+  { id: 'editorial-portfolio', name: 'Nandini Jaryal', type: 'Developer · Designer', color: 'cream' },
+  { id: 'corporate-consulting', name: 'Corporate Consulting', type: 'Corporate · Consulting', color: 'blue' },
+  { id: 'point-architecture', name: 'Point Architecture', type: 'Architecture · Studio', color: 'gray' }
 ]
 
 const faqs = [
@@ -64,10 +65,10 @@ export function LandingPage({ user }: { user: User }) {
           </div>
           <div className="hero-stage" aria-label="Examples of Smart Page mobile templates">
             <div className="hero-orbit orbit-one" /><div className="hero-orbit orbit-two" />
-            <div className="hero-note note-top"><Sparkles size={14} /> One link. More possibility.</div>
-            <PhoneFrame template="creator-profile" className="hero-phone hero-phone-back" label="Creator profile template" />
-            <PhoneFrame template="beauty-brand" className="hero-phone hero-phone-left" label="Beauty brand template" />
-            <PhoneFrame template="creator-portfolio" className="hero-phone hero-phone-main" label="Creator portfolio template" />
+            <div className="hero-note note-top"> <span className="online-dot" /> One link. More possibility.</div>
+            <PhoneFrame template="creator-fashion" className="hero-phone hero-phone-back" label="Creator profile template" />
+            <PhoneFrame template="creator-profile" className="hero-phone hero-phone-left" label="Beauty brand template" />
+            <PhoneFrame template="corporate-consulting" className="hero-phone hero-phone-main" label="Creator portfolio template" />
             <div className="hero-note note-bottom"><span className="online-dot" /> Your page is ready when they are.</div>
             <span className="stage-index">01 — 03</span>
           </div>
@@ -108,18 +109,18 @@ export function LandingPage({ user }: { user: User }) {
 
         <section className="comparison-section section-pad" id="comparison"><div className="comparison-intro reveal"><p className="kicker">05 / THE DIFFERENCE IS THE WHOLE POINT</p><h2>Less link list.<br /><em>More you.</em></h2><p>A quick way to see where Smart Page fits.</p></div><div className="comparison-table reveal"><div className="compare-head"><span>WHAT MATTERS</span><span>SMART PAGE</span><span>LINK DIRECTORY</span><span>TRADITIONAL SITE</span></div>{[['Designed page templates', true, 'Varies', true], ['AI answers from your content', true, false, 'Add-on'], ['Built-in lead capture', true, 'Varies', true], ['Purpose-built for social bios', true, true, false], ['Visual editing, no code', true, true, 'Varies']].map(([label, a, b, c]) => <div className="compare-row" key={String(label)}><span>{label}</span><span>{a === true ? <Check size={16} /> : a}</span><span>{b === true ? <Check size={16} /> : b === false ? '—' : b}</span><span>{c === true ? <Check size={16} /> : c === false ? '—' : c}</span></div>)}<p className="comparison-note">Features vary by provider and plan. Comparison focuses on common product formats.</p></div></section>
 
-        <section className="pricing-section section-pad" id="pricing"><div className="pricing-card reveal"><div className="pricing-art"><div className="pricing-orb orb-a"/><div className="pricing-orb orb-b"/><div className="pricing-note">Less friction.<br /><em>More connection.</em></div><div className="pricing-mini-phone"><PhoneFrame template="creator-profile" label="Smart Page sample" /></div></div><div className="pricing-copy"><p className="kicker">06 / YOUR NEXT CHAPTER</p><h2>Start with a page<br />that feels like <em>you.</em></h2><p>Bring your work, your story, and your next opportunity together in one link worth opening.</p><ul><li><Check size={15} /> 14-day free trial</li><li><Check size={15} /> Choose from real, editable templates</li><li><Check size={15} /> Add AI, forms, and analytics as you grow</li></ul><a href={startHref} className="button button-dark">Create your Smart Page <ArrowRight size={16} /></a><span className="pricing-foot">Start creating, then choose the tools that fit.</span></div></div></section>
+        <section className="pricing-section section-pad" id="pricing"><div className="pricing-card reveal"><div className="pricing-art"><div className="pricing-orb orb-a" /><div className="pricing-orb orb-b" /><div className="pricing-note">Less friction.<br /><em>More connection.</em></div><div className="pricing-mini-phone"><PhoneFrame template="creator-profile" label="Smart Page sample" /></div></div><div className="pricing-copy"><p className="kicker">06 / YOUR NEXT CHAPTER</p><h2>Start with a page<br />that feels like <em>you.</em></h2><p>Bring your work, your story, and your next opportunity together in one link worth opening.</p><ul><li><Check size={15} /> 14-day free trial</li><li><Check size={15} /> Choose from real, editable templates</li><li><Check size={15} /> Add AI, forms, and analytics as you grow</li></ul><a href={startHref} className="button button-dark">Create your Smart Page <ArrowRight size={16} /></a><span className="pricing-foot">Start creating, then choose the tools that fit.</span></div></div></section>
 
         <section className="faq-section section-pad" id="faq"><div className="faq-title reveal"><p className="kicker">A FEW GOOD QUESTIONS</p><h2>Good to <em>know.</em></h2></div><div className="faq-list">{faqs.map(([question, answer], index) => <div className={`faq-item ${faqOpen === index ? 'active' : ''}`} key={question}><button onClick={() => setFaqOpen(faqOpen === index ? null : index)} aria-expanded={faqOpen === index}><span>{question}</span><ChevronDown size={18} /></button>{faqOpen === index && <p>{answer}</p>}</div>)}</div></section>
 
-        <section className="final-cta"><div className="final-glow"/><p className="kicker">YOUR BIO CAN DO MORE</p><h2>Make the next click<br /><em>mean something.</em></h2><a href={startHref} className="button button-light">Build your Smart Page <ArrowRight size={16} /></a><span>One link. A world of possibility.</span></section>
+        <section className="final-cta"><div className="final-glow" /><p className="kicker">YOUR BIO CAN DO MORE</p><h2>Make the next click<br /><em>mean something.</em></h2><a href={startHref} className="button button-light">Build your Smart Page <ArrowRight size={16} /></a><span>One link. A world of possibility.</span></section>
 
-        <footer className="lp-footer"><a href="#top" className="lp-brand"><span className="brand-mark"><i/><i/><i/></span><span>smart<span className="brand-light">page</span></span></a><span className="footer-note">A little more than a link in bio.</span><div className="footer-links"><a href="#features">Features</a><a href="#templates">Templates</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="mailto:hello@smartpage.app">Contact</a></div><span className="copyright">© {new Date().getFullYear()} Smart Page</span></footer>
+        <footer className="lp-footer"><a href="#top" className="lp-brand"><span className="brand-mark"><i /><i /><i /></span><span>smart<span className="brand-light">page</span></span></a><span className="footer-note">A little more than a link in bio.</span><div className="footer-links"><a href="#features">Features</a><a href="#templates">Templates</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="mailto:hello@smartpage.app">Contact</a></div><span className="copyright">© {new Date().getFullYear()} Smart Page</span></footer>
       </main>
     </ReactLenis>
   )
 }
 
 function PhoneFrame({ template, className = '', label }: { template: string; className?: string; label: string }) {
-  return <div className={`phone-frame ${className}`}><div className="phone-hardware"><span className="phone-camera"/><iframe src={`/template-preview?id=${template}`} title={label} loading="lazy" tabIndex={-1} /></div></div>
+  return <div className={`phone-frame ${className}`}><div className="phone-hardware"><span className="phone-camera" /><iframe src={`/template-preview?id=${template}`} title={label} loading="lazy" tabIndex={-1} /></div></div>
 }

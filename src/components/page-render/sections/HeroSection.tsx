@@ -581,7 +581,7 @@ function PortfolioEditorialHero({ content }: SubProps) {
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">{content.title}</p>
             <p className="mt-12 max-w-[16rem] text-[11px] leading-relaxed text-neutral-500">{content.subtitle}</p>
           </div>
-          {content.buttonText && <a href={content.buttonUrl || '#contact'} className="inline-flex min-h-11 items-center rounded-full bg-neutral-900 px-8 text-[11px] font-semibold uppercase tracking-wide text-white">{content.buttonText}</a>}
+          {content.buttonText?.trim() ? <a href={content.buttonUrl || '#contact'} className="inline-flex min-h-11 items-center rounded-full bg-neutral-900 px-8 text-[11px] font-semibold uppercase tracking-wide !text-white">{content.buttonText}</a> : null}
         </div>
         <div className="pb-1">
           <h1 className="max-w-4xl text-5xl font-normal leading-[0.98] tracking-[-0.065em] sm:text-6xl md:text-[clamp(3.5rem,6.2vw,6rem)]">{content.headline}</h1>

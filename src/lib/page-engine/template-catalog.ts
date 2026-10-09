@@ -16,7 +16,6 @@ const details: Record<string, TemplateDetails> = {
   'creator-profile': { name: 'Creator Profile', description: 'A warm introduction, your best work, and a clear way to reach you.', category: 'CREATOR', mood: 'Personal · Editorial' },
   'creator-portfolio': { name: 'Creator Portfolio', description: 'A considered home for your portfolio, services, and next collaboration.', category: 'CREATOR', mood: 'Studio · Portfolio' },
   'creator-newsletter': { name: 'Creator Newsletter', description: 'Turn a passing visit into a reader who comes back each week.', category: 'CREATOR', mood: 'Writing · Community' },
-  'developer-portfolio': { name: 'Developer Portfolio', description: 'Put your work, expertise, and availability in one confident place.', category: 'CREATOR', mood: 'Digital · Minimal' },
   'editorial-portfolio': { name: 'Editorial Portfolio', description: 'A quiet, image-led portfolio made for independent creative work.', category: 'CREATOR', mood: 'Editorial · Artful' },
   'creator-fashion': { name: 'Fashion Creator', description: 'A personal style journal for outfit stories, travel notes, and favourite finds.', category: 'CREATOR', mood: 'Fashion · Editorial' },
   'creator-speaker': { name: 'Speaker & Author', description: 'Bring your talks, writing, audience stories, and booking details together.', category: 'CREATOR', mood: 'Ideas · Speaking' },
