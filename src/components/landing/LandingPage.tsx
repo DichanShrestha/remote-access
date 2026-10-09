@@ -57,11 +57,19 @@ export function LandingPage({ user }: { user: User }) {
         <section className="hero" id="top">
           <div className="hero-wash" /><div className="hero-grain" />
           <div className="hero-copy">
-            <div className="eyebrow"><span className="eyebrow-dot" /> A better place to land</div>
-            <h1>Your whole world,<br />in <em>one</em> beautiful place.</h1>
-            <p className="hero-description">A page that looks like you, answers like you, and turns passing visits into real connections.</p>
-            <div className="hero-actions"><a className="button button-dark" href={startHref}>Create your Smart Page <ArrowRight size={16} /></a><a className="text-link" href="#templates">Explore the templates <ArrowDown size={14} /></a></div>
-            <div className="hero-proof"><div className="proof-avatars"><span>J</span><span>M</span><span>A</span><span>+</span></div><span>Made for people building<br />something worth finding.</span></div>
+            <div className="eyebrow"><span className="eyebrow-dot" /> TURN ATTENTION INTO OPPORTUNITY</div>
+            <h1>Turn your online presence<br />into <em>opportunities.</em></h1>
+            <p className="hero-description !max-w-[450px]">
+              Showcase what you do on one beautiful page. An AI chatbot answers visitor questions and helps turn interest into client inquiries, booked calls, and brand deals.
+            </p>
+            <div className="hero-actions">
+              <a className="button button-dark" href={startHref}>Create your Smart Page <ArrowRight size={16} /></a>
+              <a className="text-link" href="#templates">Explore templates <ArrowDown size={14} /></a>
+            </div>
+            <div className="hero-proof">
+              <div className="proof-avatars"><span>C</span><span>F</span><span>B</span><span>+</span></div>
+              <span>For creators, freelancers,<br />and businesses.</span>
+            </div>
           </div>
           <div className="hero-stage" aria-label="Examples of Smart Page mobile templates">
             <div className="hero-orbit orbit-one" /><div className="hero-orbit orbit-two" />
