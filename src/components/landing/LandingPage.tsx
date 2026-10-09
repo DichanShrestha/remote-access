@@ -85,7 +85,23 @@ export function LandingPage({ user }: { user: User }) {
 
         <section className="editor-section section-pad" id="editor">
           <div className="section-heading reveal"><div><p className="kicker">02 / EDIT IT LIVE</p><h2>Made personal.<br /><em>Made simple.</em></h2></div><div className="heading-aside"><p>Your page takes shape as you work. Choose a starting point, adjust the details, and see it come together in real time.</p><a href="/editor?demo=creator-profile" className="under-link">Try the live editor <ArrowUpRight size={15} /></a></div></div>
-          <div className="editor-showcase reveal"><div className="editor-browser-bar"><div className="browser-dots"><i /><i /><i /></div><span>smartpage.app / editor</span><span className="browser-live"><i /> LIVE PREVIEW</span></div><iframe src="/editor?demo=creator-profile" title="Smart Page interactive editor demo" loading="lazy" className="editor-frame" /><div className="editor-steps"><span><b>01</b> Choose a template</span><span><b>02</b> Make it yours</span><span><b>03</b> Publish beautifully</span></div></div>
+          <div className="editor-showcase reveal">
+            <div className="editor-browser-bar">
+              <div className="browser-dots"><i /><i /><i /></div>
+              <span>smartpage.app / editor</span>
+              <span className="browser-live"><i /> LIVE PREVIEW</span>
+            </div>
+            <video
+              src="/personalized_editing.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              className="editor-frame !h-auto aspect-video w-full object-cover"
+            />
+            <div className="editor-steps"><span><b>01</b> Choose a template</span><span><b>02</b> Make it yours</span><span><b>03</b> Publish beautifully</span></div>
+          </div>
         </section>
 
         <section className="journey-section section-pad" id="features">
