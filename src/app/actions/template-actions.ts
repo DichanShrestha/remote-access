@@ -7,6 +7,7 @@ import { PageDocument, PageSection, GroupNode, PageNode } from '@/lib/page-engin
 import { isGroup } from '@/lib/page-engine/operations';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { requirePageAccess } from '@/lib/billing/entitlements';
 
 export async function getAvailableTemplatesForClient() {
   const templates = getAvailableTemplates();
@@ -58,6 +59,7 @@ export async function mergeTemplateContent(oldDoc: PageDocument, templateId: str
 
 export async function applyTemplateToPage(templateId: string) {
   const user = await authService.requireUser();
+  await requirePageAccess(user.id);
   if (!user.profile) throw new Error('Profile not found');
 
   const page = await db.page.findUnique({ where: { profileId: user.profile.id } });
@@ -80,4 +82,3 @@ export async function previewTemplate(oldDoc: PageDocument, templateId: string):
   if (!user.profile) throw new Error('Profile not found');
   return await mergeTemplateContent(oldDoc, templateId);
 }
-

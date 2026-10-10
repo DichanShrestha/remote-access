@@ -2,10 +2,11 @@
 import { authService } from "@/services/auth";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { storageService } from "@/lib/storage/service";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { generateGeminiEmbedding } from "@/lib/ai/gemini-embeddings";
+import { requireAIEntitlement } from "@/lib/billing/entitlements";
 
 async function fetchImageAsBase64(url: string) {
     try {
@@ -81,6 +82,7 @@ export async function createVisualSet(
     const normalizedTriggers = triggerQueries.map(q => q.toLowerCase().trim()).filter(Boolean);
 
     const user = await authService.requireUser();
+    await requireAIEntitlement(user.id);
 
 
     if (!title) throw new Error("Title is required");
@@ -133,6 +135,7 @@ export async function updateVisualSet(
     const normalizedTriggers = triggerQueries.map(q => q.toLowerCase().trim()).filter(Boolean);
 
     const user = await authService.requireUser();
+    await requireAIEntitlement(user.id);
 
 
     if (!title) throw new Error("Title is required");
@@ -187,18 +190,10 @@ export async function updateVisualSet(
 
             // Clean up deleted images from storage
             try {
-                const supabaseAdmin = createAdminClient();
-                const pathsToDelete = imagesToDelete.map(img => {
-                    const urlObj = new URL(img.publicUrl);
-                    const pathParts = urlObj.pathname.split("/catalog-assets/");
-                    if (pathParts.length > 1) {
-                        return decodeURIComponent(pathParts[1]);
-                    }
-                    return null;
-                }).filter(Boolean) as string[];
+                const pathsToDelete = imagesToDelete.map(img => storageService.keyFromPublicUrl("catalog-assets", img.publicUrl)).filter(Boolean) as string[];
 
                 if (pathsToDelete.length > 0) {
-                    await supabaseAdmin.storage.from("catalog-assets").remove(pathsToDelete);
+                    await storageService.delete(pathsToDelete.map((key) => ({ bucket: "catalog-assets", key })));
                 }
             } catch (e) {
                 console.error("Failed to delete removed images from storage", e);
@@ -249,6 +244,7 @@ export async function updateVisualSet(
 export async function getVisualSets(botId: string) {
 
     const user = await authService.requireUser();
+    await requireAIEntitlement(user.id);
 
 
 
@@ -285,18 +281,10 @@ export async function deleteVisualSet(itemId: string, botId: string) {
 
     // Cleanup storage
     try {
-        const supabaseAdmin = createAdminClient();
-        const pathsToDelete = item.images.map(img => {
-            const urlObj = new URL(img.publicUrl);
-            const pathParts = urlObj.pathname.split("/catalog-assets/");
-            if (pathParts.length > 1) {
-                return decodeURIComponent(pathParts[1]);
-            }
-            return null;
-        }).filter(Boolean) as string[];
+        const pathsToDelete = item.images.map(img => storageService.keyFromPublicUrl("catalog-assets", img.publicUrl)).filter(Boolean) as string[];
 
         if (pathsToDelete.length > 0) {
-            await supabaseAdmin.storage.from("catalog-assets").remove(pathsToDelete);
+            await storageService.delete(pathsToDelete.map((key) => ({ bucket: "catalog-assets", key })));
         }
     } catch (e) {
         console.error("Failed to cleanup deleted Visual Set from storage", e);

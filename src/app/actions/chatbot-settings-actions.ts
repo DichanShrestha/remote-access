@@ -2,9 +2,11 @@
 
 import prisma from "@/lib/prisma";
 import { authService } from "@/services/auth";
+import { requireAIEntitlement } from "@/lib/billing/entitlements";
 
 export async function getOrCreateBotForPage(pageId: string) {
     const user = await authService.requireUser();
+    await requireAIEntitlement(user.id);
     
     const page = await prisma.page.findFirst({
         where: { id: pageId, profile: { userId: user.id } },
@@ -36,6 +38,7 @@ export async function getOrCreateBotForPage(pageId: string) {
 
 export async function updateBotSettings(botId: string, data: any) {
     const user = await authService.requireUser();
+    await requireAIEntitlement(user.id);
     
     const bot = await prisma.bot.findUnique({ where: { id: botId } });
     if (!bot || bot.userId !== user.id) throw new Error("Unauthorized");

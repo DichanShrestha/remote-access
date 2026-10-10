@@ -2,7 +2,8 @@ import { authService } from "@/services/auth";
 import db from "@/lib/prisma";
 import Link from "next/link";
 import { CreditCard, Zap, Calendar, AlertCircle } from "lucide-react";
-import { createCheckoutSession, startFreeTrial, cancelManualSubscription } from "@/app/actions/billing-actions";
+import { createCheckoutSession, startFreeTrial, cancelManualSubscription, createCustomerPortalSession } from "@/app/actions/billing-actions";
+import { getSmartPageEntitlement } from "@/lib/tier-limits";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,6 +14,14 @@ export default async function BillingPage() {
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
   });
+  const account = await db.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 }, usage: true } });
+  const entitlement = account ? getSmartPageEntitlement(account) : null;
+  const aiCount = entitlement?.limits.aiReplies || 0;
+  const sourceCount = await db.dataSource.count({ where: { userId: user.id, type: { not: 'qa' }, status: { not: 'error' } } });
+  const faqCount = await db.qAPair.count({ where: { userId: user.id } });
+  const mediaBytes = Number(account?.usage?.pageMediaBytes || 0);
+  const plan = entitlement?.plan || 'trial';
+  const knowledgeRetentionDeadline = new Date((sub?.aiAccessEndedAt || sub?.trialEnd || new Date()).getTime() + 30 * 86400000);
 
   const now = new Date();
   
@@ -34,7 +43,7 @@ export default async function BillingPage() {
         statusColor = "bg-[#FDF3F3] text-[#D14F4F] border-[#FADCDC]";
       }
     } else if (sub.status === "active") {
-      showSubscribe = false;
+      showSubscribe = plan !== 'smart_page_ai';
       if (sub.cancelAtPeriodEnd) {
         statusText = `Cancels on ${sub.currentPeriodEnd?.toLocaleDateString()}`;
         statusColor = "bg-[#F3F2EA] text-[#777970] border-[#E8E7E1]";
@@ -52,7 +61,9 @@ export default async function BillingPage() {
   }
 
   let planDisplayName = "Free";
-  if (sub && (sub.status === "active" || sub.status === "trialing")) {
+  if (entitlement?.trialExpired) {
+    planDisplayName = "Trial expired";
+  } else if (sub && (sub.status === "active" || sub.status === "trialing" || sub.status === "past_due")) {
     const rawPlan = (sub.planId || sub.tier || "").toLowerCase();
     if (rawPlan.includes("ai") || rawPlan.includes("knowchat")) {
       planDisplayName = "Smart Page + AI";
@@ -67,6 +78,8 @@ export default async function BillingPage() {
         <h1 className="text-[32px] font-semibold tracking-tight text-[#292A25] mb-2 font-serif">Billing & Plans</h1>
         <p className="text-[#777970] text-[15px]">Manage your subscription, billing method, and plan details.</p>
       </div>
+      {sub?.status === 'trialing' && trialRemaining <= 3 && <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Your trial ends {trialRemaining <= 1 ? 'within 24 hours' : `in ${trialRemaining} days`}. Choose a plan to keep AI access and avoid interruption.</div>}
+      {sub?.status === 'past_due' && <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">Your latest payment failed. Update your payment method in the billing portal to keep paid features available. No new AI replies will be added until Dodo confirms renewal.</div>}
 
       <div className="grid gap-6 md:grid-cols-2 mb-16">
         {/* Current Plan Card */}
@@ -104,14 +117,41 @@ export default async function BillingPage() {
               </form>
             )}
             
-            {sub?.billingMethod === "dodo" && sub?.status === "active" && (
-               <button className="w-full mt-4 px-4 py-2.5 text-sm font-medium text-[#292A25] bg-[#F3F2EA] hover:bg-[#E8E7E1] rounded-xl transition-colors">
-                  Manage in Dodo Portal
-               </button>
+            {sub?.billingMethod === "dodo" && ["active", "past_due"].includes(sub.status) && (
+               <form action={async () => {
+                 "use server";
+                 const { url } = await createCustomerPortalSession();
+                 const { redirect } = await import("next/navigation");
+                 redirect(url);
+               }}>
+                 <button type="submit" className="w-full mt-4 px-4 py-2.5 text-sm font-medium text-[#292A25] bg-[#F3F2EA] hover:bg-[#E8E7E1] rounded-xl transition-colors">Manage in Dodo Portal</button>
+               </form>
             )}
           </div>
         </div>
       </div>
+
+      <section className="mb-12 rounded-2xl border border-[#E8E7E1] bg-white p-6">
+        <h2 className="text-lg font-semibold text-[#292A25]">Usage and included limits</h2>
+        <p className="mt-1 text-sm text-[#777970]">{plan === 'trial' ? `Trial ends ${entitlement?.trialEnd.toLocaleString()}.` : plan === 'smart_page_ai' ? `AI replies reset with the confirmed billing period${sub?.currentPeriodEnd ? ` ending ${sub.currentPeriodEnd.toLocaleDateString()}` : ''}.` : 'AI is not included with Smart Page.'}</p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+          <div className="rounded-xl bg-[#F7F6F1] p-4"><strong>AI replies</strong><p className="mt-1 text-[#777970]">{plan === 'smart_page' ? 'Not included' : `${sub?.aiRepliesUsed || 0} used · ${Math.max(0, aiCount - (sub?.aiRepliesUsed || 0))} remaining`}</p></div>
+          <div className="rounded-xl bg-[#F7F6F1] p-4"><strong>Knowledge sources</strong><p className="mt-1 text-[#777970]">{plan === 'smart_page' ? 'Not included' : `${sourceCount} / ${entitlement?.limits.knowledgeSources}`}</p></div>
+          <div className="rounded-xl bg-[#F7F6F1] p-4"><strong>Knowledge storage</strong><p className="mt-1 text-[#777970]">{plan === 'smart_page' ? `Not included · AI data retained until ${knowledgeRetentionDeadline.toLocaleDateString()}` : `${(Number(account?.usage?.knowledgeBytes || 0) / 1048576).toFixed(1)} / ${(Number(entitlement?.limits.knowledgeBytes || 0) / 1048576).toFixed(0)} MB`}</p></div>
+          <div className="rounded-xl bg-[#F7F6F1] p-4"><strong>Indexed text</strong><p className="mt-1 text-[#777970]">{plan === 'smart_page' ? 'Not included' : `${(account?.usage?.indexedTokens || 0).toLocaleString()} / ${(entitlement?.limits.indexedTokens || 0).toLocaleString()} tokens`}</p></div>
+          <div className="rounded-xl bg-[#F7F6F1] p-4"><strong>FAQs</strong><p className="mt-1 text-[#777970]">{plan === 'smart_page' ? 'Not included' : `${faqCount} / ${entitlement?.limits.faqEntries}`}</p></div>
+          <div className="rounded-xl bg-[#F7F6F1] p-4"><strong>Page media</strong><p className="mt-1 text-[#777970]">{(mediaBytes / 1048576).toFixed(1)} / 250 MB · 10 MB max each</p></div>
+        </div>
+        {[
+          aiCount > 0 && (sub?.aiRepliesUsed || 0) / aiCount >= .8,
+          entitlement && entitlement.limits.knowledgeSources > 0 && sourceCount / entitlement.limits.knowledgeSources >= .8,
+          entitlement && entitlement.limits.knowledgeBytes > 0 && Number(account?.usage?.knowledgeBytes || 0) / entitlement.limits.knowledgeBytes >= .8,
+          entitlement && entitlement.limits.indexedTokens > 0 && (account?.usage?.indexedTokens || 0) / entitlement.limits.indexedTokens >= .8,
+          faqCount > 0 && entitlement && entitlement.limits.faqEntries > 0 && faqCount / entitlement.limits.faqEntries >= .8,
+          mediaBytes / (250 * 1024 * 1024) >= .8,
+        ].some(Boolean) && <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">You are using about 80% or more of at least one included limit.</p>}
+        {plan === 'smart_page' && <p className="mt-4 text-sm text-amber-800">AI knowledge files and FAQs are retained until {knowledgeRetentionDeadline.toLocaleDateString()} after AI access ends.</p>}
+      </section>
 
       {showSubscribe && (
         <div className="mb-12">
@@ -139,7 +179,7 @@ export default async function BillingPage() {
                 <li className="flex items-center gap-3"><Zap className="w-4 h-4 text-[#A1A299]" /> Basic analytics (Views, clicks, CTR)</li>
               </ul>
 
-              {!sub ? (
+              {!sub && !account?.trialGrantedAt ? (
                 <form action={async () => {
                   "use server";
                   await startFreeTrial("smart_page");
@@ -148,18 +188,20 @@ export default async function BillingPage() {
                     Start 14-day free trial
                   </button>
                 </form>
+              ) : plan === 'smart_page' && ['active', 'past_due'].includes(sub?.status || '') ? (
+                <button disabled className="w-full cursor-default rounded-xl border border-[#E8E7E1] px-4 py-3 text-sm font-semibold text-[#777970]">Current plan</button>
               ) : (
                 <form action={async () => {
                   "use server";
-                  const productId = process.env.DODO_PRODUCT_SMART_PAGE || "prod_smart_page";
-                  const { payment_link } = await createCheckoutSession(productId); 
+                  const productId = process.env.DODO_PRODUCT_SMART_PAGE!;
+                  const { payment_link } = await createCheckoutSession(productId, "smart_page");
                   if (payment_link) {
                      const { redirect } = await import("next/navigation");
                      redirect(payment_link);
                   }
                 }}>
                   <button type="submit" className="w-full px-4 py-3 text-sm font-semibold text-[#FDFCF8] bg-[#292A25] hover:bg-[#3C3D37] rounded-xl transition-colors">
-                    Subscribe to Smart Page
+                    {plan === 'smart_page' ? 'Current plan' : 'Subscribe to Smart Page'}
                   </button>
                 </form>
               )}
@@ -187,7 +229,7 @@ export default async function BillingPage() {
                 <li className="flex items-center gap-3"><Zap className="w-4 h-4 text-amber-400" /> Email lead notifications</li>
               </ul>
 
-              {!sub ? (
+              {!sub && !account?.trialGrantedAt ? (
                 <form action={async () => {
                   "use server";
                   await startFreeTrial("smart_page_ai");
@@ -197,18 +239,20 @@ export default async function BillingPage() {
                   </button>
                   <p className="text-center text-xs text-[#A1A299] mt-3">No credit card required.</p>
                 </form>
+              ) : plan === 'smart_page_ai' && ['active', 'past_due'].includes(sub?.status || '') ? (
+                <button disabled className="w-full cursor-default rounded-xl border border-white/20 px-4 py-3 text-sm font-semibold text-white/70">Current plan</button>
               ) : (
                 <form action={async () => {
                   "use server";
-                  const productId = process.env.DODO_PRODUCT_SMART_PAGE_AI || "prod_smart_page_ai";
-                  const { payment_link } = await createCheckoutSession(productId); 
+                  const productId = process.env.DODO_PRODUCT_SMART_PAGE_AI!;
+                  const { payment_link } = await createCheckoutSession(productId, "smart_page_ai");
                   if (payment_link) {
                      const { redirect } = await import("next/navigation");
                      redirect(payment_link);
                   }
                 }}>
                   <button type="submit" className="w-full px-4 py-3 text-sm font-semibold text-[#292A25] bg-[#FDFCF8] hover:bg-white rounded-xl transition-colors shadow-lg">
-                    Subscribe to Smart Page + AI
+                    {plan === 'smart_page_ai' ? 'Current plan' : 'Subscribe to Smart Page + AI'}
                   </button>
                 </form>
               )}

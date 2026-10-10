@@ -4,9 +4,11 @@ import { authService } from "@/services/auth";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { enforceStorageGuard, updateStorageUsage } from "@/lib/guards/resource-manager";
+import { updateStorageUsage } from "@/lib/guards/resource-manager";
 import { getStringSize } from "@/lib/utils";
 import { generateEmbeddings } from "@/lib/ai/embeddings";
+import { AI_CHARS_PER_TOKEN, getSmartPageEntitlement } from "@/lib/tier-limits";
+import { requireAIEntitlement } from "@/lib/billing/entitlements";
 
 /**
  * Get or create a synthetic DataSource of type "qa" for a given bot.
@@ -116,6 +118,7 @@ async function removeQAEmbeddings(qaId: string, botId: string, userId: string) {
 export async function getQAs(botId: string) {
 
     const user = await authService.requireUser();
+    await requireAIEntitlement(user.id);
 
 
 
@@ -136,6 +139,7 @@ export async function saveQA(
 ) {
 
     const user = await authService.requireUser();
+    await requireAIEntitlement(user.id);
 
 
 
@@ -144,9 +148,19 @@ export async function saveQA(
         where: { id: botId, userId: user.id },
     });
     if (!bot) throw new Error("Bot not found");
+    const account = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 }, usage: true } });
+    if (!account) throw new Error("Workspace not found");
+    const entitlement = getSmartPageEntitlement(account);
+    if (!entitlement.aiEnabled) throw new Error("AI knowledge is available during your trial or with Smart Page + AI.");
+    const faqCount = await prisma.qAPair.count({ where: { userId: user.id } });
+    if (!data.id && faqCount >= entitlement.limits.faqEntries) throw new Error(`Your plan allows ${entitlement.limits.faqEntries} FAQ entries.`);
 
     const questionsText = data.questions.join(" ");
     const newContentSize = getStringSize(questionsText + " " + data.answer);
+    const tokenCount = Math.ceil((questionsText.length + data.answer.length) / AI_CHARS_PER_TOKEN);
+    const oldForTokens = data.id ? await prisma.qAPair.findUnique({ where: { id: data.id, userId: user.id }, select: { questions: true, answer: true } }) : null;
+    const previousTokens = oldForTokens ? Math.ceil((oldForTokens.questions.join(" ").length + oldForTokens.answer.length) / AI_CHARS_PER_TOKEN) : 0;
+    if ((account.usage?.indexedTokens || 0) - previousTokens + tokenCount > entitlement.limits.indexedTokens) throw new Error(`Your plan allows ${entitlement.limits.indexedTokens.toLocaleString()} indexed text tokens.`);
 
     if (data.id) {
         // Update
@@ -157,10 +171,6 @@ export async function saveQA(
         if (oldQA) {
             const oldContentSize = getStringSize(oldQA.questions.join(" ") + " " + oldQA.answer);
             const sizeDiff = newContentSize - oldContentSize;
-
-            if (sizeDiff > 0) {
-                await enforceStorageGuard(user.id, sizeDiff);
-            }
 
             const updated = await prisma.qAPair.update({
                 where: { id: data.id, userId: user.id },
@@ -174,14 +184,13 @@ export async function saveQA(
             await syncQAEmbeddings(updated.id, botId, user.id, data.questions, data.answer);
 
             await updateStorageUsage(user.id, sizeDiff);
+            await prisma.usage.update({ where: { userId: user.id }, data: { indexedTokens: { increment: tokenCount - previousTokens } } });
             revalidatePath(`/dashboard/bot/${botId}/sources/qa`);
             return updated;
         }
         throw new Error("QA pair not found");
     } else {
         // Create
-        await enforceStorageGuard(user.id, newContentSize);
-
         const created = await prisma.qAPair.create({
             data: {
                 botId,
@@ -195,6 +204,7 @@ export async function saveQA(
         await syncQAEmbeddings(created.id, botId, user.id, data.questions, data.answer);
 
         await updateStorageUsage(user.id, newContentSize);
+        await prisma.usage.upsert({ where: { userId: user.id }, create: { userId: user.id, indexedTokens: tokenCount }, update: { indexedTokens: { increment: tokenCount } } });
         revalidatePath(`/dashboard/bot/${botId}/sources/qa`);
         return created;
     }
@@ -225,6 +235,8 @@ export async function deleteQA(qaId: string) {
 
     const qaSize = getStringSize(qa.questions.join(" ") + " " + qa.answer);
     await updateStorageUsage(user.id, -qaSize);
+    const removedTokens = Math.ceil((qa.questions.join(" ").length + qa.answer.length) / AI_CHARS_PER_TOKEN);
+    await prisma.usage.updateMany({ where: { userId: user.id }, data: { indexedTokens: { decrement: removedTokens } } });
 
     revalidatePath(`/dashboard/bot/${deleted.botId}/sources/qa`);
     return { success: true };

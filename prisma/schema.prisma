@@ -16,6 +16,7 @@ model User {
   email     String? @unique
   name      String?
   avatarUrl String?
+  trialGrantedAt DateTime?
 
   profile       Profile?
   subscriptions Subscription[]
@@ -28,6 +29,8 @@ model User {
   qaPairs      QAPair[]
   apiKeys      UserApiKey[]
   catalogItems CatalogItem[]
+  pageMedia    PageMediaAsset[]
+  aiRequestUsage AIRequestUsage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -76,6 +79,14 @@ model Subscription {
   billingMethod      String    @default("none") // none, dodo, manual
   
   currentPeriodEnd   DateTime?
+  currentPeriodStart DateTime?
+  trialEverGranted   Boolean   @default(false)
+  aiRepliesUsed      Int       @default(0)
+  aiRepliesReserved  Int       @default(0)
+  aiRepliesPeriodStart DateTime?
+  lastProviderEventAt DateTime?
+  aiAccessEndedAt    DateTime?
+  aiKnowledgePurgedAt DateTime?
   trialStart         DateTime?
   trialEnd           DateTime?
   cancelAtPeriodEnd  Boolean   @default(false)
@@ -102,7 +113,10 @@ model Usage {
 
   // Knowchat fields
   monthlyMessages  Int @default(0) @map("monthly_messages")
-  storageUsedBytes Int @default(0) @map("storage_used_bytes")
+  storageUsedBytes Int    @default(0) @map("storage_used_bytes")
+  pageMediaBytes   BigInt @default(0)
+  knowledgeBytes   BigInt @default(0)
+  indexedTokens    Int    @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -115,6 +129,39 @@ model WebhookEvent {
   type      String
   status    String
   createdAt DateTime @default(now())
+}
+
+model AIRequestUsage {
+  id          String   @id @default(cuid())
+  requestId   String   @unique
+  userId      String   @db.Uuid
+  botId       String   @db.Uuid
+  modelId     String
+  inputTokens Int      @default(0)
+  outputTokens Int     @default(0)
+  costUsd     Decimal  @default(0) @db.Decimal(12, 8)
+  status      String
+  error       String?
+  retryCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bot         Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+  @@map("ai_request_usage")
+}
+
+model PageMediaAsset {
+  id          String   @id @default(cuid())
+  userId      String   @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bucket      String
+  objectKey   String
+  sizeBytes   BigInt
+  contentType String
+  createdAt   DateTime @default(now())
+  @@unique([bucket, objectKey])
+  @@index([userId])
+  @@map("page_media_assets")
 }
 
 model Lead {
@@ -175,6 +222,7 @@ model Bot {
   qaPairs           QAPair[]
   catalogItems      CatalogItem[]
   bookingEvents     BookingEvent[]
+  aiRequestUsage    AIRequestUsage[]
 
   page Page?
 

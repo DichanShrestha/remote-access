@@ -1,4 +1,4 @@
-import { getDefaultChatModel } from "@/lib/ai/providers";
+import { getDefaultChatModel, GEMINI_DEFAULT_MODEL } from "@/lib/ai/providers";
 import { streamText, convertToModelMessages } from "ai";
 import { prisma } from "@/lib/prisma";
 import { retrieveRelevantChunks, formatContextForPrompt, buildSystemPrompt } from "@/lib/ai/rag";
@@ -6,6 +6,8 @@ import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { sanitizeInput } from "@/lib/utils";
 import crypto from "crypto";
 import { enforceMessageGuard, enforceBotEntitlement, getCatalogSearchLimit, GuardError } from "@/lib/guards/resource-manager";
+import { AI_CHARS_PER_TOKEN, AI_MAX_INPUT_TOKENS, AI_MAX_OUTPUT_TOKENS, getSmartPageEntitlement } from "@/lib/tier-limits";
+import { reserveAIReply } from "@/lib/ai/reply-usage";
 
 /**
  * Public chat API route (for embeddable widget).
@@ -51,6 +53,11 @@ export async function POST(req: Request) {
                 headers: corsHeaders(),
             });
         }
+
+        const owner = await prisma.user.findUnique({ where: { id: bot.userId }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } });
+        if (!owner) return new Response("Workspace not found", { status: 404, headers: corsHeaders() });
+        const entitlement = getSmartPageEntitlement(owner);
+        if (!entitlement.aiEnabled) return new Response(JSON.stringify({ error: "AI is unavailable on your current plan. Choose Smart Page + AI to restore your assistant." }), { status: 402, headers: { "Content-Type": "application/json", ...corsHeaders() } });
 
         // 2. Per-Bot Custom Rate Limit
         const botLimit = rateLimit(`bot-public:${botId}:${ip}`, {
@@ -179,14 +186,36 @@ export async function POST(req: Request) {
 
         // Convert UI messages to Model messages (Crucial for AI SDK streamText)
         const modelMessages = await convertToModelMessages(messages);
+        const charsPerToken = AI_CHARS_PER_TOKEN;
+        const estimate = (value: string) => Math.ceil(value.length / charsPerToken);
+        const latestMessages = modelMessages.slice(-12);
+        let boundedMessages = latestMessages;
+        const systemBudget = estimate(systemPrompt);
+        if (systemBudget >= AI_MAX_INPUT_TOKENS) {
+            return new Response("AI request is too large. Shorten the latest message or reduce your system instructions.", { status: 413, headers: corsHeaders() });
+        }
+        while (boundedMessages.length > 1 && systemBudget + estimate(JSON.stringify(boundedMessages)) > AI_MAX_INPUT_TOKENS) boundedMessages = boundedMessages.slice(1);
+        if (systemBudget + estimate(JSON.stringify(boundedMessages)) > AI_MAX_INPUT_TOKENS) {
+            return new Response("Your message exceeds the 6,000 token request limit. Please shorten it and try again.", { status: 413, headers: corsHeaders() });
+        }
+
+        const subscription = owner.subscriptions[0];
+        const quota = entitlement.limits.aiReplies;
+        const reservation = await reserveAIReply(owner.id, botId, subscription?.id, quota, entitlement.onTrial ? 'trialing' : 'active');
+        if (!reservation) return new Response(JSON.stringify({ error: "Your AI reply allowance is used up. Upgrade to Smart Page + AI or wait for the next billing period." }), { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders() } });
 
         // Stream response
         const result = streamText({
             model: getDefaultChatModel(),
             system: systemPrompt,
-            messages: modelMessages,
+            messages: boundedMessages,
+            maxOutputTokens: AI_MAX_OUTPUT_TOKENS,
+            maxRetries: 0,
             temperature: bot.temperature ?? 0.7,
-            async onFinish({ text }) {
+            async onFinish({ text, usage }) {
+                const inputTokens = usage?.inputTokens || 0;
+                const outputTokens = usage?.outputTokens || 0;
+                await reservation.finish(process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL, inputTokens, outputTokens, text ? "completed" : "empty", undefined, Boolean(text));
                 // Persist assistant response
                 if (text) {
                     await prisma.chatMessage.create({
@@ -210,6 +239,9 @@ export async function POST(req: Request) {
                         });
                     }
                 }
+            },
+            async onError({ error }) {
+                await reservation.finish(process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL, 0, 0, "error", error instanceof Error ? error.message : "Provider request failed");
             },
         });
 
@@ -246,4 +278,3 @@ function corsHeaders(): HeadersInit {
         "Access-Control-Max-Age": "86400",
     };
 }
-

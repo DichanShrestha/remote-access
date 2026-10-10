@@ -4,7 +4,7 @@ import { PageNode, PageSection, SectionType } from '@/lib/page-engine/schemas';
 import { isGroup } from '@/lib/page-engine/operations';
 import { LayoutGroupInspector } from './LayoutGroupInspector';
 import { Plus, Trash, ChevronDown, ChevronUp, Image as ImageIcon, X, Link2, Type, Layout, MousePointerClick, Eye, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { uploadPageMedia } from '@/app/editor/actions';
 
 // ── Field definition system ────────────────────────────────────
 type FieldType = 'text' | 'textarea' | 'url' | 'image' | 'select' | 'color' | 'email' | 'number' | 'toggle' | 'datetime' | 'segmented-control';
@@ -521,24 +521,15 @@ function MediaPicker({ label, value, onChange }: { label: string; value: string;
     const file = event.target.files?.[0];
     if (!file) return;
 
+    if (!file.type.startsWith('image/')) { alert('Choose an image file.'); event.target.value = ''; return; }
+    if (file.size > 10 * 1024 * 1024) { alert('Images must be 10 MB or smaller.'); event.target.value = ''; return; }
+
     setIsUploading(true);
     try {
-      const supabase = createClient();
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `uploads/${fileName}`;
-
-      const { data, error } = await supabase.storage
-        .from('smart-page-assets')
-        .upload(filePath, file, { cacheControl: '3600', upsert: false });
-
-      if (error) throw error;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('smart-page-assets')
-        .getPublicUrl(filePath);
-
-      onChange(publicUrl);
+      const formData = new FormData();
+      formData.set('file', file);
+      const result = await uploadPageMedia(formData);
+      onChange(result.publicUrl);
     } catch (error: any) {
       alert(`Upload failed: ${error.message}`);
     } finally {
@@ -556,6 +547,7 @@ function MediaPicker({ label, value, onChange }: { label: string; value: string;
   return (
     <div className="flex flex-col gap-2">
       <label className="text-xs font-medium text-slate-500">{label}</label>
+      <p className="text-[11px] text-slate-400">Images up to 10 MB · 250 MB page storage</p>
       <input 
         type="file" 
         accept="image/*" 

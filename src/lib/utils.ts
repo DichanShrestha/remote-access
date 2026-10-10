@@ -20,11 +20,10 @@ export function sanitizeInput(input: string): string {
  * Validate file for upload security.
  * Checks file type, size, and performs content-type verification.
  */
-export function validateFile(file: File): {
+export function validateFile(file: File, maxSize = 10 * 1024 * 1024): {
   valid: boolean;
   error?: string;
 } {
-  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
   const ALLOWED_TYPES = [
     "application/pdf",
     "text/plain",
@@ -33,8 +32,8 @@ export function validateFile(file: File): {
   const ALLOWED_EXTENSIONS = [".pdf", ".txt", ".docx"];
 
   // Check size
-  if (file.size > MAX_SIZE) {
-    return { valid: false, error: "File size must be under 5MB" };
+  if (file.size > maxSize) {
+    return { valid: false, error: `File size must be ${Math.floor(maxSize / 1024 / 1024)}MB or smaller` };
   }
 
   // Check MIME type

@@ -2,6 +2,7 @@ const nextConfig = {
   /* config options here */
   experimental: {
     reactCompiler: true,
+    serverActions: { bodySizeLimit: '12mb' },
   },
   typescript: {
     ignoreBuildErrors: true,

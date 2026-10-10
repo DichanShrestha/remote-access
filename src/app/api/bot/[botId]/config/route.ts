@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { getSmartPageEntitlement } from "@/lib/tier-limits";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export async function GET(
     request: Request,
@@ -21,12 +22,17 @@ export async function GET(
                 avatarUrl: true,
                 welcomeMessage: true,
                 collectLeads: true,
+                userId: true,
             }
         });
 
         if (!bot) {
             return NextResponse.json({ error: "Bot not found" }, { status: 404, headers: corsHeaders() });
         }
+
+        const owner = await prisma.user.findUnique({ where: { id: bot.userId }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } });
+        const entitlement = owner ? getSmartPageEntitlement(owner) : null;
+        const subscription = owner?.subscriptions[0];
 
         return NextResponse.json({
             id: bot.id,
@@ -37,6 +43,8 @@ export async function GET(
             avatarUrl: bot.avatarUrl,
             welcomeMessage: bot.welcomeMessage,
             collectLeads: bot.collectLeads,
+            aiEnabled: entitlement?.aiEnabled || false,
+            aiRepliesRemaining: Math.max(0, (entitlement?.limits.aiReplies || 0) - (subscription?.aiRepliesUsed || 0)),
         }, { headers: corsHeaders() });
     } catch (error: any) {
         console.error("Failed to fetch bot config:", error);

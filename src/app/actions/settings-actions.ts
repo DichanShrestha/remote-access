@@ -4,6 +4,7 @@ import { authService } from "@/services/auth";
 import db from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { storageService } from '@/lib/storage/service';
 
 /**
  * Settings Server Actions
@@ -33,6 +34,26 @@ export async function checkUsernameAvailability(username: string): Promise<{ sta
   } catch {
     return { state: "unavailable" };
   }
+}
+
+export async function exportAccountData() {
+  const user = await authService.requireUser();
+  const data = await db.user.findUnique({ where: { id: user.id }, include: {
+    profile: { include: { page: { include: { leads: true } } } },
+    subscriptions: { select: { planId: true, status: true, trialStart: true, trialEnd: true, currentPeriodStart: true, currentPeriodEnd: true, cancelAtPeriodEnd: true, aiRepliesUsed: true } },
+    usage: { select: { pageMediaBytes: true, knowledgeBytes: true, indexedTokens: true } },
+    bots: { include: { dataSources: { select: { id: true, type: true, source: true, status: true, metadata: true, filePath: true, createdAt: true } }, chunks: { select: { content: true, metadata: true } }, qaPairs: true, chatMessages: true, leads: true } },
+  } });
+  if (!data) throw new Error('Account data not found');
+  const bots = await Promise.all(data.bots.map(async (bot) => ({
+    ...bot,
+    dataSources: await Promise.all(bot.dataSources.map(async (source) => ({
+      ...source,
+      downloadUrl: source.filePath ? await storageService.signedUrl({ bucket: 'docs', key: source.filePath }, 3600).catch(() => null) : null,
+      filePath: undefined,
+    }))),
+  })));
+  return JSON.parse(JSON.stringify({ ...data, bots }, (_key, value) => typeof value === 'bigint' ? value.toString() : value));
 }
 
 export async function updateAccountProfile(data: { name: string; username: string }): Promise<{ success?: boolean; error?: string }> {
@@ -105,6 +126,11 @@ export async function deleteUserPage(): Promise<{ success?: boolean; error?: str
       return { error: "No page found to delete." };
     }
 
+    const media = await db.pageMediaAsset.findMany({ where: { userId: user.id } });
+    if (media.length) await storageService.delete(media.map((asset) => ({ bucket: asset.bucket, key: asset.objectKey })));
+    await db.pageMediaAsset.deleteMany({ where: { userId: user.id } });
+    await db.usage.updateMany({ where: { userId: user.id }, data: { pageMediaBytes: 0 } });
+
     await db.page.delete({
       where: { id: page.id },
     });
@@ -120,6 +146,19 @@ export async function deleteUserPage(): Promise<{ success?: boolean; error?: str
 export async function deleteUserAccount(): Promise<{ success?: boolean; error?: string }> {
   try {
     const user = await authService.requireUser();
+
+    const [media, sources, catalog] = await Promise.all([
+      db.pageMediaAsset.findMany({ where: { userId: user.id } }),
+      db.dataSource.findMany({ where: { userId: user.id, filePath: { not: null } }, select: { filePath: true } }),
+      db.catalogItem.findMany({ where: { userId: user.id }, include: { images: { select: { publicUrl: true } } } }),
+    ]);
+    const objects = media.map((asset) => ({ bucket: asset.bucket, key: asset.objectKey }));
+    for (const source of sources) if (source.filePath) objects.push({ bucket: 'docs', key: source.filePath });
+    for (const image of catalog.flatMap((item) => item.images)) {
+      const key = storageService.keyFromPublicUrl('catalog-assets', image.publicUrl);
+      if (key) objects.push({ bucket: 'catalog-assets', key });
+    }
+    if (objects.length) await storageService.delete(objects);
 
     // Permanently delete user from Prisma DB.
     // Cascades to Profile, Page, Subscriptions, Usage, Bots, Leads, etc.

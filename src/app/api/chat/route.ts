@@ -1,4 +1,4 @@
-import { resolveChatModel } from "@/lib/ai/providers";
+import { resolveChatModel, GEMINI_DEFAULT_MODEL } from "@/lib/ai/providers";
 import { streamText } from "ai";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
@@ -8,6 +8,8 @@ import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { sanitizeInput } from "@/lib/utils";
 import crypto from "crypto";
 import { enforceMessageGuard, enforceBotEntitlement, getCatalogSearchLimit, GuardError } from "@/lib/guards/resource-manager";
+import { getSmartPageEntitlement, AI_CHARS_PER_TOKEN, AI_MAX_INPUT_TOKENS, AI_MAX_OUTPUT_TOKENS } from "@/lib/tier-limits";
+import { reserveAIReply } from "@/lib/ai/reply-usage";
 
 /**
  * Authenticated chat API route.
@@ -52,6 +54,10 @@ export async function POST(req: Request) {
         if (!bot) {
             return new Response("Bot not found", { status: 404 });
         }
+        const owner = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } });
+        if (!owner) return new Response("Workspace not found", { status: 404 });
+        const entitlement = getSmartPageEntitlement(owner);
+        if (!entitlement.aiEnabled) return Response.json({ error: "AI is unavailable on your current plan. Choose Smart Page + AI to restore your assistant." }, { status: 402 });
 
         // 2. Per-Bot Custom Rate Limit
         const botLimit = rateLimit(`bot-chat:${botId}:${ip}`, {
@@ -196,6 +202,16 @@ export async function POST(req: Request) {
             bot.bookingLink
         );
 
+        const charsPerToken = AI_CHARS_PER_TOKEN;
+        const estimate = (value: string) => Math.ceil(value.length / charsPerToken);
+        const systemTokens = estimate(systemPrompt);
+        if (systemTokens >= AI_MAX_INPUT_TOKENS) return new Response("AI request is too large. Shorten the system instructions.", { status: 413 });
+        let boundedMessages = formattedMessages.slice(-12);
+        while (boundedMessages.length > 1 && systemTokens + estimate(JSON.stringify(boundedMessages)) > AI_MAX_INPUT_TOKENS) boundedMessages = boundedMessages.slice(1);
+        if (systemTokens + estimate(JSON.stringify(boundedMessages)) > AI_MAX_INPUT_TOKENS) return new Response("Your message exceeds the 6,000 token request limit. Please shorten it and try again.", { status: 413 });
+        const reservation = await reserveAIReply(user.id, botId, owner.subscriptions[0]?.id, entitlement.limits.aiReplies, entitlement.onTrial ? 'trialing' : 'active');
+        if (!reservation) return Response.json({ error: "Your AI reply allowance is used up. Upgrade to Smart Page + AI or wait for the next billing period." }, { status: 429 });
+
         // Extremely native lead intent detection based on the user's latest query
         const buyingIntentRegex = /(pricing|cost|quote|how much|buy|purchase|upgrade|contact sales|talk to sales|demo|interested)/i;
         const hasBuyingIntent = sanitizedQuery.length > 5 && buyingIntentRegex.test(sanitizedQuery);
@@ -205,8 +221,11 @@ export async function POST(req: Request) {
         const result = streamText({
             model: resolveChatModel(!!userApiKey),
             system: systemPrompt,
-            messages: formattedMessages,
-            async onFinish({ text }) {
+            messages: boundedMessages,
+            maxOutputTokens: AI_MAX_OUTPUT_TOKENS,
+            maxRetries: 0,
+            async onFinish({ text, usage }) {
+                await reservation.finish(userApiKey ? 'openai-byok' : process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL, usage?.inputTokens || 0, usage?.outputTokens || 0, text ? 'completed' : 'empty', undefined, Boolean(text));
                 // Persist assistant response
                 if (text) {
                     await prisma.chatMessage.create({
@@ -225,7 +244,8 @@ export async function POST(req: Request) {
                                 botId,
                                 event: "booking_link_shown",
                                 sessionId
-                            }
+            },
+            async onError({ error }: { error: unknown }) { await reservation.finish(userApiKey ? 'openai-byok' : process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL, 0, 0, 'error', error instanceof Error ? error.message : 'Provider request failed'); }
                         });
                     }
                 }

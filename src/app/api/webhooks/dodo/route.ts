@@ -1,138 +1,100 @@
 import { NextResponse } from 'next/server';
 import { dodo } from '@/lib/dodopayments';
 import db from '@/lib/prisma';
+import { normalizePlan } from '@/lib/tier-limits';
 
-type DodoEvent = {
-  event_id?: string;
-  id?: string;
-  type?: string;
-  event_type?: string;
-  data?: Record<string, any>;
-};
+type DodoEvent = { type?: string; timestamp?: string; data?: Record<string, any> };
 
 export async function POST(req: Request) {
   const payload = await req.text();
-
   const webhookId = req.headers.get('webhook-id');
   const webhookSignature = req.headers.get('webhook-signature');
   const webhookTimestamp = req.headers.get('webhook-timestamp');
-
-  if (!webhookId || !webhookSignature || !webhookTimestamp) {
-    return NextResponse.json(
-      { error: 'Missing webhook headers' },
-      { status: 400 }
-    );
-  }
-
-  if (!dodo) {
-    return NextResponse.json(
-      { error: 'Dodo Payments not initialized' },
-      { status: 500 }
-    );
-  }
-
   const webhookKey = process.env.DODO_WEBHOOK_SECRET || process.env.DODO_PAYMENTS_WEBHOOK_KEY;
-
-  if (!webhookKey) {
-    console.error('Webhook verification failed: DODO_WEBHOOK_SECRET is not set in environment variables');
-    return NextResponse.json(
-      { error: 'Webhook key not configured on server' },
-      { status: 500 }
-    );
-  }
-
+  if (!webhookId || !webhookSignature || !webhookTimestamp) return NextResponse.json({ error: 'Missing webhook headers' }, { status: 400 });
+  if (!dodo || !webhookKey) return NextResponse.json({ error: 'Webhook verification is not configured' }, { status: 500 });
   let event: DodoEvent;
   try {
-    event = dodo.webhooks.unwrap(payload, {
-      headers: {
-        'webhook-id': webhookId,
-        'webhook-signature': webhookSignature,
-        'webhook-timestamp': webhookTimestamp,
-      },
-      key: webhookKey,
-    }) as DodoEvent;
-  } catch (err: any) {
-    console.error('Webhook verification failed:', err?.message || err);
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-  }
+    event = dodo.webhooks.unwrap(payload, { headers: { 'webhook-id': webhookId, 'webhook-signature': webhookSignature, 'webhook-timestamp': webhookTimestamp }, key: webhookKey }) as DodoEvent;
+  } catch { return NextResponse.json({ error: 'Invalid signature' }, { status: 401 }); }
 
-  const eventId = event.event_id || event.id || 'unknown_event_id';
-  const eventType = event.type || event.event_type || 'unknown';
+  const eventId = webhookId;
+  const type = event.type || 'unknown';
   const data = event.data || {};
-
+  const eventAt = new Date(event.timestamp || webhookTimestamp);
   try {
-    // Process subscription events
-    if (eventType.startsWith('subscription.')) {
-      const userId = data.metadata?.user_id || data.customer?.metadata?.user_id;
-      const dodoSubscriptionId = data.subscription_id || data.id;
-      const dodoCustomerId = data.customer_id || data.customer?.customer_id;
-      const status = data.status || 'active';
-      const cancelAtPeriodEnd = !!data.cancel_at_period_end;
-      const planId = data.metadata?.plan_id || data.product_id || (data.product_cart && data.product_cart[0]?.product_id) || "smart_page";
-      
-      let nextBillingDate: Date | undefined;
-      if (data.next_billing_date) {
-         nextBillingDate = new Date(data.next_billing_date);
-      } else if (data.current_period_end) {
-         nextBillingDate = new Date(data.current_period_end);
+    await db.$transaction(async (tx) => {
+      await tx.webhookEvent.create({ data: { eventId, provider: 'dodo', type, status: 'processing' } });
+      const subscriptionId = data.subscription_id || data.id;
+      const existing = subscriptionId ? await tx.subscription.findFirst({ where: { dodoSubscriptionId: subscriptionId } }) : null;
+      const userId = data.metadata?.user_id || data.customer?.metadata?.user_id || existing?.userId;
+      if (!userId) {
+        await tx.webhookEvent.update({ where: { eventId }, data: { status: 'ignored_missing_user' } });
+        return;
       }
-
-      if (userId && dodoSubscriptionId) {
-        // Upsert the subscription using standard upsert or finding existing
-        const existing = await db.subscription.findFirst({
-           where: { userId }
-        });
-
-        if (existing) {
-           await db.subscription.update({
-             where: { id: existing.id },
-             data: {
-               planId,
-               tier: planId,
-               status,
-               billingMethod: 'dodo',
-               cancelAtPeriodEnd,
-               dodoSubscriptionId,
-               dodoCustomerId,
-               ...(nextBillingDate ? { currentPeriodEnd: nextBillingDate } : {}),
-             }
-           });
-        } else {
-           await db.subscription.create({
-             data: {
-               userId,
-               planId,
-               status,
-               billingMethod: 'dodo',
-               cancelAtPeriodEnd,
-               dodoSubscriptionId,
-               dodoCustomerId,
-               currentPeriodEnd: nextBillingDate || new Date(),
-               tier: planId
-             }
-           });
+      const sub = existing || await tx.subscription.findFirst({ where: { userId }, orderBy: { updatedAt: 'desc' } });
+      if (sub?.lastProviderEventAt && eventAt <= sub.lastProviderEventAt) {
+        await tx.webhookEvent.update({ where: { eventId }, data: { status: 'ignored_stale' } });
+        return;
+      }
+      const productId = data.product_id || data.product_cart?.[0]?.product_id;
+      const aiProduct = process.env.DODO_PRODUCT_SMART_PAGE_AI;
+      const basicProduct = process.env.DODO_PRODUCT_SMART_PAGE;
+      const plan = productId === aiProduct ? 'smart_page_ai' : productId === basicProduct ? 'smart_page' : normalizePlan(data.metadata?.plan_id || sub?.planId);
+      const providerStatus = data.status;
+      const periodStart = data.previous_billing_date ? new Date(data.previous_billing_date) : undefined;
+      const periodEnd = data.next_billing_date ? new Date(data.next_billing_date) : undefined;
+      let aiAccessEndedAt = sub?.aiAccessEndedAt || null;
+      const common = {
+        planId: plan, tier: plan, billingMethod: 'dodo', dodoSubscriptionId: subscriptionId,
+        dodoCustomerId: data.customer_id || data.customer?.customer_id || sub?.dodoCustomerId,
+        currentPeriodStart: periodStart || sub?.currentPeriodStart,
+        currentPeriodEnd: periodEnd || sub?.currentPeriodEnd,
+        cancelAtPeriodEnd: Boolean(data.cancel_at_next_billing_date), lastProviderEventAt: eventAt,
+      };
+      let status = sub?.status || 'pending';
+      let repliesUsed = sub?.aiRepliesUsed || 0;
+      let periodStartSaved = sub?.aiRepliesPeriodStart;
+      if (type === 'subscription.active' || type === 'subscription.renewed' || type === 'subscription.unpaused') {
+        status = 'active';
+        // Only successful activation or an explicit renewal for a genuinely new provider period resets AI replies.
+        const confirmedNewPeriod = !!periodStart && (!sub?.aiRepliesPeriodStart || periodStart > sub.aiRepliesPeriodStart);
+        const newlyActivatedAI = type === 'subscription.active' && plan === 'smart_page_ai' && (sub?.status !== 'active' || normalizePlan(sub?.planId) !== 'smart_page_ai');
+        if (plan === 'smart_page_ai' && (newlyActivatedAI || (type === 'subscription.renewed' && confirmedNewPeriod))) {
+          repliesUsed = 0;
+          periodStartSaved = periodStart || eventAt;
         }
-        
-        console.log(`Updated subscription for user ${userId} to status ${status}`);
+        if (plan === 'smart_page_ai') aiAccessEndedAt = null;
+        else if (plan === 'smart_page' && sub?.status === 'trialing') aiAccessEndedAt = eventAt;
+      } else if (type === 'subscription.failed' || type === 'subscription.on_hold') {
+        status = 'past_due';
+      } else if (type === 'subscription.cancelled' || type === 'subscription.expired') {
+        status = type === 'subscription.cancelled' && periodEnd && periodEnd > new Date() ? 'active' : 'expired';
+        if (normalizePlan(sub?.planId) === 'smart_page_ai' && status === 'expired') aiAccessEndedAt = periodEnd || eventAt;
+      } else if (type === 'subscription.plan_changed') {
+        status = providerStatus === 'active' ? 'active' : sub?.status || 'pending';
+        const confirmedNewPeriod = !!periodStart && (!sub?.aiRepliesPeriodStart || periodStart > sub.aiRepliesPeriodStart);
+        if (plan === 'smart_page_ai' && status === 'active' && (normalizePlan(sub?.planId) !== 'smart_page_ai' || confirmedNewPeriod)) {
+          repliesUsed = 0;
+          periodStartSaved = periodStart || eventAt;
+          aiAccessEndedAt = null;
+        } else if (plan === 'smart_page' && (normalizePlan(sub?.planId) === 'smart_page_ai' || sub?.status === 'trialing')) aiAccessEndedAt = eventAt;
+      } else if (type === 'subscription.updated') {
+        // Cancellation scheduling and metadata updates never create new paid access or reset quota.
+        status = sub?.status || (providerStatus === 'active' ? 'active' : 'pending');
+      } else if (type === 'payment.succeeded') {
+        // Payment events alone are not sufficient to infer a subscription period or plan.
+        status = sub?.status || 'pending';
       }
-    }
-    
-    // Also record the webhook to ensure idempotency
-    await db.webhookEvent.upsert({
-      where: { eventId },
-      update: { status: 'processed' },
-      create: {
-        eventId,
-        provider: 'dodo',
-        type: eventType,
-        status: 'processed'
-      }
+      const writeData = { ...common, status, aiRepliesUsed: repliesUsed, aiRepliesPeriodStart: periodStartSaved, aiAccessEndedAt };
+      if (sub) await tx.subscription.update({ where: { id: sub.id }, data: writeData });
+      else await tx.subscription.create({ data: { userId, ...writeData, planId: plan, tier: plan } });
+      await tx.webhookEvent.update({ where: { eventId }, data: { status: 'processed' } });
     });
-
   } catch (err: any) {
-    console.error('Error processing webhook event:', err);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    if (err?.code === 'P2002') return NextResponse.json({ received: true, duplicate: true });
+    console.error('Error processing Dodo webhook:', err);
+    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
-
   return NextResponse.json({ received: true });
 }

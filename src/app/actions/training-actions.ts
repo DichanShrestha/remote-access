@@ -2,7 +2,6 @@
 import { authService } from "@/services/auth";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { prisma } from "@/lib/prisma";
 import { parseDocument, crawlUrl } from "@/lib/documents/parser";
 import { crawlWebsite } from "@/lib/documents/crawler";
@@ -10,7 +9,19 @@ import { chunkText } from "@/lib/ai/chunker";
 import { generateEmbeddings } from "@/lib/ai/embeddings";
 import { validateFile, getStringSize } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
-import { enforceStorageGuard, updateStorageUsage } from "@/lib/guards/resource-manager";
+import { updateStorageUsage } from "@/lib/guards/resource-manager";
+import { AI_CHARS_PER_TOKEN, getSmartPageEntitlement } from "@/lib/tier-limits";
+import { storageService } from "@/lib/storage/service";
+import { requireAIEntitlement } from "@/lib/billing/entitlements";
+
+export async function getKnowledgeUploadPolicy() {
+    const user = await authService.requireUser();
+    const account = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 }, usage: true } });
+    if (!account) throw new Error('Workspace not found');
+    const entitlement = getSmartPageEntitlement(account);
+    const sources = await prisma.dataSource.count({ where: { userId: user.id, type: { not: 'qa' }, status: { not: 'error' } } });
+    return { allowed: entitlement.aiEnabled, maxFileBytes: entitlement.limits.knowledgeFileBytes, remainingBytes: Math.max(0, entitlement.limits.knowledgeBytes - Number(account.usage?.knowledgeBytes || 0)), sourcesRemaining: Math.max(0, entitlement.limits.knowledgeSources - sources) };
+}
 
 /**
  * Upload and process document files for a bot.
@@ -19,6 +30,10 @@ import { enforceStorageGuard, updateStorageUsage } from "@/lib/guards/resource-m
 export async function uploadAndTrainFiles(botId: string, formData: FormData) {
 
     const user = await authService.requireUser();
+    const billing = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } });
+    if (!billing) throw new Error("Workspace not found");
+    const entitlement = getSmartPageEntitlement(billing);
+    if (!entitlement.aiEnabled) throw new Error("Knowledge training requires an active trial or Smart Page + AI plan.");
 
 
 
@@ -34,7 +49,13 @@ export async function uploadAndTrainFiles(botId: string, formData: FormData) {
 
     // Enforce Storage Guard
     const totalBytes = files.reduce((acc, file) => acc + file.size, 0);
-    await enforceStorageGuard(user.id, totalBytes);
+    const perFileLimit = entitlement.limits.knowledgeFileBytes;
+    const existingSources = await prisma.dataSource.count({ where: { userId: user.id, type: { not: "qa" }, status: { not: "error" } } });
+    const existingUsage = await prisma.usage.findUnique({ where: { userId: user.id } });
+    let existingTokens = existingUsage?.indexedTokens || 0;
+    if (files.some((f) => f.size > perFileLimit)) throw new Error(`Each knowledge file must be ${Math.floor(perFileLimit / 1024 / 1024)} MB or smaller on your current plan.`);
+    if (existingSources + files.length > entitlement.limits.knowledgeSources) throw new Error(`Your plan allows ${entitlement.limits.knowledgeSources} knowledge sources.`);
+    if (Number(existingUsage?.knowledgeBytes || 0) + totalBytes > entitlement.limits.knowledgeBytes) throw new Error("Your knowledge storage limit would be exceeded. Delete a source or upgrade your plan.");
 
     // Update bot status
     await prisma.bot.update({
@@ -47,7 +68,7 @@ export async function uploadAndTrainFiles(botId: string, formData: FormData) {
 
     for (const file of files) {
         // Validate file
-        const validation = validateFile(file);
+        const validation = validateFile(file, perFileLimit);
         if (!validation.valid) {
             results.push({ source: file.name, status: "error", error: validation.error });
             continue;
@@ -64,16 +85,11 @@ export async function uploadAndTrainFiles(botId: string, formData: FormData) {
             },
         });
 
+        let filePath: string | null = null;
         try {
             // Upload file to Supabase Storage
-            const filePath = `${user.id}/${botId}/${Date.now()}-${file.name}`;
-            const supabaseAdmin = createAdminClient();
-
-            const { error: uploadError } = await supabaseAdmin.storage
-                .from("docs")
-                .upload(filePath, file, { contentType: file.type });
-
-            if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+            filePath = `${user.id}/${botId}/${Date.now()}-${file.name}`;
+            await storageService.upload({ bucket: "docs", key: filePath, size: file.size, contentType: file.type }, file);
 
             await prisma.dataSource.update({
                 where: { id: dataSource.id },
@@ -87,15 +103,10 @@ export async function uploadAndTrainFiles(botId: string, formData: FormData) {
             // Chunk the text
             const textChunks = chunkText(text);
 
-            await prisma.dataSource.update({
-                where: { id: dataSource.id },
-                data: { status: "embedding" },
-            });
-
-            // Generate embeddings
-            const embeddings = await generateEmbeddings(
-                textChunks.map((c) => c.content)
-            );
+            const tokenCount = Math.ceil(text.length / AI_CHARS_PER_TOKEN);
+            if (existingTokens + tokenCount > entitlement.limits.indexedTokens) throw new Error("Your indexed text limit would be exceeded. Remove a source or upgrade your plan.");
+            await prisma.dataSource.update({ where: { id: dataSource.id }, data: { status: "embedding" } });
+            const embeddings = await generateEmbeddings(textChunks.map((c) => c.content));
 
             // Store chunks with embeddings using raw SQL for vector type
             for (let i = 0; i < textChunks.length; i++) {
@@ -114,17 +125,19 @@ export async function uploadAndTrainFiles(botId: string, formData: FormData) {
             }
 
             // Calculate character-based storage size
-            const textSize = getStringSize(text);
-
+            const textSize = file.size;
             await prisma.dataSource.update({
                 where: { id: dataSource.id },
-                data: { status: "complete", metadata: { chunks: textChunks.length, storageBytes: textSize } },
+                data: { status: "complete", metadata: { chunks: textChunks.length, storageBytes: textSize, indexedTokens: tokenCount } },
             });
 
             successfulBytes += textSize;
+            existingTokens += tokenCount;
             results.push({ id: dataSource.id, source: file.name, status: "complete" });
         } catch (error) {
             const message = error instanceof Error ? error.message : "Unknown error";
+            if (filePath) try { await storageService.delete([{ bucket: "docs", key: filePath }]); } catch {}
+            await prisma.documentChunk.deleteMany({ where: { dataSourceId: dataSource.id } });
             await prisma.dataSource.update({
                 where: { id: dataSource.id },
                 data: { status: "error", errorMessage: message },
@@ -135,6 +148,10 @@ export async function uploadAndTrainFiles(botId: string, formData: FormData) {
 
     if (successfulBytes > 0) {
         await updateStorageUsage(user.id, successfulBytes);
+        const successfulSources = results.filter((r) => r.status === "complete");
+        const successfulTokenTotal = await prisma.dataSource.findMany({ where: { id: { in: successfulSources.map((r) => r.id!).filter(Boolean) } }, select: { metadata: true } });
+        const indexedTokens = successfulTokenTotal.reduce((sum, source) => sum + Number((source.metadata as any)?.indexedTokens || 0), 0);
+        await prisma.usage.upsert({ where: { userId: user.id }, create: { userId: user.id, knowledgeBytes: successfulBytes, indexedTokens }, update: { knowledgeBytes: { increment: successfulBytes }, indexedTokens: { increment: indexedTokens } } });
     }
 
     // Update bot status
@@ -155,6 +172,12 @@ export async function uploadAndTrainFiles(botId: string, formData: FormData) {
 export async function crawlAndTrain(botId: string, url: string) {
 
     const user = await authService.requireUser();
+    const billing = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 }, usage: true } });
+    if (!billing) throw new Error("Workspace not found");
+    const entitlement = getSmartPageEntitlement(billing);
+    if (!entitlement.aiEnabled) throw new Error("Knowledge training requires an active trial or Smart Page + AI plan.");
+    const sourceCount = await prisma.dataSource.count({ where: { userId: user.id, type: { not: 'qa' }, status: { not: 'error' } } });
+    if (sourceCount >= entitlement.limits.knowledgeSources) throw new Error(`Your plan allows ${entitlement.limits.knowledgeSources} knowledge sources.`);
 
 
 
@@ -201,16 +224,8 @@ export async function crawlAndTrain(botId: string, url: string) {
         // Calculate total bytes from all pages
         const totalSourceBytes = pages.reduce((acc, page) => acc + getStringSize(page.content), 0);
 
-        // Enforce Storage Guard
-        try {
-            await enforceStorageGuard(user.id, totalSourceBytes);
-        } catch (e) {
-            await prisma.dataSource.update({
-                where: { id: dataSource.id },
-                data: { status: "error", errorMessage: "Storage limit reached." },
-            });
-            throw e;
-        }
+        const indexedTokens = Math.ceil(pages.reduce((sum, page) => sum + page.content.length, 0) / AI_CHARS_PER_TOKEN);
+        if ((billing.usage?.indexedTokens || 0) + indexedTokens > entitlement.limits.indexedTokens) throw new Error("Your indexed text limit would be exceeded. Remove a source or upgrade your plan.");
 
         await prisma.dataSource.update({
             where: { id: dataSource.id },
@@ -260,10 +275,12 @@ export async function crawlAndTrain(botId: string, url: string) {
                     chunks: totalChunks,
                     pages: pages.length,
                     url: parsedUrl.href,
-                    storageBytes: totalSourceBytes
+                    storageBytes: totalSourceBytes,
+                    indexedTokens
                 }
             },
         });
+        await prisma.usage.upsert({ where: { userId: user.id }, create: { userId: user.id, indexedTokens }, update: { indexedTokens: { increment: indexedTokens } } });
 
         // Update bot status
         await prisma.bot.update({
@@ -275,6 +292,8 @@ export async function crawlAndTrain(botId: string, url: string) {
         return { success: true, id: dataSource.id, chunks: totalChunks, pages: pages.length };
     } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown error";
+
+        await prisma.documentChunk.deleteMany({ where: { dataSourceId: dataSource.id } });
 
         await prisma.dataSource.update({
             where: { id: dataSource.id },
@@ -296,6 +315,7 @@ export async function crawlAndTrain(botId: string, url: string) {
 export async function reTrainSource(dataSourceId: string) {
 
     const user = await authService.requireUser();
+    await requireAIEntitlement(user.id);
 
 
 
@@ -322,12 +342,7 @@ export async function reTrainSource(dataSourceId: string) {
 
         if (!dataSource.filePath) throw new Error("File path missing");
 
-        const supabaseAdmin = createAdminClient();
-        const { data, error } = await supabaseAdmin.storage
-            .from("docs")
-            .download(dataSource.filePath);
-
-        if (error || !data) throw new Error("Failed to download file for re-training");
+        const data = await storageService.download({ bucket: "docs", key: dataSource.filePath });
 
         const buffer = Buffer.from(await data.arrayBuffer());
         const text = await parseDocument(buffer, dataSource.source);
@@ -387,8 +402,7 @@ export async function deleteDataSource(dataSourceId: string) {
 
     // Delete file from storage if it's a file source
     if (dataSource.filePath) {
-        const supabaseAdmin = createAdminClient();
-        await supabaseAdmin.storage.from("docs").remove([dataSource.filePath]);
+        await storageService.delete([{ bucket: "docs", key: dataSource.filePath }]);
     }
 
     // Decrement storage usage if storageBytes is in metadata
@@ -396,6 +410,11 @@ export async function deleteDataSource(dataSourceId: string) {
     if (metadata?.storageBytes) {
         await updateStorageUsage(user.id, -metadata.storageBytes);
     }
+    const removedTokens = Number(metadata?.indexedTokens || 0);
+    await prisma.usage.updateMany({ where: { userId: user.id }, data: {
+        ...(dataSource.type === 'file' && Number(metadata?.storageBytes || 0) ? { knowledgeBytes: { decrement: BigInt(metadata.storageBytes) } } : {}),
+        ...(removedTokens ? { indexedTokens: { decrement: removedTokens } } : {}),
+    } });
 
     // Cascade delete handles chunks
     await prisma.dataSource.delete({ where: { id: dataSourceId } });

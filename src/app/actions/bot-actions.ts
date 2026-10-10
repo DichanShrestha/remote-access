@@ -7,6 +7,7 @@ import { sanitizeInput, getStringSize } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import type { BotFormData } from "@/lib/supabase/types";
 import { enforceBotGuard, updateStorageUsage } from "@/lib/guards/resource-manager";
+import { requirePageAccess, requireAIEntitlement } from "@/lib/billing/entitlements";
 
 /**
  * Create a new bot during onboarding.
@@ -14,6 +15,7 @@ import { enforceBotGuard, updateStorageUsage } from "@/lib/guards/resource-manag
 export async function createBot(data: BotFormData) {
     
     const user = await authService.requireUser();
+    await requirePageAccess(user.id);
 
     
 
@@ -54,6 +56,7 @@ export async function createBot(data: BotFormData) {
 export async function updateBot(botId: string, data: Partial<BotFormData>) {
     
     const user = await authService.requireUser();
+    await requirePageAccess(user.id);
 
     
 
@@ -259,6 +262,7 @@ export async function completeOnboarding() {
 export async function updateBotSystemPrompt(botId: string, systemPrompt: string) {
     
     const user = await authService.requireUser();
+    await requireAIEntitlement(user.id);
 
     
 

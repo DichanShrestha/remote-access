@@ -20,7 +20,7 @@ import type { LanguageModel } from "ai";
 // ─── Model IDs ───────────────────────────────────────────────────────────────
 
 export const GEMINI_DEFAULT_MODEL = "gemini-2.5-flash-lite";
-export const OPENAI_FALLBACK_MODEL = "gpt-4o-mini";
+export const OPENAI_FALLBACK_MODEL = process.env.AI_CHAT_MODEL || "gpt-4o-mini";
 
 // ─── Provider factories ───────────────────────────────────────────────────────
 
@@ -29,7 +29,8 @@ export const OPENAI_FALLBACK_MODEL = "gpt-4o-mini";
  * Used by public chat, authenticated chat, and playground (unless overridden).
  */
 export function getDefaultChatModel(): LanguageModel {
-    return openai("gpt-4o-mini");
+    const modelId = process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL;
+    return modelId.startsWith("gemini-") ? google(modelId) : openai(modelId);
 }
 
 /**

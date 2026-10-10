@@ -1,4 +1,4 @@
-import { resolvePlaygroundModel } from "@/lib/ai/providers";
+import { resolvePlaygroundModel, GEMINI_DEFAULT_MODEL } from "@/lib/ai/providers";
 import { streamText, createUIMessageStream, createUIMessageStreamResponse, convertToModelMessages } from "ai";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +6,8 @@ import { retrieveRelevantChunks, formatContextForPrompt, buildSystemPrompt } fro
 import { sanitizeInput } from "@/lib/utils";
 import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { getCatalogSearchLimit } from "@/lib/guards/resource-manager";
+import { getSmartPageEntitlement, AI_CHARS_PER_TOKEN, AI_MAX_INPUT_TOKENS, AI_MAX_OUTPUT_TOKENS } from "@/lib/tier-limits";
+import { reserveAIReply } from "@/lib/ai/reply-usage";
 
 export async function POST(req: Request) {
     try {
@@ -38,6 +40,10 @@ export async function POST(req: Request) {
         if (!bot) {
             return new Response("Bot not found", { status: 404 });
         }
+        const owner = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } });
+        if (!owner) return new Response("Workspace not found", { status: 404 });
+        const entitlement = getSmartPageEntitlement(owner);
+        if (!entitlement.aiEnabled) return Response.json({ error: "AI is unavailable on your current plan." }, { status: 402 });
 
         // 2. Per-Bot Custom Rate Limit
         const botLimit = rateLimit(`playground-bot:${botId}:${ip}`, {
@@ -97,6 +103,15 @@ export async function POST(req: Request) {
             bot.purpose,
             bot.bookingLink
         );
+        const modelMessages = await convertToModelMessages(messages);
+        const estimate = (value: string) => Math.ceil(value.length / AI_CHARS_PER_TOKEN);
+        const systemTokens = estimate(finalSystemPrompt);
+        if (systemTokens >= AI_MAX_INPUT_TOKENS) return new Response("AI request is too large. Shorten the system instructions.", { status: 413 });
+        let boundedMessages = modelMessages.slice(-12);
+        while (boundedMessages.length > 1 && systemTokens + estimate(JSON.stringify(boundedMessages)) > AI_MAX_INPUT_TOKENS) boundedMessages = boundedMessages.slice(1);
+        if (systemTokens + estimate(JSON.stringify(boundedMessages)) > AI_MAX_INPUT_TOKENS) return new Response("Your request exceeds the 6,000 token limit.", { status: 413 });
+        const reservation = await reserveAIReply(user.id, botId, owner.subscriptions[0]?.id, entitlement.limits.aiReplies, entitlement.onTrial ? 'trialing' : 'active');
+        if (!reservation) return Response.json({ error: "Your AI reply allowance is used up." }, { status: 429 });
 
         // Create a conversation in DB if it doesn't exist for this session
         // For Playground, we might want to group by a playground-specific sessionId
@@ -127,8 +142,11 @@ export async function POST(req: Request) {
                     model: resolvePlaygroundModel(model),
                     temperature: temperature ?? 0.7,
                     system: finalSystemPrompt,
-                    messages: await convertToModelMessages(messages),
-                    onFinish: async ({ text }: { text: string }) => {
+                    messages: boundedMessages,
+                    maxOutputTokens: AI_MAX_OUTPUT_TOKENS,
+                    maxRetries: 0,
+                    onFinish: async ({ text, usage }: { text: string; usage?: { inputTokens?: number; outputTokens?: number } }) => {
+                        await reservation.finish(model || process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL, usage?.inputTokens || 0, usage?.outputTokens || 0, text ? 'completed' : 'empty', undefined, Boolean(text));
                         // Save messages to DB
                         // Use a fixed session ID for playground chats so they group together
                         const playgroundSessionId = `playground-${user.id}`;
@@ -163,7 +181,8 @@ export async function POST(req: Request) {
                                 }
                             });
                         }
-                    }
+                    },
+                    onError: async ({ error }: { error: unknown }) => reservation.finish(model || process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL, 0, 0, 'error', error instanceof Error ? error.message : 'Provider request failed')
                 });
 
                 writer.merge(result.toUIMessageStream());

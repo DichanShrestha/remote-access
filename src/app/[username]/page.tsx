@@ -4,6 +4,7 @@ import db from '@/lib/prisma';
 import { PageRenderer } from '@/components/page-render/PageRenderer';
 import { PageDocumentSchema } from '@/lib/page-engine/schemas';
 import { TEMPLATE_CREATOR_PROFILE } from '@/lib/page-engine/templates';
+import { getSmartPageEntitlement } from '@/lib/tier-limits';
 
 interface PublicPageProps {
   params: Promise<{
@@ -15,7 +16,7 @@ export async function generateMetadata({ params }: PublicPageProps) {
   const { username } = await params;
   const profile = await db.profile.findUnique({
     where: { username: username.toLowerCase() },
-    include: { page: true }
+    include: { page: true, user: { include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } } }
   });
 
   if (!profile || !profile.page || !profile.page.isPublished) {
@@ -50,11 +51,16 @@ export default async function PublicPage({ params }: PublicPageProps) {
 
   const profile = await db.profile.findUnique({
     where: { username: username.toLowerCase() },
-    include: { page: true }
+    include: { page: true, user: { include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } } }
   });
 
   if (!profile || !profile.page || !profile.page.isPublished) {
     notFound();
+  }
+
+  const entitlement = getSmartPageEntitlement(profile.user);
+  if (entitlement.trialExpired && new Date() > entitlement.publicGraceEndsAt) {
+    return <div className="min-h-screen grid place-items-center bg-[#FDFCF8] p-6 text-center"><div><h1 className="font-serif text-3xl text-[#292A25]">This page is temporarily unavailable</h1><p className="mt-3 text-[#777970]">The owner can restore it by choosing a Smart Page plan.</p></div></div>;
   }
 
   const parsed = PageDocumentSchema.safeParse(profile.page.publishedConfig);

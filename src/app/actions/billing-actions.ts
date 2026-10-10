@@ -4,6 +4,7 @@ import { authService } from "@/services/auth";
 import { dodo } from "@/lib/dodopayments";
 import db from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { normalizePlan, TRIAL_MS } from "@/lib/tier-limits";
 
 export async function createCheckoutSession(
     productId: string,
@@ -12,13 +13,16 @@ export async function createCheckoutSession(
 ) {
     const user = await authService.requireUser();
 
-    try {
-        if (!dodo) throw new Error("Dodo client not initialized");
+    if (!dodo || !process.env.DODO_API_KEY) throw new Error("Billing is temporarily unavailable. Please try again later.");
+    const canonicalPlan = normalizePlan(planId);
+    const configuredProduct = canonicalPlan === "smart_page_ai" ? process.env.DODO_PRODUCT_SMART_PAGE_AI : process.env.DODO_PRODUCT_SMART_PAGE;
+    if (!configuredProduct || productId !== configuredProduct) throw new Error("This plan is not configured for checkout.");
 
+    try {
         const session = await dodo.checkoutSessions.create({
             customer: { email: user.email!, name: user.email! },
             product_cart: [{ product_id: productId, quantity: 1 }],
-            metadata: { user_id: user.id, plan_id: planId },
+            metadata: { user_id: user.id, plan_id: canonicalPlan },
             feature_flags: {
                 allow_discount_code: true
             },
@@ -26,49 +30,23 @@ export async function createCheckoutSession(
         });
 
         return { payment_link: session.checkout_url };
-    } catch (e: any) {
-        console.warn("Dodo Payments API error, using fallback stub:", e.message);
-        return {
-            payment_link: `https://dodopayments.com/mock-checkout/${productId}`,
-        };
-    }
+    } catch (e: any) { console.error("Dodo checkout creation failed:", e.message); throw new Error("Could not start checkout. Please try again."); }
 }
 
 export async function startFreeTrial(planId: string = "smart_page") {
     const user = await authService.requireUser();
     
-    // Check if user already has a subscription/trial
-    const existing = await db.subscription.findFirst({
-        where: { userId: user.id }
-    });
-
     const now = new Date();
-    const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days
-
-    if (existing) {
-        await db.subscription.update({
-            where: { id: existing.id },
-            data: {
-                planId,
-                tier: planId,
-                status: "trialing",
-                trialStart: existing.trialStart || now,
-                trialEnd: existing.trialEnd || trialEnd,
-            }
-        });
-    } else {
-        await db.subscription.create({
-            data: {
-                userId: user.id,
-                planId,
-                status: "trialing",
-                billingMethod: "none",
-                trialStart: now,
-                trialEnd,
-                tier: planId,
-            }
-        });
-    }
+    const trialEnd = new Date(now.getTime() + TRIAL_MS);
+    await db.$transaction(async (tx) => {
+        const existing = await tx.subscription.findFirst({ where: { userId: user.id }, orderBy: { updatedAt: "desc" } });
+        if (existing && ["active", "past_due"].includes(existing.status)) throw new Error("You already have a paid subscription.");
+        if (existing?.trialEverGranted || existing?.trialStart || existing?.status === "trialing") throw new Error("Your one-time trial has already been used.");
+        const claim = await tx.user.updateMany({ where: { id: user.id, trialGrantedAt: null }, data: { trialGrantedAt: now } });
+        if (!claim.count) throw new Error("Your one-time trial has already been used.");
+        if (existing) await tx.subscription.update({ where: { id: existing.id }, data: { planId: "trial", tier: "trial", status: "trialing", billingMethod: "none", trialStart: now, trialEnd, currentPeriodEnd: trialEnd, trialEverGranted: true } });
+        else await tx.subscription.create({ data: { userId: user.id, planId: "trial", status: "trialing", billingMethod: "none", trialStart: now, trialEnd, currentPeriodEnd: trialEnd, tier: "trial", trialEverGranted: true } });
+    });
 
     revalidatePath("/dashboard/billing");
     revalidatePath("/dashboard");
@@ -110,8 +88,5 @@ export async function createCustomerPortalSession() {
             return_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/settings`
         });
         return { url: session.link };
-    } catch (e: any) {
-        console.warn("Dodo Customer Portal error:", e.message);
-        return { url: `https://dodopayments.com/portal/${sub.dodoCustomerId}` };
-    }
+    } catch (e: any) { console.error("Dodo Customer Portal error:", e.message); throw new Error("Could not open the billing portal. Please try again later."); }
 }

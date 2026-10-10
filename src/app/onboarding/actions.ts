@@ -7,7 +7,7 @@ import { PageDocumentSchema } from '@/lib/page-engine/schemas';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { TIER_LIMITS } from '@/lib/tier-limits';
+import { TIER_LIMITS, TRIAL_MS } from '@/lib/tier-limits';
 
 export async function selectOnboardingPath(type: TemplateCategory) {
   const user = await authService.requireUser();
@@ -102,15 +102,26 @@ export async function startCurrentFreeTrial(planId: string = 'smart_page') {
   const page = await db.page.findUnique({ where: { profileId: user.profile.id } });
   if (!page || !Object.keys(page.draftConfig as object).length) return { error: 'Choose and personalize a template before publishing.' };
 
-  const trialEndsAt = new Date(user.createdAt.getTime() + 14 * 24 * 60 * 60 * 1000);
-  if (Date.now() >= trialEndsAt.getTime()) return { error: 'This account’s 14-day trial has ended. Contact support to choose the next step.' };
+  const now = new Date();
+  const trialEndsAt = new Date(now.getTime() + TRIAL_MS);
   const existing = await db.subscription.findFirst({ where: { userId: user.id }, orderBy: { updatedAt: 'desc' } });
+  const trialGrant = await db.user.findUnique({ where: { id: user.id }, select: { trialGrantedAt: true } });
+  if ((trialGrant?.trialGrantedAt || existing?.trialEverGranted || existing?.trialStart || existing?.status === 'trialing') && !['active', 'past_due'].includes(existing?.status || '')) {
+    if (!existing || existing.status !== 'trialing' || !existing.trialEnd || existing.trialEnd <= now) return { error: 'Your one-time trial has ended. Choose a paid plan to continue.' };
+  }
   await db.$transaction(async (tx) => {
     await tx.page.update({ where: { id: page.id }, data: { publishedConfig: page.draftConfig as any, isPublished: true } });
-    if (existing) {
-      await tx.subscription.update({ where: { id: existing.id }, data: { status: 'trialing', planId, currentPeriodEnd: trialEndsAt, tier: planId } });
+    if (existing?.status === 'trialing' && existing.trialEnd && existing.trialEnd > now) {
+      await tx.subscription.update({ where: { id: existing.id }, data: { planId: 'trial', tier: 'trial', currentPeriodEnd: existing.trialEnd } });
+    } else if (existing && ['active', 'past_due'].includes(existing.status)) {
+      // Publishing again never changes an existing paid entitlement.
+    } else if (!existing?.trialEverGranted && !existing?.trialStart) {
+      const claim = await tx.user.updateMany({ where: { id: user.id, trialGrantedAt: null }, data: { trialGrantedAt: now } });
+      if (!claim.count) throw new Error('Your one-time trial has already been used.');
+      if (existing) await tx.subscription.update({ where: { id: existing.id }, data: { status: 'trialing', planId: 'trial', currentPeriodEnd: trialEndsAt, tier: 'trial', billingMethod: 'none', trialStart: now, trialEnd: trialEndsAt, trialEverGranted: true } });
+      else await tx.subscription.create({ data: { userId: user.id, status: 'trialing', planId: 'trial', currentPeriodEnd: trialEndsAt, tier: 'trial', trialStart: now, trialEnd: trialEndsAt, trialEverGranted: true } });
     } else {
-      await tx.subscription.create({ data: { userId: user.id, status: 'trialing', planId, currentPeriodEnd: trialEndsAt, tier: planId } });
+      throw new Error('Trial is unavailable for this account.');
     }
   });
   revalidatePath('/dashboard');
@@ -120,8 +131,9 @@ export async function startCurrentFreeTrial(planId: string = 'smart_page') {
 
 export async function getCurrentTrialLimits() {
   const user = await authService.requireUser();
+  const existing = await db.subscription.findFirst({ where: { userId: user.id }, orderBy: { updatedAt: 'desc' } });
   return {
-    endsAt: new Date(user.createdAt.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    endsAt: (existing?.trialEnd || new Date(user.createdAt.getTime() + TRIAL_MS)).toISOString(),
     limits: TIER_LIMITS.free,
   };
 }

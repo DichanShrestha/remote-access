@@ -27,7 +27,7 @@ export function ChatbotWidget({ botId }: { botId: string }) {
             .catch(err => console.error("Failed to load bot config", err));
     }, [botId]);
 
-    const { messages, sendMessage, status } = useChat({
+    const { messages, sendMessage, status, error } = useChat({
         transport: new TextStreamChatTransport({
             api: "/api/chat/public",
             body: {
@@ -133,6 +133,8 @@ export function ChatbotWidget({ botId }: { botId: string }) {
                                 </div>
                             </div>
                         )}
+                        {config.aiEnabled === false && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">This assistant is temporarily unavailable. Please contact the page owner.</div>}
+                        {config.aiEnabled && typeof config.aiRepliesRemaining === "number" && config.aiRepliesRemaining <= 0 && <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">This assistant has used its current reply allowance. Please check back later.</div>}
 
                         {/* Lead Capture Form */}
                         {!leadCaptured && (
@@ -187,6 +189,7 @@ export function ChatbotWidget({ botId }: { botId: string }) {
                                 </div>
                             );
                         })}
+                        {error && <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">{error.message || "We could not complete that reply. Please try again."}</div>}
                         {isLoading && (
                             <div className="flex justify-start">
                                 <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl rounded-tl-sm flex gap-1 items-center h-10 shadow-sm">
@@ -200,7 +203,7 @@ export function ChatbotWidget({ botId }: { botId: string }) {
                     </div>
 
                     {/* Input */}
-                    {leadCaptured && (
+                    {leadCaptured && config.aiEnabled !== false && config.aiRepliesRemaining !== 0 && (
                         <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
                             <form onSubmit={handleSend} className="relative flex items-center">
                                 <input

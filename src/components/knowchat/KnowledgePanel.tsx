@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { FileText, Link as LinkIcon, HelpCircle, Image as ImageIcon, Trash2, Plus, UploadCloud, Brain, Loader2 } from "lucide-react";
-import { getTrainingStatus, crawlAndTrain, uploadAndTrainFiles, deleteDataSource } from "@/app/actions/training-actions";
+import { getTrainingStatus, crawlAndTrain, uploadAndTrainFiles, deleteDataSource, getKnowledgeUploadPolicy } from "@/app/actions/training-actions";
 import { getQAs, saveQA, deleteQA } from "@/app/actions/qa-actions";
 import { getVisualSets, createVisualSet, deleteVisualSet } from "@/app/actions/catalog-actions";
 
@@ -67,14 +67,21 @@ export function KnowledgePanel({ botId }: { botId: string }) {
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
+        const file = e.target.files[0];
         setLoading(true);
         try {
+            const policy = await getKnowledgeUploadPolicy();
+            if (!policy.allowed) throw new Error("AI knowledge requires an active trial or Smart Page + AI plan.");
+            if (file.size > policy.maxFileBytes) throw new Error(`This file exceeds your ${Math.floor(policy.maxFileBytes / 1048576)} MB per-file limit.`);
+            if (file.size > policy.remainingBytes) throw new Error("This upload exceeds your remaining knowledge storage.");
+            if (policy.sourcesRemaining < 1) throw new Error("You have reached your knowledge-source limit.");
             const formData = new FormData();
-            formData.append("file", e.target.files[0]);
+            formData.append("file", file);
             await uploadAndTrainFiles(botId, formData);
             await loadData();
         } catch (error) {
             console.error(error);
+            alert(error instanceof Error ? error.message : "The file could not be uploaded.");
         } finally {
             setLoading(false);
         }

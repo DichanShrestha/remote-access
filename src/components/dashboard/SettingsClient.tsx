@@ -16,7 +16,7 @@ import {
   Calendar,
   AtSign
 } from "lucide-react";
-import { updateAccountProfile, deleteUserPage, deleteUserAccount, checkUsernameAvailability } from "@/app/actions/settings-actions";
+import { updateAccountProfile, deleteUserPage, deleteUserAccount, checkUsernameAvailability, exportAccountData } from "@/app/actions/settings-actions";
 import { createCheckoutSession, createCustomerPortalSession, cancelManualSubscription } from "@/app/actions/billing-actions";
 import { createClient } from "@/lib/supabase/client";
 
@@ -52,6 +52,7 @@ export function SettingsClient({ user, hasPage: initialHasPage, subscription }: 
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "current" | "available" | "unavailable" | "invalid">("current");
   const [isUpdatingAccount, startAccountTransition] = useTransition();
   const [accountFeedback, setAccountFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Billing State
   const [isBillingPending, startBillingTransition] = useTransition();
@@ -484,6 +485,24 @@ export function SettingsClient({ user, hasPage: initialHasPage, subscription }: 
               </button>
             </div>
           </div>
+        </section>
+
+        <section className="rounded-2xl border border-[#E8E7E1] bg-[#FDFCF8] p-6 sm:p-8">
+          <h2 className="text-lg font-semibold text-[#292A25] font-serif">Your data</h2>
+          <p className="mt-1 text-sm text-[#777970]">Download your profile, page, AI knowledge, conversations, leads, and billing dates.</p>
+          <button onClick={async () => {
+            setIsExporting(true);
+            try {
+              const data = await exportAccountData();
+              const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = 'smart-page-account-export.json';
+              link.click();
+              URL.revokeObjectURL(url);
+            } catch (error) { alert(error instanceof Error ? error.message : 'Your export could not be prepared.'); }
+            finally { setIsExporting(false); }
+          }} disabled={isExporting} className="mt-4 rounded-xl border border-[#E8E7E1] px-4 py-2.5 text-sm font-medium text-[#292A25] disabled:opacity-50">{isExporting ? 'Preparing export…' : 'Download account data'}</button>
         </section>
 
         {/* SECTION 3: DANGER ZONE */}

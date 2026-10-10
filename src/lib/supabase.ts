@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { prisma } from './prisma';
+import { storageService } from './storage/service';
 
 /**
  * KnoChat Unified Client Library
@@ -47,18 +48,15 @@ export const knoChat = {
      */
     storage: {
         async uploadDocument(userId: string, fileName: string, body: Buffer | File) {
-            const { data, error } = await supabase.storage
-                .from('docs')
-                .upload(`${userId}/${fileName}`, body, {
-                    upsert: true,
-                    contentType: 'application/pdf', // Or dynamic
-                });
-            return { data, error };
+            const key = `${userId}/${fileName}`;
+            try {
+                await storageService.upload({ bucket: 'docs', key, contentType: body instanceof File ? body.type : 'application/octet-stream' }, body, true);
+                return { data: { path: key }, error: null };
+            } catch (error) { return { data: null, error }; }
         },
 
         async getPublicUrl(path: string) {
-            const { data } = supabase.storage.from('docs').getPublicUrl(path);
-            return data.publicUrl;
+            return storageService.publicUrl({ bucket: 'docs', key: path });
         },
     },
 
