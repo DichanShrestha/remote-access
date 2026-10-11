@@ -1,10 +1,29 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, ArrowUpRight, Search } from 'lucide-react';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 
-type Template = { id: string; name: string; description: string; mood: string };
-export function TemplateLibrary({ category, templates }: { category: 'CREATOR' | 'BUSINESS'; templates: Template[] }) {
-  const label = category === 'CREATOR' ? 'Creator' : 'Business';
-  return <main className="onboard-library"><header className="onboard-top"><Link href="/onboarding" className="onboard-back"><ArrowLeft size={15}/> Your path</Link><a href="/" className="onboard-brand"><span className="onboard-mark">s.</span> Smart Page</a><span>02 <i/> 04</span></header><section className="library-intro"><p className="onboard-kicker">THE {label.toUpperCase()} COLLECTION <span>·</span> {templates.length} DESIGNS</p><h1>Start with something<br/><em>beautiful.</em></h1><p>Every template is a complete page, built to give your first draft a real sense of place. Choose the one that feels closest.</p><div className="library-controls"><span><Search size={15}/>{templates.length} thoughtfully made starting points</span><span>PREVIEW EACH PAGE IN FULL <ArrowRight size={14}/></span></div></section><div className="onboard-template-grid">{templates.map((template, index) => <article key={template.id} className="onboard-template-card"><Link href={`/onboarding/template/${template.id}`} className="onboard-template-visual" aria-label={`Preview ${template.name}`}><div className="template-device"><iframe src={`/template-preview?id=${template.id}`} title={`${template.name} live preview`} loading={index < 4 ? 'eager' : 'lazy'} tabIndex={-1}/></div><span className="template-seq">{String(index + 1).padStart(2, '0')} <i/> {label.toUpperCase()}</span><span className="template-preview-affordance">Preview <ArrowUpRight size={14}/></span><span className={`template-halo halo-${index % 5}`}/></Link><div className="onboard-template-info"><div><p>{template.mood}</p><h2>{template.name}</h2><span>{template.description}</span></div></div><div className="onboard-template-actions"><Link href={`/onboarding/template/${template.id}`}>Preview <ArrowUpRight size={13}/></Link><Link href={`/onboarding/personalize?template=${template.id}`}>Use template <ArrowRight size={14}/></Link></div></article>)}</div><footer className="library-footer"><span>YOUR PAGE CAN CHANGE AS YOU DO.</span><Link href="/onboarding">Choose another path <ArrowUpRight size={14}/></Link></footer></main>;
+type Category = 'CREATOR' | 'BUSINESS';
+type Template = { id: string; name: string; description: string; mood: string; category: Category };
+
+export function TemplateLibrary({ templates }: { templates: Template[] }) {
+  const [filter, setFilter] = useState<'ALL' | Category>('ALL');
+  const visible = useMemo(() => filter === 'ALL' ? templates : templates.filter((template) => template.category === filter), [filter, templates]);
+  return <main className="onboard-library premium-library">
+    <header className="onboard-top"><Link href="/" className="onboard-brand"><span className="onboard-mark">s.</span> Smart Page</Link><span>01 <i/> 02</span></header>
+    <section className="library-intro"><p className="onboard-kicker">A BEAUTIFUL PLACE TO BEGIN</p><h1>Choose your <em>starting point.</em></h1>
+      <div className="template-filter" role="tablist" aria-label="Filter templates">
+        {(['ALL', 'CREATOR', 'BUSINESS'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={filter === value} className={filter === value ? 'active' : ''} onClick={() => setFilter(value)}>{value === 'ALL' ? 'All' : value === 'CREATOR' ? 'Creator' : 'Business'}</button>)}
+      </div>
+    </section>
+    <div className="onboard-template-grid">{visible.map((template, index) => <article key={template.id} className="onboard-template-card">
+      <Link href={`/onboarding/personalize?template=${template.id}`} className="onboard-template-visual" aria-label={`Choose ${template.name}`}>
+        <div className="template-device"><iframe src={`/template-preview?id=${template.id}`} title={`${template.name} preview`} loading={index < 4 ? 'eager' : 'lazy'} tabIndex={-1}/></div>
+        <span className="template-seq">{template.category === 'CREATOR' ? 'CREATOR' : 'BUSINESS'}</span><span className="template-preview-affordance">Choose template <ArrowUpRight size={14}/></span><span className={`template-halo halo-${index % 5}`}/>
+      </Link>
+      <div className="onboard-template-info"><div><p>{template.mood}</p><h2>{template.name}</h2><span>{template.description}</span></div></div>
+      <Link className="premium-template-choose" href={`/onboarding/personalize?template=${template.id}`}>Use this template <ArrowRight size={15}/></Link>
+    </article>)}</div>
+  </main>;
 }

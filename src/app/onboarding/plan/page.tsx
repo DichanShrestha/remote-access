@@ -9,7 +9,6 @@ export default async function OnboardingPlanPage() {
   const user = await authService.requireUser();
   const profile = await db.profile.findUnique({ where: { userId: user.id }, include: { page: true } });
   if (!profile?.page || !Object.keys(profile.page.draftConfig as object).length) redirect('/onboarding');
-  if (profile.page.isPublished) redirect('/dashboard');
   const trial = await getCurrentTrialLimits();
   return <PlanSelection username={profile.username} domain={new URL(await getPublicOrigin()).host} endsAt={trial.endsAt} limits={trial.limits} />;
 }

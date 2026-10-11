@@ -1,7 +1,6 @@
 import { authService } from '@/services/auth';
 import db from '@/lib/prisma';
 import { redirect } from 'next/navigation';
-import { OnboardingPathPicker } from '@/components/onboarding/OnboardingPathPicker';
 
 export default async function OnboardingStart() {
   const user = await authService.requireUser();
@@ -10,5 +9,5 @@ export default async function OnboardingStart() {
   if (profile.page?.draftConfig && Object.keys(profile.page.draftConfig as object).length > 0) {
     redirect(profile.page.isPublished ? '/dashboard' : '/editor');
   }
-  return <OnboardingPathPicker name={profile.displayName} />;
+  redirect('/onboarding/templates');
 }

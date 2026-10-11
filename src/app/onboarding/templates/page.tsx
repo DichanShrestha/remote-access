@@ -6,6 +6,6 @@ import { TemplateLibrary } from '@/components/onboarding/TemplateLibrary';
 export default async function OnboardingTemplates() {
   const user = await authService.requireUser();
   if (!user.profile) redirect('/onboarding');
-  const templates = getAvailableTemplates(user.profile.type);
-  return <TemplateLibrary category={user.profile.type} templates={templates.map(({ id, name, description, mood }) => ({ id, name, description, mood }))} />;
+  const templates = getAvailableTemplates();
+  return <TemplateLibrary templates={templates.map(({ id, name, description, mood, category }) => ({ id, name, description, mood, category }))} />;
 }

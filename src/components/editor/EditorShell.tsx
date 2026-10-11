@@ -120,7 +120,8 @@ export function EditorShell({
     try {
       toast.loading("Publishing your page...", { id: 'publish' });
       const result = await publishDraftConfig(pageId, doc);
-      toast.success("Page published successfully!", { id: 'publish' });
+      if (result.redirectTo === '/dashboard') toast.success("Page published successfully!", { id: 'publish' });
+      else toast.dismiss('publish');
       router.push(result.redirectTo);
     } catch (error) {
       console.error(error);

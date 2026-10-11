@@ -7,7 +7,7 @@ import { authService } from '@/services/auth';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 import { storageService } from '@/lib/storage/service';
-import { requirePageAccess } from '@/lib/billing/entitlements';
+import { getUserEntitlement, requirePageAccess } from '@/lib/billing/entitlements';
 
 async function removeUnusedPageMedia(userId: string, configs: unknown[]) {
   const used = new Set<string>();
@@ -57,7 +57,7 @@ export async function uploadPageMedia(formData: FormData) {
   }
 }
 
-export async function saveDraftConfig(pageId: string, rawConfig: any) {
+export async function saveDraftConfig(pageId: string, rawConfig: unknown) {
   const user = await authService.requireUser();
   await requirePageAccess(user.id);
 
@@ -88,9 +88,9 @@ export async function saveDraftConfig(pageId: string, rawConfig: any) {
   return { success: true };
 }
 
-export async function publishDraftConfig(pageId: string, rawConfig: any) {
+export async function publishDraftConfig(pageId: string, rawConfig: unknown) {
   const user = await authService.requireUser();
-  await requirePageAccess(user.id);
+  const { entitlement } = await getUserEntitlement(user.id);
   const parsed = PageDocumentSchema.safeParse(rawConfig);
   if (!parsed.success) throw new Error('Invalid page configuration');
 
@@ -100,12 +100,11 @@ export async function publishDraftConfig(pageId: string, rawConfig: any) {
   });
   if (!page || page.profile.userId !== user.id) throw new Error('Unauthorized');
 
-  const existingPlan = await db.subscription.findFirst({
-    where: { userId: user.id },
-    orderBy: { updatedAt: 'desc' },
-    select: { id: true, planId: true },
-  });
-  const onboardingComplete = page.isPublished || Boolean(existingPlan?.planId);
+  if (entitlement.trialExpired) {
+    await db.page.update({ where: { id: page.id }, data: { draftConfig: parsed.data as unknown as Prisma.InputJsonValue } });
+    return { redirectTo: '/dashboard/billing' };
+  }
+  const onboardingComplete = entitlement.onTrial || entitlement.paidActive;
 
   if (onboardingComplete) {
     await db.page.update({
@@ -126,5 +125,5 @@ export async function publishDraftConfig(pageId: string, rawConfig: any) {
     where: { id: page.id },
     data: { draftConfig: parsed.data as unknown as Prisma.InputJsonValue },
   });
-  return { redirectTo: '/onboarding/claim' };
+  return { redirectTo: '/onboarding/plan' };
 }
