@@ -14,6 +14,7 @@ export default async function DashboardLayout({
   const user = await authService.requireUser();
   const billing = await db.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 }, usage: true } });
   const entitlement = billing ? getSmartPageEntitlement(billing) : null;
+  console.log("Entitlement", entitlement)
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row">
       <Sidebar />
