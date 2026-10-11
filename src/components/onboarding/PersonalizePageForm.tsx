@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, LoaderCircle, X } from 'lucide-react';
-import { checkUsernameAvailability, saveOnboardingPersonalization } from '@/app/onboarding/actions';
+import { checkUsernameAvailability, saveOnboardingPersonalization, selectOnboardingTemplateDirect } from '@/app/onboarding/actions';
 
 function suggestedUsername(name: string) {
   return name.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
@@ -46,6 +46,14 @@ export function PersonalizePageForm({ templateId, templateName, displayName, use
         <p id="username-status" className={`premium-username-status status-${availability}`} aria-live="polite">{availability === 'checking' ? 'Checking availability…' : availability === 'available' ? 'This address is available.' : availability === 'unavailable' ? 'Already taken. Try another.' : availability === 'invalid' ? 'Use 3–30 letters, numbers, dashes, or underscores.' : 'We’ll check this address as you type.'}</p>
         <div className="personalize-hint">Your page stays private until you choose to publish.</div>{error && <p className="onboard-error" role="alert">{error}</p>}
         <button className="onboard-primary" type="submit" disabled={pending || availability !== 'available' || !name.trim()}>{pending ? 'Creating your draft…' : 'Continue to editor'}<ArrowRight size={16}/></button>
+        <button
+          type="button"
+          onClick={() => startTransition(() => selectOnboardingTemplateDirect(templateId))}
+          disabled={pending}
+          className="mt-3 w-full text-center text-xs text-[#777970] hover:text-[#292a25] transition-colors py-1 cursor-pointer"
+        >
+          Skip personalization and open editor directly →
+        </button>
       </form>
     </div>
   </main>;

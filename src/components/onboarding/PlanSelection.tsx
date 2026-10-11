@@ -2,231 +2,650 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Check, ShieldCheck, Zap, Sparkles } from 'lucide-react';
-import { startCurrentFreeTrial } from '@/app/onboarding/actions';
+import { ArrowLeft, ArrowRight, Check, ShieldCheck, Sparkles, ExternalLink } from 'lucide-react';
+import { startCurrentFreeTrial, createOnboardingCheckout } from '@/app/onboarding/actions';
 
-type Limits = { 
-  bots: number; 
-  characterLimit: number; 
-  messages: number; 
-  catalogImages: number; 
-  catalogSearchResults: number 
-};
+interface PlanSelectionProps {
+  username: string;
+  domain: string;
+  endsAt: string;
+  trialEligible: boolean;
+  trialIneligibleReason?: string;
+}
 
-export function PlanSelection({ 
-  username, 
-  domain, 
-  endsAt, 
-  limits 
-}: { 
-  username: string; 
-  domain: string; 
-  endsAt: string; 
-  limits: Limits 
-}) {
-  const [pendingPlan, setPendingPlan] = useState<string | null>(null);
+const BASE_FEATURES = [
+  'Professional page templates',
+  'Full customization & branding',
+  'Unlimited links & components',
+  'Custom profile URL & QR code',
+  'Basic analytics (views, clicks, CTR)',
+];
+
+const AI_FEATURES = [
+  'AI conversational chatbot',
+  'Automated lead capture & inbox',
+  'AI visual product responses',
+  'Email notifications for new leads',
+  'Knowledge base & FAQ builder',
+];
+
+export function PlanSelection({ username, domain, endsAt, trialEligible, trialIneligibleReason }: PlanSelectionProps) {
+  const [selectedPlan, setSelectedPlan] = useState<'smart_page' | 'smart_page_ai'>('smart_page_ai');
   const [isPending, startTransition] = useTransition();
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [error, setError] = useState('');
 
-  const endDate = new Date(endsAt).toLocaleDateString('en-US', { 
-    month: 'long', 
-    day: 'numeric', 
-    year: 'numeric', 
-    timeZone: 'UTC' 
+  const endDate = new Date(endsAt).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
   });
 
-  const handleSelectPlan = (planId: string) => {
-    setPendingPlan(planId);
+  const handleStartTrial = () => {
+    if (!trialEligible) return;
+    setPendingAction('trial');
     setError('');
     startTransition(async () => {
-      const result = await startCurrentFreeTrial(planId);
+      const result = await startCurrentFreeTrial(selectedPlan);
       if (result?.error) {
         setError(result.error);
-        setPendingPlan(null);
+        setPendingAction(null);
       }
     });
   };
 
+  const handleSubscribe = (planId: 'smart_page' | 'smart_page_ai') => {
+    setPendingAction(`subscribe_${planId}`);
+    setError('');
+    startTransition(async () => {
+      const result = await createOnboardingCheckout(planId);
+      if (result && 'error' in result && result.error) {
+        setError(result.error);
+        setPendingAction(null);
+      } else if (result && 'checkoutUrl' in result && result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+      }
+    });
+  };
+
+  const isLoading = isPending || !!pendingAction;
+
   return (
-    <main className="plan-page min-h-screen bg-[#F8F7F2] text-[#292A25] font-sans pb-16">
-      {/* Top Header */}
-      <header className="onboard-top max-w-6xl mx-auto px-6 py-6 flex items-center justify-between border-b border-[#E8E7E1]/60">
-        <Link href="/onboarding/claim" className="onboard-back flex items-center gap-2 text-xs text-[#777970] hover:text-[#292A25] transition-colors">
-          <ArrowLeft size={15}/> Back to Username
+    <main className="plan-page" style={styles.page}>
+      {/* Header */}
+      <header style={styles.header}>
+        <Link href="/onboarding/claim" style={styles.backLink}>
+          <ArrowLeft size={14} />
+          <span>Back</span>
         </Link>
-        <a href="/" className="onboard-brand text-sm font-semibold tracking-tight text-[#292A25]">
-          <span className="onboard-mark text-emerald-600 font-bold">s.</span> Smart Page
+        <a href="/" style={styles.brand}>
+          <span style={styles.brandMark}>s.</span> Smart Page
         </a>
-        <span className="text-[11px] font-mono tracking-widest text-[#92938A] uppercase flex items-center gap-1.5">
-          YOUR PAGE <i className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></i> READY
-        </span>
+        <div style={styles.statusBadge}>
+          <span style={styles.statusDot} />
+          Page ready
+        </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-6 pt-10 pb-8">
-        {/* Page Title & Copy */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <p className="onboard-kicker text-[11px] font-mono uppercase tracking-[0.2em] text-[#898A82] mb-3">
-            ONE LAST STEP BEFORE THE WORLD SEES IT
+      <div style={styles.container}>
+        {/* Title */}
+        <div style={styles.titleSection}>
+          <h1 style={styles.heading}>Choose your plan</h1>
+          <p style={styles.subtitle}>
+            Your page at <strong style={styles.urlHighlight}>{domain}/{username}</strong> is ready to go live.
           </p>
-          <h1 className="text-4xl md:text-5xl font-serif tracking-tight text-[#292A25] mb-4">
-            Choose how to <em>begin.</em>
-          </h1>
-          <p className="text-sm md:text-base text-[#777970] leading-relaxed mb-6">
-            Both plans include a <strong>14-day free trial</strong> with <strong>no credit card required</strong>. Your page will publish live immediately.
-          </p>
-
-          <div className="inline-flex items-center gap-2 bg-[#FDFCF8] border border-[#E8E7E1] px-4 py-2.5 rounded-xl shadow-xs text-xs text-[#777970]">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-[#A1A299]">Live address:</span>
-            <strong className="text-[#292A25] font-medium">{domain}/<span className="font-semibold text-emerald-700">{username}</span></strong>
-          </div>
         </div>
 
         {error && (
-          <div className="max-w-md mx-auto mb-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs text-center">
-            {error}
+          <div style={styles.errorBanner}>{error}</div>
+        )}
+
+        {/* Plan Cards */}
+        <div style={styles.cardsGrid}>
+
+          {/* Smart Page — $9/mo */}
+          <div
+            style={{
+              ...styles.card,
+              ...(selectedPlan === 'smart_page' ? styles.cardSelected : {}),
+            }}
+            onClick={() => !isLoading && setSelectedPlan('smart_page')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && !isLoading && setSelectedPlan('smart_page')}
+          >
+            {/* Selection indicator */}
+            <div style={styles.radioRow}>
+              <div style={{
+                ...styles.radio,
+                ...(selectedPlan === 'smart_page' ? styles.radioChecked : {}),
+              }}>
+                {selectedPlan === 'smart_page' && <div style={styles.radioInner} />}
+              </div>
+              <span style={styles.planLabel}>Standard</span>
+            </div>
+
+            <div style={styles.planNameRow}>
+              <h2 style={styles.planName}>Smart Page</h2>
+            </div>
+
+            <div style={styles.priceRow}>
+              <span style={styles.priceAmount}>$9</span>
+              <span style={styles.pricePeriod}>/month</span>
+            </div>
+
+            <p style={styles.planDescription}>
+              For creators & businesses wanting a clean, high-converting digital presence.
+            </p>
+
+            <div style={styles.divider} />
+
+            <ul style={styles.featureList}>
+              {BASE_FEATURES.map((f) => (
+                <li key={f} style={styles.featureItem}>
+                  <Check size={14} style={styles.checkIcon} />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); handleSubscribe('smart_page'); }}
+              disabled={isLoading}
+              style={{
+                ...styles.subscribeBtn,
+                ...(isLoading ? styles.btnDisabled : {}),
+              }}
+            >
+              {pendingAction === 'subscribe_smart_page' ? 'Redirecting…' : 'Subscribe — $9/mo'}
+              {pendingAction !== 'subscribe_smart_page' && <ExternalLink size={13} />}
+            </button>
+          </div>
+
+          {/* Smart Page + AI — $29/mo */}
+          <div
+            style={{
+              ...styles.card,
+              ...styles.cardDark,
+              ...(selectedPlan === 'smart_page_ai' ? styles.cardDarkSelected : {}),
+            }}
+            onClick={() => !isLoading && setSelectedPlan('smart_page_ai')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && !isLoading && setSelectedPlan('smart_page_ai')}
+          >
+            {/* Recommended badge */}
+            <div style={styles.recommendedBadge}>
+              <Sparkles size={11} />
+              Recommended
+            </div>
+
+            {/* Selection indicator */}
+            <div style={styles.radioRow}>
+              <div style={{
+                ...styles.radio,
+                ...styles.radioDark,
+                ...(selectedPlan === 'smart_page_ai' ? styles.radioDarkChecked : {}),
+              }}>
+                {selectedPlan === 'smart_page_ai' && <div style={styles.radioInnerDark} />}
+              </div>
+              <span style={{ ...styles.planLabel, color: '#A1A299' }}>AI-Powered</span>
+            </div>
+
+            <div style={styles.planNameRow}>
+              <h2 style={{ ...styles.planName, color: '#FDFCF8' }}>Smart Page + AI</h2>
+            </div>
+
+            <div style={styles.priceRow}>
+              <span style={{ ...styles.priceAmount, color: '#FDFCF8' }}>$29</span>
+              <span style={{ ...styles.pricePeriod, color: '#A1A299' }}>/month</span>
+            </div>
+
+            <p style={{ ...styles.planDescription, color: '#9B9C94' }}>
+              For brands that want an AI assistant capturing leads and answering questions 24/7.
+            </p>
+
+            <div style={{ ...styles.divider, borderColor: '#3C3D37' }} />
+
+            <div style={styles.includesLabel}>
+              Everything in Smart Page, plus:
+            </div>
+
+            <ul style={styles.featureList}>
+              {AI_FEATURES.map((f) => (
+                <li key={f} style={styles.featureItem}>
+                  <Sparkles size={13} style={styles.aiIcon} />
+                  <span style={{ color: '#D8D7D0' }}>{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); handleSubscribe('smart_page_ai'); }}
+              disabled={isLoading}
+              style={{
+                ...styles.subscribeBtnLight,
+                ...(isLoading ? styles.btnDisabled : {}),
+              }}
+            >
+              {pendingAction === 'subscribe_smart_page_ai' ? 'Redirecting…' : 'Subscribe — $29/mo'}
+              {pendingAction !== 'subscribe_smart_page_ai' && <ExternalLink size={13} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Trial Section */}
+        {trialEligible && (
+          <div style={styles.trialSection}>
+            <div style={styles.trialCard}>
+              <div style={styles.trialContent}>
+                <div style={styles.trialInfo}>
+                  <h3 style={styles.trialTitle}>Not ready to commit?</h3>
+                  <p style={styles.trialDescription}>
+                    Start a <strong>14-day free trial</strong> of the <strong>{selectedPlan === 'smart_page_ai' ? 'Smart Page + AI' : 'Smart Page'}</strong> plan.
+                    No credit card required — you won't be charged when it ends.
+                  </p>
+                </div>
+                <button
+                  onClick={handleStartTrial}
+                  disabled={isLoading}
+                  style={{
+                    ...styles.trialBtn,
+                    ...(isLoading ? styles.btnDisabled : {}),
+                  }}
+                >
+                  {pendingAction === 'trial' ? 'Publishing your page…' : (
+                    <>
+                      Start free trial
+                      <ArrowRight size={14} />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Pricing Cards Grid */}
-        <div className="grid md:grid-cols-2 gap-8 items-stretch mb-12">
-          
-          {/* Plan 1: Smart Page ($9/mo) */}
-          <div className="bg-[#FDFCF8] border border-[#E5E3DB] rounded-2xl p-8 shadow-sm flex flex-col justify-between hover:border-[#D1CFB5] transition-all">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-mono tracking-wider text-[#92938A] uppercase font-semibold">Standard Plan</span>
-                <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                  14 Days Free
-                </span>
-              </div>
-
-              <h2 className="text-2xl font-bold text-[#292A25] mb-2 font-serif">Smart Page</h2>
-              <p className="text-xs text-[#777970] mb-6">For creators & businesses wanting a clean, high-converting digital storefront.</p>
-
-              <div className="flex items-baseline gap-1.5 mb-6 pb-6 border-b border-[#E8E7E1]">
-                <span className="text-4xl font-bold text-[#292A25]">$9</span>
-                <span className="text-xs text-[#898A82]">/ month after trial</span>
-                <span className="ml-auto text-xs font-semibold text-[#292A25] bg-[#F3F2EA] px-2.5 py-1 rounded-lg">$0 today</span>
-              </div>
-
-              <div className="space-y-3.5 mb-8 text-xs text-[#55574E]">
-                <div className="font-semibold text-[11px] font-mono text-[#92938A] uppercase tracking-wider mb-2">What's Included:</div>
-                <div className="flex items-center gap-2.5">
-                  <Check size={15} className="text-emerald-600 shrink-0" />
-                  <span>Business / Creator templates</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Check size={15} className="text-emerald-600 shrink-0" />
-                  <span>Customization & full branding</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Check size={15} className="text-emerald-600 shrink-0" />
-                  <span>Unlimited links & components</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Check size={15} className="text-emerald-600 shrink-0" />
-                  <span>Custom profile URL & QR code</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Check size={15} className="text-emerald-600 shrink-0" />
-                  <span>Basic analytics (views, clicks, CTR)</span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => handleSelectPlan('smart_page')}
-              disabled={isPending}
-              className="w-full py-3.5 px-5 bg-[#292A25] hover:bg-[#3C3D37] text-[#FDFCF8] font-medium text-xs rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {isPending && pendingPlan === 'smart_page' ? (
-                'Publishing your page…'
-              ) : (
-                <>
-                  Start 14-Day Free Trial
-                  <ArrowRight size={15} />
-                </>
-              )}
-            </button>
+        {!trialEligible && trialIneligibleReason && (
+          <div style={styles.trialUsedNotice}>
+            <ShieldCheck size={15} style={{ color: '#898A82', flexShrink: 0 }} />
+            <span>{trialIneligibleReason}</span>
           </div>
+        )}
 
-          {/* Plan 2: Smart Page + AI ($29/mo) */}
-          <div className="bg-[#292A25] text-[#FDFCF8] border border-[#3C3D37] rounded-2xl p-8 shadow-xl flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute -top-12 -right-12 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[11px] font-mono tracking-wider text-amber-300 uppercase font-semibold flex items-center gap-1">
-                  <Sparkles size={13} className="text-amber-300" /> RECOMMENDED
-                </span>
-                <span className="text-[11px] font-medium text-emerald-300 bg-emerald-950/80 border border-emerald-800 px-2.5 py-0.5 rounded-full">
-                  14 Days Free
-                </span>
-              </div>
-
-              <h2 className="text-2xl font-bold text-[#FDFCF8] mb-2 font-serif">Smart Page + AI</h2>
-              <p className="text-xs text-[#A1A299] mb-6">For brands that want an automated AI assistant capturing leads 24/7.</p>
-
-              <div className="flex items-baseline gap-1.5 mb-6 pb-6 border-b border-[#3C3D37]">
-                <span className="text-4xl font-bold text-[#FDFCF8]">$29</span>
-                <span className="text-xs text-[#A1A299]">/ month after trial</span>
-                <span className="ml-auto text-xs font-semibold text-[#FDFCF8] bg-[#3C3D37] px-2.5 py-1 rounded-lg">$0 today</span>
-              </div>
-
-              <div className="space-y-3.5 mb-8 text-xs text-[#DEDDD6]">
-                <div className="font-semibold text-[11px] font-mono text-[#A1A299] uppercase tracking-wider mb-2">Everything in Smart Page, plus:</div>
-                <div className="flex items-center gap-2.5">
-                  <Zap size={15} className="text-amber-400 shrink-0" />
-                  <span>AI conversational chatbot & assistant</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Zap size={15} className="text-amber-400 shrink-0" />
-                  <span>Automated lead capture & contact inbox</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Zap size={15} className="text-amber-400 shrink-0" />
-                  <span>AI visual product responses</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Zap size={15} className="text-amber-400 shrink-0" />
-                  <span>Email notifications for new leads</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <Check size={15} className="text-emerald-400 shrink-0" />
-                  <span>Up to {limits.messages.toLocaleString()} AI messages during trial</span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => handleSelectPlan('smart_page_ai')}
-              disabled={isPending}
-              className="w-full py-3.5 px-5 bg-[#FDFCF8] hover:bg-white text-[#292A25] font-semibold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg disabled:opacity-50 cursor-pointer"
-            >
-              {isPending && pendingPlan === 'smart_page_ai' ? (
-                'Publishing your page…'
-              ) : (
-                <>
-                  Start 14-Day Trial with AI
-                  <ArrowRight size={15} />
-                </>
-              )}
-            </button>
-          </div>
-
-        </div>
-
-        {/* Cardless Guarantee Bar */}
-        <div className="max-w-2xl mx-auto bg-[#F5F4EE] border border-[#E8E6DE] rounded-xl p-4 flex items-start gap-3 text-xs text-[#777970]">
-          <ShieldCheck size={18} className="text-emerald-700 shrink-0 mt-0.5" />
-          <div>
-            <strong className="font-semibold text-[#292A25] block mb-0.5">14-Day Guarantee & Cardless Start</strong>
-            <p className="leading-relaxed">
-              Your free trial runs through <strong>{endDate}</strong>. No credit card is collected today, and you will not be charged automatically. You can switch plans or upgrade anytime from your dashboard.
-            </p>
-          </div>
+        {/* Trust footer */}
+        <div style={styles.trustFooter}>
+          <ShieldCheck size={15} style={{ color: '#898A82', flexShrink: 0 }} />
+          <span>
+            {trialEligible
+              ? `Free trial runs through ${endDate}. No card collected, no auto-charges. Switch or upgrade anytime.`
+              : 'Cancel anytime. Switch or upgrade plans from your dashboard.'}
+          </span>
         </div>
       </div>
     </main>
   );
 }
+
+/* ---------- Inline Styles ---------- */
+
+const styles: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: '100vh',
+    backgroundColor: '#F8F7F2',
+    color: '#292A25',
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    paddingBottom: 80,
+  },
+  header: {
+    maxWidth: 1080,
+    margin: '0 auto',
+    padding: '20px 24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottom: '1px solid #E8E7E1',
+  },
+  backLink: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    fontSize: 13,
+    color: '#777970',
+    textDecoration: 'none',
+    transition: 'color 0.15s',
+  },
+  brand: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: '#292A25',
+    textDecoration: 'none',
+    letterSpacing: '-0.01em',
+  },
+  brandMark: {
+    color: '#16a34a',
+    fontWeight: 700,
+  },
+  statusBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    fontSize: 12,
+    color: '#898A82',
+    fontWeight: 500,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    backgroundColor: '#22c55e',
+  },
+  container: {
+    maxWidth: 960,
+    margin: '0 auto',
+    padding: '0 24px',
+  },
+  titleSection: {
+    textAlign: 'center' as const,
+    paddingTop: 48,
+    paddingBottom: 40,
+  },
+  heading: {
+    fontSize: 36,
+    fontWeight: 700,
+    letterSpacing: '-0.025em',
+    color: '#292A25',
+    margin: '0 0 12px',
+    lineHeight: 1.15,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: '#777970',
+    margin: 0,
+    lineHeight: 1.5,
+  },
+  urlHighlight: {
+    color: '#292A25',
+    fontWeight: 600,
+  },
+  errorBanner: {
+    maxWidth: 480,
+    margin: '0 auto 24px',
+    padding: '12px 16px',
+    backgroundColor: '#FEF2F2',
+    border: '1px solid #FECACA',
+    color: '#B91C1C',
+    borderRadius: 12,
+    fontSize: 13,
+    textAlign: 'center' as const,
+  },
+  cardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: 20,
+    marginBottom: 32,
+  },
+  card: {
+    position: 'relative' as const,
+    backgroundColor: '#FDFCF8',
+    border: '2px solid #E8E7E1',
+    borderRadius: 16,
+    padding: '28px 28px 24px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    cursor: 'pointer',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+  },
+  cardSelected: {
+    borderColor: '#292A25',
+    boxShadow: '0 0 0 1px #292A25',
+  },
+  cardDark: {
+    backgroundColor: '#292A25',
+    border: '2px solid #3C3D37',
+    color: '#FDFCF8',
+  },
+  cardDarkSelected: {
+    borderColor: '#FDFCF8',
+    boxShadow: '0 0 0 1px #FDFCF8',
+  },
+  recommendedBadge: {
+    position: 'absolute' as const,
+    top: -1,
+    right: 24,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+    fontSize: 10,
+    fontWeight: 600,
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase' as const,
+    color: '#292A25',
+    backgroundColor: '#F5D04E',
+    padding: '4px 10px',
+    borderRadius: '0 0 8px 8px',
+  },
+  radioRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  radio: {
+    width: 18,
+    height: 18,
+    borderRadius: '50%',
+    border: '2px solid #D1CFB5',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'border-color 0.15s',
+    flexShrink: 0,
+  },
+  radioChecked: {
+    borderColor: '#292A25',
+  },
+  radioInner: {
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    backgroundColor: '#292A25',
+  },
+  radioDark: {
+    borderColor: '#555650',
+  },
+  radioDarkChecked: {
+    borderColor: '#FDFCF8',
+  },
+  radioInnerDark: {
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    backgroundColor: '#FDFCF8',
+  },
+  planLabel: {
+    fontSize: 11,
+    fontWeight: 600,
+    color: '#898A82',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.08em',
+  },
+  planNameRow: {
+    marginBottom: 8,
+  },
+  planName: {
+    fontSize: 22,
+    fontWeight: 700,
+    letterSpacing: '-0.015em',
+    margin: 0,
+    color: '#292A25',
+  },
+  priceRow: {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: 3,
+    marginBottom: 10,
+  },
+  priceAmount: {
+    fontSize: 36,
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 1,
+    color: '#292A25',
+  },
+  pricePeriod: {
+    fontSize: 13,
+    color: '#898A82',
+    fontWeight: 500,
+  },
+  planDescription: {
+    fontSize: 13,
+    color: '#777970',
+    lineHeight: 1.5,
+    margin: '0 0 16px',
+  },
+  divider: {
+    borderTop: '1px solid #E8E7E1',
+    margin: '0 0 16px',
+  },
+  includesLabel: {
+    fontSize: 11,
+    fontWeight: 600,
+    color: '#777970',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.06em',
+    marginBottom: 10,
+  },
+  featureList: {
+    listStyle: 'none',
+    padding: 0,
+    margin: '0 0 20px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 9,
+  },
+  featureItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    fontSize: 13,
+    lineHeight: 1.3,
+  },
+  checkIcon: {
+    color: '#16a34a',
+    flexShrink: 0,
+  },
+  aiIcon: {
+    color: '#D9A520',
+    flexShrink: 0,
+  },
+  subscribeBtn: {
+    marginTop: 'auto',
+    width: '100%',
+    padding: '12px 16px',
+    backgroundColor: '#292A25',
+    color: '#FDFCF8',
+    border: 'none',
+    borderRadius: 10,
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    transition: 'background-color 0.15s',
+  },
+  subscribeBtnLight: {
+    marginTop: 'auto',
+    width: '100%',
+    padding: '12px 16px',
+    backgroundColor: '#FDFCF8',
+    color: '#292A25',
+    border: 'none',
+    borderRadius: 10,
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    transition: 'background-color 0.15s',
+  },
+  btnDisabled: {
+    opacity: 0.5,
+    cursor: 'not-allowed',
+  },
+
+  /* Trial Section */
+  trialSection: {
+    marginBottom: 24,
+  },
+  trialCard: {
+    backgroundColor: '#FDFCF8',
+    border: '1px solid #E8E7E1',
+    borderRadius: 14,
+    padding: '20px 24px',
+  },
+  trialContent: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 24,
+    flexWrap: 'wrap' as const,
+  },
+  trialInfo: {
+    flex: 1,
+    minWidth: 240,
+  },
+  trialTitle: {
+    fontSize: 15,
+    fontWeight: 650,
+    color: '#292A25',
+    margin: '0 0 4px',
+    letterSpacing: '-0.01em',
+  },
+  trialDescription: {
+    fontSize: 13,
+    color: '#777970',
+    margin: 0,
+    lineHeight: 1.5,
+  },
+  trialBtn: {
+    padding: '11px 22px',
+    backgroundColor: '#16a34a',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: 10,
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    whiteSpace: 'nowrap' as const,
+    transition: 'background-color 0.15s',
+    flexShrink: 0,
+  },
+  trialUsedNotice: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    justifyContent: 'center',
+    fontSize: 13,
+    color: '#777970',
+    marginBottom: 24,
+  },
+  trustFooter: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    justifyContent: 'center',
+    fontSize: 12,
+    color: '#898A82',
+    textAlign: 'center' as const,
+    paddingTop: 8,
+  },
+};

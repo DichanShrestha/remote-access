@@ -22,8 +22,56 @@ export async function chooseOnboardingTemplate(templateId: string) {
   if (!user.profile) throw new Error('Your profile is not ready yet.');
   const template = getTemplateDetails(templateId);
   if (!template) throw new Error('Choose an available template.');
-  await db.profile.update({ where: { id: user.profile.id }, data: { type: template.category } });
+
+  // Pre-seed the page with the chosen template right away
+  await db.$transaction(async (tx) => {
+    await tx.profile.update({
+      where: { id: user.profile!.id },
+      data: { type: template.category },
+    });
+    await tx.page.upsert({
+      where: { profileId: user.profile!.id },
+      create: {
+        profileId: user.profile!.id,
+        draftConfig: template.document as unknown as Prisma.InputJsonValue,
+      },
+      update: {
+        draftConfig: template.document as unknown as Prisma.InputJsonValue,
+      },
+    });
+  });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/editor');
   redirect(`/onboarding/personalize?template=${encodeURIComponent(templateId)}`);
+}
+
+export async function selectOnboardingTemplateDirect(templateId: string) {
+  const user = await authService.requireUser();
+  if (!user.profile) throw new Error('Your profile is not ready yet.');
+  const template = getTemplateDetails(templateId);
+  if (!template) throw new Error('Choose an available template.');
+
+  await db.$transaction(async (tx) => {
+    await tx.profile.update({
+      where: { id: user.profile!.id },
+      data: { type: template.category },
+    });
+    await tx.page.upsert({
+      where: { profileId: user.profile!.id },
+      create: {
+        profileId: user.profile!.id,
+        draftConfig: template.document as unknown as Prisma.InputJsonValue,
+      },
+      update: {
+        draftConfig: template.document as unknown as Prisma.InputJsonValue,
+      },
+    });
+  });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/editor');
+  redirect('/editor');
 }
 
 const personalizationSchema = z.object({
@@ -41,14 +89,23 @@ export async function saveOnboardingPersonalization(input: unknown) {
   const template = getTemplateDetails(templateId);
   if (!template) return { error: 'That template is no longer available.' };
   if (username.toLowerCase() !== user.profile.username && !(await authService.isUsernameAvailable(username.toLowerCase()))) return { error: 'That username is already in use.' };
-  const existingPage = await db.page.findUnique({ where: { profileId: user.profile.id }, select: { id: true, draftConfig: true } });
-  if (existingPage?.draftConfig && Object.keys(existingPage.draftConfig as object).length > 0) redirect('/editor');
 
   const doc = structuredClone(template.document);
-  const hero = doc.sections.find((section) => 'type' in section && section.type === 'hero');
-  if (hero && 'content' in hero) {
-    hero.content = { ...hero.content, title: displayName } as typeof hero.content;
-  }
+  // Find hero in sections or groups and update title with user's display name
+  const updateHeroTitle = (nodes: any[]): boolean => {
+    for (const node of nodes) {
+      if (node.type === 'hero' && node.content) {
+        node.content = { ...node.content, title: displayName };
+        return true;
+      }
+      if (node.kind === 'group' && Array.isArray(node.children)) {
+        if (updateHeroTitle(node.children)) return true;
+      }
+    }
+    return false;
+  };
+  updateHeroTitle(doc.sections);
+
   const validated = PageDocumentSchema.safeParse(doc);
   if (!validated.success) return { error: 'We could not prepare this template. Please choose another.' };
 
@@ -141,4 +198,47 @@ export async function getCurrentTrialLimits() {
     endsAt: (existing?.trialEnd || new Date(user.createdAt.getTime() + TRIAL_MS)).toISOString(),
     limits: TIER_LIMITS.free,
   };
+}
+
+/** Check whether the current user can start a free trial. */
+export async function checkTrialEligibility(): Promise<{ eligible: boolean; reason?: string }> {
+  const user = await authService.requireUser();
+  const existing = await db.subscription.findFirst({ where: { userId: user.id }, orderBy: { updatedAt: 'desc' } });
+  const trialGrant = await db.user.findUnique({ where: { id: user.id }, select: { trialGrantedAt: true } });
+  if (existing && ['active', 'past_due'].includes(existing.status)) return { eligible: false, reason: 'You already have an active subscription.' };
+  if (trialGrant?.trialGrantedAt || existing?.trialEverGranted || existing?.trialStart) return { eligible: false, reason: 'Your one-time trial has already been used.' };
+  return { eligible: true };
+}
+
+/** Publish the page and redirect the user to a Dodo checkout session. */
+export async function createOnboardingCheckout(planId: 'smart_page' | 'smart_page_ai') {
+  const user = await authService.requireUser();
+  if (!user.profile) return { error: 'Your profile is not ready yet.' };
+
+  const page = await db.page.findUnique({ where: { profileId: user.profile.id } });
+  if (!page || !Object.keys(page.draftConfig as object).length) return { error: 'Choose and personalize a template before publishing.' };
+
+  // Publish the page first so it's live when the user returns from checkout
+  await db.page.update({ where: { id: page.id }, data: { publishedConfig: page.draftConfig as unknown as Prisma.InputJsonValue, isPublished: true } });
+
+  // Create checkout session via Dodo
+  const { dodo } = await import('@/lib/dodopayments');
+  if (!dodo || !process.env.DODO_API_KEY) return { error: 'Billing is temporarily unavailable. Please try again later.' };
+
+  const productId = planId === 'smart_page_ai' ? process.env.DODO_PRODUCT_SMART_PAGE_AI : process.env.DODO_PRODUCT_SMART_PAGE;
+  if (!productId) return { error: 'This plan is not configured for checkout.' };
+
+  try {
+    const session = await dodo.checkoutSessions.create({
+      customer: { email: user.email!, name: user.email! },
+      product_cart: [{ product_id: productId, quantity: 1 }],
+      metadata: { user_id: user.id, plan_id: planId },
+      feature_flags: { allow_discount_code: true },
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/onboarding/complete`,
+    });
+    return { checkoutUrl: session.checkout_url };
+  } catch (e: any) {
+    console.error('Onboarding checkout creation failed:', e.message);
+    return { error: 'Could not start checkout. Please try again.' };
+  }
 }
