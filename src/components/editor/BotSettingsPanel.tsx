@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getOrCreateBotForPage, updateBotSettings } from "@/app/actions/chatbot-settings-actions";
-import { Save, MessageSquare, Shield, Palette, Brain, ExternalLink } from "lucide-react";
+import { Save, MessageSquare, Shield, Palette, Brain, ExternalLink, Calendar } from "lucide-react";
 import Link from "next/link";
 
 export function BotSettingsPanel({ pageId }: { pageId: string }) {
@@ -150,6 +150,40 @@ export function BotSettingsPanel({ pageId }: { pageId: string }) {
                         onChange={e => setBot({ ...bot, collectLeads: e.target.checked })}
                         className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4"
                     />
+                </div>
+            </div>
+
+            {/* Booking & Scheduling */}
+            <div className="flex flex-col gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="w-4 h-4 text-slate-500" />
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Booking & Scheduling</h4>
+                </div>
+                
+                <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-400 block">Booking Calendar URL</label>
+                        {bot.bookingLink && (
+                            <a
+                                href={bot.bookingLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                            >
+                                Test <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                        )}
+                    </div>
+                    <input
+                        type="url"
+                        value={bot.bookingLink || ""}
+                        onChange={e => setBot({ ...bot, bookingLink: e.target.value })}
+                        placeholder="https://cal.com/your-name or https://calendly.com/..."
+                        className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                        When visitors express intent to book or schedule, the AI automatically provides this booking link and tracks conversion analytics.
+                    </p>
                 </div>
             </div>
 

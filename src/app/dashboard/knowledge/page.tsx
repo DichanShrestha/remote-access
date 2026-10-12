@@ -14,12 +14,12 @@ export default async function KnowledgePage() {
 
   if (!bot) {
     return (
-      <div className="max-w-5xl mx-auto w-full">
+      <div className="max-w-6xl mx-auto w-full">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">AI Knowledge</h1>
-        <p className="text-slate-500 mb-10">Train your AI assistant with your custom knowledge.</p>
+        <p className="text-slate-500 mb-10">Train your AI assistant with custom knowledge.</p>
 
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-10 text-center flex flex-col items-center">
-          <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4">
+          <div className="w-16 h-16 bg-slate-100 text-slate-700 rounded-full flex items-center justify-center mb-4">
             <Brain className="w-8 h-8" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight mb-2">No AI Assistant Yet</h2>
@@ -39,7 +39,7 @@ export default async function KnowledgePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto w-full">
+    <div className="max-w-6xl mx-auto w-full pb-16">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">AI Knowledge</h1>
         <p className="text-slate-500">Upload documents, crawl URLs, add FAQs, and manage visual catalogs to train your AI assistant.</p>

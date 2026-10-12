@@ -1,11 +1,14 @@
 "use client";
 
 import React from "react";
+import { ExternalLink } from "lucide-react";
 
 interface MarkdownMessageProps {
   content: string;
   className?: string;
   isUser?: boolean;
+  bookingLink?: string | null;
+  onBookingClick?: (url: string) => void;
 }
 
 /**
@@ -14,16 +17,37 @@ interface MarkdownMessageProps {
  * - *italic* or _italic_
  * - `code`
  * - [label](url)
+ * - bare URLs (https://...)
  */
-function renderInline(text: string, isUser = false): React.ReactNode {
+function renderInline(
+  text: string, 
+  isUser = false, 
+  bookingLink?: string | null, 
+  onBookingClick?: (url: string) => void
+): React.ReactNode {
   // Regex pattern matching:
   // 1. `code`
   // 2. **bold** or __bold__
   // 3. [link](url)
-  // 4. *italic* or _italic_
-  const tokenRegex = /(`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\[[^\]]+\]\(https?:\/\/[^\s)]+\)|\*[^*]+\*|_[^_]+_)/g;
+  // 4. bare url: (https?:\/\/[^\s<)]+)
+  // 5. *italic* or _italic_
+  const tokenRegex = /(`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s<)]+|\*[^*]+\*|_[^_]+_)/g;
 
   const parts = text.split(tokenRegex);
+
+  const isBookingUrl = (testUrl: string) => {
+    if (!testUrl) return false;
+    if (bookingLink && (testUrl === bookingLink || testUrl.startsWith(bookingLink) || bookingLink.startsWith(testUrl))) {
+      return true;
+    }
+    return false;
+  };
+
+  const handleLinkClick = (url: string) => {
+    if (isBookingUrl(url)) {
+      onBookingClick?.(url);
+    }
+  };
 
   return parts.map((part, index) => {
     if (!part) return null;
@@ -58,15 +82,38 @@ function renderInline(text: string, isUser = false): React.ReactNode {
     const linkMatch = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
     if (linkMatch) {
       const [, label, url] = linkMatch;
+      const isBooking = isBookingUrl(url);
       return (
         <a
           key={index}
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline font-medium hover:opacity-80 transition-opacity break-all text-inherit"
+          onClick={() => handleLinkClick(url)}
+          className={`underline font-medium hover:opacity-80 transition-opacity break-all text-inherit ${
+            isBooking ? "font-semibold underline decoration-2 underline-offset-2" : ""
+          }`}
         >
           {label}
+        </a>
+      );
+    }
+
+    // Bare URL: https://...
+    if (/^https?:\/\/[^\s<)]+$/.test(part)) {
+      const isBooking = isBookingUrl(part);
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => handleLinkClick(part)}
+          className={`underline font-medium hover:opacity-80 transition-opacity break-all text-inherit ${
+            isBooking ? "font-semibold underline decoration-2 underline-offset-2" : ""
+          }`}
+        >
+          {part}
         </a>
       );
     }
@@ -139,6 +186,8 @@ export function MarkdownMessage({
   content,
   className = "",
   isUser = false,
+  bookingLink = null,
+  onBookingClick,
 }: MarkdownMessageProps) {
   if (!content) return null;
 
@@ -159,7 +208,7 @@ export function MarkdownMessage({
           return (
             <pre
               key={blockIndex}
-              className="p-3 my-2 rounded-xl bg-black/10 dark:bg-black/40 overflow-x-auto font-mono text-xs"
+              className="p-3 my-2 rounded-xl bg-black/10 dark:bg-black/40 overflow-x-auto max-w-full font-mono text-xs"
             >
               <code>{codeContent}</code>
             </pre>
@@ -175,7 +224,7 @@ export function MarkdownMessage({
                 const itemText = line.replace(/^\s*[-*•]\s+/, "");
                 return (
                   <li key={lineIndex} className="leading-relaxed">
-                    {renderInline(itemText, isUser)}
+                    {renderInline(itemText, isUser, bookingLink, onBookingClick)}
                   </li>
                 );
               })}
@@ -192,7 +241,7 @@ export function MarkdownMessage({
                 const itemText = line.replace(/^\s*\d+\.\s+/, "");
                 return (
                   <li key={lineIndex} className="leading-relaxed">
-                    {renderInline(itemText, isUser)}
+                    {renderInline(itemText, isUser, bookingLink, onBookingClick)}
                   </li>
                 );
               })}
@@ -206,7 +255,7 @@ export function MarkdownMessage({
             {lines.map((line, lineIndex) => (
               <React.Fragment key={lineIndex}>
                 {lineIndex > 0 && <br />}
-                {renderInline(line, isUser)}
+                {renderInline(line, isUser, bookingLink, onBookingClick)}
               </React.Fragment>
             ))}
           </p>
@@ -215,28 +264,39 @@ export function MarkdownMessage({
 
       {/* Render Visual Sets if provided */}
       {visualSets.length > 0 && (
-        <div className="pt-2 flex flex-col gap-2">
+        <div className="pt-2 flex flex-col gap-2.5">
           {visualSets.map((set, idx) => (
             <div
               key={idx}
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 shadow-xs flex flex-col gap-2"
+              className="p-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xs flex flex-col gap-2.5"
             >
               {set.images.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {set.images.map((img, imgIdx) => (
-                    <img
-                      key={imgIdx}
-                      src={img.src}
-                      alt={img.caption || set.title}
-                      className="w-20 h-20 object-cover rounded-lg border border-slate-100 dark:border-slate-700"
-                    />
-                  ))}
+                <div className="relative">
+                  <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-slate-200">
+                    {set.images.map((img, imgIdx) => (
+                      <div key={imgIdx} className="relative flex-shrink-0 group/img">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={img.src}
+                          alt={img.caption || `${set.title} view ${imgIdx + 1}`}
+                          className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-xl border border-slate-100 dark:border-slate-700 group-hover/img:brightness-95 transition-all"
+                        />
+                        {set.images.length > 1 && (
+                          <span className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-xs text-white text-[9px] font-medium px-1.5 py-0.5 rounded-md">
+                            {imgIdx + 1}/{set.images.length}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-800 dark:text-slate-100">{set.title}</span>
+              <div className="flex items-center justify-between text-xs pt-0.5">
+                <span className="font-semibold text-slate-800 dark:text-slate-100 truncate mr-2">
+                  {set.title}
+                </span>
                 {set.price && (
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg">
                     {set.currency || "$"}
                     {set.price}
                   </span>
@@ -247,9 +307,10 @@ export function MarkdownMessage({
                   href={set.redirectUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[11px] font-medium text-blue-600 dark:text-blue-400 underline hover:opacity-80"
+                  className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-700/60 text-[11px] font-medium text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 transition-colors no-underline cursor-pointer group/link"
                 >
-                  View Details →
+                  <span>View item</span>
+                  <ExternalLink className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
                 </a>
               )}
             </div>

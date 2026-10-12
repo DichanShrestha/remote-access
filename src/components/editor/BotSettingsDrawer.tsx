@@ -13,7 +13,8 @@ import {
   ExternalLink, 
   Check, 
   Loader2, 
-  Power
+  Power,
+  Calendar
 } from "lucide-react";
 import Link from "next/link";
 
@@ -269,7 +270,51 @@ export function BotSettingsDrawer({ pageId, isOpen, onClose }: BotSettingsDrawer
                 </div>
               </div>
 
-              {/* Section 4: Knowledge Base Link */}
+              {/* Section 4: Booking & Scheduling */}
+              <div className="space-y-4 p-4 bg-[#FDFCF8] dark:bg-slate-800/20 border border-[#E8E7E1] dark:border-slate-800 rounded-xl">
+                <div className="flex items-center gap-2 pb-2 border-b border-[#E8E7E1] dark:border-slate-800">
+                  <Calendar size={15} className="text-[#777970]" />
+                  <h3 className="text-xs font-bold text-[#A1A299] uppercase tracking-wider">
+                    Booking & Scheduling
+                  </h3>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-[#292A25] dark:text-slate-300">
+                      Booking Calendar Link
+                    </label>
+                    {bot.bookingLink && (
+                      <a
+                        href={bot.bookingLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                      >
+                        Test link <ExternalLink size={10} />
+                      </a>
+                    )}
+                  </div>
+                  <input
+                    type="url"
+                    value={bot.bookingLink || ""}
+                    onChange={(e) => setBot({ ...bot, bookingLink: e.target.value })}
+                    placeholder="https://cal.com/your-name or https://calendly.com/..."
+                    className="w-full px-3.5 py-2 bg-[#FDFCF8] dark:bg-slate-900 border border-[#E8E7E1] dark:border-slate-700 rounded-lg text-xs text-[#292A25] dark:text-slate-200 focus:outline-hidden focus:border-[#292A25]"
+                  />
+                  <div className="mt-2.5 p-2.5 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-lg text-[11px] text-blue-900 dark:text-blue-200 space-y-1">
+                    <p className="font-semibold flex items-center gap-1.5 text-blue-800 dark:text-blue-300">
+                      <Calendar size={12} className="text-blue-600 dark:text-blue-400" />
+                      Automatic Intent Triggers
+                    </p>
+                    <p className="text-blue-700/90 dark:text-blue-300/80 leading-relaxed text-[11px]">
+                      When visitors ask to book, schedule, or meet (e.g. &ldquo;can I book a call?&rdquo;, &ldquo;schedule a demo&rdquo;), the AI presents this link and tracks conversions into your Analytics funnel.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 5: Knowledge Base Link */}
               <div className="p-4 bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl space-y-2">
                 <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
                   <Brain size={16} />

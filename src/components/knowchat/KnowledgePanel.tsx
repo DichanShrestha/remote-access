@@ -1,159 +1,507 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { FileText, Link as LinkIcon, HelpCircle, Image as ImageIcon, Trash2, Plus, UploadCloud, Brain, Loader2 } from "lucide-react";
-import { getTrainingStatus, crawlAndTrain, uploadAndTrainFiles, deleteDataSource, getKnowledgeUploadPolicy } from "@/app/actions/training-actions";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+    FileText,
+    Globe,
+    HelpCircle,
+    Image as ImageIcon,
+    Trash2,
+    Plus,
+    UploadCloud,
+    Loader2,
+    CheckCircle2,
+    AlertCircle,
+    Clock,
+    Search,
+    ExternalLink,
+    MessageSquareMore,
+    ArrowUp,
+    ArrowDown,
+    ArrowRight,
+    Sparkles,
+    Save,
+    X
+} from "lucide-react";
+import { toast } from "sonner";
+import {
+    getTrainingStatus,
+    crawlAndTrain,
+    uploadAndTrainFiles,
+    deleteDataSource,
+    getKnowledgeUploadPolicy
+} from "@/app/actions/training-actions";
 import { getQAs, saveQA, deleteQA } from "@/app/actions/qa-actions";
-import { getVisualSets, createVisualSet, deleteVisualSet } from "@/app/actions/catalog-actions";
+import {
+    getVisualSets,
+    createVisualSet,
+    deleteVisualSet,
+    uploadCatalogImages
+} from "@/app/actions/catalog-actions";
+import { getSuggestedQuestions, updateSuggestedQuestions } from "@/app/actions/bot-actions";
 
-type Tab = "sources" | "faqs" | "visuals";
+type Tab = "sources" | "faqs" | "visuals" | "questions";
+
+interface DataSourceItem {
+    id: string;
+    source: string;
+    type: string;
+    status: string;
+    createdAt?: Date | string;
+}
+
+interface QAItem {
+    id: string;
+    questions: string[];
+    answer: string;
+    createdAt?: Date | string;
+}
+
+interface VisualSetItem {
+    id: string;
+    title: string;
+    description: string | null;
+    triggerQueries?: string[];
+    price?: number | null;
+    currency?: string | null;
+    redirectUrl?: string | null;
+    images?: Array<{ publicUrl: string }>;
+}
 
 export function KnowledgePanel({ botId }: { botId: string }) {
     const [activeTab, setActiveTab] = useState<Tab>("sources");
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
 
+    // Counts for tab badges
+    const [counts, setCounts] = useState({ sources: 0, faqs: 0, visuals: 0, questions: 0 });
+
     // Data Sources State
-    const [sources, setSources] = useState<any[]>([]);
+    const [sources, setSources] = useState<DataSourceItem[]>([]);
     const [urlInput, setUrlInput] = useState("");
+    const [isDragging, setIsDragging] = useState(false);
 
     // FAQs State
-    const [faqs, setFaqs] = useState<any[]>([]);
+    const [faqs, setFaqs] = useState<QAItem[]>([]);
     const [newFaq, setNewFaq] = useState({ question: "", answer: "" });
+    const [faqSearch, setFaqSearch] = useState("");
 
-    // Visuals State
-    const [visualSets, setVisualSets] = useState<any[]>([]);
-    const [newVisual, setNewVisual] = useState({ title: "", description: "", imageUrl: "", queries: "" });
+    // Visuals State (Bulk image upload, optional description, price, redirect URL)
+    const [visualSets, setVisualSets] = useState<VisualSetItem[]>([]);
+    const [newVisual, setNewVisual] = useState({
+        title: "",
+        description: "",
+        queries: "",
+        price: "",
+        currency: "$",
+        redirectUrl: "",
+    });
+    const [visualFiles, setVisualFiles] = useState<File[]>([]);
+    const [visualPreviews, setVisualPreviews] = useState<string[]>([]);
+    const [isVisualDragging, setIsVisualDragging] = useState(false);
 
-    useEffect(() => {
-        loadData();
-    }, [activeTab]);
+    // Suggested Questions State
+    const [questions, setQuestions] = useState<string[]>([]);
+    const [newQuestionInput, setNewQuestionInput] = useState("");
+    const [savingQuestions, setSavingQuestions] = useState(false);
 
-    const loadData = async () => {
-        setInitialLoading(true);
+    // Refresh data after mutations
+    const refreshData = useCallback(async () => {
         try {
             if (activeTab === "sources") {
                 const data = await getTrainingStatus(botId);
-                setSources(data.sources);
+                const items = (data?.sources || []) as DataSourceItem[];
+                setSources(items);
+                setCounts(prev => ({ ...prev, sources: items.length }));
             } else if (activeTab === "faqs") {
-                const data = await getQAs(botId);
-                setFaqs(data);
+                const data = (await getQAs(botId)) as QAItem[];
+                setFaqs(data || []);
+                setCounts(prev => ({ ...prev, faqs: (data || []).length }));
             } else if (activeTab === "visuals") {
-                const data = await getVisualSets(botId);
-                setVisualSets(data);
+                const data = (await getVisualSets(botId)) as VisualSetItem[];
+                setVisualSets(data || []);
+                setCounts(prev => ({ ...prev, visuals: (data || []).length }));
+            } else if (activeTab === "questions") {
+                const data = await getSuggestedQuestions(botId);
+                setQuestions(data || []);
+                setCounts(prev => ({ ...prev, questions: (data || []).length }));
             }
         } catch (error) {
-            console.error("Failed to load data", error);
+            console.error("Failed to refresh knowledge data", error);
+        }
+    }, [activeTab, botId]);
+
+    // Initial load and tab change listener
+    useEffect(() => {
+        let isMounted = true;
+        async function fetchTabData() {
+            try {
+                if (activeTab === "sources") {
+                    const data = await getTrainingStatus(botId);
+                    if (isMounted) {
+                        const items = (data?.sources || []) as DataSourceItem[];
+                        setSources(items);
+                        setCounts(prev => ({ ...prev, sources: items.length }));
+                    }
+                } else if (activeTab === "faqs") {
+                    const data = (await getQAs(botId)) as QAItem[];
+                    if (isMounted) {
+                        setFaqs(data || []);
+                        setCounts(prev => ({ ...prev, faqs: (data || []).length }));
+                    }
+                } else if (activeTab === "visuals") {
+                    const data = (await getVisualSets(botId)) as VisualSetItem[];
+                    if (isMounted) {
+                        setVisualSets(data || []);
+                        setCounts(prev => ({ ...prev, visuals: (data || []).length }));
+                    }
+                } else if (activeTab === "questions") {
+                    const data = await getSuggestedQuestions(botId);
+                    if (isMounted) {
+                        setQuestions(data || []);
+                        setCounts(prev => ({ ...prev, questions: (data || []).length }));
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to load knowledge data", error);
+            } finally {
+                if (isMounted) {
+                    setInitialLoading(false);
+                }
+            }
+        }
+
+        fetchTabData();
+        return () => {
+            isMounted = false;
+        };
+    }, [activeTab, botId]);
+
+    // Initial count fetch for all tabs
+    useEffect(() => {
+        async function fetchAllCounts() {
+            try {
+                const [sourcesRes, faqsRes, visualsRes, questionsRes] = await Promise.allSettled([
+                    getTrainingStatus(botId),
+                    getQAs(botId),
+                    getVisualSets(botId),
+                    getSuggestedQuestions(botId),
+                ]);
+                setCounts({
+                    sources: sourcesRes.status === "fulfilled" ? (sourcesRes.value?.sources || []).length : 0,
+                    faqs: faqsRes.status === "fulfilled" ? (faqsRes.value || []).length : 0,
+                    visuals: visualsRes.status === "fulfilled" ? (visualsRes.value || []).length : 0,
+                    questions: questionsRes.status === "fulfilled" ? (questionsRes.value || []).length : 0,
+                });
+            } catch {
+                // Ignore silent count fetch error
+            }
+        }
+        fetchAllCounts();
+    }, [botId]);
+
+    // --- SUGGESTED QUESTIONS HANDLERS ---
+    const handleAddQuestion = (textToAdd?: string) => {
+        const text = (textToAdd ?? newQuestionInput).trim();
+        if (!text) return;
+        if (questions.length >= 6) {
+            toast.error("Maximum 6 suggested questions allowed.");
+            return;
+        }
+        if (questions.some(q => q.toLowerCase() === text.toLowerCase())) {
+            toast.error("This question already exists in your list.");
+            return;
+        }
+        setQuestions(prev => [...prev, text]);
+        setNewQuestionInput("");
+    };
+
+    const handleRemoveQuestion = (idx: number) => {
+        setQuestions(prev => prev.filter((_, i) => i !== idx));
+    };
+
+    const handleUpdateQuestion = (idx: number, val: string) => {
+        setQuestions(prev => {
+            const next = [...prev];
+            next[idx] = val;
+            return next;
+        });
+    };
+
+    const handleMoveQuestion = (idx: number, dir: "up" | "down") => {
+        if (dir === "up" && idx === 0) return;
+        if (dir === "down" && idx === questions.length - 1) return;
+        setQuestions(prev => {
+            const next = [...prev];
+            const target = dir === "up" ? idx - 1 : idx + 1;
+            const temp = next[idx];
+            next[idx] = next[target];
+            next[target] = temp;
+            return next;
+        });
+    };
+
+    const handleSaveQuestions = async () => {
+        setSavingQuestions(true);
+        try {
+            const cleanList = questions.map(q => q.trim()).filter(Boolean);
+            const res = await updateSuggestedQuestions(botId, cleanList);
+            setQuestions(res.questions);
+            setCounts(prev => ({ ...prev, questions: res.questions.length }));
+            toast.success("Suggested questions saved successfully");
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : "Failed to save suggested questions";
+            toast.error(msg);
         } finally {
-            setInitialLoading(false);
+            setSavingQuestions(false);
         }
     };
 
-    // --- SOURCES ---
+    // --- SOURCES HANDLERS ---
     const handleAddUrl = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!urlInput) return;
+        const trimmed = urlInput.trim();
+        if (!trimmed) return;
+
         setLoading(true);
         try {
-            await crawlAndTrain(botId, urlInput);
+            await crawlAndTrain(botId, trimmed);
+            toast.success("Website URL added for crawling");
             setUrlInput("");
-            await loadData();
-        } catch (error) {
+            await refreshData();
+        } catch (error: unknown) {
             console.error(error);
+            const msg = error instanceof Error ? error.message : "Failed to crawl website";
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files || e.target.files.length === 0) return;
-        const file = e.target.files[0];
+    const processFiles = async (files: FileList | File[]) => {
+        if (!files || files.length === 0) return;
+        const file = files[0];
         setLoading(true);
         try {
             const policy = await getKnowledgeUploadPolicy();
-            if (!policy.allowed) throw new Error("AI knowledge requires an active trial or Smart Page + AI plan.");
-            if (file.size > policy.maxFileBytes) throw new Error(`This file exceeds your ${Math.floor(policy.maxFileBytes / 1048576)} MB per-file limit.`);
-            if (file.size > policy.remainingBytes) throw new Error("This upload exceeds your remaining knowledge storage.");
-            if (policy.sourcesRemaining < 1) throw new Error("You have reached your knowledge-source limit.");
+            if (!policy.allowed) {
+                throw new Error("AI knowledge requires an active trial or Smart Page + AI plan.");
+            }
+            if (file.size > policy.maxFileBytes) {
+                throw new Error(`This file exceeds your ${Math.floor(policy.maxFileBytes / 1048576)} MB per-file limit.`);
+            }
+            if (file.size > policy.remainingBytes) {
+                throw new Error("This upload exceeds your remaining knowledge storage.");
+            }
+            if (policy.sourcesRemaining < 1) {
+                throw new Error("You have reached your knowledge-source limit.");
+            }
+
             const formData = new FormData();
+            formData.append("files", file);
             formData.append("file", file);
+
             await uploadAndTrainFiles(botId, formData);
-            await loadData();
-        } catch (error) {
+            toast.success(`"${file.name}" uploaded and queued for indexing`);
+            await refreshData();
+        } catch (error: unknown) {
             console.error(error);
-            alert(error instanceof Error ? error.message : "The file could not be uploaded.");
+            const msg = error instanceof Error ? error.message : "The file could not be uploaded.";
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleDeleteSource = async (id: string) => {
-        await deleteDataSource(id);
-        await loadData();
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            processFiles(e.target.files);
+            e.target.value = "";
+        }
     };
 
-    // --- FAQS ---
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            processFiles(e.dataTransfer.files);
+        }
+    };
+
+    const handleDeleteSource = async (id: string, name: string) => {
+        if (!confirm(`Delete "${name}" from training sources?`)) return;
+        try {
+            await deleteDataSource(id);
+            toast.success("Source deleted");
+            await refreshData();
+        } catch (error: unknown) {
+            console.error(error);
+            toast.error("Failed to delete source");
+        }
+    };
+
+    // --- FAQS HANDLERS ---
     const handleAddFaq = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newFaq.question || !newFaq.answer) return;
+        if (!newFaq.question.trim() || !newFaq.answer.trim()) return;
+
         setLoading(true);
         try {
-            await saveQA(botId, { questions: [newFaq.question], answer: newFaq.answer });
+            await saveQA(botId, {
+                questions: [newFaq.question.trim()],
+                answer: newFaq.answer.trim()
+            });
+            toast.success("FAQ pair added successfully");
             setNewFaq({ question: "", answer: "" });
-            await loadData();
-        } catch (error) {
+            await refreshData();
+        } catch (error: unknown) {
             console.error(error);
+            const msg = error instanceof Error ? error.message : "Failed to save FAQ";
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteFaq = async (id: string) => {
-        await deleteQA(id);
-        await loadData();
+        try {
+            await deleteQA(id);
+            toast.success("FAQ deleted");
+            await refreshData();
+        } catch (error: unknown) {
+            console.error(error);
+            toast.error("Failed to delete FAQ");
+        }
     };
 
-    // --- VISUALS ---
+    // --- VISUALS HANDLERS ---
+    const handleVisualFilesSelected = (files: FileList | File[]) => {
+        if (!files || files.length === 0) return;
+        const validFiles: File[] = [];
+        const newPreviews: string[] = [];
+
+        Array.from(files).forEach(f => {
+            if (f.type.startsWith("image/")) {
+                validFiles.push(f);
+                newPreviews.push(URL.createObjectURL(f));
+            } else {
+                toast.error(`"${f.name}" is not an image file`);
+            }
+        });
+
+        if (validFiles.length > 0) {
+            setVisualFiles(prev => [...prev, ...validFiles]);
+            setVisualPreviews(prev => [...prev, ...newPreviews]);
+        }
+    };
+
+    const handleRemoveVisualFile = (index: number) => {
+        setVisualFiles(prev => prev.filter((_, i) => i !== index));
+        setVisualPreviews(prev => {
+            const urlToRevoke = prev[index];
+            if (urlToRevoke) URL.revokeObjectURL(urlToRevoke);
+            return prev.filter((_, i) => i !== index);
+        });
+    };
+
     const handleAddVisual = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newVisual.title || !newVisual.imageUrl) return;
+        if (!newVisual.title.trim()) {
+            toast.error("Item title is required");
+            return;
+        }
+        if (visualFiles.length === 0) {
+            toast.error("Please upload at least one image");
+            return;
+        }
+
         setLoading(true);
         try {
-            const queries = newVisual.queries.split(",").map(q => q.trim()).filter(Boolean);
+            // 1. Bulk upload images to storage
+            const formData = new FormData();
+            visualFiles.forEach(f => formData.append("files", f));
+
+            const uploadRes = await uploadCatalogImages(formData);
+            const uploadedUrls = uploadRes.urls;
+
+            const queries = newVisual.queries
+                .split(",")
+                .map(q => q.trim())
+                .filter(Boolean);
+
+            const parsedPrice = newVisual.price.trim() ? parseFloat(newVisual.price) : null;
+            const currency = parsedPrice !== null ? (newVisual.currency || "$") : null;
+            const redirectUrl = newVisual.redirectUrl.trim() || null;
+
+            const images = uploadedUrls.map((url, idx) => ({
+                publicUrl: url,
+                caption: "",
+                order: idx,
+            }));
+
             await createVisualSet(
                 botId,
-                newVisual.title,
-                newVisual.description,
+                newVisual.title.trim(),
+                newVisual.description.trim(),
                 queries,
-                [{ publicUrl: newVisual.imageUrl, caption: "", order: 0 }]
+                images,
+                parsedPrice,
+                currency,
+                redirectUrl
             );
-            setNewVisual({ title: "", description: "", imageUrl: "", queries: "" });
-            await loadData();
-        } catch (error) {
+
+            toast.success("Visual item added to catalog");
+            visualPreviews.forEach(p => URL.revokeObjectURL(p));
+            setVisualFiles([]);
+            setVisualPreviews([]);
+            setNewVisual({
+                title: "",
+                description: "",
+                queries: "",
+                price: "",
+                currency: "$",
+                redirectUrl: "",
+            });
+            await refreshData();
+        } catch (error: unknown) {
             console.error(error);
+            const msg = error instanceof Error ? error.message : "Failed to add visual item";
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteVisual = async (id: string) => {
-        await deleteVisualSet(id, botId);
-        await loadData();
+        try {
+            await deleteVisualSet(id, botId);
+            toast.success("Catalog item deleted");
+            await refreshData();
+        } catch (error: unknown) {
+            console.error(error);
+            toast.error("Failed to delete catalog item");
+        }
     };
 
+    const filteredFaqs = faqs.filter(faq => {
+        if (!faqSearch.trim()) return true;
+        const q = (faq.questions?.[0] || "").toLowerCase();
+        const a = (faq.answer || "").toLowerCase();
+        return q.includes(faqSearch.toLowerCase()) || a.includes(faqSearch.toLowerCase());
+    });
+
     const tabs = [
-        { id: "sources" as Tab, label: "Documents & URLs", icon: FileText, color: "blue" },
-        { id: "faqs" as Tab, label: "FAQs", icon: HelpCircle, color: "purple" },
-        { id: "visuals" as Tab, label: "Visual Catalog", icon: ImageIcon, color: "pink" },
+        { id: "sources" as Tab, label: "Documents & URLs", icon: FileText, count: counts.sources },
+        { id: "faqs" as Tab, label: "Frequently Asked Questions", icon: HelpCircle, count: counts.faqs },
+        { id: "questions" as Tab, label: "Suggested Questions", icon: MessageSquareMore, count: counts.questions },
+        { id: "visuals" as Tab, label: "Visual Catalog", icon: ImageIcon, count: counts.visuals },
     ];
 
-    const activeColor = tabs.find(t => t.id === activeTab)?.color || "blue";
-
     return (
-        <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar Tabs */}
-            <div className="lg:w-56 flex-shrink-0">
-                <nav className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 lg:sticky lg:top-10">
+        <div className="w-full space-y-6 animate-in fade-in duration-300">
+            {/* Horizontal Tabs Navigation (Matching App Aesthetic) */}
+            <div className="border-b border-slate-200 overflow-x-auto no-scrollbar">
+                <nav className="flex items-center gap-1 sm:gap-2 -mb-px">
                     {tabs.map(tab => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -161,225 +509,951 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap cursor-pointer ${
                                     isActive
-                                        ? `bg-${tab.color}-50 text-${tab.color}-700 border border-${tab.color}-200 shadow-sm`
-                                        : "text-slate-500 hover:bg-slate-100 border border-transparent"
+                                        ? "border-slate-900 text-slate-900 font-semibold"
+                                        : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
                                 }`}
-                                style={isActive ? {
-                                    backgroundColor: tab.color === 'blue' ? '#eff6ff' : tab.color === 'purple' ? '#faf5ff' : '#fdf2f8',
-                                    color: tab.color === 'blue' ? '#1d4ed8' : tab.color === 'purple' ? '#7e22ce' : '#be185d',
-                                    borderColor: tab.color === 'blue' ? '#bfdbfe' : tab.color === 'purple' ? '#e9d5ff' : '#fbcfe8',
-                                } : {}}
                             >
-                                <Icon className="w-4 h-4 flex-shrink-0" />
-                                {tab.label}
+                                <Icon className={`w-4 h-4 ${isActive ? "text-slate-900" : "text-slate-400"}`} />
+                                <span>{tab.label}</span>
+                                <span
+                                    className={`text-[11px] px-2 py-0.5 rounded-full font-medium transition-colors ${
+                                        isActive
+                                            ? "bg-slate-900 text-white"
+                                            : "bg-slate-100 text-slate-600"
+                                    }`}
+                                >
+                                    {tab.count}
+                                </span>
                             </button>
                         );
                     })}
                 </nav>
             </div>
 
-            {/* Content Area */}
-            <div className="flex-1 min-w-0">
-                {initialLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                        <Loader2 className="w-8 h-8 animate-spin mb-4" />
-                        <p className="text-sm font-medium">Loading knowledge data…</p>
-                    </div>
-                ) : (
-                    <>
-                        {activeTab === "sources" && (
-                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                                <h3 className="text-xl font-bold text-slate-900 mb-1">Data Sources</h3>
-                                <p className="text-slate-500 text-sm mb-8">Upload PDFs, docs, or enter website URLs for the AI to read and learn from.</p>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-                                    {/* Upload File */}
-                                    <div className="border border-slate-200 bg-slate-50 p-5 rounded-xl">
-                                        <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                                            <UploadCloud className="w-4 h-4 text-blue-500" /> Upload Document
-                                        </h4>
-                                        <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
-                                            <div className="text-center text-sm text-slate-500">
-                                                <span className="font-semibold text-blue-600">Click to upload</span> or drag and drop
+            {/* Tab Content Body */}
+            {initialLoading ? (
+                <div className="bg-white border border-slate-200/80 rounded-2xl p-16 flex flex-col items-center justify-center text-slate-400">
+                    <Loader2 className="w-7 h-7 animate-spin mb-3 text-slate-600" />
+                    <p className="text-sm font-medium text-slate-600">Loading knowledge base...</p>
+                </div>
+            ) : (
+                <>
+                    {/* TAB 1: DATA SOURCES */}
+                    {activeTab === "sources" && (
+                        <div className="space-y-8 animate-in fade-in duration-200">
+                            {/* Two Column Ingestion Cards */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {/* Upload Document Card */}
+                                <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2.5 mb-1.5">
+                                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                                                <UploadCloud className="w-4 h-4" />
                                             </div>
-                                            <input type="file" className="hidden" accept=".pdf,.doc,.docx,.txt" onChange={handleFileUpload} disabled={loading} />
-                                        </label>
-                                    </div>
-
-                                    {/* Add URL */}
-                                    <div className="border border-slate-200 bg-slate-50 p-5 rounded-xl">
-                                        <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                                            <LinkIcon className="w-4 h-4 text-blue-500" /> Crawl Website
-                                        </h4>
-                                        <form onSubmit={handleAddUrl} className="flex flex-col gap-3">
-                                            <input
-                                                type="url"
-                                                placeholder="https://example.com"
-                                                value={urlInput}
-                                                onChange={e => setUrlInput(e.target.value)}
-                                                className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                                required
-                                            />
-                                            <button type="submit" disabled={loading || !urlInput} className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2 rounded-lg disabled:opacity-50 transition-colors">
-                                                {loading ? "Crawling…" : "Add URL"}
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-
-                                {/* List Sources */}
-                                <h4 className="font-semibold text-slate-800 mb-4">Trained Sources ({sources.length})</h4>
-                                <div className="flex flex-col gap-3">
-                                    {sources.map(source => (
-                                        <div key={source.id} className="flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-white hover:shadow-sm transition-shadow">
-                                            <div className="flex items-center gap-3">
-                                                {source.type === 'url' ? <LinkIcon className="w-4 h-4 text-slate-400" /> : <FileText className="w-4 h-4 text-slate-400" />}
-                                                <div>
-                                                    <p className="text-sm font-medium text-slate-700">{source.source}</p>
-                                                    <p className="text-xs text-slate-500 capitalize">{source.type} • {source.status}</p>
-                                                </div>
-                                            </div>
-                                            <button onClick={() => handleDeleteSource(source.id)} className="p-2 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            <h3 className="font-semibold text-sm text-slate-900">Upload Documents</h3>
                                         </div>
-                                    ))}
-                                    {sources.length === 0 && <p className="text-sm text-slate-400 italic py-4">No sources trained yet. Upload a document or crawl a URL to get started.</p>}
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === "faqs" && (
-                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                                <h3 className="text-xl font-bold text-slate-900 mb-1">Frequently Asked Questions</h3>
-                                <p className="text-slate-500 text-sm mb-8">Directly train the AI on specific Q&A pairs for guaranteed accurate answers.</p>
-
-                                <form onSubmit={handleAddFaq} className="border border-slate-200 bg-slate-50 p-6 rounded-xl mb-8 flex flex-col gap-4">
-                                    <div>
-                                        <label className="text-sm font-medium text-slate-700 mb-1.5 block">Question</label>
-                                        <input
-                                            type="text"
-                                            placeholder="E.g. What are your opening hours?"
-                                            value={newFaq.question}
-                                            onChange={e => setNewFaq({ ...newFaq, question: e.target.value })}
-                                            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
-                                            required
-                                        />
+                                        <p className="text-xs text-slate-500 mb-4">
+                                            Upload PDFs, Word documents, or text files for indexing.
+                                        </p>
                                     </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-slate-700 mb-1.5 block">Answer</label>
-                                        <textarea
-                                            placeholder="We are open Monday to Friday from 9 AM to 5 PM."
-                                            value={newFaq.answer}
-                                            onChange={e => setNewFaq({ ...newFaq, answer: e.target.value })}
-                                            rows={3}
-                                            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white resize-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
-                                            required
-                                        />
-                                    </div>
-                                    <button type="submit" disabled={loading} className="bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm py-2.5 px-5 rounded-lg self-start disabled:opacity-50 flex items-center gap-2 transition-colors">
-                                        <Plus className="w-4 h-4" /> Add FAQ
-                                    </button>
-                                </form>
 
-                                <h4 className="font-semibold text-slate-800 mb-4">Saved FAQs ({faqs.length})</h4>
-                                <div className="flex flex-col gap-3">
-                                    {faqs.map(faq => (
-                                        <div key={faq.id} className="flex items-start justify-between p-4 border border-slate-200 rounded-xl bg-white hover:shadow-sm transition-shadow">
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-bold text-slate-800 mb-1">{faq.questions?.[0]}</p>
-                                                <p className="text-sm text-slate-600">{faq.answer}</p>
-                                            </div>
-                                            <button onClick={() => handleDeleteFaq(faq.id)} className="p-2 text-slate-400 hover:text-red-500 transition-colors flex-shrink-0 rounded-lg hover:bg-red-50 ml-3">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                    <label
+                                        onDragOver={e => {
+                                            e.preventDefault();
+                                            setIsDragging(true);
+                                        }}
+                                        onDragLeave={() => setIsDragging(false)}
+                                        onDrop={handleDrop}
+                                        className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                                            isDragging
+                                                ? "border-slate-900 bg-slate-50"
+                                                : "border-slate-200 hover:border-slate-400 hover:bg-slate-50/60"
+                                        } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                                    >
+                                        <div className="flex flex-col items-center text-center p-4">
+                                            <UploadCloud className="w-5 h-5 text-slate-400 mb-1.5" />
+                                            <span className="text-xs font-semibold text-slate-800">
+                                                Click to upload <span className="font-normal text-slate-500">or drag & drop</span>
+                                            </span>
+                                            <span className="text-[11px] text-slate-400 mt-0.5">
+                                                PDF, DOCX, DOC, TXT (up to 25 MB)
+                                            </span>
                                         </div>
-                                    ))}
-                                    {faqs.length === 0 && <p className="text-sm text-slate-400 italic py-4">No FAQs added yet. Add question-answer pairs to train your AI.</p>}
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === "visuals" && (
-                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                                <h3 className="text-xl font-bold text-slate-900 mb-1">Visual Catalog</h3>
-                                <p className="text-slate-500 text-sm mb-8">Add visual items (products, portfolio images) that the AI can recommend in chat.</p>
-
-                                <form onSubmit={handleAddVisual} className="border border-slate-200 bg-slate-50 p-6 rounded-xl mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="md:col-span-2">
-                                        <label className="text-sm font-medium text-slate-700 mb-1.5 block">Item Title</label>
                                         <input
-                                            type="text"
-                                            value={newVisual.title}
-                                            onChange={e => setNewVisual({ ...newVisual, title: e.target.value })}
-                                            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none"
-                                            required
+                                            type="file"
+                                            className="hidden"
+                                            accept=".pdf,.doc,.docx,.txt"
+                                            onChange={handleFileUpload}
+                                            disabled={loading}
                                         />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                        <label className="text-sm font-medium text-slate-700 mb-1.5 block">Description</label>
-                                        <textarea
-                                            value={newVisual.description}
-                                            onChange={e => setNewVisual({ ...newVisual, description: e.target.value })}
-                                            rows={2}
-                                            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white resize-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none"
-                                        />
-                                    </div>
+                                    </label>
+                                </div>
+
+                                {/* Crawl Website Card */}
+                                <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
                                     <div>
-                                        <label className="text-sm font-medium text-slate-700 mb-1.5 block">Image URL</label>
+                                        <div className="flex items-center gap-2.5 mb-1.5">
+                                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                                                <Globe className="w-4 h-4" />
+                                            </div>
+                                            <h3 className="font-semibold text-sm text-slate-900">Crawl Website</h3>
+                                        </div>
+                                        <p className="text-xs text-slate-500 mb-4">
+                                            Provide any public website URL to crawl and ingest knowledge.
+                                        </p>
+                                    </div>
+
+                                    <form onSubmit={handleAddUrl} className="flex flex-col gap-2.5 mt-auto">
                                         <input
                                             type="url"
-                                            placeholder="https://..."
-                                            value={newVisual.imageUrl}
-                                            onChange={e => setNewVisual({ ...newVisual, imageUrl: e.target.value })}
-                                            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none"
+                                            placeholder="https://example.com/faq"
+                                            value={urlInput}
+                                            onChange={e => setUrlInput(e.target.value)}
+                                            disabled={loading}
+                                            className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
+                                            required
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={loading || !urlInput.trim()}
+                                            className="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs py-2.5 px-4 rounded-xl shadow-xs transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                                        >
+                                            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                                            {loading ? "Crawling & Training..." : "Crawl & Add"}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            {/* Trained Sources List */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-semibold text-slate-900">
+                                        Trained Knowledge Sources ({sources.length})
+                                    </h3>
+                                </div>
+
+                                {sources.length === 0 ? (
+                                    <div className="bg-white border border-slate-200/80 rounded-2xl p-10 text-center flex flex-col items-center">
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2.5">
+                                            <FileText className="w-5 h-5" />
+                                        </div>
+                                        <p className="font-semibold text-sm text-slate-800">No knowledge sources yet</p>
+                                        <p className="text-xs text-slate-500 max-w-sm mt-1">
+                                            Upload a PDF or enter a website URL above to start training your AI assistant.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2.5">
+                                        {sources.map(source => {
+                                            const isUrl = source.type === "url";
+                                            const isReady = source.status === "complete" || source.status === "ready";
+                                            const isError = source.status === "error";
+
+                                            return (
+                                                <div
+                                                    key={source.id}
+                                                    className="bg-white border border-slate-200/80 rounded-xl p-3.5 flex items-center justify-between hover:border-slate-300 transition-all shadow-xs"
+                                                >
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 flex-shrink-0">
+                                                            {isUrl ? <Globe className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="text-xs font-semibold text-slate-900 truncate">
+                                                                    {source.source}
+                                                                </p>
+                                                                {isUrl && (
+                                                                    <a
+                                                                        href={source.source}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="text-slate-400 hover:text-slate-600"
+                                                                        title="Open URL"
+                                                                    >
+                                                                        <ExternalLink className="w-3 h-3" />
+                                                                    </a>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 mt-0.5">
+                                                                <span className="text-[11px] text-slate-400 uppercase font-medium">
+                                                                    {source.type}
+                                                                </span>
+                                                                <span className="text-slate-300">•</span>
+                                                                <span
+                                                                    className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.2 rounded-full ${
+                                                                        isReady
+                                                                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                                                                            : isError
+                                                                            ? "bg-rose-50 text-rose-700 border border-rose-200/60"
+                                                                            : "bg-amber-50 text-amber-700 border border-amber-200/60"
+                                                                    }`}
+                                                                >
+                                                                    {isReady ? (
+                                                                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                                                    ) : isError ? (
+                                                                        <AlertCircle className="w-3 h-3 text-rose-600" />
+                                                                    ) : (
+                                                                        <Clock className="w-3 h-3 text-amber-600" />
+                                                                    )}
+                                                                    {isReady ? "Ready" : isError ? "Failed" : "Processing"}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteSource(source.id, source.source)}
+                                                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                                        title="Delete source"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* TAB 2: FAQS */}
+                    {activeTab === "faqs" && (
+                        <div className="space-y-8 animate-in fade-in duration-200">
+                            {/* New FAQ Form Card */}
+                            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                                        <HelpCircle className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-sm text-slate-900">Add New Q&A Pair</h3>
+                                        <p className="text-xs text-slate-500">
+                                            Teach the AI specific question-answer pairs for guaranteed accurate answers.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handleAddFaq} className="flex flex-col gap-3.5 pt-2">
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-700 mb-1 block">Question</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. What are your turnaround times?"
+                                            value={newFaq.question}
+                                            onChange={e => setNewFaq(prev => ({ ...prev, question: e.target.value }))}
+                                            disabled={loading}
+                                            className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
                                             required
                                         />
                                     </div>
+
                                     <div>
-                                        <label className="text-sm font-medium text-slate-700 mb-1.5 block">Trigger Keywords (comma separated)</label>
-                                        <input
-                                            type="text"
-                                            placeholder="red shoes, sneakers…"
-                                            value={newVisual.queries}
-                                            onChange={e => setNewVisual({ ...newVisual, queries: e.target.value })}
-                                            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none"
+                                        <label className="text-xs font-semibold text-slate-700 mb-1 block">Answer</label>
+                                        <textarea
+                                            placeholder="e.g. Our standard delivery time is 3 to 5 business days."
+                                            value={newFaq.answer}
+                                            onChange={e => setNewFaq(prev => ({ ...prev, answer: e.target.value }))}
+                                            disabled={loading}
+                                            rows={3}
+                                            className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all resize-none"
+                                            required
                                         />
                                     </div>
-                                    <div className="md:col-span-2 pt-2">
-                                        <button type="submit" disabled={loading} className="bg-pink-600 hover:bg-pink-700 text-white font-medium text-sm py-2.5 px-5 rounded-lg disabled:opacity-50 flex items-center gap-2 transition-colors">
-                                            <Plus className="w-4 h-4" /> Add to Catalog
+
+                                    <div className="flex justify-end pt-1">
+                                        <button
+                                            type="submit"
+                                            disabled={loading || !newFaq.question.trim() || !newFaq.answer.trim()}
+                                            className="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs py-2.5 px-5 rounded-xl shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                                        >
+                                            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                                            Add FAQ
                                         </button>
                                     </div>
                                 </form>
+                            </div>
 
-                                <h4 className="font-semibold text-slate-800 mb-4">Catalog Items ({visualSets.length})</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {visualSets.map(set => (
-                                        <div key={set.id} className="flex gap-3 p-4 border border-slate-200 rounded-xl bg-white hover:shadow-sm transition-shadow">
-                                            <div className="w-16 h-16 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0">
-                                                {set.images?.[0]?.publicUrl && (
-                                                    <img src={set.images[0].publicUrl} alt={set.title} className="w-full h-full object-cover" />
+                            {/* Saved FAQs List */}
+                            <div className="space-y-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <h3 className="text-sm font-semibold text-slate-900">
+                                        Saved FAQs ({faqs.length})
+                                    </h3>
+                                    {faqs.length > 0 && (
+                                        <div className="relative w-full sm:w-64">
+                                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search FAQs..."
+                                                value={faqSearch}
+                                                onChange={e => setFaqSearch(e.target.value)}
+                                                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {filteredFaqs.length === 0 ? (
+                                    <div className="bg-white border border-slate-200/80 rounded-2xl p-10 text-center flex flex-col items-center">
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2.5">
+                                            <HelpCircle className="w-5 h-5" />
+                                        </div>
+                                        <p className="font-semibold text-sm text-slate-800">
+                                            {faqSearch ? "No matching FAQs found" : "No FAQs added yet"}
+                                        </p>
+                                        <p className="text-xs text-slate-500 max-w-sm mt-1">
+                                            {faqSearch
+                                                ? "Try searching for a different keyword."
+                                                : "Add custom question-answer pairs above to give your AI instant precision."}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2.5">
+                                        {filteredFaqs.map(faq => (
+                                            <div
+                                                key={faq.id}
+                                                className="bg-white border border-slate-200/80 rounded-xl p-4 flex items-start justify-between gap-4 hover:border-slate-300 transition-all shadow-xs"
+                                            >
+                                                <div className="min-w-0 flex-1 space-y-1">
+                                                    <p className="text-xs font-semibold text-slate-900 leading-snug">
+                                                        {faq.questions?.[0]}
+                                                    </p>
+                                                    <p className="text-xs text-slate-600 leading-relaxed">
+                                                        {faq.answer}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteFaq(faq.id)}
+                                                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer flex-shrink-0"
+                                                    title="Delete FAQ"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* TAB 3: VISUAL CATALOG */}
+                    {activeTab === "visuals" && (
+                        <div className="space-y-8 animate-in fade-in duration-200">
+                            {/* New Visual Catalog Item Form */}
+                            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                                        <ImageIcon className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-sm text-slate-900">Add Visual Catalog Item</h3>
+                                        <p className="text-xs text-slate-500">
+                                            Add products, portfolio photos, or services for your AI assistant to display as interactive cards in chat.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handleAddVisual} className="space-y-4 pt-2">
+                                    {/* Bulk Image Upload Dropzone */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <label className="text-xs font-semibold text-slate-700 block">
+                                                Upload Images <span className="text-rose-500">*</span>
+                                            </label>
+                                            <span className="text-[11px] text-slate-400">
+                                                {visualFiles.length > 0
+                                                    ? `${visualFiles.length} ${visualFiles.length === 1 ? "image" : "images"} selected (bulk upload)`
+                                                    : "Bulk image upload supported (e.g. room angles, views)"}
+                                            </span>
+                                        </div>
+
+                                        <label
+                                            onDragOver={e => {
+                                                e.preventDefault();
+                                                setIsVisualDragging(true);
+                                            }}
+                                            onDragLeave={() => setIsVisualDragging(false)}
+                                            onDrop={e => {
+                                                e.preventDefault();
+                                                setIsVisualDragging(false);
+                                                if (e.dataTransfer.files) {
+                                                    handleVisualFilesSelected(e.dataTransfer.files);
+                                                }
+                                            }}
+                                            className={`flex flex-col items-center justify-center w-full min-h-28 py-4 px-4 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                                                isVisualDragging
+                                                    ? "border-slate-900 bg-slate-50"
+                                                    : "border-slate-200 hover:border-slate-400 hover:bg-slate-50/60"
+                                            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                                        >
+                                            <div className="flex flex-col items-center text-center">
+                                                <UploadCloud className="w-5 h-5 text-slate-400 mb-1" />
+                                                <span className="text-xs font-semibold text-slate-800">
+                                                    Click to select images <span className="font-normal text-slate-500">or drag & drop</span>
+                                                </span>
+                                                <span className="text-[11px] text-slate-400 mt-0.5">
+                                                    Upload multiple photos (PNG, JPG, WEBP). Perfect for room designs from all 4 angles or product variants.
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="file"
+                                                multiple
+                                                accept="image/*"
+                                                className="hidden"
+                                                disabled={loading}
+                                                onChange={e => {
+                                                    if (e.target.files) {
+                                                        handleVisualFilesSelected(e.target.files);
+                                                        e.target.value = "";
+                                                    }
+                                                }}
+                                            />
+                                        </label>
+
+                                        {/* Image Previews Grid */}
+                                        {visualPreviews.length > 0 && (
+                                            <div className="flex flex-wrap gap-2.5 mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                                                {visualPreviews.map((preview, idx) => (
+                                                    <div key={idx} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-slate-200 shadow-2xs">
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img
+                                                            src={preview}
+                                                            alt={`Preview ${idx + 1}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] font-semibold px-1 py-0.5 rounded">
+                                                            #{idx + 1}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleRemoveVisualFile(idx);
+                                                            }}
+                                                            className="absolute top-1 right-1 p-1 bg-black/70 hover:bg-rose-600 text-white rounded-md transition-colors cursor-pointer"
+                                                            title="Remove image"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <label className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 hover:border-slate-500 bg-white flex flex-col items-center justify-center cursor-pointer transition-colors text-slate-500 hover:text-slate-800">
+                                                    <Plus className="w-4 h-4 mb-0.5" />
+                                                    <span className="text-[10px] font-medium">+ More</span>
+                                                    <input
+                                                        type="file"
+                                                        multiple
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        disabled={loading}
+                                                        onChange={e => {
+                                                            if (e.target.files) {
+                                                                handleVisualFilesSelected(e.target.files);
+                                                                e.target.value = "";
+                                                            }
+                                                        }}
+                                                    />
+                                                </label>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Fields Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                        <div className="md:col-span-2">
+                                            <label className="text-xs font-semibold text-slate-700 mb-1 block">
+                                                Item Title <span className="text-rose-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. Master Bedroom Interior Design (4 Views)"
+                                                value={newVisual.title}
+                                                onChange={e => setNewVisual(prev => ({ ...prev, title: e.target.value }))}
+                                                disabled={loading}
+                                                className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div className="md:col-span-2">
+                                            <label className="text-xs font-semibold text-slate-700 mb-1 block">
+                                                Description <span className="font-normal text-slate-400">(optional)</span>
+                                            </label>
+                                            <textarea
+                                                placeholder="e.g. Scandinavian oak furniture with panoramic windows and custom warm ambient lighting."
+                                                value={newVisual.description}
+                                                onChange={e => setNewVisual(prev => ({ ...prev, description: e.target.value }))}
+                                                disabled={loading}
+                                                rows={2}
+                                                className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all resize-none"
+                                            />
+                                        </div>
+
+                                        {/* Price & Currency (Optional) */}
+                                        <div>
+                                            <label className="text-xs font-semibold text-slate-700 mb-1 block">
+                                                Price <span className="font-normal text-slate-400">(optional)</span>
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <select
+                                                    value={newVisual.currency}
+                                                    onChange={e => setNewVisual(prev => ({ ...prev, currency: e.target.value }))}
+                                                    disabled={loading}
+                                                    className="w-20 px-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
+                                                >
+                                                    <option value="$">$ (USD)</option>
+                                                    <option value="€">€ (EUR)</option>
+                                                    <option value="£">£ (GBP)</option>
+                                                    <option value="Rs">Rs (NPR/INR)</option>
+                                                    <option value="¥">¥ (JPY)</option>
+                                                </select>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    placeholder="e.g. 299.00"
+                                                    value={newVisual.price}
+                                                    onChange={e => setNewVisual(prev => ({ ...prev, price: e.target.value }))}
+                                                    disabled={loading}
+                                                    className="flex-1 px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Redirect URL (Optional) */}
+                                        <div>
+                                            <label className="text-xs font-semibold text-slate-700 mb-1 block">
+                                                Redirect URL <span className="font-normal text-slate-400">(optional)</span>
+                                            </label>
+                                            <input
+                                                type="url"
+                                                placeholder="https://example.com/product/chair"
+                                                value={newVisual.redirectUrl}
+                                                onChange={e => setNewVisual(prev => ({ ...prev, redirectUrl: e.target.value }))}
+                                                disabled={loading}
+                                                className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
+                                            />
+                                        </div>
+
+                                        {/* Trigger Keywords (Optional) */}
+                                        <div className="md:col-span-2">
+                                            <label className="text-xs font-semibold text-slate-700 mb-1 block">
+                                                Trigger Keywords <span className="font-normal text-slate-400">(optional, comma-separated)</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="room design, bedroom, modern interior, chair"
+                                                value={newVisual.queries}
+                                                onChange={e => setNewVisual(prev => ({ ...prev, queries: e.target.value }))}
+                                                disabled={loading}
+                                                className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end pt-2">
+                                        <button
+                                            type="submit"
+                                            disabled={loading || !newVisual.title.trim() || visualFiles.length === 0}
+                                            className="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs py-2.5 px-6 rounded-xl shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                                        >
+                                            {loading ? (
+                                                <>
+                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    Uploading & Saving...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Plus className="w-3.5 h-3.5" />
+                                                    Add to Catalog
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            {/* Catalog Items Grid */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-semibold text-slate-900">
+                                    Catalog Items ({visualSets.length})
+                                </h3>
+
+                                {visualSets.length === 0 ? (
+                                    <div className="bg-white border border-slate-200/80 rounded-2xl p-10 text-center flex flex-col items-center">
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2.5">
+                                            <ImageIcon className="w-5 h-5" />
+                                        </div>
+                                        <p className="font-semibold text-sm text-slate-800">No visual items in catalog</p>
+                                        <p className="text-xs text-slate-500 max-w-sm mt-1">
+                                            Upload products, room designs, or portfolio images above to let your chatbot recommend them with rich preview cards.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {visualSets.map(set => {
+                                            const imgUrl = set.images?.[0]?.publicUrl;
+                                            const totalImages = set.images?.length || 0;
+                                            return (
+                                                <div
+                                                    key={set.id}
+                                                    className="bg-white border border-slate-200/80 rounded-xl overflow-hidden hover:border-slate-300 transition-all shadow-xs flex flex-col group"
+                                                >
+                                                    {/* Image Preview */}
+                                                    <div className="aspect-video bg-slate-100 relative overflow-hidden">
+                                                        {imgUrl ? (
+                                                            /* eslint-disable-next-line @next/next/no-img-element */
+                                                            <img
+                                                                src={imgUrl}
+                                                                alt={set.title}
+                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                                <ImageIcon className="w-8 h-8" />
+                                                            </div>
+                                                        )}
+
+                                                        {/* Multiple images indicator */}
+                                                        {totalImages > 1 && (
+                                                            <span className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs">
+                                                                <ImageIcon className="w-3 h-3" />
+                                                                {totalImages} photos
+                                                            </span>
+                                                        )}
+
+                                                        {/* Price Tag if provided */}
+                                                        {set.price != null && (
+                                                            <span className="absolute top-2 left-2 bg-emerald-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-lg shadow-xs">
+                                                                {set.currency || "$"}
+                                                                {set.price}
+                                                            </span>
+                                                        )}
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteVisual(set.id)}
+                                                            className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-xs text-slate-600 hover:text-rose-600 hover:bg-white rounded-lg shadow-xs transition-colors cursor-pointer"
+                                                            title="Delete item"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Content */}
+                                                    <div className="p-3.5 flex-1 flex flex-col justify-between">
+                                                        <div>
+                                                            <h4 className="font-semibold text-xs text-slate-900 truncate">
+                                                                {set.title}
+                                                            </h4>
+                                                            {set.description && (
+                                                                <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-relaxed">
+                                                                    {set.description}
+                                                                </p>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="mt-3 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+                                                            {set.redirectUrl && (
+                                                                <a
+                                                                    href={set.redirectUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-[11px] text-slate-500 hover:text-slate-900 flex items-center gap-1 truncate transition-colors"
+                                                                >
+                                                                    <ExternalLink className="w-3 h-3 flex-shrink-0 text-slate-400" />
+                                                                    <span className="truncate">{set.redirectUrl}</span>
+                                                                </a>
+                                                            )}
+
+                                                            {set.triggerQueries && set.triggerQueries.length > 0 && (
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {set.triggerQueries.map((q, idx) => (
+                                                                        <span
+                                                                            key={idx}
+                                                                            className="text-[10px] font-medium bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md"
+                                                                        >
+                                                                            #{q}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* TAB 4: SUGGESTED QUESTIONS */}
+                    {activeTab === "questions" && (
+                        <div className="space-y-6 animate-in fade-in duration-200">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                                {/* Left Column: Editor & Management */}
+                                <div className="lg:col-span-7 space-y-6">
+                                    {/* Add New Question Card */}
+                                    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs">
+                                        <div className="flex items-center gap-2.5 mb-1.5">
+                                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                                                <Sparkles className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-semibold text-sm text-slate-900">Add Suggested Question</h3>
+                                                <p className="text-xs text-slate-500">
+                                                    Short, high-intent questions visitors can click with one tap.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <form
+                                            onSubmit={(e) => {
+                                                e.preventDefault();
+                                                handleAddQuestion();
+                                            }}
+                                            className="mt-4 flex gap-2"
+                                        >
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. What are your pricing plans?"
+                                                value={newQuestionInput}
+                                                maxLength={90}
+                                                onChange={(e) => setNewQuestionInput(e.target.value)}
+                                                className="flex-1 px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
+                                            />
+                                            <button
+                                                type="submit"
+                                                disabled={!newQuestionInput.trim() || questions.length >= 6}
+                                                className="px-4 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                                            >
+                                                <Plus className="w-3.5 h-3.5" />
+                                                Add
+                                            </button>
+                                        </form>
+
+                                        {/* Starter Ideas */}
+                                        <div className="mt-4 pt-4 border-t border-slate-100">
+                                            <span className="text-[11px] font-medium text-slate-400 block mb-2">
+                                                Quick suggestions:
+                                            </span>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {[
+                                                    "Explore our services",
+                                                    "View pricing",
+                                                    "Get a quote",
+                                                    "What are your business hours?",
+                                                    "How do I get started?",
+                                                    "Book a consultation"
+                                                ].map((suggestion, idx) => {
+                                                    const alreadyAdded = questions.some(
+                                                        q => q.toLowerCase() === suggestion.toLowerCase()
+                                                    );
+                                                    return (
+                                                        <button
+                                                            key={idx}
+                                                            type="button"
+                                                            disabled={alreadyAdded || questions.length >= 6}
+                                                            onClick={() => handleAddQuestion(suggestion)}
+                                                            className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1 cursor-pointer ${
+                                                                alreadyAdded
+                                                                    ? "border-slate-200 bg-slate-50 text-slate-400 opacity-60 cursor-not-allowed"
+                                                                    : "border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-slate-700 font-medium"
+                                                            }`}
+                                                        >
+                                                            <span>{suggestion}</span>
+                                                            {!alreadyAdded && <Plus className="w-2.5 h-2.5 text-slate-400" />}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Configured Questions List */}
+                                    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div>
+                                                <h3 className="font-semibold text-sm text-slate-900">Configured Questions</h3>
+                                                <p className="text-xs text-slate-500">
+                                                    Shown in order below the welcome greeting (up to 6 questions).
+                                                </p>
+                                            </div>
+                                            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+                                                {questions.length} / 6
+                                            </span>
+                                        </div>
+
+                                        {questions.length === 0 ? (
+                                            <div className="border border-dashed border-slate-200 rounded-xl p-8 text-center bg-slate-50/50">
+                                                <MessageSquareMore className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                                <p className="text-xs font-medium text-slate-700">No custom questions configured</p>
+                                                <p className="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">
+                                                    Default questions (&ldquo;Explore our services&rdquo;, &ldquo;View pricing&rdquo;, &ldquo;Get a quote&rdquo;) will be shown until you save custom ones.
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setQuestions(["Explore our services", "View pricing", "Get a quote"])}
+                                                    className="mt-3 text-xs font-medium text-slate-900 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                                                >
+                                                    Load default templates
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2.5">
+                                                {questions.map((question, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200/90 bg-slate-50/40 hover:bg-white hover:border-slate-300 transition-all"
+                                                    >
+                                                        <span className="w-6 h-6 rounded-lg bg-slate-200/70 text-slate-600 text-[11px] font-semibold flex items-center justify-center flex-shrink-0">
+                                                            {idx + 1}
+                                                        </span>
+                                                        <input
+                                                            type="text"
+                                                            value={question}
+                                                            onChange={(e) => handleUpdateQuestion(idx, e.target.value)}
+                                                            className="flex-1 bg-transparent text-xs font-medium text-slate-800 focus:outline-none focus:bg-white focus:ring-1 focus:ring-slate-300 rounded px-2 py-1"
+                                                        />
+                                                        <div className="flex items-center gap-0.5 flex-shrink-0">
+                                                            <button
+                                                                type="button"
+                                                                disabled={idx === 0}
+                                                                onClick={() => handleMoveQuestion(idx, "up")}
+                                                                className="p-1 rounded text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                                                                title="Move up"
+                                                            >
+                                                                <ArrowUp className="w-3.5 h-3.5" />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                disabled={idx === questions.length - 1}
+                                                                onClick={() => handleMoveQuestion(idx, "down")}
+                                                                className="p-1 rounded text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                                                                title="Move down"
+                                                            >
+                                                                <ArrowDown className="w-3.5 h-3.5" />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveQuestion(idx)}
+                                                                className="p-1 rounded text-slate-400 hover:text-rose-600 cursor-pointer ml-1"
+                                                                title="Remove question"
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Save Action Bar */}
+                                        <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                                            <button
+                                                type="button"
+                                                onClick={() => setQuestions(["Explore our services", "View pricing", "Get a quote"])}
+                                                className="text-xs text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                                            >
+                                                Reset to defaults
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={savingQuestions}
+                                                onClick={handleSaveQuestions}
+                                                className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+                                            >
+                                                {savingQuestions ? (
+                                                    <>
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                        Saving...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Save className="w-3.5 h-3.5" />
+                                                        Save Questions
+                                                    </>
                                                 )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-slate-800 truncate">{set.title}</p>
-                                                <p className="text-xs text-slate-500 truncate">{set.description}</p>
-                                            </div>
-                                            <button onClick={() => handleDeleteVisual(set.id)} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors self-start flex-shrink-0 rounded-lg hover:bg-red-50">
-                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
-                                    ))}
-                                    {visualSets.length === 0 && <p className="text-sm text-slate-400 italic col-span-2 py-4">No visual items added yet.</p>}
+                                    </div>
+                                </div>
+
+                                {/* Right Column: Live Chatbot Preview */}
+                                <div className="lg:col-span-5 sticky top-6">
+                                    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs">
+                                        <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                                <span className="text-xs font-semibold text-slate-800">Live Widget Preview</span>
+                                            </div>
+                                            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Visitor View</span>
+                                        </div>
+
+                                        {/* Widget Mockup Card */}
+                                        <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 shadow-inner space-y-4">
+                                            {/* Header Mockup */}
+                                            <div className="flex items-center justify-between pb-3 border-b border-slate-200/60">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700">
+                                                        bot
+                                                    </div>
+                                                    <span className="text-xs font-bold text-slate-900">My AI Assistant</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 text-slate-400">
+                                                    <span className="text-sm font-bold tracking-widest">&bull;&bull;&bull;</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Greeting Bubble */}
+                                            <div className="flex flex-col gap-2.5 items-start">
+                                                <div className="bg-white border border-slate-200/80 text-slate-800 rounded-2xl rounded-tl-xs px-3.5 py-2.5 text-[12px] leading-relaxed max-w-[90%] shadow-2xs">
+                                                    Hello! How can I help you today?
+                                                </div>
+
+                                                {/* Suggested Questions Section */}
+                                                <div className="w-full flex flex-col gap-1.5 pt-1">
+                                                    <span className="text-[11px] font-medium text-slate-400 px-1">
+                                                        Suggested questions
+                                                    </span>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        {(questions.length > 0
+                                                            ? questions
+                                                            : ["Explore our services", "View pricing", "Get a quote"]
+                                                        ).map((q, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                className="w-full text-left px-3.5 py-2 rounded-xl border border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-medium transition-all flex items-center justify-between group shadow-2xs cursor-default"
+                                                            >
+                                                                <span className="truncate">{q || `Question ${idx + 1}`}</span>
+                                                                <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-slate-700 transition-transform flex-shrink-0 ml-2" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <p className="text-[11px] text-slate-400 text-center mt-3 leading-relaxed">
+                                            Visitors can click any question chip to send it instantly to the chatbot.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        )}
-                    </>
-                )}
-            </div>
+                        </div>
+                    )}
+                </>
+            )}
         </div>
     );
 }

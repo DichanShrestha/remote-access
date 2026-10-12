@@ -15,7 +15,10 @@ import {
   Sliders,
   ShieldCheck,
   MessageSquare,
-  HelpCircle
+  HelpCircle,
+  Calendar,
+  CalendarCheck,
+  ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 import { updateLeadCaptureConfig } from "@/app/actions/bot-actions";
@@ -42,7 +45,41 @@ export function LeadCaptureConfigPanel({
     ...initialConfig,
   });
   const [newKeyword, setNewKeyword] = useState("");
+  const [newBookingKeyword, setNewBookingKeyword] = useState("");
+  const [previewTab, setPreviewTab] = useState<"form" | "booking">("form");
   const [isSaving, setIsSaving] = useState(false);
+
+  const bookingKeywordsList = config.bookingKeywords || DEFAULT_LEAD_CAPTURE_SETTINGS.bookingKeywords || [];
+
+  const handleAddBookingKeyword = () => {
+    const trimmed = newBookingKeyword.trim().toLowerCase();
+    if (!trimmed) return;
+    if (bookingKeywordsList.includes(trimmed)) {
+      toast.error("Booking keyword already added");
+      return;
+    }
+    setConfig(prev => ({
+      ...prev,
+      bookingKeywords: [...(prev.bookingKeywords || DEFAULT_LEAD_CAPTURE_SETTINGS.bookingKeywords || []), trimmed],
+    }));
+    setNewBookingKeyword("");
+  };
+
+  const handleRemoveBookingKeyword = (keywordToRemove: string) => {
+    setConfig(prev => ({
+      ...prev,
+      bookingKeywords: (prev.bookingKeywords || DEFAULT_LEAD_CAPTURE_SETTINGS.bookingKeywords || []).filter(k => k !== keywordToRemove),
+    }));
+  };
+
+  const handleAddSuggestedBookingKeyword = (keyword: string) => {
+    const lower = keyword.toLowerCase();
+    if (bookingKeywordsList.includes(lower)) return;
+    setConfig(prev => ({
+      ...prev,
+      bookingKeywords: [...(prev.bookingKeywords || DEFAULT_LEAD_CAPTURE_SETTINGS.bookingKeywords || []), lower],
+    }));
+  };
 
   const handleAddKeyword = () => {
     const trimmed = newKeyword.trim().toLowerCase();
@@ -432,6 +469,171 @@ export function LeadCaptureConfigPanel({
             </div>
           </div>
 
+          {/* Step 3: Booking Link & Intent Triggers */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Calendar className="w-4 h-4 text-slate-600" />
+                  <h3 className="text-base font-bold text-slate-900">3. Booking Link & Intent Triggers</h3>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Configure your calendar link and manage the triggers that prompt the AI to share it with visitors.
+                </p>
+              </div>
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                  config.bookingLink
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {config.bookingLink ? "Configured" : "Not Set"}
+              </span>
+            </div>
+
+            {/* Booking URL Input */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-700 block">
+                  Booking Calendar Link
+                </label>
+                {config.bookingLink && (
+                  <a
+                    href={config.bookingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1"
+                  >
+                    Test link <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type="url"
+                  placeholder="https://cal.com/your-team or https://calendly.com/your-team"
+                  value={config.bookingLink || ""}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setConfig(prev => ({ ...prev, bookingLink: val }));
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500">
+                <span className="font-medium text-slate-600">Supported:</span>
+                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono text-[10px]">cal.com</span>
+                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono text-[10px]">calendly.com</span>
+                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono text-[10px]">savvycal.com</span>
+                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono text-[10px]">custom url</span>
+              </div>
+            </div>
+
+            {/* Booking Trigger Keywords */}
+            <div className="space-y-3 pt-2 border-t border-slate-100">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block">
+                  Booking Intent Trigger Keywords
+                </label>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  When a visitor mentions any of these terms, the assistant activates the booking protocol and provides your link.
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newBookingKeyword}
+                  onChange={e => setNewBookingKeyword(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" || e.key === ",") {
+                      e.preventDefault();
+                      handleAddBookingKeyword();
+                    }
+                  }}
+                  placeholder="e.g. consult, discovery, interview"
+                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddBookingKeyword}
+                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add
+                </button>
+              </div>
+
+              {/* Active Keywords Tags */}
+              <div className="flex flex-wrap gap-1.5 min-h-[32px] p-2.5 bg-slate-50 rounded-xl border border-slate-200/60">
+                {bookingKeywordsList.length === 0 ? (
+                  <span className="text-xs text-slate-400 italic">No custom keywords configured. Default booking terms are used.</span>
+                ) : (
+                  bookingKeywordsList.map((kw, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-700 shadow-2xs group"
+                    >
+                      {kw}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveBookingKeyword(kw)}
+                        className="text-slate-400 hover:text-rose-500 rounded-full transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))
+                )}
+              </div>
+
+              {/* Suggestions */}
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[11px] font-medium text-slate-400 block">Suggested triggers:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {["schedule", "meeting", "call", "appointment", "demo", "book", "consultation"].map((sug, i) => {
+                    const isAdded = bookingKeywordsList.includes(sug);
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        disabled={isAdded}
+                        onClick={() => handleAddSuggestedBookingKeyword(sug)}
+                        className={`text-[11px] px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+                          isAdded
+                            ? "bg-slate-100 text-slate-400 border-slate-200 cursor-default"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50"
+                        }`}
+                      >
+                        {isAdded ? `✓ ${sug}` : `+ ${sug}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Display Card Toggle */}
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+              <div>
+                <label className="text-xs font-semibold text-slate-800 block cursor-pointer" htmlFor="toggleBookingCard">
+                  Interactive Booking Card in Chat
+                </label>
+                <p className="text-[11px] text-slate-500">
+                  Renders an action button with calendar icon whenever the booking link is triggered.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                id="toggleBookingCard"
+                checked={config.showBookingCard !== false}
+                onChange={e => setConfig(prev => ({ ...prev, showBookingCard: e.target.checked }))}
+                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer"
+              />
+            </div>
+          </div>
+
           {/* Action Bar */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
@@ -454,9 +656,32 @@ export function LeadCaptureConfigPanel({
                 <Eye className="w-4 h-4 text-blue-600" />
                 <h3 className="text-sm font-bold text-slate-900">Live Widget Preview</h3>
               </div>
-              <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-                {config.mode === "first" ? "Gated Chat" : "In-Chat Prompt"}
-              </span>
+              
+              {/* Tab Selector */}
+              <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-[11px] font-medium">
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab("form")}
+                  className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                    previewTab === "form"
+                      ? "bg-white text-slate-900 shadow-2xs font-semibold"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Lead Form
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab("booking")}
+                  className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                    previewTab === "booking"
+                      ? "bg-white text-slate-900 shadow-2xs font-semibold"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Booking Card
+                </button>
+              </div>
             </div>
 
             {/* Mock Widget Container */}
@@ -479,7 +704,46 @@ export function LeadCaptureConfigPanel({
 
               {/* Chat Body */}
               <div className="p-3.5 bg-slate-50 min-h-[310px] flex flex-col justify-end gap-2.5 text-xs">
-                {config.mode === "first" ? (
+                {previewTab === "booking" ? (
+                  <>
+                    <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-700 max-w-[85%] text-[11px] leading-relaxed">
+                      Hello! How can I help you today?
+                    </div>
+                    <div
+                      style={{ backgroundColor: primaryColor }}
+                      className="p-2.5 text-white rounded-xl rounded-tr-sm self-end max-w-[80%] text-[11px]"
+                    >
+                      Can we schedule a call to talk through options?
+                    </div>
+                    <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-700 max-w-[92%] text-[11px] leading-relaxed space-y-2 shadow-2xs">
+                      <div>
+                        I would be delighted to help! You can choose a time that works best for you right here:
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                            <Calendar className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-slate-900 text-xs">Schedule an Appointment</div>
+                            <div className="text-[10px] text-slate-500 truncate">
+                              {config.bookingLink ? config.bookingLink.replace(/^https?:\/\//, '') : "cal.com/your-team"}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          style={{ backgroundColor: primaryColor }}
+                          className="w-full py-1.5 px-3 rounded-lg text-white text-[11px] font-semibold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                        >
+                          <CalendarCheck className="w-3.5 h-3.5" />
+                          <span>Open Booking Calendar</span>
+                          <ExternalLink className="w-3 h-3 opacity-80" />
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : config.mode === "first" ? (
                   <>
                     <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-slate-700 max-w-[85%] text-[11px] leading-relaxed">
                       Hello! How can I help you today?

@@ -2,8 +2,8 @@
 
 import { authService } from "@/services/auth";
 
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { sanitizeInput, getStringSize } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import type { BotFormData } from "@/lib/supabase/types";
@@ -87,12 +87,10 @@ export async function updateBot(botId: string, data: Partial<BotFormData>) {
     if (data.collectLeads !== undefined)
         updateData.collectLeads = data.collectLeads;
     if (data.leadGenConfig !== undefined) {
-        // We cast to any because Prisma's Json input type might be slightly different 
-        // than our LeadGenConfig type, but it's a valid JSON object.
-        updateData.leadGenConfig = data.leadGenConfig ? (data.leadGenConfig as any) : null;
+        updateData.leadGenConfig = data.leadGenConfig ? (data.leadGenConfig as unknown as Prisma.InputJsonValue) : Prisma.JsonNull;
     }
     if (data.leadCaptureConfig !== undefined) {
-        updateData.leadCaptureConfig = data.leadCaptureConfig ? (data.leadCaptureConfig as any) : null;
+        updateData.leadCaptureConfig = data.leadCaptureConfig ? (data.leadCaptureConfig as unknown as Prisma.InputJsonValue) : Prisma.JsonNull;
     }
     if (data.bookingLink !== undefined) {
         if (data.bookingLink) {
@@ -102,8 +100,8 @@ export async function updateBot(botId: string, data: Partial<BotFormData>) {
                     throw new Error("Booking URL must start with http:// or https://");
                 }
                 updateData.bookingLink = url.toString();
-            } catch (error: any) {
-                if (error.message.includes("Booking URL must start")) throw error;
+            } catch (error: unknown) {
+                if (error instanceof Error && error.message.includes("Booking URL must start")) throw error;
                 throw new Error("Invalid booking URL");
             }
         } else {
@@ -162,8 +160,8 @@ export async function deleteBot(botId: string) {
     // Calculate how much storage this bot was using to free it up
     let totalBotStorage = 0;
     for (const source of bot.dataSources) {
-        const metadata = source.metadata as any;
-        if (metadata?.storageBytes) {
+        const metadata = source.metadata as Record<string, unknown> | null;
+        if (typeof metadata?.storageBytes === "number") {
             totalBotStorage += metadata.storageBytes;
         } else {
             // Fallback for legacy data
@@ -315,6 +313,7 @@ ${identity}
 ${businessContext}
 
 ### Communication Style
+- Maintain a ${tone || "friendly and helpful"} tone throughout.
 - Don't lead with "I'm an AI" or add disclaimers unprompted — focus on being naturally helpful.
 - If a user sincerely and directly asks whether they're talking to a human or an AI, answer honestly.`;
 }
@@ -327,7 +326,7 @@ export async function getLeadCaptureConfig(botId: string): Promise<LeadCaptureSe
 
     const bot = await prisma.bot.findFirst({
         where: { id: botId, userId: user.id },
-        select: { leadCaptureConfig: true, collectLeads: true },
+        select: { leadCaptureConfig: true, collectLeads: true, bookingLink: true },
     });
 
     if (!bot) throw new Error("Bot not found");
@@ -336,6 +335,7 @@ export async function getLeadCaptureConfig(botId: string): Promise<LeadCaptureSe
     return {
         ...DEFAULT_LEAD_CAPTURE_SETTINGS,
         enabled: bot.collectLeads ?? false,
+        bookingLink: bot.bookingLink || saved?.bookingLink || "",
         ...(saved || {}),
     };
 }
@@ -353,13 +353,32 @@ export async function updateLeadCaptureConfig(botId: string, config: Partial<Lea
     if (!existingBot) throw new Error("Bot not found");
 
     const isEnabled = Boolean(config.enabled);
+    const updateData: Record<string, unknown> = {
+        collectLeads: isEnabled,
+        leadCaptureConfig: config ? (config as Prisma.InputJsonValue) : Prisma.JsonNull,
+    };
+
+    if (config.bookingLink !== undefined) {
+        const trimmed = config.bookingLink?.trim();
+        if (trimmed) {
+            try {
+                const url = new URL(trimmed);
+                if (url.protocol !== "http:" && url.protocol !== "https:") {
+                    throw new Error("Booking URL must start with http:// or https://");
+                }
+                updateData.bookingLink = url.toString();
+            } catch (error: unknown) {
+                if (error instanceof Error && error.message.includes("Booking URL must start")) throw error;
+                throw new Error("Invalid booking URL");
+            }
+        } else {
+            updateData.bookingLink = null;
+        }
+    }
 
     await prisma.bot.update({
         where: { id: botId },
-        data: {
-            collectLeads: isEnabled,
-            leadCaptureConfig: config ? (config as any) : null,
-        },
+        data: updateData,
     });
 
     revalidatePath("/dashboard");
@@ -368,3 +387,61 @@ export async function updateLeadCaptureConfig(botId: string, config: Partial<Lea
     return { success: true };
 }
 
+/**
+ * Get configured suggested questions for the bot
+ */
+export async function getSuggestedQuestions(botId: string): Promise<string[]> {
+    if (!botId) return [];
+    const user = await authService.requireUser();
+
+    const bot = await prisma.bot.findFirst({
+        where: { id: botId, userId: user.id },
+        select: { welcomeMessages: true, welcomeMessage: true },
+    });
+
+    if (!bot) return [];
+
+    // Filter out greeting if present in welcomeMessages
+    const questions = (bot.welcomeMessages || [])
+        .map((q) => q.trim())
+        .filter((q) => q.length > 0 && q !== bot.welcomeMessage);
+
+    return questions;
+}
+
+/**
+ * Update suggested questions for the bot
+ */
+export async function updateSuggestedQuestions(
+    botId: string,
+    questions: string[]
+): Promise<{ success: boolean; questions: string[] }> {
+    const user = await authService.requireUser();
+
+    const existingBot = await prisma.bot.findFirst({
+        where: { id: botId, userId: user.id },
+        select: { id: true, welcomeMessage: true },
+    });
+
+    if (!existingBot) throw new Error("Bot not found");
+
+    // Clean, sanitize, filter duplicates and empty strings, cap at 6 questions
+    const sanitized = Array.from(
+        new Set(
+            questions
+                .map((q) => sanitizeInput(q.trim()))
+                .filter((q) => q.length > 0 && q !== existingBot.welcomeMessage)
+        )
+    ).slice(0, 6);
+
+    await prisma.bot.update({
+        where: { id: botId },
+        data: {
+            welcomeMessages: sanitized,
+        },
+    });
+
+    revalidatePath("/dashboard/knowledge");
+    revalidatePath("/dashboard");
+    return { success: true, questions: sanitized };
+}

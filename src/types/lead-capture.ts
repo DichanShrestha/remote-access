@@ -9,6 +9,9 @@ export interface LeadCaptureSettings {
     askName: boolean;
     askEmail: boolean;
     askPhone: boolean;
+    bookingLink?: string;
+    bookingKeywords?: string[];
+    showBookingCard?: boolean;
 }
 
 export const DEFAULT_LEAD_CAPTURE_SETTINGS: LeadCaptureSettings = {
@@ -22,4 +25,7 @@ export const DEFAULT_LEAD_CAPTURE_SETTINGS: LeadCaptureSettings = {
     askName: true,
     askEmail: true,
     askPhone: false,
+    bookingLink: "",
+    bookingKeywords: ["book", "schedule", "call", "meeting", "appointment", "demo", "calendar", "consultation"],
+    showBookingCard: true,
 };

@@ -16,7 +16,15 @@ class SupabaseStorageService implements StorageService {
   private client = createAdminClient();
   async upload(object: StoredObject, body: Buffer | File | Blob, upsert = false) {
     const { error } = await this.client.storage.from(object.bucket).upload(object.key, body, { upsert, contentType: object.contentType });
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.message?.toLowerCase().includes("bucket not found")) {
+        await this.client.storage.createBucket(object.bucket, { public: true });
+        const retry = await this.client.storage.from(object.bucket).upload(object.key, body, { upsert, contentType: object.contentType });
+        if (retry.error) throw new Error(retry.error.message);
+        return;
+      }
+      throw new Error(error.message);
+    }
   }
   async download(object: StoredObject) {
     const { data, error } = await this.client.storage.from(object.bucket).download(object.key);

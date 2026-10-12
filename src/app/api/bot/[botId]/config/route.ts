@@ -23,6 +23,7 @@ export async function GET(
                 welcomeMessage: true,
                 collectLeads: true,
                 leadCaptureConfig: true,
+                bookingLink: true,
                 userId: true,
             }
         });
@@ -45,6 +46,7 @@ export async function GET(
             welcomeMessage: bot.welcomeMessage,
             collectLeads: bot.collectLeads,
             leadCaptureConfig: bot.leadCaptureConfig,
+            bookingLink: bot.bookingLink,
             aiEnabled: entitlement?.aiEnabled || false,
             aiRepliesRemaining: Math.max(0, (entitlement?.limits.aiReplies || 0) - (subscription?.aiRepliesUsed || 0)),
         }, { headers: corsHeaders() });

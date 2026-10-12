@@ -1,9 +1,9 @@
 "use server";
 import { authService } from "@/services/auth";
 
-import { createClient } from "@/lib/supabase/server";
 import { storageService } from "@/lib/storage/service";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { generateGeminiEmbedding } from "@/lib/ai/gemini-embeddings";
 import { requireAIEntitlement } from "@/lib/billing/entitlements";
@@ -43,7 +43,7 @@ async function processImageEmbeddings(
     await Promise.all(imagesToProcess.map(async (img) => {
         try {
             const textToEmbed = `Title: ${title}\nDescription: ${description || ''}\nTriggers: ${triggerQueries.join(', ')}\nCaption: ${img.caption || ''}`;
-            let embeddingParams: any = { text: textToEmbed };
+            const embeddingParams: Record<string, unknown> = { text: textToEmbed };
 
             const imageData = await fetchImageAsBase64(img.publicUrl);
             if (imageData) {
@@ -294,6 +294,14 @@ export async function deleteVisualSet(itemId: string, botId: string) {
     return { success: true };
 }
 
+type CatalogItemWithImages = Prisma.CatalogItemGetPayload<{
+    include: { images: true };
+}>;
+
+type CatalogSearchResult = CatalogItemWithImages & {
+    similarity: number;
+};
+
 export async function searchVisualSets(
     botId: string,
     query: string,
@@ -306,7 +314,7 @@ export async function searchVisualSets(
         include: { images: { orderBy: { order: 'asc' } } }
     });
 
-    let results: any[] = [];
+    let results: CatalogSearchResult[] = [];
 
     // 1 & 2. Trigger Matches & Keyword Matches
     for (const item of allItems) {
@@ -354,7 +362,7 @@ export async function searchVisualSets(
                 const excludeClause = excludeIds ? `AND i.catalog_item_id NOT IN (${excludeIds})` : '';
 
             // Group by item_id and get the max similarity among its images
-            const semanticMatches = await prisma.$queryRawUnsafe<any[]>(`
+            const semanticMatches = await prisma.$queryRawUnsafe<Array<{ id: string; similarity: number }>>(`
                 SELECT i.catalog_item_id as "id", MAX(1 - (i.embedding <=> $1::vector)) as similarity
                 FROM "catalog_images" i
                 JOIN "catalog_items" t ON i.catalog_item_id = t.id
@@ -375,13 +383,12 @@ export async function searchVisualSets(
                     }
                 });
 
-                // Merge with similarity scores and maintain order
-                const scoredItems = semanticMatches.map(sm => {
+                for (const sm of semanticMatches) {
                     const item = fetchedItems.find(fi => fi.id === sm.id);
-                    return item ? { ...item, similarity: sm.similarity } : null;
-                }).filter(Boolean);
-
-                results = [...results, ...scoredItems as any[]];
+                    if (item) {
+                        results.push({ ...item, similarity: sm.similarity });
+                    }
+                }
             }
             }
         } catch (err) {
@@ -394,4 +401,49 @@ export async function searchVisualSets(
     results.sort((a, b) => b.similarity - a.similarity);
 
     return results.slice(0, matchCount);
+}
+
+/**
+ * Upload multiple catalog images (supports bulk uploads)
+ */
+export async function uploadCatalogImages(formData: FormData): Promise<{ urls: string[] }> {
+    const user = await authService.requireUser();
+    await requireAIEntitlement(user.id);
+
+    const files = formData.getAll("files") as File[];
+    if (!files || files.length === 0) {
+        throw new Error("No image files selected");
+    }
+
+    const uploadedUrls: string[] = [];
+
+    for (const file of files) {
+        if (!file || typeof file.arrayBuffer !== "function") continue;
+        if (!file.type.startsWith("image/")) {
+            throw new Error(`"${file.name}" is not an image`);
+        }
+        if (file.size > 20 * 1024 * 1024) {
+            throw new Error(`"${file.name}" exceeds 20MB limit`);
+        }
+
+        const extension = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8) || 'jpg';
+        const objectKey = `${user.id}/catalog/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${extension}`;
+        const bucket = "catalog-assets";
+
+        await storageService.upload({
+            bucket,
+            key: objectKey,
+            size: file.size,
+            contentType: file.type,
+        }, file);
+
+        const publicUrl = storageService.publicUrl({ bucket, key: objectKey });
+        uploadedUrls.push(publicUrl);
+    }
+
+    if (uploadedUrls.length === 0) {
+        throw new Error("No valid images were uploaded");
+    }
+
+    return { urls: uploadedUrls };
 }

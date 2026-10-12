@@ -42,6 +42,25 @@ export async function updateBotSettings(botId: string, data: any) {
     
     const bot = await prisma.bot.findUnique({ where: { id: botId } });
     if (!bot || bot.userId !== user.id) throw new Error("Unauthorized");
+
+    let cleanBookingLink: string | null | undefined = undefined;
+    if (data.bookingLink !== undefined) {
+        const trimmed = typeof data.bookingLink === "string" ? data.bookingLink.trim() : "";
+        if (trimmed) {
+            try {
+                const url = new URL(trimmed);
+                if (url.protocol !== "http:" && url.protocol !== "https:") {
+                    throw new Error("Booking URL must start with http:// or https://");
+                }
+                cleanBookingLink = url.toString();
+            } catch (err: any) {
+                if (err.message.includes("Booking URL must start")) throw err;
+                throw new Error("Invalid booking URL");
+            }
+        } else {
+            cleanBookingLink = null;
+        }
+    }
     
     return prisma.bot.update({
         where: { id: botId },
@@ -51,6 +70,7 @@ export async function updateBotSettings(botId: string, data: any) {
             systemPrompt: data.systemPrompt,
             colorTheme: data.colorTheme,
             collectLeads: data.collectLeads,
+            ...(cleanBookingLink !== undefined ? { bookingLink: cleanBookingLink } : {}),
             ...(data.status ? { status: data.status } : {})
         }
     });
