@@ -2,7 +2,23 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Copy `.env.example` to `.env` and configure your credentials:
+
+```bash
+cp .env.example .env
+```
+
+### AI & LLM Configuration (OpenRouter)
+
+Smart Page uses OpenRouter via the OpenAI SDK compatible base URL (`https://openrouter.ai/api/v1`).
+
+Key configuration environment variables:
+- `OPENROUTER_API_KEY`: Your OpenRouter API key.
+- `OPENROUTER_BASE_URL`: Base URL (default: `https://openrouter.ai/api/v1`).
+- `AI_CHAT_MODEL`: Primary response model ID (default: `anthropic/claude-haiku-5.5`). Configurable to any OpenRouter model (e.g. `openai/gpt-5-nano`, `google/gemini-3.1-flash-lite`).
+- `AI_EMBEDDING_MODEL`: Text embeddings model ID (default: `openai/text-embedding-3-small`). Configurable to models like `google/gemini-embedding-001`.
+
+Then, run the development server:
 
 ```bash
 npm run dev

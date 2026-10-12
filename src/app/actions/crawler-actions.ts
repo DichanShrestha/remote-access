@@ -6,7 +6,7 @@ import { sanitizeInput, getStringSize } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
 import { crawlWebsite as performCrawl } from "@/lib/documents/crawler";
 import { chunkText } from "@/lib/ai/chunker";
-import { generateEmbeddings } from "@/lib/ai/embeddings";
+import { generateEmbeddings, getActiveEmbeddingModel } from "@/lib/ai/embeddings";
 import { enforceStorageGuard, updateStorageUsage } from "@/lib/guards/resource-manager";
 import { revalidatePath } from "next/cache";
 
@@ -159,7 +159,8 @@ export async function crawlAndStoreUrl(botId: string, url: string) {
                     metadata: {
                         ...textChunks[i].metadata,
                         url: page.url,
-                        title: page.title // Smart Meta: Include pageTitle
+                        title: page.title, // Smart Meta: Include pageTitle
+                        embeddingModel: getActiveEmbeddingModel(),
                     }
                 });
             }
@@ -176,7 +177,7 @@ export async function crawlAndStoreUrl(botId: string, url: string) {
             // We use JSON.stringify(chunk.embedding) to match pgvector's expectation
             const valueRows = batch.map((_, index) => {
                 const offset = index * 6;
-                return `(uuid_generate_v4(), $${offset + 1}::uuid, $${offset + 2}::uuid, $${offset + 3}::uuid, $${offset + 4}, $${offset + 5}::vector(1536), $${offset + 6}::jsonb)`;
+                return `(uuid_generate_v4(), $${offset + 1}::uuid, $${offset + 2}::uuid, $${offset + 3}::uuid, $${offset + 4}, $${offset + 5}::vector, $${offset + 6}::jsonb)`;
             }).join(', ');
 
             const params = [];

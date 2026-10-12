@@ -1,6 +1,17 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
+// Polyfill WebSocket for Node runtime environments where native WebSocket is not present
+if (typeof globalThis !== 'undefined' && typeof (globalThis as any).WebSocket === 'undefined') {
+    (globalThis as any).WebSocket = class WebSocket {
+        constructor() {}
+        addEventListener() {}
+        removeEventListener() {}
+        send() {}
+        close() {}
+    };
+}
+
 /**
  * Admin Supabase client using the service role key.
  * ⚠️  SERVER-ONLY — never import this in client components.
@@ -20,6 +31,9 @@ export function createAdminClient() {
         auth: {
             autoRefreshToken: false,
             persistSession: false,
+        },
+        realtime: {
+            createSocket: () => null as any,
         },
     });
 }

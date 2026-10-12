@@ -341,15 +341,17 @@ export async function searchVisualSets(
         results = results.slice(0, matchCount);
     }
 
-    // 3. Gemini Vision Embedding Semantic Search (Strong Fallback)
-    if (results.length < matchCount) {
+    // 3. Gemini Vision Embedding Semantic Search (Optional fallback when Gemini is configured)
+    const hasGeminiKey = Boolean(process.env.GEMINI_API_KEY || process.env.GEMINI_FREE_API_KEY);
+    if (results.length < matchCount && hasGeminiKey) {
         try {
             const queryEmbedding = await generateGeminiEmbedding({ text: query }, "RETRIEVAL_QUERY");
-            const vectorString = `[${queryEmbedding.join(',')}]`;
+            if (queryEmbedding && queryEmbedding.length > 0) {
+                const vectorString = `[${queryEmbedding.join(',')}]`;
 
-            // Exclude already found items
-            const excludeIds = results.map(r => `'${r.id}'`).join(',');
-            const excludeClause = excludeIds ? `AND i.catalog_item_id NOT IN (${excludeIds})` : '';
+                // Exclude already found items
+                const excludeIds = results.map(r => `'${r.id}'`).join(',');
+                const excludeClause = excludeIds ? `AND i.catalog_item_id NOT IN (${excludeIds})` : '';
 
             // Group by item_id and get the max similarity among its images
             const semanticMatches = await prisma.$queryRawUnsafe<any[]>(`
@@ -380,6 +382,7 @@ export async function searchVisualSets(
                 }).filter(Boolean);
 
                 results = [...results, ...scoredItems as any[]];
+            }
             }
         } catch (err) {
             console.error("Semantic search fallback failed:", err);

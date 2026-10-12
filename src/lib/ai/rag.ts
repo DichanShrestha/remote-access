@@ -42,6 +42,7 @@ export async function retrieveRelevantChunks(
 
     // Use admin client to bypass RLS (widget chat needs this)
     const supabase = createAdminClient();
+    let results: MatchedDocument[] = [];
 
     const { data, error } = await supabase.rpc("match_documents", {
         query_embedding: queryEmbedding,
@@ -49,12 +50,30 @@ export async function retrieveRelevantChunks(
         match_count: matchCount,
     });
 
-    if (error) {
-        console.error("[RAG] Error matching documents:", error);
-        return [];
+    if (!error && Array.isArray(data)) {
+        results = data as MatchedDocument[];
+    } else {
+        if (error) {
+            console.warn("[RAG] PostgREST notice, utilizing direct DB vector search:", error.message);
+        }
+        try {
+            const rawResults = await prisma.$queryRaw<MatchedDocument[]>`
+                SELECT 
+                    id, 
+                    content, 
+                    metadata, 
+                    (1 - (embedding <=> ${JSON.stringify(queryEmbedding)}::vector))::float as similarity
+                FROM document_chunks
+                WHERE bot_id = ${botId}::uuid
+                ORDER BY embedding <=> ${JSON.stringify(queryEmbedding)}::vector
+                LIMIT ${matchCount}
+            `;
+            results = rawResults || [];
+        } catch (dbErr) {
+            console.error("[RAG] Direct DB vector search error:", dbErr);
+            return [];
+        }
     }
-
-    let results = (data ?? []) as MatchedDocument[];
 
     // Boost QA chunks and track them for usage counting
     const qaIds: string[] = [];

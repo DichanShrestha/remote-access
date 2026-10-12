@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { parseDocument, crawlUrl } from "@/lib/documents/parser";
 import { crawlWebsite } from "@/lib/documents/crawler";
 import { chunkText } from "@/lib/ai/chunker";
-import { generateEmbeddings } from "@/lib/ai/embeddings";
+import { generateEmbeddings, getActiveEmbeddingModel } from "@/lib/ai/embeddings";
 import { validateFile, getStringSize } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { updateStorageUsage } from "@/lib/guards/resource-manager";
@@ -118,8 +118,11 @@ export async function uploadAndTrainFiles(botId: string, formData: FormData) {
             ${botId}::uuid,
             ${user.id}::uuid,
             ${textChunks[i].content},
-            ${JSON.stringify(embeddings[i])}::vector(1536),
-            ${JSON.stringify(textChunks[i].metadata)}::jsonb
+            ${JSON.stringify(embeddings[i])}::vector,
+            ${JSON.stringify({
+                ...textChunks[i].metadata,
+                embeddingModel: getActiveEmbeddingModel(),
+            })}::jsonb
           )
         `;
             }
@@ -254,11 +257,12 @@ export async function crawlAndTrain(botId: string, url: string) {
                         ${botId}::uuid,
                         ${user.id}::uuid,
                         ${textChunks[i].content},
-                        ${JSON.stringify(embeddings[i])}::vector(1536),
+                        ${JSON.stringify(embeddings[i])}::vector,
                         ${JSON.stringify({
                     ...textChunks[i].metadata,
                     url: page.url,
-                    title: page.title
+                    title: page.title,
+                    embeddingModel: getActiveEmbeddingModel(),
                 })}::jsonb
                     )
                 `;
@@ -364,8 +368,11 @@ export async function reTrainSource(dataSourceId: string) {
                     ${dataSource.botId}::uuid,
                     ${user.id}::uuid,
                     ${textChunks[i].content},
-                    ${JSON.stringify(embeddings[i])}::vector(1536),
-                    ${JSON.stringify(textChunks[i].metadata)}::jsonb
+                    ${JSON.stringify(embeddings[i])}::vector,
+                    ${JSON.stringify({
+                        ...textChunks[i].metadata,
+                        embeddingModel: getActiveEmbeddingModel(),
+                    })}::jsonb
                 )
             `;
         }

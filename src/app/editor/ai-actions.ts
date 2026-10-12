@@ -1,7 +1,7 @@
 "use server";
 
 import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { getDefaultChatModel } from '@/lib/ai/providers';
 import { PageDocumentSchema, PageSectionSchema } from '@/lib/page-engine/schemas';
 import { ComponentRegistry } from '@/lib/page-engine/registry';
 import { authService } from '@/services/auth';
@@ -33,7 +33,7 @@ export async function composePage(prompt: string, pageId: string) {
     .join('\n');
 
   const { object } = await generateObject({
-    model: openai('gpt-4o-mini'),
+    model: getDefaultChatModel(),
     schema: PageDocumentSchema,
     system: `You are an expert web designer and copywriter building a premium "Smart Page".
 The user will provide an intent or content description.
@@ -64,7 +64,7 @@ export async function editSection(prompt: string, section: any, pageId: string) 
   }
 
   const { object } = await generateObject({
-    model: openai('gpt-4o-mini'),
+    model: getDefaultChatModel(),
     schema: PageSectionSchema,
     system: `You are an expert web editor and copywriter.
 The user wants to edit a specific section of their Smart Page.
@@ -77,3 +77,4 @@ Ensure your copy is highly engaging, grammatically perfect, and conversion-optim
 
   return object;
 }
+

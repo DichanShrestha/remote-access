@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { updateStorageUsage } from "@/lib/guards/resource-manager";
 import { getStringSize } from "@/lib/utils";
-import { generateEmbeddings } from "@/lib/ai/embeddings";
+import { generateEmbeddings, getActiveEmbeddingModel } from "@/lib/ai/embeddings";
 import { AI_CHARS_PER_TOKEN, getSmartPageEntitlement } from "@/lib/tier-limits";
 import { requireAIEntitlement } from "@/lib/billing/entitlements";
 
@@ -80,13 +80,14 @@ async function syncQAEmbeddings(
             ${botId}::uuid,
             ${userId}::uuid,
             ${embeddingText},
-            ${JSON.stringify(embedding)}::vector(1536),
+            ${JSON.stringify(embedding)}::vector,
             ${JSON.stringify({
         qaId,
         type: "qa",
         chunkIndex: 0,
         startChar: 0,
         endChar: embeddingText.length,
+        embeddingModel: getActiveEmbeddingModel(),
     })}::jsonb
         )
     `;

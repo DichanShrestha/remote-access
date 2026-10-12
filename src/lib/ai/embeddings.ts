@@ -1,25 +1,40 @@
-import { openai, createOpenAI } from "@ai-sdk/openai";
-import { google } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import { embedMany, embed } from "ai";
 
 /**
- * Generate embeddings using Google's text-embedding-004 by default.
- * Supports BYOK (Bring Your Own Key) — if an API key is provided,
- * it assumes it is an OpenAI key and falls back to text-embedding-3-small.
+ * OpenRouter Text Embeddings module.
+ *
+ * Uses OpenRouter's OpenAI-compatible /v1/embeddings endpoint.
+ * Default model: openai/text-embedding-3-small (1536-dimensional, cost-effective).
+ * Configurable via AI_EMBEDDING_MODEL (e.g. google/gemini-embedding-001).
  */
 
+export const OPENROUTER_BASE_URL = process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1";
+export const DEFAULT_EMBEDDING_MODEL = process.env.AI_EMBEDDING_MODEL || "openai/text-embedding-3-small";
+
+export function getActiveEmbeddingModel(): string {
+    return process.env.AI_EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL;
+}
+
+export function getEmbeddingProvider(apiKey?: string) {
+    const key = apiKey || process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+    return createOpenAI({
+        baseURL: OPENROUTER_BASE_URL,
+        apiKey: key,
+    });
+}
+
 /**
- * Generate embeddings for an array of text chunks.
+ * Generate embeddings for an array of text chunks using OpenRouter.
  */
 export async function generateEmbeddings(
     texts: string[],
     apiKey?: string
 ): Promise<number[][]> {
-    const model = apiKey
-        ? createOpenAI({ apiKey }).embedding("text-embedding-3-small")
-        : openai.embedding("text-embedding-3-small");
+    const provider = getEmbeddingProvider(apiKey);
+    const model = provider.embedding(getActiveEmbeddingModel());
 
-    // Process in batches of 100 (Google limit for embedMany might also be 100)
+    // Process in batches of 100
     const batchSize = 100;
     const allEmbeddings: number[][] = [];
 
@@ -44,9 +59,8 @@ export async function generateQueryEmbedding(
     query: string,
     apiKey?: string
 ): Promise<number[]> {
-    const model = apiKey
-        ? createOpenAI({ apiKey }).embedding("text-embedding-3-small")
-        : openai.embedding("text-embedding-3-small");
+    const provider = getEmbeddingProvider(apiKey);
+    const model = provider.embedding(getActiveEmbeddingModel());
 
     const { embedding } = await embed({
         model,
@@ -55,3 +69,4 @@ export async function generateQueryEmbedding(
 
     return embedding;
 }
+

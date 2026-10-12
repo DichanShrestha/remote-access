@@ -17,31 +17,36 @@ if (typeof global !== 'undefined' && typeof (global as any).DOMMatrix === 'undef
     };
 }
 
+let isWorkerConfigured = false;
+
 /**
- * Configure PDF.js worker for Node.js environments.
+ * Configure PDF.js worker for Node.js environments lazily.
  */
 async function configureWorker() {
+    if (isWorkerConfigured) return;
     try {
         const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-        // 1. Locate the worker file in the build environment
-        // Vercel keeps files in /var/task during execution
-        const workerPath = path.join(process.cwd(), 'public', 'pdf.worker.mjs');
+        // 1. Locate the worker file across potential environment paths
+        const candidatePaths = [
+            path.join(process.cwd(), 'public', 'pdf.worker.mjs'),
+            path.join(process.cwd(), 'node_modules', 'pdfjs-dist', 'legacy', 'build', 'pdf.worker.mjs'),
+            path.join(process.cwd(), 'node_modules', 'pdfjs-dist', 'build', 'pdf.worker.mjs'),
+        ];
 
-        // 2. Read the file and convert to Base64
-        const workerBuffer = fs.readFileSync(workerPath);
-        const workerBase64 = workerBuffer.toString('base64');
+        const workerPath = candidatePaths.find((p) => fs.existsSync(p));
 
-        // 3. Set the workerSrc using the 'data:' protocol (Supported by ESM loader)
-        pdfjs.GlobalWorkerOptions.workerSrc = `data:text/javascript;base64,${workerBase64}`;
-
+        if (workerPath) {
+            const workerBuffer = fs.readFileSync(workerPath);
+            const workerBase64 = workerBuffer.toString('base64');
+            pdfjs.GlobalWorkerOptions.workerSrc = `data:text/javascript;base64,${workerBase64}`;
+            isWorkerConfigured = true;
+        }
     } catch (e) {
-        console.error("Critical Worker Error:", e);
+        console.warn("[PDF Parser] Worker configuration warning:", e);
     }
 }
 
-// Global initialization
-configureWorker();
 
 export async function parsePDF(buffer: Buffer): Promise<string> {
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");

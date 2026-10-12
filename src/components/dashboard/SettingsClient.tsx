@@ -217,7 +217,6 @@ export function SettingsClient({ user, hasPage: initialHasPage, subscription }: 
   let statusBadgeClass = "bg-slate-100 text-slate-700 border-slate-200";
 
   if (subscription) {
-    console.log("Subscription", subscription)
     const rawPlan = (subscription.planId || subscription.tier || "").toLowerCase();
     if (rawPlan.includes("ai") || rawPlan.includes("knowchat")) {
       planTitle = "Smart Page + AI ($29/mo)";
@@ -321,10 +320,10 @@ export function SettingsClient({ user, hasPage: initialHasPage, subscription }: 
                   placeholder="username"
                   required
                   className={`w-full pl-9 pr-4 py-2.5 bg-[#FDFCF8] border rounded-xl text-sm text-[#292A25] focus:outline-hidden transition-colors font-mono ${usernameStatus === "available"
-                      ? "border-emerald-500 focus:border-emerald-600"
-                      : usernameStatus === "unavailable"
-                        ? "border-[#D14F4F] focus:border-[#D14F4F]"
-                        : "border-[#E8E7E1] focus:border-[#292A25]"
+                    ? "border-emerald-500 focus:border-emerald-600"
+                    : usernameStatus === "unavailable"
+                      ? "border-[#D14F4F] focus:border-[#D14F4F]"
+                      : "border-[#E8E7E1] focus:border-[#292A25]"
                     }`}
                 />
               </div>
@@ -366,8 +365,8 @@ export function SettingsClient({ user, hasPage: initialHasPage, subscription }: 
             {accountFeedback && (
               <div
                 className={`p-3 rounded-xl text-xs flex items-center gap-2 ${accountFeedback.type === "success"
-                    ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
-                    : "bg-[#FDF3F3] border border-[#FADCDC] text-[#D14F4F]"
+                  ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
+                  : "bg-[#FDF3F3] border border-[#FADCDC] text-[#D14F4F]"
                   }`}
               >
                 {accountFeedback.type === "success" && <Check size={14} />}

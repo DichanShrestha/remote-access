@@ -1,73 +1,74 @@
 /**
  * Centralized AI provider configuration.
  *
- * Gemini is the default provider. OpenAI is kept as a secondary provider
- * (used when a user has a stored BYOK OpenAI key, or for explicit opt-in).
+ * All chat and completion requests route through OpenRouter via the OpenAI SDK compatible endpoint.
  *
  * Model IDs:
- *   - Default: gemini-2.5-flash-lite  (Gemini — fast, cost-efficient)
- *   - Fallback: gpt-4o-mini           (OpenAI — used for BYOK flows)
+ *   - Chat default: anthropic/claude-haiku-5.5 (configurable via AI_CHAT_MODEL)
  *
- * Environment variables required:
- *   GOOGLE_GENERATIVE_AI_API_KEY — Gemini API key (for default provider)
- *   OPENAI_API_KEY               — OpenAI API key (for BYOK / fallback)
+ * Environment variables:
+ *   OPENROUTER_API_KEY    — OpenRouter API key
+ *   OPENROUTER_BASE_URL   — OpenRouter compatible base URL (default: https://openrouter.ai/api/v1)
+ *   AI_CHAT_MODEL         — Primary chat response model ID
  */
 
-import { google } from "@ai-sdk/google";
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import type { LanguageModel } from "ai";
 
-// ─── Model IDs ───────────────────────────────────────────────────────────────
+// ─── Configuration ────────────────────────────────────────────────────────────
 
-export const GEMINI_DEFAULT_MODEL = "gemini-2.5-flash-lite";
-export const OPENAI_FALLBACK_MODEL = process.env.AI_CHAT_MODEL || "gpt-4o-mini";
+export const OPENROUTER_BASE_URL = process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1";
+export const DEFAULT_CHAT_MODEL = process.env.AI_CHAT_MODEL || "anthropic/claude-haiku-5.5";
 
-// ─── Provider factories ───────────────────────────────────────────────────────
+// Backward compatibility alias for existing route usages
+export const GEMINI_DEFAULT_MODEL = DEFAULT_CHAT_MODEL;
+export const OPENAI_FALLBACK_MODEL = DEFAULT_CHAT_MODEL;
+
+// ─── OpenRouter Provider Factory ─────────────────────────────────────────────
 
 /**
- * Returns the default Gemini model for chat.
- * Used by public chat, authenticated chat, and playground (unless overridden).
+ * Creates an OpenRouter provider instance using the OpenAI-compatible SDK.
  */
-export function getDefaultChatModel(): LanguageModel {
-    const modelId = process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL;
-    return modelId.startsWith("gemini-") ? google(modelId) : openai(modelId);
+export function getOpenRouterProvider(apiKey?: string) {
+    const key = apiKey || process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+    return createOpenAI({
+        baseURL: OPENROUTER_BASE_URL,
+        apiKey: key,
+    });
 }
 
 /**
- * Returns the OpenAI fallback model.
- * Used when the user has a BYOK OpenAI key configured.
+ * Returns the default chat model (anthropic/claude-haiku-5.5 or process.env.AI_CHAT_MODEL).
+ * Used by public chat, authenticated chat, and editor actions.
  */
-export function getOpenAIFallbackModel(modelId?: string): LanguageModel {
-    return openai(modelId ?? OPENAI_FALLBACK_MODEL);
+export function getDefaultChatModel(modelId?: string, apiKey?: string): LanguageModel {
+    const provider = getOpenRouterProvider(apiKey);
+    const targetModel = modelId || process.env.AI_CHAT_MODEL || DEFAULT_CHAT_MODEL;
+    return provider(targetModel);
+}
+
+/**
+ * Returns the fallback model (preserves function signature for BYOK flows).
+ */
+export function getOpenAIFallbackModel(modelId?: string, apiKey?: string): LanguageModel {
+    return getDefaultChatModel(modelId, apiKey);
 }
 
 /**
  * Resolves which model to use for authenticated chat:
- * - If the user has a BYOK OpenAI key, use OpenAI (preserves existing behaviour)
- * - Otherwise use the default Gemini model
+ * - If user provides custom BYOK key, uses it with the target model
+ * - Otherwise uses the primary configured OpenRouter model
  */
-export function resolveChatModel(hasOpenAIByok: boolean, modelId?: string): LanguageModel {
-    if (hasOpenAIByok) {
-        return getOpenAIFallbackModel(modelId);
-    }
-    return getDefaultChatModel();
+export function resolveChatModel(hasOpenAIByok?: boolean, modelId?: string, apiKey?: string): LanguageModel {
+    return getDefaultChatModel(modelId, apiKey);
 }
 
 /**
  * Resolves which model to use for the playground.
- * The playground supports model selection — if the caller passes an explicit
- * model ID it is used. Otherwise defaults to Gemini.
- *
- * Model ID routing:
- *   - Any ID starting with "gemini-" → Gemini provider
- *   - Anything else → OpenAI provider (backward compat for playground UI)
+ * If the caller passes an explicit model ID it is used directly on OpenRouter.
+ * Otherwise defaults to the primary chat model.
  */
-export function resolvePlaygroundModel(modelId?: string): LanguageModel {
-    if (!modelId) {
-        return getDefaultChatModel();
-    }
-    if (modelId.startsWith("gemini-")) {
-        return google(modelId);
-    }
-    return openai(modelId);
+export function resolvePlaygroundModel(modelId?: string, apiKey?: string): LanguageModel {
+    return getDefaultChatModel(modelId, apiKey);
 }
+

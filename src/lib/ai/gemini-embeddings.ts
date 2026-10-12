@@ -2,9 +2,10 @@ export async function generateGeminiEmbedding(
     params: { text?: string; imageBase64?: string; mimeType?: string },
     taskType: "RETRIEVAL_DOCUMENT" | "RETRIEVAL_QUERY" = "RETRIEVAL_DOCUMENT"
 ): Promise<number[]> {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_FREE_API_KEY;
     if (!apiKey) {
-        throw new Error("GEMINI_API_KEY environment variable is missing.");
+        // Gracefully return empty if Gemini multimodal key is not set
+        return [];
     }
 
     const parts: any[] = [];
