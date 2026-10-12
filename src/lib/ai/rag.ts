@@ -226,12 +226,10 @@ When a user's request matches nothing in the knowledge base:
 2. Acknowledge — "I checked our knowledge base and couldn't find information on [topic]."
 3. Next steps — ${agentGroup.escalation}
 
-[VISUAL SETS]
-1. First, answer the user's query normally using the text information in the KNOWLEDGE BASE.
-2. Then, check if there is a [RECOMMENDED VISUAL SETS] section in the KNOWLEDGE BASE.
-3. If visual sets ARE provided, you MUST append the exact <visualset> tags to the very end of your response. DO NOT ask the user if they want to see them.
-4. If visual sets ARE NOT provided, simply end your text response normally. DO NOT apologize or mention that images are missing.
-5. Never invent or modify the <visualset> tags.
+[RECOMMENDED CATALOG ITEMS]
+1. If [RECOMMENDED CATALOG ITEMS] are provided in the KNOWLEDGE BASE, answer the user's query and naturally mention or describe the relevant items (e.g., name, price, key details).
+2. DO NOT output any XML tags, <img> tags, image URLs, or <visualset> tags in your response. The system automatically attaches visual photos and product cards below your message.
+3. If no catalog items are provided or relevant, simply answer normally based on the knowledge base.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 LEAD CAPTURE

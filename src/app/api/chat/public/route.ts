@@ -166,6 +166,7 @@ export async function POST(req: Request) {
 
         // 5. Catalog Search Guard — gate based on tier entitlement
         let catalogContext = "";
+        let catalogVisualSetXml = ""; // Appended to stream programmatically (not by the AI)
         try {
             const catalogSearchLimit = await getCatalogSearchLimit(botId);
             if (sanitizedQuery && catalogSearchLimit > 0) {
@@ -173,9 +174,18 @@ export async function POST(req: Request) {
                 const catalogResults = await searchVisualSets(botId, sanitizedQuery, catalogSearchLimit);
                 const relevantCatalogItems = (catalogResults as any[]).filter(r => r.similarity > 0.3);
 
-                console.log("relevant visual sets: ", relevantCatalogItems)
                 if (relevantCatalogItems.length > 0) {
-                    catalogContext = `\n\n[RECOMMENDED VISUAL SETS]\n` + relevantCatalogItems.map(set => {
+                    // Give the AI only text metadata so it can mention items naturally
+                    catalogContext = `\n\n[RECOMMENDED CATALOG ITEMS]\n` + relevantCatalogItems.map((set: any) => {
+                        const parts = [`- ${set.title}`];
+                        if (set.price != null) parts.push(`Price: ${set.currency || '$'}${set.price}`);
+                        if (set.description) parts.push(`Description: ${set.description}`);
+                        parts.push(`Images: ${(set.images || []).length} photo(s)`);
+                        return parts.join(' | ');
+                    }).join('\n');
+
+                    // Build the full visualset XML to append after the AI response
+                    catalogVisualSetXml = "\n" + relevantCatalogItems.map((set: any) => {
                         const imagesXml = (set.images || []).map((img: any) =>
                             `<img src="${img.publicUrl}" caption="${img.caption || ''}" />`
                         ).join("");
@@ -190,7 +200,7 @@ export async function POST(req: Request) {
             console.error("[Catalog Search Error]:", e);
         }
 
-        // Build the final context. If visual sets are found, prioritize them and omit generic chunks to avoid dilution.
+        // Build the final context.
         const context = formatContextForPrompt(relevantChunks) + catalogContext;
 
         const systemPrompt = buildSystemPrompt(
@@ -235,20 +245,21 @@ export async function POST(req: Request) {
                 const inputTokens = usage?.inputTokens || 0;
                 const outputTokens = usage?.outputTokens || 0;
                 await reservation.finish(process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL, inputTokens, outputTokens, text ? "completed" : "empty", undefined, Boolean(text));
-                // Persist assistant response
-                if (text) {
+                // Persist assistant response (including appended visualset XML)
+                const fullText = catalogVisualSetXml ? (text || "") + catalogVisualSetXml : text;
+                if (fullText) {
                     await prisma.chatMessage.create({
                         data: {
                             botId,
                             sessionId,
                             visitorId: visitorId || null,
                             role: "assistant",
-                            content: text,
+                            content: fullText,
                         },
                     });
 
                     // Track if the booking link was shown
-                    if (bot.bookingLink && text.includes(bot.bookingLink)) {
+                    if (bot.bookingLink && fullText.includes(bot.bookingLink)) {
                         await (prisma as any).bookingEvent.create({
                             data: {
                                 botId,
@@ -263,6 +274,40 @@ export async function POST(req: Request) {
                 await reservation.finish(process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL, 0, 0, "error", error instanceof Error ? error.message : "Provider request failed");
             },
         });
+
+        // If we have visualset XML to append, pipe through a transform that appends it after the AI stream ends
+        if (catalogVisualSetXml) {
+            const xmlToAppend = catalogVisualSetXml;
+            const reader = result.textStream.getReader();
+
+            const outputStream = new ReadableStream<string>({
+                async pull(controller) {
+                    try {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            // Append visualset XML at the very end of the stream
+                            controller.enqueue(xmlToAppend);
+                            controller.close();
+                            return;
+                        }
+                        controller.enqueue(value);
+                    } catch (err) {
+                        controller.error(err);
+                    }
+                },
+                cancel(reason) {
+                    return reader.cancel(reason);
+                },
+            });
+
+            return new Response(outputStream.pipeThrough(new TextEncoderStream()), {
+                headers: {
+                    "Content-Type": "text/plain; charset=utf-8",
+                    ...corsHeaders(),
+                    "X-Session-Id": sessionId,
+                },
+            });
+        }
 
         return result.toTextStreamResponse({
             headers: {

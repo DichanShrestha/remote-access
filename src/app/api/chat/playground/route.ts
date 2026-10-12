@@ -76,15 +76,13 @@ export async function POST(req: Request) {
 
                 console.log("relevant visual sets (playground): ", relevantCatalogItems)
                 if (relevantCatalogItems.length > 0) {
-                    catalogContext = `\n\n[RECOMMENDED VISUAL SETS]\n` + relevantCatalogItems.map(set => {
-                        const imagesXml = (set.images || []).map((img: any) =>
-                            `<img src="${img.publicUrl}" caption="${img.caption || ''}" />`
-                        ).join("");
-                        const priceAttr = set.price != null ? ` price="${set.price}"` : "";
-                        const currencyAttr = set.currency ? ` currency="${set.currency}"` : "";
-                        const redirectAttr = set.redirectUrl ? ` redirectUrl="${set.redirectUrl}"` : "";
-                        return `<visualset title="${set.title}"${priceAttr}${currencyAttr}${redirectAttr}>${imagesXml}</visualset>`;
-                    }).join("\n");
+                    catalogContext = `\n\n[RECOMMENDED CATALOG ITEMS]\n` + relevantCatalogItems.map((set: any) => {
+                        const parts = [`- ${set.title}`];
+                        if (set.price != null) parts.push(`Price: ${set.currency || '$'}${set.price}`);
+                        if (set.description) parts.push(`Description: ${set.description}`);
+                        parts.push(`Images: ${(set.images || []).length} photo(s)`);
+                        return parts.join(' | ');
+                    }).join('\n');
                 }
             }
         } catch (e) {

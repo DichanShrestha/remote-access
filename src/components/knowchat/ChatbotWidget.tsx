@@ -552,6 +552,7 @@ export function ChatbotWidget({ botId }: { botId: string }) {
                     role="dialog"
                     aria-modal="true"
                     aria-label={config.name || "Chat Assistant"}
+                    data-lenis-prevent
                 >
                     {/* Header (DocsBot / Capacity inspired: compact, clean surface, subtle divider) */}
                     <div className="px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between select-none flex-shrink-0">

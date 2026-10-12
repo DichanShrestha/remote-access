@@ -15,7 +15,7 @@ export const TIER_LIMITS = {
 export type TierType = keyof typeof TIER_LIMITS;
 export const TRIAL_MS = 14 * 24 * 60 * 60 * 1000;
 export const AI_MAX_INPUT_TOKENS = Number(process.env.AI_MAX_INPUT_TOKENS || 6000);
-export const AI_MAX_OUTPUT_TOKENS = Number(process.env.AI_MAX_OUTPUT_TOKENS || 500);
+export const AI_MAX_OUTPUT_TOKENS = Number(process.env.AI_MAX_OUTPUT_TOKENS || 1000);
 // Conservative estimate where the selected provider tokenizer is not exposed.
 export const AI_CHARS_PER_TOKEN = Number(process.env.AI_CHARS_PER_TOKEN || 3);
 

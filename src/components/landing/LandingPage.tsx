@@ -44,7 +44,7 @@ export function LandingPage({ user }: { user: User }) {
   const startHref = user ? '/dashboard' : '/editor'
   return (
     <ReactLenis root options={{ lerp: 0.085, smoothWheel: true }}>
-      <main className="landing-page">
+      <main className="landing-page bg-[#FFFEFB]">
         <nav className="lp-nav">
           <a href="#top" className="lp-brand" aria-label="Smart Page home"><span className="brand-mark"><i /><i /><i /></span><span>smart<span className="brand-light">page</span></span></a>
           <div className={`lp-nav-links ${menuOpen ? 'open' : ''}`}>
@@ -54,12 +54,40 @@ export function LandingPage({ user }: { user: User }) {
           <button className="lp-menu" aria-label="Toggle navigation" onClick={() => setMenuOpen(!menuOpen)}><Menu size={20} /></button>
         </nav>
 
-        <section className="hero" id="top">
-          <div className="hero-wash" /><div className="hero-grain" />
-          <div className="hero-copy">
-            <div className="eyebrow"><span className="eyebrow-dot" /> TURN ATTENTION INTO OPPORTUNITY</div>
-            <h1>Turn your online presence<br />into <em>opportunities.</em></h1>
-            <p className="hero-description !max-w-[450px]">
+        <section className="hero relative overflow-hidden bg-[#FFFEFB]" id="top">
+          {/* Rich Warm Luxury Ambient Glows (Background Only) */}
+          <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+            {/* Primary Golden-Amber Glow centered behind Phone Mockups */}
+            <div 
+              className="absolute top-[45%] right-[-8%] sm:right-[2%] md:right-[8%] -translate-y-1/2 w-[720px] md:w-[900px] h-[720px] md:h-[900px] rounded-full blur-[75px] md:blur-[95px] opacity-95"
+              style={{
+                background: 'radial-gradient(circle, rgba(248, 212, 142, 0.9) 0%, rgba(242, 185, 102, 0.6) 35%, rgba(249, 225, 172, 0.25) 60%, transparent 75%)'
+              }}
+            />
+
+            {/* Upper Warm Halo behind the Top of Mockups */}
+            <div 
+              className="absolute top-[10%] right-[3%] w-[520px] h-[520px] rounded-full blur-[70px] opacity-80"
+              style={{
+                background: 'radial-gradient(circle, rgba(250, 220, 155, 0.85) 0%, rgba(244, 192, 115, 0.45) 45%, transparent 70%)'
+              }}
+            />
+
+            {/* Soft Ambient Transition Glow behind Headline */}
+            <div 
+              className="absolute top-[38%] left-[-8%] md:left-[0%] -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[110px] opacity-60"
+              style={{
+                background: 'radial-gradient(circle, rgba(248, 222, 170, 0.7) 0%, rgba(243, 200, 138, 0.3) 50%, transparent 75%)'
+              }}
+            />
+          </div>
+
+          <div className="hero-grain" />
+
+          <div className="hero-copy relative z-10">
+            <div className="eyebrow border border-[#E8E5DF] bg-[#FFFEFB]/80 backdrop-blur-sm rounded-full px-3 py-1 w-fit"><span className="eyebrow-dot" /> TURN ATTENTION INTO OPPORTUNITY</div>
+            <h1 className="text-[#171717] [text-shadow:none] [filter:none]">Turn your online presence<br />into <em>opportunities.</em></h1>
+            <p className="hero-description text-[#171717]/85 !max-w-[450px] [text-shadow:none] [filter:none]">
               Showcase what you do on one beautiful page. An AI chatbot answers visitor questions and helps turn interest into client inquiries, booked calls, and brand deals.
             </p>
             <div className="hero-actions">
@@ -71,16 +99,16 @@ export function LandingPage({ user }: { user: User }) {
               <span>For creators, freelancers,<br />and businesses.</span>
             </div>
           </div>
-          <div className="hero-stage" aria-label="Examples of Smart Page mobile templates">
+          <div className="hero-stage relative z-10 drop-shadow-[0_25px_35px_rgba(0,0,0,0.08)]" aria-label="Examples of Smart Page mobile templates">
             <div className="hero-orbit orbit-one" /><div className="hero-orbit orbit-two" />
-            <div className="hero-note note-top"> <span className="online-dot" /> One link. More possibility.</div>
-            <PhoneFrame template="creator-fashion" className="hero-phone hero-phone-back" label="Creator profile template" />
-            <PhoneFrame template="creator-profile" className="hero-phone hero-phone-left" label="Beauty brand template" />
-            <PhoneFrame template="corporate-consulting" className="hero-phone hero-phone-main" label="Creator portfolio template" />
-            <div className="hero-note note-bottom"><span className="online-dot" /> Your page is ready when they are.</div>
+            <div className="hero-note note-top border border-[#E8E5DF] rounded-full"> <span className="online-dot" /> One link. More possibility.</div>
+            <PhoneFrame template="creator-fashion" className="hero-phone hero-phone-back relative z-10 drop-shadow-[0_25px_35px_rgba(0,0,0,0.08)]" label="Creator profile template" />
+            <PhoneFrame template="creator-profile" className="hero-phone hero-phone-left relative z-10 drop-shadow-[0_25px_35px_rgba(0,0,0,0.08)]" label="Beauty brand template" />
+            <PhoneFrame template="corporate-consulting" className="hero-phone hero-phone-main relative z-10 drop-shadow-[0_25px_35px_rgba(0,0,0,0.08)]" label="Creator portfolio template" />
+            <div className="hero-note note-bottom border border-[#E8E5DF] rounded-full"><span className="online-dot" /> Your page is ready when they are.</div>
             <span className="stage-index">01 — 03</span>
           </div>
-          <div className="hero-bottom"><span>THE NEW HOME FOR YOUR BIO</span><span>SCROLL TO SEE WHAT’S POSSIBLE ↓</span></div>
+          <div className="hero-bottom relative z-10"><span>THE NEW HOME FOR YOUR BIO</span><span>SCROLL TO SEE WHAT’S POSSIBLE ↓</span></div>
         </section>
 
         <div className="benefit-marquee" aria-label="Premium templates, AI chat, lead capture, analytics, built for social"><div className="marquee-track">{Array.from({ length: 2 }, (_, repeat) => <span key={repeat}>PREMIUM TEMPLATES <b>✳</b> AI THAT ANSWERS <b>✳</b> LEAD CAPTURE <b>✳</b> REAL ANALYTICS <b>✳</b> MADE FOR SOCIAL <b>✳</b> A PAGE THAT CONVERTS <b>✳</b></span>)}</div></div>

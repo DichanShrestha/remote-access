@@ -166,6 +166,7 @@ export async function POST(req: Request) {
 
         // 5. Catalog Search Guard — gate based on tier entitlement
         let catalogContext = "";
+        let catalogVisualSetXml = "";
         try {
             const catalogSearchLimit = await getCatalogSearchLimit(botId);
             if (sanitizedQuery && catalogSearchLimit > 0) {
@@ -173,9 +174,16 @@ export async function POST(req: Request) {
                 const catalogResults = await searchVisualSets(botId, sanitizedQuery, catalogSearchLimit);
                 const relevantCatalogItems = (catalogResults as any[]).filter(r => r.similarity > 0.3);
 
-                console.log("relevant visual sets: ", relevantCatalogItems)
                 if (relevantCatalogItems.length > 0) {
-                    catalogContext = `\n\n[RECOMMENDED VISUAL SETS]\n` + relevantCatalogItems.map(set => {
+                    catalogContext = `\n\n[RECOMMENDED CATALOG ITEMS]\n` + relevantCatalogItems.map((set: any) => {
+                        const parts = [`- ${set.title}`];
+                        if (set.price != null) parts.push(`Price: ${set.currency || '$'}${set.price}`);
+                        if (set.description) parts.push(`Description: ${set.description}`);
+                        parts.push(`Images: ${(set.images || []).length} photo(s)`);
+                        return parts.join(' | ');
+                    }).join('\n');
+
+                    catalogVisualSetXml = "\n" + relevantCatalogItems.map((set: any) => {
                         const imagesXml = (set.images || []).map((img: any) =>
                             `<img src="${img.publicUrl}" caption="${img.caption || ''}" />`
                         ).join("");
@@ -190,7 +198,7 @@ export async function POST(req: Request) {
             console.error("[Catalog Search Error]:", e);
         }
 
-        // Build the final context. If visual sets are found, prioritize them and omit generic chunks to avoid dilution.
+        // Build the final context.
         const context = formatContextForPrompt(relevantChunks) + catalogContext;
         const systemPrompt = buildSystemPrompt(
             bot.systemPrompt,
@@ -226,26 +234,26 @@ export async function POST(req: Request) {
             maxRetries: 0,
             async onFinish({ text, usage }) {
                 await reservation.finish(userApiKey ? 'openai-byok' : process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL, usage?.inputTokens || 0, usage?.outputTokens || 0, text ? 'completed' : 'empty', undefined, Boolean(text));
-                // Persist assistant response
-                if (text) {
+                // Persist assistant response (including visualset XML)
+                const fullText = catalogVisualSetXml ? (text || "") + catalogVisualSetXml : text;
+                if (fullText) {
                     await prisma.chatMessage.create({
                         data: {
                             botId,
                             sessionId,
                             role: "assistant",
-                            content: text,
+                            content: fullText,
                         },
                     });
 
                     // Track if the booking link was shown
-                    if (bot.bookingLink && text.includes(bot.bookingLink)) {
+                    if (bot.bookingLink && fullText.includes(bot.bookingLink)) {
                         await (prisma as any).bookingEvent.create({
                             data: {
                                 botId,
                                 event: "booking_link_shown",
-                                sessionId
-            },
-            async onError({ error }: { error: unknown }) { await reservation.finish(userApiKey ? 'openai-byok' : process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL, 0, 0, 'error', error instanceof Error ? error.message : 'Provider request failed'); }
+                                sessionId,
+                            },
                         });
                     }
                 }
@@ -258,7 +266,6 @@ export async function POST(req: Request) {
                     if (match) {
                         const email = match[0].toLowerCase();
                         try {
-                            // Because 'botId' and 'email' might not have a compound unique index, we use findFirst
                             const existingLead = await prisma.botLead.findFirst({
                                 where: { botId, email }
                             });
@@ -278,12 +285,46 @@ export async function POST(req: Request) {
                     }
                 }
             },
+            async onError({ error }: { error: unknown }) {
+                await reservation.finish(userApiKey ? 'openai-byok' : process.env.AI_CHAT_MODEL || GEMINI_DEFAULT_MODEL, 0, 0, 'error', error instanceof Error ? error.message : 'Provider request failed');
+            },
         });
 
         // Expose a custom HTTP header indicating intent for simple frontend interception if necessary
         const responseHeaders: Record<string, string> = { "X-Session-Id": sessionId };
         if (shouldFlagIntent) {
             responseHeaders["x-lead-intent"] = "true";
+        }
+
+        if (catalogVisualSetXml) {
+            const xmlToAppend = catalogVisualSetXml;
+            const reader = result.textStream.getReader();
+
+            const outputStream = new ReadableStream<string>({
+                async pull(controller) {
+                    try {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            controller.enqueue(xmlToAppend);
+                            controller.close();
+                            return;
+                        }
+                        controller.enqueue(value);
+                    } catch (err) {
+                        controller.error(err);
+                    }
+                },
+                cancel(reason) {
+                    return reader.cancel(reason);
+                },
+            });
+
+            return new Response(outputStream.pipeThrough(new TextEncoderStream()), {
+                headers: {
+                    "Content-Type": "text/plain; charset=utf-8",
+                    ...responseHeaders,
+                },
+            });
         }
 
         return result.toTextStreamResponse({
