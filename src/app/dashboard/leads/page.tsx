@@ -1,7 +1,7 @@
 import db from '@/lib/prisma';
 import { authService } from '@/services/auth';
 import { LeadsPanel } from '@/components/dashboard/LeadsPanel';
-import { Users, ArrowRight } from 'lucide-react';
+import { Users, ArrowRight, Sliders } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function LeadsPage() {
@@ -75,6 +75,15 @@ export default async function LeadsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">Leads</h1>
           <p className="text-slate-500">View and export your captured leads from AI chat and page forms.</p>
         </div>
+        {hasBot && (
+          <Link
+            href="/dashboard/leads/capture"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all"
+          >
+            <Sliders className="w-4 h-4 text-blue-600" />
+            Configure Triggers
+          </Link>
+        )}
       </div>
 
       <LeadsPanel botId={botId} botLeads={botLeads} pageLeads={pageLeads} />

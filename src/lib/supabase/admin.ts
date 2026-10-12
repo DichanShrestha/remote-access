@@ -32,8 +32,5 @@ export function createAdminClient() {
             autoRefreshToken: false,
             persistSession: false,
         },
-        realtime: {
-            createSocket: () => null as any,
-        },
     });
 }

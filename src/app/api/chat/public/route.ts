@@ -29,6 +29,25 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
+
+        // Lead capture submission handler
+        if (body.leadCapture && body.botId && (body.email || body.phone)) {
+            const lead = await prisma.botLead.create({
+                data: {
+                    botId: body.botId,
+                    visitorId: body.visitorId?.trim() || null,
+                    name: body.name?.trim() || null,
+                    email: body.email?.trim() || null,
+                    phone: body.phone?.trim() || null,
+                    conversationSnippet: body.conversationSnippet || null,
+                    metadata: { source: "widget_form", trigger: body.triggerMode || "manual" },
+                },
+            });
+            return new Response(JSON.stringify({ success: true, leadId: lead.id }), {
+                headers: { "Content-Type": "application/json", ...corsHeaders() },
+            });
+        }
+
         const { messages, botId, sessionId: clientSessionId } = body;
         const visitorId = body.visitorId?.trim() || null;
 

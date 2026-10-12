@@ -1,5 +1,4 @@
 "use client";
-"use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -10,6 +9,7 @@ import {
   PenTool, 
   MessageSquare, 
   Users, 
+  UserCheck,
   Brain, 
   LineChart, 
   Settings, 
@@ -42,6 +42,7 @@ const NAV_GROUPS = [
     items: [
       { name: 'Conversations', href: '/dashboard/conversations', icon: MessageSquare },
       { name: 'Leads', href: '/dashboard/leads', icon: Users },
+      { name: 'Lead Capture', href: '/dashboard/leads/capture', icon: UserCheck },
       { name: 'AI Knowledge', href: '/dashboard/knowledge', icon: Brain },
     ]
   },

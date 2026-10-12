@@ -1,5 +1,6 @@
-import { authService } from "@/services/auth";
 "use server";
+
+import { authService } from "@/services/auth";
 
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
@@ -8,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import type { BotFormData } from "@/lib/supabase/types";
 import { enforceBotGuard, updateStorageUsage } from "@/lib/guards/resource-manager";
 import { requirePageAccess, requireAIEntitlement } from "@/lib/billing/entitlements";
+import { LeadCaptureSettings, DEFAULT_LEAD_CAPTURE_SETTINGS } from "@/types/lead-capture";
 
 /**
  * Create a new bot during onboarding.
@@ -318,32 +320,31 @@ ${businessContext}
 }
 
 /**
- * Get lead capture keyword mapping config
+ * Get lead capture trigger configuration
  */
-export async function getLeadCaptureConfig(botId: string) {
-    
+export async function getLeadCaptureConfig(botId: string): Promise<LeadCaptureSettings> {
     const user = await authService.requireUser();
-
-    
 
     const bot = await prisma.bot.findFirst({
         where: { id: botId, userId: user.id },
-        select: { leadCaptureConfig: true },
+        select: { leadCaptureConfig: true, collectLeads: true },
     });
 
     if (!bot) throw new Error("Bot not found");
 
-    return bot.leadCaptureConfig as any;
+    const saved = bot.leadCaptureConfig as Partial<LeadCaptureSettings> | null;
+    return {
+        ...DEFAULT_LEAD_CAPTURE_SETTINGS,
+        enabled: bot.collectLeads ?? false,
+        ...(saved || {}),
+    };
 }
 
 /**
- * Update lead capture keyword mapping config
+ * Update lead capture trigger configuration
  */
-export async function updateLeadCaptureConfig(botId: string, config: any) {
-    
+export async function updateLeadCaptureConfig(botId: string, config: Partial<LeadCaptureSettings>) {
     const user = await authService.requireUser();
-
-    
 
     const existingBot = await prisma.bot.findFirst({
         where: { id: botId, userId: user.id },
@@ -351,13 +352,19 @@ export async function updateLeadCaptureConfig(botId: string, config: any) {
 
     if (!existingBot) throw new Error("Bot not found");
 
+    const isEnabled = Boolean(config.enabled);
+
     await prisma.bot.update({
         where: { id: botId },
         data: {
+            collectLeads: isEnabled,
             leadCaptureConfig: config ? (config as any) : null,
         },
     });
 
     revalidatePath("/dashboard");
+    revalidatePath("/dashboard/leads");
+    revalidatePath("/dashboard/leads/capture");
     return { success: true };
 }
+

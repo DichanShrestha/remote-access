@@ -21,6 +21,7 @@ import type {
   ConversationSummary,
   ConversationMessage,
 } from "@/types/conversations";
+import { MarkdownMessage } from "@/components/ui/MarkdownMessage";
 
 function formatRelativeTime(date: Date): string {
   const now = new Date();
@@ -293,7 +294,7 @@ export function ConversationsPanel({ botId }: { botId: string }) {
                             : "bg-slate-100 text-slate-800 rounded-bl-md"
                         }`}
                       >
-                        <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                        <MarkdownMessage content={msg.content} isUser={isUser} />
                         <p
                           className={`text-[10px] mt-2 ${
                             isUser ? "text-slate-400" : "text-slate-400"
