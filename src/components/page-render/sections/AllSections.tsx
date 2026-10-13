@@ -134,7 +134,7 @@ export function CtaSection({ section, theme }: { section: any; theme: ThemeConfi
       <div className="max-w-3xl mx-auto text-center">
         <h2 className="text-4xl md:text-5xl font-extrabold mb-6 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">{title}</h2>
         {text && <p className="text-xl text-slate-500 dark:text-slate-400 mb-10 max-w-xl mx-auto leading-relaxed">{text}</p>}
-          <a href={buttonUrl} data-page-button className="inline-block px-10 py-4 text-white font-bold text-lg rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" style={{ backgroundColor: theme.primaryColor }}>
+        <a href={buttonUrl} data-page-button className="inline-block px-10 py-4 text-white font-bold text-lg rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" style={{ backgroundColor: theme.primaryColor }}>
           {buttonText}
         </a>
       </div>
@@ -1573,11 +1573,7 @@ export function StatsSection({ section, theme }: { section: z.infer<typeof Stats
               {title && <h2 className="max-w-xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{title}</h2>}
             </div>
             <div>
-              <div className="mb-3 flex gap-2 text-[10px] font-semibold">
-                <span className="rounded-sm bg-white px-3 py-2 text-slate-900">Expertise</span>
-                <span className="rounded-sm bg-white/10 px-3 py-2">Innovation</span>
-                <span className="rounded-sm bg-white/10 px-3 py-2">Accountability</span>
-              </div>
+
               {description && <p className="max-w-xl text-xs leading-relaxed text-current/75">{description}</p>}
             </div>
           </div>
