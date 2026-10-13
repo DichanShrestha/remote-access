@@ -65,6 +65,7 @@ function renderNode(node: PageNode, theme: PageDocument['theme'], isPreview?: bo
       style={{
         backgroundColor: node.backgroundColor,
         color: node.textColor,
+        '--section-text-color': node.textColor,
         '--section-padding': padding,
         '--section-content-width': contentWidth,
         '--section-button-text': node.buttonTextColor,
@@ -95,6 +96,7 @@ function LayoutGroup({ group, theme, isPreview, pageId, isNested }: { group: Gro
       style={{
         backgroundColor: group.backgroundColor,
         color: group.textColor,
+        '--section-text-color': group.textColor,
         width: isNested ? '100%' : width,
         '--layout-gap': gap,
         '--layout-padding': padding,

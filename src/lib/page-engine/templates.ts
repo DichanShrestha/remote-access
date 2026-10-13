@@ -753,6 +753,270 @@ export const TEMPLATE_CREATOR_SPEAKER: PageDocument = {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// 12. SPA & SALON — NUE STUDIO
+// ═══════════════════════════════════════════════════════════════════
+export const TEMPLATE_SPA_SALON: PageDocument = {
+  version: 1,
+  theme: {
+    style: 'premium-minimal',
+    primaryColor: '#1f1a18',
+    radius: 'full',
+    density: 'comfortable',
+  },
+  settings: { showFooterBranding: false, enableSmoothScrolling: true },
+  sections: [
+    {
+      id: 'site-header',
+      type: 'site-navbar',
+      variant: 'default',
+      isHidden: false,
+      backgroundColor: '#f6f4ee',
+      textColor: '#1f1a18',
+      buttonColor: '#1f1a18',
+      content: {
+        logoText: 'Nue Studio',
+        links: [
+          { id: 'nav-home', label: 'Home', url: '#hero' },
+          { id: 'nav-about', label: 'About Us', url: '#services-overview' },
+          { id: 'nav-services', label: 'Services', url: '#treatments' },
+          { id: 'nav-contact', label: 'Contact', url: '#contact' },
+        ],
+        primaryLabel: 'Book Now',
+        primaryUrl: '#contact',
+      },
+    },
+    {
+      id: 'hero',
+      type: 'hero',
+      variant: 'salon-arch',
+      layout: 'split',
+      isHidden: false,
+      backgroundColor: '#f6f4ee',
+      textColor: '#1f1a18',
+      buttonColor: '#1f1a18',
+      content: {
+        title: 'Manicure And Pedicure Nail Salon',
+        subtitle: 'Welcome to our premier nail studio, where luxury meets care. We offer exceptional manicures, pedicures, and nail art in a serene atmosphere.',
+        buttonText: 'Book Now',
+        buttonUrl: '#contact',
+        imageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=1000',
+      },
+    },
+    consultingGroup('stats-block', 'Stats Band', 'column', [
+      {
+        id: 'stats',
+        type: 'stats',
+        variant: 'salon-minimal',
+        isHidden: false,
+        backgroundColor: '#1f1a18',
+        textColor: '#f6f4ee',
+        content: {
+          items: [
+            { id: 'stat-1', value: '5K', label: 'Happy Clients' },
+            { id: 'stat-2', value: '4.5K', label: 'Reviews' },
+            { id: 'stat-3', value: '99', suffix: '%', label: 'Satisfaction' },
+          ],
+        },
+      },
+    ], { backgroundColor: '#1f1a18', textColor: '#f6f4ee' }),
+    consultingGroup('services-overview', 'Services Intro Split', 'column', [
+      {
+        id: 'services-intro',
+        type: 'feature-split',
+        variant: 'salon-arch',
+        layout: 'image-right',
+        isHidden: false,
+        backgroundColor: '#1f1a18',
+        textColor: '#f6f4ee',
+        buttonColor: '#b89562',
+        content: {
+          eyebrow: 'OUR SERVICES',
+          title: 'Services',
+          description: 'Our manicurists and nail artists are here to bring you the best manicure and pedicure experience. We believe nails are an art form and a reflection of your personality and style, which is why we offer a wide variety of nail services designed to rejuvenate and inspire.',
+          buttonText: 'View More',
+          buttonUrl: '#treatments',
+          imageUrl: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&q=80&w=1000',
+          checkpoints: [],
+        },
+      },
+    ], { backgroundColor: '#1f1a18', textColor: '#f6f4ee' }),
+    consultingGroup('treatment-services-group', 'Treatment Offerings', 'column', [
+      {
+        id: 'treatments',
+        type: 'services',
+        variant: 'salon-staggered',
+        isHidden: false,
+        backgroundColor: '#f6f4ee',
+        textColor: '#1f1a18',
+        buttonColor: '#1f1a18',
+        content: {
+          items: [
+            {
+              id: 'service-1',
+              tag: '★ BEST GEL MANICURE',
+              title: 'Best Gel Manicure.',
+              description: 'Long-lasting gel polish cured under UV/LED light. Includes nail shaping, cuticle care, hand massage, and high-shine or matte finish.',
+              price: '1h 30min · $50',
+              buttonText: 'Book Now',
+              buttonUrl: '#contact',
+              imageUrl: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=80&w=1000',
+            },
+            {
+              id: 'service-2',
+              tag: 'STRENGTH & LENGTH',
+              title: 'Builder/Hard Gel Manicure',
+              description: 'Ideal for strengthening natural nails or creating elegant extensions with durable builder gel that lasts up to 4 weeks with mirror-like shine.',
+              price: '1h 40min · $70',
+              buttonText: 'Book Now',
+              buttonUrl: '#contact',
+              imageUrl: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&q=80&w=1000',
+            },
+            {
+              id: 'service-3',
+              tag: 'RELAXATION',
+              title: 'Pedicure Gel',
+              description: 'Relaxing foot soak, gentle exfoliation, precision nail shaping, callus smoothing, and long-lasting gel color of your choice.',
+              price: '1h 00min · $45',
+              buttonText: 'Book Now',
+              buttonUrl: '#contact',
+              imageUrl: 'https://images.unsplash.com/photo-1519735777090-ec97162dc266?auto=format&fit=crop&q=80&w=1000',
+            },
+          ],
+        },
+      },
+    ], { backgroundColor: '#f6f4ee', textColor: '#1f1a18' }),
+    consultingGroup('testimonials-block', 'Testimonials Block', 'column', [
+      {
+        id: 'testimonials',
+        type: 'testimonials',
+        variant: 'salon-editorial',
+        isHidden: false,
+        backgroundColor: '#1f1a18',
+        textColor: '#f6f4ee',
+        content: {
+          title: 'What Our Clients Say',
+          items: [
+            {
+              id: 't-1',
+              quote: 'The best nail salon in the city! The precision, cleanliness, and artistry are unmatched. My gel manicure lasted four weeks without chipping.',
+              author: 'Sophia',
+              role: 'Verified Client',
+            },
+            {
+              id: 't-2',
+              quote: 'Such a calming, luxurious atmosphere. The technicians take their time and truly care about nail health. I wouldn’t go anywhere else.',
+              author: 'Michelle Robinson',
+              role: 'Loyal Client',
+            },
+          ],
+        },
+      },
+    ], { backgroundColor: '#1f1a18', textColor: '#f6f4ee' }),
+    consultingGroup('gift-card-block', 'Gift Card Feature', 'column', [
+      {
+        id: 'gift-card',
+        type: 'feature-split',
+        variant: 'salon-arch',
+        layout: 'image-right',
+        isHidden: false,
+        backgroundColor: '#f6f4ee',
+        textColor: '#1f1a18',
+        buttonColor: '#1f1a18',
+        content: {
+          title: 'Gift Card',
+          description: 'Give the gift of pampering and gorgeous nails. Our gift cards are redeemable for any manicure, pedicure, or custom nail art service. The perfect treat for birthdays, weddings, or everyday self-care.',
+          buttonText: 'Buy Gift Card',
+          buttonUrl: '#contact',
+          imageUrl: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&q=80&w=1000',
+          checkpoints: [],
+        },
+      },
+    ], { backgroundColor: '#f6f4ee', textColor: '#1f1a18' }),
+    consultingGroup('faq-block', 'FAQ Accordion', 'column', [
+      {
+        id: 'faq',
+        type: 'faq',
+        variant: 'salon-pill',
+        isHidden: false,
+        backgroundColor: '#f6f4ee',
+        textColor: '#1f1a18',
+        content: {
+          title: 'Have Questions?',
+          subtitle: 'Find answers to our most commonly asked questions about our treatments and salon etiquette.',
+          items: [
+            {
+              id: 'faq-1',
+              question: 'What is a Manicure?',
+              answer: 'A manicure is a specialized beauty and care treatment for the fingernails and hands. It includes nail shaping, gentle cuticle care, hand exfoliation, a soothing massage, and high-quality polish application.',
+            },
+            {
+              id: 'faq-2',
+              question: 'What is the difference between normal Gel and Hard Gel?',
+              answer: 'Normal soft gel provides flexible, chip-free color for 2 to 3 weeks and is soaked off with acetone. Hard gel (or builder gel) is non-porous and cured for immense durability, allowing for nail extensions and lasting 3 to 4+ weeks.',
+            },
+            {
+              id: 'faq-3',
+              question: 'How long does Pure Gel Polish last?',
+              answer: 'Our pure gel polishes typically last 2 to 4 weeks with flawless shine, resisting chips and peeling throughout daily activities when properly maintained.',
+            },
+          ],
+        },
+      },
+    ], { backgroundColor: '#f6f4ee', textColor: '#1f1a18' }),
+    consultingGroup('contact-group', 'Get In Touch', 'column', [
+      {
+        id: 'contact',
+        type: 'contact',
+        variant: 'salon-cards',
+        isHidden: false,
+        backgroundColor: '#f6f4ee',
+        textColor: '#1f1a18',
+        content: {
+          eyebrow: 'CONTACT US',
+          title: 'Get In Touch.',
+          description: 'Contact us to book an appointment or make an inquiry.',
+          email: 'hello@nuestudio.com',
+          phone: '+1 (555) 234-5678',
+          address: '77 Broadway, 7th Fl, New York, NY 10003',
+        },
+      },
+    ], { backgroundColor: '#f6f4ee', textColor: '#1f1a18' }),
+    {
+      id: 'footer',
+      type: 'site-footer',
+      variant: 'columns',
+      isHidden: false,
+      backgroundColor: '#1f1a18',
+      textColor: '#f6f4ee',
+      content: {
+        logoText: 'Nue Studio',
+        description: 'Luxury nail & spa sanctuary dedicated to meticulous manicure, pedicure, and bespoke nail artistry.',
+        links: [
+          { id: 'fl-1', group: 'Quick Links', label: 'Home', url: '#hero' },
+          { id: 'fl-2', group: 'Quick Links', label: 'About Us', url: '#services-overview' },
+          { id: 'fl-3', group: 'Quick Links', label: 'Services', url: '#treatments' },
+          { id: 'fl-4', group: 'Quick Links', label: 'Blog', url: '#treatments' },
+          { id: 'fl-5', group: 'Pages', label: 'Pricing', url: '#treatments' },
+          { id: 'fl-6', group: 'Pages', label: 'FAQ', url: '#faq' },
+          { id: 'fl-7', group: 'Pages', label: 'Appointment', url: '#contact' },
+          { id: 'fl-8', group: 'Follow', label: 'Instagram', url: 'https://instagram.com' },
+          { id: 'fl-9', group: 'Follow', label: 'Pinterest', url: 'https://pinterest.com' },
+        ],
+        socialLinks: [
+          { id: 'sl-1', label: 'Instagram', url: 'https://instagram.com' },
+          { id: 'sl-2', label: 'Pinterest', url: 'https://pinterest.com' },
+        ],
+        legalLinks: [
+          { id: 'll-1', label: '© 2026 Nue Studio. All rights reserved.', url: '#hero' },
+          { id: 'll-2', label: 'Privacy Policy', url: '#hero' },
+          { id: 'll-3', label: 'Terms of Service', url: '#hero' },
+        ],
+      },
+    },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════════
 // TEMPLATE MAP — for lookup by ID
 // ═══════════════════════════════════════════════════════════════════
 export const TEMPLATES_MAP: Record<string, PageDocument> = {
@@ -767,4 +1031,5 @@ export const TEMPLATES_MAP: Record<string, PageDocument> = {
   'point-architecture': TEMPLATE_POINT_ARCHITECTURE,
   'creator-fashion': TEMPLATE_CREATOR_FASHION,
   'creator-speaker': TEMPLATE_CREATOR_SPEAKER,
+  'spa-salon': TEMPLATE_SPA_SALON,
 };

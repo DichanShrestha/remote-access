@@ -845,14 +845,151 @@ function ZoomRevealPortal({ zoomWord, theme, isPreview }: {
     </div>
   );
 }
+function SalonArchHero({ content, theme }: SubProps) {
+  const imageSrc = content.imageUrl || content.avatarUrl || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=1000';
+
+  return (
+    <section className="relative w-full overflow-hidden px-6 py-12 @md:px-12 @md:py-20 @lg:py-24">
+      {/* Delicate background curved stroke line */}
+      <svg
+        className="pointer-events-none absolute inset-0 h-full w-full opacity-35"
+        viewBox="0 0 1200 800"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M-50 200 C 300 120, 250 500, 600 350 C 950 200, 1000 650, 1300 500"
+          stroke="#c5a880"
+          strokeWidth="1.2"
+          strokeDasharray="4 6"
+        />
+        <path
+          d="M100 700 C 400 600, 500 750, 800 680 C 1050 620, 1150 780, 1300 720"
+          stroke="#c5a880"
+          strokeWidth="1"
+          opacity="0.6"
+        />
+      </svg>
+
+      <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 @lg:grid-cols-12 @lg:gap-16">
+        {/* Left Column: Typography & CTA */}
+        <div className="flex flex-col items-start text-left @lg:col-span-7">
+          <BlurFade delay={0} inView direction="right">
+            {content.eyebrow && (
+              <span className="inline-block font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#b89562] mb-3">
+                {content.eyebrow}
+              </span>
+            )}
+            <h1 className="font-serif text-4xl leading-[1.08] tracking-tight text-[#1f1a18] dark:text-stone-100 @sm:text-5xl @md:text-6xl @lg:text-7xl">
+              {content.headline && content.title ? (
+                <>
+                  {content.headline}
+                  <br />
+                  <span className="italic font-serif text-[#b89562]">{content.title}</span>
+                </>
+              ) : (() => {
+                const text = content.title || content.headline || "Manicure And Pedicure Nail Salon";
+                const words = text.trim().split(/\s+/);
+                if (words.length <= 2) {
+                  return (
+                    <>
+                      {words[0]}
+                      {words[1] && (
+                        <>
+                          <br />
+                          <span className="italic font-serif text-[#b89562]">{words[1]}</span>
+                        </>
+                      )}
+                    </>
+                  );
+                }
+                const firstPart = words.slice(0, -2).join(' ');
+                const accentPart = words.slice(-2).join(' ');
+                return (
+                  <>
+                    {firstPart}
+                    <br />
+                    <span className="italic font-serif text-[#b89562]">{accentPart}</span>
+                  </>
+                );
+              })()}
+            </h1>
+          </BlurFade>
+
+          <BlurFade delay={0.12} inView direction="right">
+            <p className="mt-6 max-w-lg font-sans text-sm leading-relaxed text-[#78716c] dark:text-stone-300 @md:text-base">
+              {content.subtitle || "Welcome to our premier nail studio, where luxury meets care. We offer exceptional manicures, pedicures, and nail art in a serene atmosphere."}
+            </p>
+          </BlurFade>
+
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            {content.buttonText && (
+              <BlurFade delay={0.2} inView direction="right">
+                <a
+                  href={content.buttonUrl || '#contact'}
+                  data-page-button
+                  className="inline-flex items-center justify-center rounded-full bg-[#1f1a18] px-8 py-3.5 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-[#382f2c] hover:shadow-md"
+                >
+                  {content.buttonText}
+                </a>
+              </BlurFade>
+            )}
+            {content.secondaryButtonText && (
+              <BlurFade delay={0.24} inView direction="right">
+                <a
+                  href={content.secondaryButtonUrl || '#treatments'}
+                  className="inline-flex items-center justify-center rounded-full border border-black/15 dark:border-white/20 px-7 py-3.5 text-sm font-medium text-current hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+                >
+                  {content.secondaryButtonText}
+                </a>
+              </BlurFade>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Signature Arched Photo */}
+        <div className="flex justify-center @lg:col-span-5 @lg:justify-end">
+          <BlurFade delay={0.16} inView direction="left" className="relative w-full max-w-sm">
+            {/* Fine decorative outer arch outline */}
+            <div className="absolute -inset-3.5 rounded-t-full border border-[#c5a880]/40 pointer-events-none" />
+
+            {/* Sparkle accents */}
+            <span data-color-preserve className="absolute -top-6 right-6 text-xl text-[#c5a880]/80 select-none animate-pulse">✦</span>
+            <span data-color-preserve className="absolute top-10 -left-4 text-sm text-[#c5a880]/60 select-none">✧</span>
+            <span data-color-preserve className="absolute -bottom-2 right-4 text-xs text-[#c5a880]/50 select-none">✦</span>
+
+            {/* Arched image */}
+            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-full rounded-b-2xl bg-[#eee7de] shadow-2xl ring-1 ring-black/5">
+              <img
+                src={imageSrc}
+                alt={content.title}
+                fetchPriority="high"
+                decoding="async"
+                className="h-full w-full object-cover object-center"
+              />
+            </div>
+          </BlurFade>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ─── Main Hero Component ───────────────────────────────────────
 const VARIANT_MAP: Record<string, React.ComponentType<SubProps>> = {
   'default': EditorialCenter,
   'editorial-center': EditorialCenter,
   'split': SplitHero,
+  'arch': SalonArchHero,
+  'salon-arch': SalonArchHero,
   'portfolio-editorial': PortfolioEditorialHero,
+  'editorial-portfolio': PortfolioEditorialHero,
+  'editorial-collage': FashionEditorialHero,
   'fashion-editorial': FashionEditorialHero,
+  'keynote': SpeakerEditorialHero,
   'speaker-editorial': SpeakerEditorialHero,
+  'cover-story': RestaurantCoverHero,
   'restaurant-cover': RestaurantCoverHero,
   'split-wide': (props) => <SplitHero {...props} wide />,
   'immersive': ImmersiveHero,

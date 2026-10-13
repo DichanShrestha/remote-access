@@ -25,6 +25,7 @@ const details: Record<string, TemplateDetails> = {
   'restaurant': { name: 'Restaurant', description: 'Your menu, atmosphere, and booking details, ready to share.', category: 'BUSINESS', mood: 'Hospitality · Warm' },
   'corporate-consulting': { name: 'Corporate Consulting', description: 'Make your expertise, approach, and results easy to understand.', category: 'BUSINESS', mood: 'Consulting · Refined' },
   'point-architecture': { name: 'Point+ Architecture', description: 'A portfolio-led studio page for projects, services, and inquiries.', category: 'BUSINESS', mood: 'Architecture · Gallery' },
+  'spa-salon': { name: 'Spa & Nail Salon', description: 'An editorial sanctuary template for luxury nail salons, wellness spas, and beauty studios.', category: 'BUSINESS', mood: 'Salon · Editorial' },
 };
 
 export function getAvailableTemplates(category?: TemplateCategory) {

@@ -331,7 +331,7 @@ import CircularCarousel from '@/components/CircularCarousel';
 import DepthCarousel from '@/components/DepthCarousel';
 import { BlurFade } from '@/components/ui/blur-fade';
 import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
+import { Check, Mail, Phone, MapPin } from 'lucide-react';
 
 // ── Carousel ───────────────────────────────────────────────────
 export function CarouselSection({ section, theme }: { section: any; theme: ThemeConfig }) {
@@ -563,6 +563,74 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
   const variant = section.variant || 'minimal-border';
 
   const renderDescription = (desc?: string) => desc || <span className="opacity-60">Premium service offering tailored to your unique requirements and goals.</span>;
+
+  if (variant === 'salon-staggered') {
+    return (
+      <section className="py-16 md:py-24 px-6 max-w-6xl mx-auto text-current">
+        {title && (
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-serif font-normal text-current tracking-tight">{title}</h2>
+          </div>
+        )}
+        <div className="flex flex-col gap-16 md:gap-24">
+          {items.map((item: any, index: number) => {
+            const isEven = index % 2 === 0;
+            return (
+              <div
+                key={item.id}
+                className={cn(
+                  "flex flex-col items-center gap-10 md:gap-16",
+                  isEven ? "md:flex-row" : "md:flex-row-reverse"
+                )}
+              >
+                {/* Image side with squircle and floating duration/price pill */}
+                <div className="w-full md:w-1/2 flex justify-center">
+                  <div className="relative w-full max-w-sm aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-lg group bg-[#ede6dc]">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-current/30">Nail Treatment</div>
+                    )}
+                    {item.price && (
+                      <div className="absolute top-4 right-4 bg-white/95 dark:bg-stone-900/90 backdrop-blur-md px-4 py-1.5 rounded-full shadow-md text-xs font-semibold text-slate-800 dark:text-stone-200 border border-black/5">
+                        {item.price}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Text side */}
+                <div className="w-full md:w-1/2 flex flex-col items-start text-left">
+                  {(item.icon || item.tag) && (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#b89562] mb-3">
+                      {item.icon || item.tag}
+                    </span>
+                  )}
+                  <h3 className="text-2xl md:text-4xl font-serif font-normal text-current tracking-tight mb-4">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm md:text-base text-current/75 leading-relaxed font-sans mb-7 max-w-md">
+                    {item.description}
+                  </p>
+                  <a
+                    href={item.buttonUrl || "#contact"}
+                    data-page-button
+                    className="inline-flex items-center justify-center rounded-full bg-[#1f1a18] px-7 py-3 text-xs font-semibold uppercase tracking-wider text-white shadow-sm hover:bg-[#382f2c] hover:shadow transition-all"
+                  >
+                    {item.buttonText || "Book Now"}
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
 
   if (variant === 'portfolio-band') {
     return (
@@ -799,6 +867,53 @@ function TestimonialCard({ item, isMarquee = false }: { item: any, isMarquee?: b
 export function TestimonialsSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, items } = section.content;
   const variant = section.variant || 'grid';
+
+  if (variant === 'salon-editorial') {
+    return (
+      <section className="py-20 md:py-28 px-6 max-w-6xl mx-auto text-current">
+        <div className="mb-12">
+          <h2 className="text-3xl md:text-5xl font-serif font-normal tracking-tight text-current">
+            {title || "What Our Clients Say"}
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {items.map((item: any) => (
+            <div
+              key={item.id}
+              className="relative bg-white/[0.04] border border-white/10 rounded-2xl p-8 md:p-10 flex flex-col justify-between overflow-hidden backdrop-blur-sm"
+            >
+              {/* Giant watermark quotation */}
+              <span data-color-preserve className="absolute right-6 bottom-2 font-serif text-8xl md:text-9xl text-white/[0.05] select-none pointer-events-none leading-none">
+                ”
+              </span>
+              <p className="relative z-10 text-base md:text-lg leading-relaxed text-current/85 font-sans mb-8">
+                "{item.quote}"
+              </p>
+              <div className="relative z-10">
+                <span className="font-serif text-lg font-medium tracking-wide text-current">
+                  {item.author}
+                </span>
+                {item.role && (
+                  <span className="block text-xs uppercase tracking-wider text-current/60 mt-1">
+                    {item.role}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Navigation circles */}
+        <div className="mt-8 flex justify-end gap-3">
+          <button type="button" aria-label="Previous" className="h-10 w-10 rounded-full border border-white/20 flex items-center justify-center text-current/70 hover:border-white/50 hover:text-white transition">
+            ←
+          </button>
+          <button type="button" aria-label="Next" className="h-10 w-10 rounded-full border border-white/20 flex items-center justify-center text-current/70 hover:border-white/50 hover:text-white transition">
+            →
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   if (variant === 'marquee') {
     // Split items into two rows
@@ -1227,6 +1342,67 @@ export function ContactSection({ section, theme, pageId }: { section: z.infer<ty
   const { title, description, buttonText, email, phone, address } = section.content;
   const variant = section.variant || 'card-centered';
 
+  if (variant === 'salon-cards' || variant === 'cards-row') {
+    return (
+      <section className="py-16 md:py-24 px-6 max-w-6xl mx-auto text-center text-current">
+        {section.content.eyebrow && (
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b89562] mb-3 inline-block">
+            {section.content.eyebrow}
+          </span>
+        )}
+        <h2 className="text-3xl md:text-5xl font-serif font-normal tracking-tight text-current mb-3">
+          {title || "Get In Touch."}
+        </h2>
+        {description && (
+          <p className="text-sm md:text-base text-current/70 max-w-md mx-auto mb-14 font-sans">
+            {description}
+          </p>
+        )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          {/* Email */}
+          <div className="bg-white/70 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl p-8 flex flex-col items-center text-center shadow-sm hover:shadow-md transition">
+            <div className="w-12 h-12 rounded-full bg-[#ede6dc] dark:bg-white/10 flex items-center justify-center text-[#b89562] mb-5">
+              <Mail className="w-5 h-5" />
+            </div>
+            <h3 className="font-serif text-lg font-medium text-current mb-1">Email</h3>
+            <p className="text-xs text-current/60 mb-3">Reach our salon concierge</p>
+            {email && (
+              <a href={`mailto:${email}`} className="text-sm font-medium text-current hover:underline">
+                {email}
+              </a>
+            )}
+          </div>
+          {/* Phone */}
+          <div className="bg-white/70 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl p-8 flex flex-col items-center text-center shadow-sm hover:shadow-md transition">
+            <div className="w-12 h-12 rounded-full bg-[#ede6dc] dark:bg-white/10 flex items-center justify-center text-[#b89562] mb-5">
+              <Phone className="w-5 h-5" />
+            </div>
+            <h3 className="font-serif text-lg font-medium text-current mb-1">Phone</h3>
+            <p className="text-xs text-current/60 mb-3">Mon-Sat from 9am to 7pm</p>
+            {phone && (
+              <a href={`tel:${phone}`} className="text-sm font-medium text-current hover:underline">
+                {phone}
+              </a>
+            )}
+          </div>
+          {/* Office */}
+          <div className="bg-white/70 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl p-8 flex flex-col items-center text-center shadow-sm hover:shadow-md transition">
+            <div className="w-12 h-12 rounded-full bg-[#ede6dc] dark:bg-white/10 flex items-center justify-center text-[#b89562] mb-5">
+              <MapPin className="w-5 h-5" />
+            </div>
+            <h3 className="font-serif text-lg font-medium text-current mb-1">Office</h3>
+            <p className="text-xs text-current/60 mb-3">Walk-ins and appointments</p>
+            {address && (
+              <span className="text-sm font-medium text-current">
+                {address}
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (variant === 'minimal-footer') {
     return (
       <footer className="py-16 px-8 mt-12 border-t border-slate-200 dark:border-slate-800 text-slate-500 text-sm">
@@ -1563,6 +1739,27 @@ export function SpacerSection({ section }: { section: any; theme: ThemeConfig })
 // ── Stats ──────────────────────────────────────────────────────
 export function StatsSection({ section, theme }: { section: z.infer<typeof StatsSectionSchema>; theme: ThemeConfig }) {
   const { title, description, items } = section.content;
+  if (section.variant === 'salon-minimal' || section.variant === 'minimal-row') {
+    return (
+      <section className="w-full px-6 py-12 md:py-16 text-current">
+        <div className="mx-auto max-w-5xl">
+          <div className="grid grid-cols-3 gap-6 md:gap-12 text-center divide-x divide-white/10">
+            {items.map((item: any) => (
+              <div key={item.id} className="flex flex-col items-center justify-center px-2">
+                <span className="font-serif text-3xl @sm:text-4xl @md:text-5xl font-light tracking-tight text-current">
+                  {item.prefix}{item.value}{item.suffix}
+                </span>
+                <span className="mt-2 text-xs md:text-sm font-sans tracking-widest uppercase opacity-75 text-current">
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (section.variant === 'editorial-band') {
     return (
       <section className="w-full px-6 py-16 md:px-10 md:py-20 text-current">
@@ -1696,6 +1893,59 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
     <div className="aspect-[1.05/1] overflow-hidden"><img src={content.imageUrl} alt={content.imageAlt || content.title} className="h-full w-full object-cover" /></div>
     <div className="flex flex-col gap-6">{content.eyebrow && <p className="text-[8px] uppercase tracking-[0.16em] text-[#b99c65]">{content.eyebrow}</p>}{content.title && <h2 className="font-serif text-3xl leading-tight md:text-4xl">{content.title}</h2>}{content.description && <p className="max-w-md text-[10px] leading-relaxed text-neutral-600">{content.description}</p>}{content.secondaryImageUrl && <img src={content.secondaryImageUrl} alt="" className="mt-1 aspect-[1.5/1] w-full object-cover md:max-w-sm" />}</div>
   </div></section>;
+
+  if (section.variant === 'salon-arch') {
+    return (
+      <section className="relative w-full overflow-hidden px-6 py-16 sm:px-10 md:py-24 text-current">
+        <div className={cn(
+          "mx-auto flex max-w-6xl flex-col items-center gap-12 md:gap-16",
+          isImageLeft ? "lg:flex-row" : "lg:flex-row-reverse"
+        )}>
+          {/* Arch Photo */}
+          <div className="w-full lg:w-1/2 flex justify-center">
+            <div className="relative w-full max-w-sm">
+              <div className="absolute -inset-3.5 rounded-t-full border border-[#c5a880]/30 pointer-events-none" />
+              <span data-color-preserve className="absolute -top-5 right-6 text-sm text-[#c5a880]/70 select-none">✦</span>
+              <span data-color-preserve className="absolute bottom-6 -left-3 text-xs text-[#c5a880]/50 select-none">✧</span>
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-full rounded-b-2xl bg-[#ede6dc] shadow-xl ring-1 ring-black/10">
+                <img
+                  src={content.imageUrl}
+                  alt={content.title || ''}
+                  className="h-full w-full object-cover object-center"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="w-full lg:w-1/2 flex flex-col items-start text-left">
+            {content.eyebrow && (
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b89562] mb-3">
+                {content.eyebrow}
+              </span>
+            )}
+            <h2 className="mb-5 font-serif text-3xl font-normal leading-tight tracking-tight text-current md:text-5xl">
+              {content.title}
+            </h2>
+            {content.description && (
+              <p className="mb-8 font-sans text-base leading-relaxed text-current/80 max-w-lg">
+                {content.description}
+              </p>
+            )}
+            {content.buttonText && content.buttonUrl && (
+              <a
+                href={content.buttonUrl}
+                data-page-button
+                className="inline-flex items-center justify-center rounded-full bg-[#b89562] px-8 py-3.5 text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition-all hover:bg-[#a68352] hover:shadow-md"
+              >
+                {content.buttonText}
+              </a>
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={`w-full px-6 py-16 sm:px-10 md:py-20 ${portfolioPortrait ? 'border-y border-neutral-400' : ''} ${editorial ? 'text-current' : 'bg-white lg:px-24'}`}>

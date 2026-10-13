@@ -150,8 +150,16 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }],
     arrayFields: [{
       key: 'content.items', label: 'Services',
-      itemFields: [{ key: 'title', label: 'Title', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'price', label: 'Price', type: 'text' }, { key: 'imageUrl', label: 'Image', type: 'image' }],
-      newItem: () => ({ id: Math.random().toString(36).substr(2, 9), title: '', description: '', price: '' }),
+      itemFields: [
+        { key: 'tag', label: 'Tag / Badge', type: 'text', placeholder: 'e.g. ★ BEST GEL MANICURE' },
+        { key: 'title', label: 'Title', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+        { key: 'price', label: 'Price & Duration', type: 'text', placeholder: 'e.g. 1h 30min · $50' },
+        { key: 'imageUrl', label: 'Image', type: 'image' },
+        { key: 'buttonText', label: 'Button Text', type: 'text', placeholder: 'Book Now' },
+        { key: 'buttonUrl', label: 'Button URL', type: 'url', placeholder: '#contact' },
+      ],
+      newItem: () => ({ id: Math.random().toString(36).substr(2, 9), title: '', description: '', price: '', buttonText: 'Book Now', buttonUrl: '#contact' }),
     }],
   },
   products: {
@@ -210,7 +218,10 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     }],
   },
   faq: {
-    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }],
+    fields: [
+      { key: 'content.title', label: 'Section Title', type: 'text' },
+      { key: 'content.subtitle', label: 'Subtitle / Description', type: 'textarea' },
+    ],
     arrayFields: [{
       key: 'content.items', label: 'Questions',
       itemFields: [{ key: 'question', label: 'Question', type: 'text' }, { key: 'answer', label: 'Answer', type: 'textarea' }],
@@ -298,6 +309,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
 
   contact: {
     fields: [
+      { key: 'content.eyebrow', label: 'Eyebrow', type: 'text' },
       { key: 'content.title', label: 'Title', type: 'text' },
       { key: 'content.description', label: 'Description', type: 'textarea' },
       { key: 'content.buttonText', label: 'Button Label', type: 'text' },
@@ -333,7 +345,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     ],
   },
   timeline: {
-    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }, { key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Vertical', value: 'vertical' }, { label: 'History', value: 'restaurant-history' }] }],
+    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }, { key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Vertical', value: 'vertical' }, { label: 'Chronology', value: 'chronology' }] }],
     arrayFields: [{
       key: 'content.items', label: 'Steps',
       itemFields: [{ key: 'label', label: 'Label', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'imageUrl', label: 'Image', type: 'image' }],
@@ -790,9 +802,71 @@ function SectionAppearance({ section, onChange }: { section: PageSection; onChan
   const supportsButtonColors = ['hero', 'cta', 'url-button', 'image-button', 'email-button', 'file-button', 'lead-form', 'collect-emails', 'booking', 'feature-split', 'contact', 'site-navbar'].includes(section.type);
 
   return (
-    <div className="mt-1 pt-6 border-t border-slate-200 dark:border-slate-700/50">
-      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 block">Section Design</label>
-      <div className="flex flex-col gap-4">
+    <InspectorGroup
+      title="Colors & Spacing"
+      icon={<svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M2 12h20"/></svg>}
+      defaultOpen={true}
+    >
+      {/* Color Swatches */}
+      <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={section.backgroundColor || '#ffffff'}
+                onChange={e => onChange({ ...section, backgroundColor: e.target.value })}
+                className="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 dark:border-slate-700 p-0 overflow-hidden"
+              />
+              <button
+                onClick={() => onChange({ ...section, backgroundColor: undefined })}
+                className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Text</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={section.textColor || '#000000'}
+                onChange={e => onChange({ ...section, textColor: e.target.value })}
+                className="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 dark:border-slate-700 p-0 overflow-hidden"
+              />
+              <button
+                onClick={() => onChange({ ...section, textColor: undefined })}
+                className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+        {supportsButtonColors && (
+          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Button</label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={section.buttonColor || '#000000'} onChange={e => onChange({ ...section, buttonColor: e.target.value })} className="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 dark:border-slate-700 p-0 overflow-hidden" />
+                <button onClick={() => onChange({ ...section, buttonColor: undefined })} className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium">Reset</button>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Button Text</label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={section.buttonTextColor || '#ffffff'} onChange={e => onChange({ ...section, buttonTextColor: e.target.value })} className="w-8 h-8 rounded-lg cursor-pointer border border-slate-200 dark:border-slate-700 p-0 overflow-hidden" />
+                <button onClick={() => onChange({ ...section, buttonTextColor: undefined })} className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium">Reset</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Spacing Controls */}
+      <div className="flex flex-col gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
         <div>
           <label className="text-xs font-medium text-slate-500 mb-1.5 block">Section Padding</label>
           <select value={section.sectionPadding || ''} onChange={e => onChange({ ...section, sectionPadding: e.target.value ? e.target.value as NonNullable<PageSection['sectionPadding']> : undefined })} className={inputClass}>
@@ -821,61 +895,7 @@ function SectionAppearance({ section, onChange }: { section: PageSection; onChan
           </select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4 mt-4">
-        <div>
-          <label className="text-xs font-medium text-slate-500 mb-1.5 block">Background Color</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={section.backgroundColor || '#ffffff'}
-              onChange={e => onChange({ ...section, backgroundColor: e.target.value })}
-              className="w-8 h-8 rounded cursor-pointer border-0 p-0"
-            />
-            <button
-              onClick={() => onChange({ ...section, backgroundColor: undefined })}
-              className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-        <div>
-          <label className="text-xs font-medium text-slate-500 mb-1.5 block">Text Color</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={section.textColor || '#000000'}
-              onChange={e => onChange({ ...section, textColor: e.target.value })}
-              className="w-8 h-8 rounded cursor-pointer border-0 p-0"
-            />
-            <button
-              onClick={() => onChange({ ...section, textColor: undefined })}
-              className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-      </div>
-      {supportsButtonColors && (
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <label className="text-xs font-medium text-slate-500 mb-1.5 block">Button Color</label>
-            <div className="flex items-center gap-2">
-              <input type="color" value={section.buttonColor || '#000000'} onChange={e => onChange({ ...section, buttonColor: e.target.value })} className="w-8 h-8 rounded cursor-pointer border-0 p-0" />
-              <button onClick={() => onChange({ ...section, buttonColor: undefined })} className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">Clear</button>
-            </div>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-500 mb-1.5 block">Button Text</label>
-            <div className="flex items-center gap-2">
-              <input type="color" value={section.buttonTextColor || '#ffffff'} onChange={e => onChange({ ...section, buttonTextColor: e.target.value })} className="w-8 h-8 rounded cursor-pointer border-0 p-0" />
-              <button onClick={() => onChange({ ...section, buttonTextColor: undefined })} className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">Clear</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </InspectorGroup>
   );
 }
 
@@ -897,7 +917,7 @@ function HeroVariantPicker({ currentVariant, onChange }: { currentVariant: strin
     { id: 'immersive', label: 'Immersive', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="0" y="0" width="60" height="32" rx="2" fill="currentColor" opacity="0.12"/><rect x="6" y="18" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.6"/><rect x="6" y="23" width="20" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="6" y="27" width="12" height="3" rx="1.5" fill="currentColor" opacity="0.4"/></svg>
     )},
-    { id: 'restaurant-cover', label: 'Restaurant', icon: (
+    { id: 'cover-story', label: 'Cover Story', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect width="60" height="32" rx="2" fill="currentColor" opacity="0.14"/><path d="M0 23 18 9l12 12L43 6l17 17v9H0z" fill="currentColor" opacity="0.3"/><rect x="5" y="24" width="18" height="2" rx="1" fill="currentColor" opacity="0.8"/><rect x="5" y="27" width="11" height="1.5" rx=".75" fill="currentColor" opacity="0.55"/></svg>
     )},
     { id: 'minimal', label: 'Minimal', icon: (
@@ -906,12 +926,21 @@ function HeroVariantPicker({ currentVariant, onChange }: { currentVariant: strin
     { id: 'asymmetric', label: 'Asymmetric', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="4" y="8" width="30" height="3" rx="1.5" fill="currentColor" opacity="0.6"/><rect x="4" y="14" width="24" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="4" y="19" width="12" height="3" rx="1.5" fill="currentColor" opacity="0.4"/><rect x="40" y="6" width="16" height="20" rx="2" fill="currentColor" opacity="0.15"/></svg>
     )},
+    { id: 'editorial-collage', label: 'Collage', icon: (
+      <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect x="4" y="4" width="18" height="24" rx="2" fill="currentColor" opacity="0.15"/><rect x="24" y="8" width="14" height="16" rx="2" fill="currentColor" opacity="0.12"/><rect x="40" y="6" width="16" height="3" rx="1.5" fill="currentColor" opacity="0.5"/><rect x="40" y="12" width="12" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="40" y="17" width="10" height="3" rx="1.5" fill="currentColor" opacity="0.4"/></svg>
+    )},
+    { id: 'arch', label: 'Arch', icon: (
+      <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><path d="M20 28V10a10 10 0 0 1 20 0v18" stroke="currentColor" strokeWidth="1.5" opacity="0.4" fill="none"/><rect x="22" y="12" width="16" height="14" rx="1" fill="currentColor" opacity="0.12"/><rect x="8" y="6" width="12" height="2" rx="1" fill="currentColor" opacity="0.5"/><rect x="8" y="10" width="10" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="8" y="14" width="8" height="3" rx="1.5" fill="currentColor" opacity="0.4"/></svg>
+    )},
   ];
 
   return (
     <div className="grid grid-cols-3 gap-2">
       {variants.map((v) => {
-        const isActive = currentVariant === v.id;
+        const isActive = currentVariant === v.id
+          || (v.id === 'arch' && currentVariant === 'salon-arch')
+          || (v.id === 'cover-story' && currentVariant === 'restaurant-cover')
+          || (v.id === 'editorial-collage' && currentVariant === 'fashion-editorial');
         return (
           <button
             key={v.id}
@@ -982,10 +1011,14 @@ export function SectionInspector({ section, onChange }: { section: PageNode; onC
         </div>
       )}
 
+      {/* Colors & Spacing placed prominently near top */}
+      <SectionAppearance section={section} onChange={onChange} />
+
       {!def ? (
-        <div className="text-sm text-slate-400 italic py-4 text-center">No editable properties. Use AI Edit above!</div>
+        <div className="text-sm text-slate-400 italic py-4 text-center">No additional content fields.</div>
       ) : (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Content</label>
           {def.fields.map(field => (
             <div key={field.key}>
               <label className="text-xs font-medium text-slate-500 mb-1.5 block">{field.label}</label>
@@ -997,8 +1030,6 @@ export function SectionInspector({ section, onChange }: { section: PageNode; onC
           ))}
         </div>
       )}
-
-      <SectionAppearance section={section} onChange={onChange} />
     </div>
   );
 }

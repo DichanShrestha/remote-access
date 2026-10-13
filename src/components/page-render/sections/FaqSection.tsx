@@ -55,6 +55,57 @@ export function FaqSection({ section, theme }: FaqProps) {
     );
   }
 
+  if (variant === 'salon-pill') {
+    return (
+      <section className="py-16 md:py-24 px-6 w-full max-w-4xl mx-auto text-current">
+        <div className="text-center mb-12">
+          {content.title && (
+            <h2 className="text-3xl md:text-5xl font-serif font-normal text-current tracking-tight mb-3">
+              {content.title}
+            </h2>
+          )}
+          {(content.subtitle || content.description) && (
+            <p className="text-sm md:text-base text-current/70 max-w-lg mx-auto font-sans leading-relaxed">
+              {content.subtitle || content.description}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-4 max-w-2xl mx-auto">
+          {content.items.map((item, index) => {
+            const isOpen = openIndex === index;
+            return (
+              <div
+                key={item.id}
+                className={cn(
+                  "border border-[#c5a880]/30 bg-white/70 dark:bg-white/5 backdrop-blur-sm transition-all duration-300 shadow-sm overflow-hidden",
+                  isOpen ? "rounded-3xl bg-white/90" : "rounded-full hover:border-[#c5a880]/60"
+                )}
+              >
+                <button
+                  className="w-full flex items-center justify-between px-7 py-4 text-left focus:outline-none"
+                  onClick={() => setOpenIndex(isOpen ? null : index)}
+                >
+                  <span className="text-sm md:text-base font-serif font-medium text-current pr-6">
+                    {item.question}
+                  </span>
+                  <span className="text-xl font-light text-current/70 flex-shrink-0 transition-transform duration-300">
+                    {isOpen ? '−' : '+'}
+                  </span>
+                </button>
+                {isOpen && (
+                  <div className="px-7 pb-6 pt-1 text-sm text-current/75 font-sans leading-relaxed border-t border-black/5 dark:border-white/5">
+                    {item.answer}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-12 px-6 w-full max-w-3xl mx-auto">
       {content.title && (

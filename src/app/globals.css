@@ -138,9 +138,22 @@ body {
   color: var(--section-button-text) !important;
 }
 
-.page-component-frame[data-custom-text-color="custom"] :is(h1, h2, h3, h4, p, span, li, a, label):not([data-page-button]),
-.layout-group[data-custom-text-color="custom"] :is(h1, h2, h3, h4, p, span, li, a, label):not([data-page-button]) {
-  color: inherit !important;
+/* Force custom text color across all text elements in the section, overriding Tailwind color utilities */
+.page-component-frame[data-custom-text-color="custom"],
+.page-component-frame[data-custom-text-color="custom"] *:not(input):not(textarea):not(select):not([data-page-button]):not([data-page-button] *):not([data-color-preserve]):not([data-color-preserve] *) {
+  color: var(--section-text-color) !important;
+}
+
+/* Layout group text color override (doesn't override child components that have their own custom text color) */
+.layout-group[data-custom-text-color="custom"],
+.layout-group[data-custom-text-color="custom"] *:not(.page-component-frame[data-custom-text-color="custom"]):not(.page-component-frame[data-custom-text-color="custom"] *):not(input):not(textarea):not(select):not([data-page-button]):not([data-page-button] *):not([data-color-preserve]):not([data-color-preserve] *) {
+  color: var(--section-text-color) !important;
+}
+
+/* Ensure SVG icons that use currentColor or fill/stroke inherit the custom text color */
+.page-component-frame[data-custom-text-color="custom"] svg:not([data-color-preserve]),
+.layout-group[data-custom-text-color="custom"] svg:not([data-color-preserve]) {
+  color: var(--section-text-color) !important;
 }
 
 @media (min-width: 64rem) {

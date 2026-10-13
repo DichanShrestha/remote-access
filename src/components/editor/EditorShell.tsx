@@ -68,7 +68,7 @@ export function EditorShell({
     }
   }, [doc, pageId]);
 
-  // Handle initialization message from iframe
+  // Handle messages from iframe (ready state, direct canvas click-to-select)
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       if (e.data?.type === 'PREVIEW_READY') {
@@ -77,15 +77,34 @@ export function EditorShell({
             { type: 'UPDATE_DOC', doc, pageId },
             '*'
           );
+          if (selectedSectionId) {
+            iframeRef.current.contentWindow.postMessage(
+              { type: 'SET_SELECTED_ID', sectionId: selectedSectionId },
+              '*'
+            );
+          }
         }
+      }
+
+      if (e.data?.type === 'SELECT_SECTION' && e.data?.sectionId) {
+        const id = e.data.sectionId;
+        setSelectedSectionId(id);
+        const node = findNode(doc.sections, id);
+        setInsertionGroupId(node && isGroup(node) ? node.id : findNodeParentId(doc.sections, id) ?? null);
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [doc, pageId]);
+  }, [doc, pageId, selectedSectionId]);
 
-  // Scroll to selected section via iframe
+  // Sync selected section to iframe and smooth scroll
   useEffect(() => {
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        { type: 'SET_SELECTED_ID', sectionId: selectedSectionId },
+        '*'
+      );
+    }
     if (selectedSectionId && iframeRef.current?.contentWindow) {
       setTimeout(() => {
         iframeRef.current?.contentWindow?.postMessage(
@@ -429,10 +448,11 @@ export function EditorShell({
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4">
+
+
               {/* Data-driven Inspector */}
-              <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Properties</h3>
+              <div className="border-t border-slate-200 dark:border-slate-800 pt-3">
                 <SectionInspector
                   section={selectedSection}
                   onChange={updated => updateDoc(prev => updateNode(prev, selectedSection.id, updated as Partial<PageNode>))}

@@ -59,7 +59,7 @@ export function SiteNavbar({ section, theme }: { section: NavbarSection; theme: 
                 </a>
               )}
               {content.primaryLabel && content.primaryUrl && (
-                <a href={content.primaryUrl} data-page-button className={`inline-flex min-h-10 items-center justify-center px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-85 ${pill ? 'rounded-full' : ''}`} style={{ backgroundColor: theme.primaryColor }}>
+                <a href={content.primaryUrl} data-page-button className={`inline-flex min-h-10 items-center justify-center px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-85 ${pill || theme.radius === 'full' ? 'rounded-full' : 'rounded-md'}`} style={{ backgroundColor: theme.primaryColor }}>
                   {content.primaryLabel}
                 </a>
               )}

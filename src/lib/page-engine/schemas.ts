@@ -185,6 +185,8 @@ export const ServicesSectionSchema = BaseSectionSchema.extend({
   type: z.literal('services'),
   content: z.object({
     title: z.string().optional(),
+    eyebrow: z.string().optional(),
+    subtitle: z.string().optional(),
     items: z.array(z.object({
       id: z.string(),
       title: z.string(),
@@ -192,6 +194,11 @@ export const ServicesSectionSchema = BaseSectionSchema.extend({
       price: z.string().optional(),
       icon: z.string().optional(),
       imageUrl: z.string().optional(),
+      tag: z.string().optional(),
+      badge: z.string().optional(),
+      duration: z.string().optional(),
+      buttonText: z.string().optional(),
+      buttonUrl: z.string().optional(),
     })),
     socialLinks: z.array(z.object({ id: z.string(), title: z.string(), url: z.string() })).optional(),
   }),
@@ -266,6 +273,8 @@ export const FaqSectionSchema = BaseSectionSchema.extend({
   type: z.literal('faq'),
   content: z.object({
     title: z.string().optional(),
+    subtitle: z.string().optional(),
+    description: z.string().optional(),
     items: z.array(z.object({ id: z.string(), question: z.string(), answer: z.string() })),
   }),
 });
@@ -346,6 +355,7 @@ export const SiteFooterSectionSchema = BaseSectionSchema.extend({
 export const ContactSectionSchema = BaseSectionSchema.extend({
   type: z.literal('contact'),
   content: z.object({
+    eyebrow: z.string().optional(),
     title: z.string().optional(),
     description: z.string().optional(),
     buttonText: z.string().optional(),

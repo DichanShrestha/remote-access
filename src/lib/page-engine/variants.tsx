@@ -23,12 +23,12 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'minimal', label: 'Minimal', previewNode: <PlaceholderSVG /> },
     { id: 'pill', label: 'Pill Navigation', previewNode: <PlaceholderSVG /> },
     { id: 'overlay', label: 'Overlay', previewNode: <PlaceholderSVG /> },
-    { id: 'restaurant-overlay', label: 'Restaurant Overlay', previewNode: <PlaceholderSVG /> },
+    { id: 'transparent-overlay', label: 'Transparent Overlay', previewNode: <PlaceholderSVG /> },
   ],
   'site-footer': [
     { id: 'columns', label: 'Link Columns', previewNode: <PlaceholderSVG /> },
     { id: 'compact', label: 'Compact', previewNode: <PlaceholderSVG /> },
-    { id: 'restaurant', label: 'Restaurant Footer', previewNode: <PlaceholderSVG /> },
+    { id: 'classic-serif', label: 'Classic Serif', previewNode: <PlaceholderSVG /> },
   ],
   // Hero uses its own built-in variant picker in HeroInspector
   'rich-text': [
@@ -46,12 +46,14 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
   stats: [
     { id: 'default', label: 'Stats Grid', previewNode: <PlaceholderSVG /> },
     { id: 'editorial-band', label: 'Editorial Band', previewNode: <PlaceholderSVG /> },
+    { id: 'minimal-row', label: 'Minimal Band', previewNode: <PlaceholderSVG /> },
   ],
   'feature-split': [
     { id: 'default', label: 'Framed Image', previewNode: <PlaceholderSVG /> },
     { id: 'editorial', label: 'Editorial Split', previewNode: <PlaceholderSVG /> },
     { id: 'portfolio-about', label: 'Portfolio About', previewNode: <PlaceholderSVG /> },
-    { id: 'restaurant-story', label: 'Restaurant Story', previewNode: <PlaceholderSVG /> },
+    { id: 'story-split', label: 'Story Split', previewNode: <PlaceholderSVG /> },
+    { id: 'arch', label: 'Arched Frame', previewNode: <PlaceholderSVG /> },
   ],
   carousel: [
     { 
@@ -69,7 +71,7 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'flex', label: 'Flex Carousel', previewNode: <PlaceholderSVG /> },
     { id: 'circular', label: 'Circular Ring', previewNode: <PlaceholderSVG /> },
     { id: 'depth', label: '3D Depth', previewNode: <PlaceholderSVG /> },
-    { id: 'restaurant-featured', label: 'Restaurant Feature', previewNode: <PlaceholderSVG /> },
+    { id: 'featured-focus', label: 'Featured Focus', previewNode: <PlaceholderSVG /> },
   ],
   gallery: [
     { id: 'default', label: 'Grid', previewNode: <PlaceholderSVG /> },
@@ -83,11 +85,12 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'minimal-border', label: 'Minimal Border', previewNode: <PlaceholderSVG /> },
     { id: 'glass-dark', label: 'Glass Dark', previewNode: <PlaceholderSVG /> },
     { id: 'asymmetric-bento', label: 'Asymmetric Bento', previewNode: <PlaceholderSVG /> },
+    { id: 'staggered', label: 'Staggered Showcase', previewNode: <PlaceholderSVG /> },
   ],
   products: [
     { id: 'default', label: 'Standard Grid', previewNode: <PlaceholderSVG /> },
     { id: 'glare', label: 'Glare Hover', previewNode: <PlaceholderSVG /> },
-    { id: 'restaurant-menu', label: 'Restaurant Menu', previewNode: <PlaceholderSVG /> },
+    { id: 'categorized-menu', label: 'Categorized Menu', previewNode: <PlaceholderSVG /> },
   ],
   image: [
     { id: 'default', label: 'Standard Image', previewNode: <PlaceholderSVG /> },
@@ -99,6 +102,7 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
   testimonials: [
     { id: 'grid', label: 'Masonry Grid', previewNode: <PlaceholderSVG /> },
     { id: 'marquee', label: 'Infinite Marquee', previewNode: <PlaceholderSVG /> },
+    { id: 'editorial-quotes', label: 'Editorial Quotes', previewNode: <PlaceholderSVG /> },
   ],
   'case-studies': [
     { id: 'default', label: 'Case Study Cards', previewNode: <PlaceholderSVG /> },
@@ -111,13 +115,14 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
   ],
   booking: [
     { id: 'default', label: 'Booking Card', previewNode: <PlaceholderSVG /> },
-    { id: 'restaurant-reservation', label: 'Reservation Flow', previewNode: <PlaceholderSVG /> },
+    { id: 'multi-step', label: 'Multi-Step Flow', previewNode: <PlaceholderSVG /> },
   ],
   contact: [
     { id: 'card-centered', label: 'Card Centered', previewNode: <PlaceholderSVG /> },
     { id: 'split-layout', label: 'Split Layout', previewNode: <PlaceholderSVG /> },
     { id: 'editorial-panel', label: 'Editorial Panel', previewNode: <PlaceholderSVG /> },
     { id: 'minimal-footer', label: 'Minimal Footer', previewNode: <PlaceholderSVG /> },
+    { id: 'contact-cards', label: 'Contact Cards', previewNode: <PlaceholderSVG /> },
   ],
   'lead-form': [
     { id: 'card-centered', label: 'Card Centered', previewNode: <PlaceholderSVG /> },
@@ -137,6 +142,11 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
   ],
   timeline: [
     { id: 'vertical', label: 'Vertical Timeline', previewNode: <PlaceholderSVG /> },
-    { id: 'restaurant-history', label: 'Restaurant History', previewNode: <PlaceholderSVG /> },
+    { id: 'chronology', label: 'Chronology', previewNode: <PlaceholderSVG /> },
+  ],
+  faq: [
+    { id: 'default', label: 'Standard Accordion', previewNode: <PlaceholderSVG /> },
+    { id: 'spacious', label: 'Spacious Split', previewNode: <PlaceholderSVG /> },
+    { id: 'pill-accordion', label: 'Pill Accordion', previewNode: <PlaceholderSVG /> },
   ],
 };
