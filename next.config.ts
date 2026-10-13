@@ -1,5 +1,6 @@
 const nextConfig = {
   /* config options here */
+  serverExternalPackages: ['pdfjs-dist'],
   experimental: {
     reactCompiler: true,
     serverActions: { bodySizeLimit: '12mb' },

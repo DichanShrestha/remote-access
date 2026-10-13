@@ -21,27 +21,23 @@ let isWorkerConfigured = false;
 
 /**
  * Configure PDF.js worker for Node.js environments lazily.
+ * Setting globalThis.pdfjsWorker allows pdfjs to use the in-memory WorkerMessageHandler
+ * directly without spawning a web worker or parsing URLs.
  */
 async function configureWorker() {
     if (isWorkerConfigured) return;
     try {
-        const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+        const [pdfjs, pdfjsWorker] = await Promise.all([
+            import("pdfjs-dist/legacy/build/pdf.mjs"),
+            // @ts-expect-error pdf.worker.mjs has no types declaration in pdfjs-dist
+            import("pdfjs-dist/legacy/build/pdf.worker.mjs"),
+        ]);
 
-        // 1. Locate the worker file across potential environment paths
-        const candidatePaths = [
-            path.join(process.cwd(), 'public', 'pdf.worker.mjs'),
-            path.join(process.cwd(), 'node_modules', 'pdfjs-dist', 'legacy', 'build', 'pdf.worker.mjs'),
-            path.join(process.cwd(), 'node_modules', 'pdfjs-dist', 'build', 'pdf.worker.mjs'),
-        ];
-
-        const workerPath = candidatePaths.find((p) => fs.existsSync(p));
-
-        if (workerPath) {
-            const workerBuffer = fs.readFileSync(workerPath);
-            const workerBase64 = workerBuffer.toString('base64');
-            pdfjs.GlobalWorkerOptions.workerSrc = `data:text/javascript;base64,${workerBase64}`;
-            isWorkerConfigured = true;
+        (globalThis as any).pdfjsWorker = pdfjsWorker;
+        if (pdfjs?.GlobalWorkerOptions) {
+            pdfjs.GlobalWorkerOptions.workerSrc = "";
         }
+        isWorkerConfigured = true;
     } catch (e) {
         console.warn("[PDF Parser] Worker configuration warning:", e);
     }
@@ -49,14 +45,17 @@ async function configureWorker() {
 
 
 export async function parsePDF(buffer: Buffer): Promise<string> {
-    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-
-    // Ensure worker is configured right before parsing
     await configureWorker();
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
     try {
         const data = new Uint8Array(buffer);
-        const loadingTask = pdfjs.getDocument({ data });
+        const loadingTask = pdfjs.getDocument({
+            data,
+            useSystemFonts: true,
+            disableFontFace: true,
+            isEvalSupported: false,
+        });
         const pdf = await loadingTask.promise;
 
         let fullText = "";

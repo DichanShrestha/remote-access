@@ -25,6 +25,7 @@ async function removeUnusedPageMedia(userId: string, configs: unknown[]) {
     db.pageMediaAsset.deleteMany({ where: { id: { in: unused.map((asset) => asset.id) } } }),
     db.usage.updateMany({ where: { userId }, data: { pageMediaBytes: { decrement: unused.reduce((sum, asset) => sum + asset.sizeBytes, BigInt(0)) } } }),
   ]);
+  revalidatePath('/dashboard/settings');
 }
 
 export async function uploadPageMedia(formData: FormData) {
@@ -49,10 +50,13 @@ export async function uploadPageMedia(formData: FormData) {
   try {
     await storageService.upload({ bucket, key: objectKey, size: file.size, contentType: file.type }, file);
     const asset = await db.pageMediaAsset.create({ data: { userId: user.id, bucket, objectKey, sizeBytes: BigInt(file.size), contentType: file.type } });
+    revalidatePath('/dashboard/settings');
+    revalidatePath('/dashboard');
     return { publicUrl: `/api/media/${asset.id}`, objectKey };
   } catch (error) {
     await db.usage.update({ where: { userId: user.id }, data: { pageMediaBytes: { decrement: BigInt(file.size) } } });
     try { await storageService.delete([{ bucket, key: objectKey }]); } catch {}
+    revalidatePath('/dashboard/settings');
     throw error;
   }
 }

@@ -24,41 +24,43 @@ export function validateFile(file: File, maxSize = 10 * 1024 * 1024): {
   valid: boolean;
   error?: string;
 } {
-  const ALLOWED_TYPES = [
-    "application/pdf",
-    "text/plain",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ];
+  const ext = "." + file.name.split(".").pop()?.toLowerCase();
   const ALLOWED_EXTENSIONS = [".pdf", ".txt", ".docx"];
 
-  // Check size
-  if (file.size > maxSize) {
-    return { valid: false, error: `File size must be ${Math.floor(maxSize / 1024 / 1024)}MB or smaller` };
-  }
-
-  // Check MIME type
-  if (!ALLOWED_TYPES.includes(file.type)) {
+  // Check extension
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
     return {
       valid: false,
       error: "Only PDF, TXT, and DOCX files are allowed",
     };
   }
 
-  // Check extension
-  const ext = "." + file.name.split(".").pop()?.toLowerCase();
-  if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    return {
-      valid: false,
-      error: "Invalid file extension",
-    };
+  // Check size
+  if (file.size > maxSize) {
+    return { valid: false, error: `File size must be ${Math.floor(maxSize / 1024 / 1024)}MB or smaller` };
   }
 
-  // Content-type virus scan simulation: check for suspicious patterns
-  if (file.type !== ALLOWED_TYPES[ALLOWED_EXTENSIONS.indexOf(ext)]) {
-    return {
-      valid: false,
-      error: "File type mismatch — possible security risk",
-    };
+  // Verify MIME type if present (accept common browser variants)
+  const MIME_MAP: Record<string, string[]> = {
+    ".pdf": ["application/pdf", "application/x-pdf", "application/acrobat", "applications/vnd.pdf", "text/pdf"],
+    ".txt": ["text/plain", "text/markdown", "text/csv", "application/octet-stream"],
+    ".docx": [
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/msword",
+      "application/zip",
+      "application/x-zip-compressed",
+      "application/octet-stream",
+    ],
+  };
+
+  if (file.type && file.type !== "") {
+    const validMimes = MIME_MAP[ext] || [];
+    if (!validMimes.includes(file.type) && !file.type.startsWith("text/")) {
+      return {
+        valid: false,
+        error: `File type mismatch for ${ext} (got ${file.type})`,
+      };
+    }
   }
 
   return { valid: true };

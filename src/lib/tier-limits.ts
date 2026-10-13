@@ -1,7 +1,7 @@
 export const SMART_PAGE_LIMITS = {
-  trial: { pages: 1, pageMediaBytes: 250 * 1024 * 1024, imageBytes: 10 * 1024 * 1024, aiReplies: 100, knowledgeSources: 5, knowledgeBytes: 10 * 1024 * 1024, knowledgeFileBytes: 5 * 1024 * 1024, faqEntries: 50, indexedTokens: 100_000 },
-  smart_page: { pages: 1, pageMediaBytes: 250 * 1024 * 1024, imageBytes: 10 * 1024 * 1024, aiReplies: 0, knowledgeSources: 0, knowledgeBytes: 0, knowledgeFileBytes: 0, faqEntries: 0, indexedTokens: 0 },
-  smart_page_ai: { pages: 1, pageMediaBytes: 250 * 1024 * 1024, imageBytes: 10 * 1024 * 1024, aiReplies: 800, knowledgeSources: 20, knowledgeBytes: 50 * 1024 * 1024, knowledgeFileBytes: 10 * 1024 * 1024, faqEntries: 200, indexedTokens: 500_000 },
+  trial: { pages: 1, pageMediaBytes: 250 * 1024 * 1024, imageBytes: 10 * 1024 * 1024, aiReplies: 100, knowledgeSources: 5, knowledgeBytes: 10 * 1024 * 1024, knowledgeFileBytes: 5 * 1024 * 1024, faqEntries: 50, indexedTokens: 100_000, aiImages: 10, aiImageFileBytes: 5 * 1024 * 1024 },
+  smart_page: { pages: 1, pageMediaBytes: 250 * 1024 * 1024, imageBytes: 10 * 1024 * 1024, aiReplies: 0, knowledgeSources: 0, knowledgeBytes: 0, knowledgeFileBytes: 0, faqEntries: 0, indexedTokens: 0, aiImages: 0, aiImageFileBytes: 0 },
+  smart_page_ai: { pages: 1, pageMediaBytes: 250 * 1024 * 1024, imageBytes: 10 * 1024 * 1024, aiReplies: 800, knowledgeSources: 20, knowledgeBytes: 50 * 1024 * 1024, knowledgeFileBytes: 10 * 1024 * 1024, faqEntries: 200, indexedTokens: 500_000, aiImages: 50, aiImageFileBytes: 10 * 1024 * 1024 },
 } as const;
 
 // Legacy KnowChat limits remain for existing resource-manager callers.

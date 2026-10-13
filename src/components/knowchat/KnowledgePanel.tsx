@@ -36,7 +36,8 @@ import {
     getVisualSets,
     createVisualSet,
     deleteVisualSet,
-    uploadCatalogImages
+    uploadCatalogImages,
+    getAIImageUsage
 } from "@/app/actions/catalog-actions";
 import { getSuggestedQuestions, updateSuggestedQuestions } from "@/app/actions/bot-actions";
 
@@ -70,7 +71,10 @@ interface VisualSetItem {
 
 export function KnowledgePanel({ botId }: { botId: string }) {
     const [activeTab, setActiveTab] = useState<Tab>("sources");
-    const [loading, setLoading] = useState(false);
+    const [uploadingDoc, setUploadingDoc] = useState<{ name: string } | null>(null);
+    const [isCrawling, setIsCrawling] = useState(false);
+    const [isSavingFaq, setIsSavingFaq] = useState(false);
+    const [isSavingVisual, setIsSavingVisual] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
 
     // Counts for tab badges
@@ -80,6 +84,17 @@ export function KnowledgePanel({ botId }: { botId: string }) {
     const [sources, setSources] = useState<DataSourceItem[]>([]);
     const [urlInput, setUrlInput] = useState("");
     const [isDragging, setIsDragging] = useState(false);
+    const [uploadPolicy, setUploadPolicy] = useState<{
+        allowed: boolean;
+        maxFileBytes: number;
+        remainingBytes: number;
+        totalBytesLimit?: number;
+        usedBytes?: number;
+        sourcesRemaining: number;
+        sourcesLimit?: number;
+        sourcesUsed?: number;
+        plan?: string;
+    } | null>(null);
 
     // FAQs State
     const [faqs, setFaqs] = useState<QAItem[]>([]);
@@ -99,6 +114,15 @@ export function KnowledgePanel({ botId }: { botId: string }) {
     const [visualFiles, setVisualFiles] = useState<File[]>([]);
     const [visualPreviews, setVisualPreviews] = useState<string[]>([]);
     const [isVisualDragging, setIsVisualDragging] = useState(false);
+    const [imageUsage, setImageUsage] = useState<{
+        currentImages: number;
+        maxImages: number;
+        maxImageFileBytes: number;
+        knowledgeUsedBytes: number;
+        knowledgeLimitBytes: number;
+        aiEnabled: boolean;
+        plan: string;
+    } | null>(null);
 
     // Suggested Questions State
     const [questions, setQuestions] = useState<string[]>([]);
@@ -109,17 +133,25 @@ export function KnowledgePanel({ botId }: { botId: string }) {
     const refreshData = useCallback(async () => {
         try {
             if (activeTab === "sources") {
-                const data = await getTrainingStatus(botId);
+                const [data, policyData] = await Promise.all([
+                    getTrainingStatus(botId),
+                    getKnowledgeUploadPolicy()
+                ]);
                 const items = (data?.sources || []) as DataSourceItem[];
                 setSources(items);
+                setUploadPolicy(policyData);
                 setCounts(prev => ({ ...prev, sources: items.length }));
             } else if (activeTab === "faqs") {
                 const data = (await getQAs(botId)) as QAItem[];
                 setFaqs(data || []);
                 setCounts(prev => ({ ...prev, faqs: (data || []).length }));
             } else if (activeTab === "visuals") {
-                const data = (await getVisualSets(botId)) as VisualSetItem[];
+                const [data, usage] = await Promise.all([
+                    getVisualSets(botId) as Promise<VisualSetItem[]>,
+                    getAIImageUsage()
+                ]);
                 setVisualSets(data || []);
+                setImageUsage(usage);
                 setCounts(prev => ({ ...prev, visuals: (data || []).length }));
             } else if (activeTab === "questions") {
                 const data = await getSuggestedQuestions(botId);
@@ -137,10 +169,14 @@ export function KnowledgePanel({ botId }: { botId: string }) {
         async function fetchTabData() {
             try {
                 if (activeTab === "sources") {
-                    const data = await getTrainingStatus(botId);
+                    const [data, policyData] = await Promise.all([
+                        getTrainingStatus(botId),
+                        getKnowledgeUploadPolicy()
+                    ]);
                     if (isMounted) {
                         const items = (data?.sources || []) as DataSourceItem[];
                         setSources(items);
+                        setUploadPolicy(policyData);
                         setCounts(prev => ({ ...prev, sources: items.length }));
                     }
                 } else if (activeTab === "faqs") {
@@ -150,9 +186,13 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                         setCounts(prev => ({ ...prev, faqs: (data || []).length }));
                     }
                 } else if (activeTab === "visuals") {
-                    const data = (await getVisualSets(botId)) as VisualSetItem[];
+                    const [data, usage] = await Promise.all([
+                        getVisualSets(botId) as Promise<VisualSetItem[]>,
+                        getAIImageUsage()
+                    ]);
                     if (isMounted) {
                         setVisualSets(data || []);
+                        setImageUsage(usage);
                         setCounts(prev => ({ ...prev, visuals: (data || []).length }));
                     }
                 } else if (activeTab === "questions") {
@@ -263,25 +303,28 @@ export function KnowledgePanel({ botId }: { botId: string }) {
         const trimmed = urlInput.trim();
         if (!trimmed) return;
 
-        setLoading(true);
+        setIsCrawling(true);
+        const toastId = toast.loading(`Crawling ${trimmed} & indexing content...`);
         try {
             await crawlAndTrain(botId, trimmed);
-            toast.success("Website URL added for crawling");
+            toast.success("Website URL crawled and indexed!", { id: toastId });
             setUrlInput("");
             await refreshData();
         } catch (error: unknown) {
             console.error(error);
             const msg = error instanceof Error ? error.message : "Failed to crawl website";
-            toast.error(msg);
+            toast.error(msg, { id: toastId });
         } finally {
-            setLoading(false);
+            setIsCrawling(false);
         }
     };
 
     const processFiles = async (files: FileList | File[]) => {
         if (!files || files.length === 0) return;
         const file = files[0];
-        setLoading(true);
+        setUploadingDoc({ name: file.name });
+        const toastId = toast.loading(`Training in progress: "${file.name}"...`);
+
         try {
             const policy = await getKnowledgeUploadPolicy();
             if (!policy.allowed) {
@@ -301,15 +344,20 @@ export function KnowledgePanel({ botId }: { botId: string }) {
             formData.append("files", file);
             formData.append("file", file);
 
-            await uploadAndTrainFiles(botId, formData);
-            toast.success(`"${file.name}" uploaded and queued for indexing`);
+            const results = await uploadAndTrainFiles(botId, formData);
+            const errorResult = results.find(r => r.status === "error");
+            if (errorResult) {
+                throw new Error(errorResult.error || "Failed to process document");
+            }
+
+            toast.success(`"${file.name}" trained and indexed successfully!`, { id: toastId });
             await refreshData();
         } catch (error: unknown) {
             console.error(error);
             const msg = error instanceof Error ? error.message : "The file could not be uploaded.";
-            toast.error(msg);
+            toast.error(msg, { id: toastId });
         } finally {
-            setLoading(false);
+            setUploadingDoc(null);
         }
     };
 
@@ -345,7 +393,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
         e.preventDefault();
         if (!newFaq.question.trim() || !newFaq.answer.trim()) return;
 
-        setLoading(true);
+        setIsSavingFaq(true);
         try {
             await saveQA(botId, {
                 questions: [newFaq.question.trim()],
@@ -359,7 +407,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
             const msg = error instanceof Error ? error.message : "Failed to save FAQ";
             toast.error(msg);
         } finally {
-            setLoading(false);
+            setIsSavingFaq(false);
         }
     };
 
@@ -377,16 +425,35 @@ export function KnowledgePanel({ botId }: { botId: string }) {
     // --- VISUALS HANDLERS ---
     const handleVisualFilesSelected = (files: FileList | File[]) => {
         if (!files || files.length === 0) return;
+        if (imageUsage && (!imageUsage.aiEnabled || imageUsage.maxImages === 0)) {
+            toast.error("AI image indexing is not available on your plan. Upgrade to Smart Page + AI.");
+            return;
+        }
+
         const validFiles: File[] = [];
         const newPreviews: string[] = [];
+        const currentTotal = (imageUsage?.currentImages || 0) + visualFiles.length;
+        const maxAllowed = imageUsage?.maxImages || 0;
 
         Array.from(files).forEach(f => {
-            if (f.type.startsWith("image/")) {
-                validFiles.push(f);
-                newPreviews.push(URL.createObjectURL(f));
-            } else {
+            if (!f.type.startsWith("image/")) {
                 toast.error(`"${f.name}" is not an image file`);
+                return;
             }
+
+            if (imageUsage?.maxImageFileBytes && f.size > imageUsage.maxImageFileBytes) {
+                const maxMB = Math.round(imageUsage.maxImageFileBytes / (1024 * 1024));
+                toast.error(`"${f.name}" exceeds the ${maxMB} MB per-image limit.`);
+                return;
+            }
+
+            if (maxAllowed > 0 && currentTotal + validFiles.length >= maxAllowed) {
+                toast.error(`You have reached the maximum limit of ${maxAllowed} AI images for your plan.`);
+                return;
+            }
+
+            validFiles.push(f);
+            newPreviews.push(URL.createObjectURL(f));
         });
 
         if (validFiles.length > 0) {
@@ -415,7 +482,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
             return;
         }
 
-        setLoading(true);
+        setIsSavingVisual(true);
         try {
             // 1. Bulk upload images to storage
             const formData = new FormData();
@@ -423,6 +490,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
 
             const uploadRes = await uploadCatalogImages(formData);
             const uploadedUrls = uploadRes.urls;
+            const uploadedSizes = uploadRes.sizes || [];
 
             const queries = newVisual.queries
                 .split(",")
@@ -437,6 +505,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                 publicUrl: url,
                 caption: "",
                 order: idx,
+                sizeBytes: uploadedSizes[idx] ?? visualFiles[idx]?.size ?? 0,
             }));
 
             await createVisualSet(
@@ -468,7 +537,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
             const msg = error instanceof Error ? error.message : "Failed to add visual item";
             toast.error(msg);
         } finally {
-            setLoading(false);
+            setIsSavingVisual(false);
         }
     };
 
@@ -562,31 +631,50 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                     <label
                                         onDragOver={e => {
                                             e.preventDefault();
-                                            setIsDragging(true);
+                                            if (!uploadingDoc) setIsDragging(true);
                                         }}
                                         onDragLeave={() => setIsDragging(false)}
-                                        onDrop={handleDrop}
-                                        className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
-                                            isDragging
-                                                ? "border-slate-900 bg-slate-50"
-                                                : "border-slate-200 hover:border-slate-400 hover:bg-slate-50/60"
-                                        } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                                        onDrop={e => {
+                                            if (!uploadingDoc) handleDrop(e);
+                                        }}
+                                        className={`flex flex-col items-center justify-center w-full min-h-32 border-2 border-dashed rounded-xl transition-all ${
+                                            uploadingDoc
+                                                ? "border-amber-400 bg-amber-50/40 cursor-wait"
+                                                : isDragging
+                                                ? "border-slate-900 bg-slate-50 cursor-pointer"
+                                                : "border-slate-200 hover:border-slate-400 hover:bg-slate-50/60 cursor-pointer"
+                                        }`}
                                     >
-                                        <div className="flex flex-col items-center text-center p-4">
-                                            <UploadCloud className="w-5 h-5 text-slate-400 mb-1.5" />
-                                            <span className="text-xs font-semibold text-slate-800">
-                                                Click to upload <span className="font-normal text-slate-500">or drag & drop</span>
-                                            </span>
-                                            <span className="text-[11px] text-slate-400 mt-0.5">
-                                                PDF, DOCX, DOC, TXT (up to 25 MB)
-                                            </span>
-                                        </div>
+                                        {uploadingDoc ? (
+                                            <div className="flex flex-col items-center text-center p-4 animate-in fade-in duration-200">
+                                                <Loader2 className="w-6 h-6 text-slate-800 animate-spin mb-2" />
+                                                <span className="text-xs font-semibold text-slate-800">
+                                                    Training in progress...
+                                                </span>
+                                                <span className="text-[11px] font-medium text-slate-600 truncate max-w-[240px] mt-0.5">
+                                                    {uploadingDoc.name}
+                                                </span>
+                                                <span className="text-[10px] text-slate-400 mt-1">
+                                                    Extracting text & generating Gemini vector embeddings
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center text-center p-4">
+                                                <UploadCloud className="w-5 h-5 text-slate-400 mb-1.5" />
+                                                <span className="text-xs font-semibold text-slate-800">
+                                                    Click to upload <span className="font-normal text-slate-500">or drag & drop</span>
+                                                </span>
+                                                <span className="text-[11px] text-slate-400 mt-0.5">
+                                                    PDF, DOCX, TXT (up to {uploadPolicy ? Math.floor(uploadPolicy.maxFileBytes / 1048576) : 10} MB)
+                                                </span>
+                                            </div>
+                                        )}
                                         <input
                                             type="file"
                                             className="hidden"
                                             accept=".pdf,.doc,.docx,.txt"
                                             onChange={handleFileUpload}
-                                            disabled={loading}
+                                            disabled={!!uploadingDoc}
                                         />
                                     </label>
                                 </div>
@@ -611,17 +699,17 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                             placeholder="https://example.com/faq"
                                             value={urlInput}
                                             onChange={e => setUrlInput(e.target.value)}
-                                            disabled={loading}
+                                            disabled={isCrawling}
                                             className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
                                             required
                                         />
                                         <button
                                             type="submit"
-                                            disabled={loading || !urlInput.trim()}
+                                            disabled={isCrawling || !urlInput.trim()}
                                             className="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs py-2.5 px-4 rounded-xl shadow-xs transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                                         >
-                                            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                                            {loading ? "Crawling & Training..." : "Crawl & Add"}
+                                            {isCrawling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                                            {isCrawling ? "Crawling & Training..." : "Crawl & Add"}
                                         </button>
                                     </form>
                                 </div>
@@ -631,7 +719,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-sm font-semibold text-slate-900">
-                                        Trained Knowledge Sources ({sources.length})
+                                        Trained Knowledge Sources ({sources.length}{uploadPolicy?.sourcesLimit ? ` / ${uploadPolicy.sourcesLimit}` : ""})
                                     </h3>
                                 </div>
 
@@ -747,7 +835,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                             placeholder="e.g. What are your turnaround times?"
                                             value={newFaq.question}
                                             onChange={e => setNewFaq(prev => ({ ...prev, question: e.target.value }))}
-                                            disabled={loading}
+                                            disabled={isSavingFaq}
                                             className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
                                             required
                                         />
@@ -759,7 +847,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                             placeholder="e.g. Our standard delivery time is 3 to 5 business days."
                                             value={newFaq.answer}
                                             onChange={e => setNewFaq(prev => ({ ...prev, answer: e.target.value }))}
-                                            disabled={loading}
+                                            disabled={isSavingFaq}
                                             rows={3}
                                             className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all resize-none"
                                             required
@@ -769,10 +857,10 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                     <div className="flex justify-end pt-1">
                                         <button
                                             type="submit"
-                                            disabled={loading || !newFaq.question.trim() || !newFaq.answer.trim()}
+                                            disabled={isSavingFaq || !newFaq.question.trim() || !newFaq.answer.trim()}
                                             className="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs py-2.5 px-5 rounded-xl shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                                         >
-                                            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                                            {isSavingFaq ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                                             Add FAQ
                                         </button>
                                     </div>
@@ -847,19 +935,80 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                     {/* TAB 3: VISUAL CATALOG */}
                     {activeTab === "visuals" && (
                         <div className="space-y-8 animate-in fade-in duration-200">
-                            {/* New Visual Catalog Item Form */}
-                            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
-                                        <ImageIcon className="w-4 h-4" />
+                            {/* AI Image Quota & Usage Bar */}
+                            {imageUsage && (
+                                <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3.5">
+                                        <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 border border-slate-200/60">
+                                            <ImageIcon className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="text-sm font-semibold text-slate-900">AI Image Knowledge Quota</h4>
+                                                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                                    {imageUsage.plan === 'smart_page_ai' ? 'Smart Page + AI' : imageUsage.plan === 'trial' ? '14-day Trial' : 'Smart Page ($9)'}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-slate-500 mt-0.5">
+                                                Vectorized by Gemini embeddings for in-chat visual recommendations. Image bytes count toward shared knowledge storage.
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="font-semibold text-sm text-slate-900">Add Visual Catalog Item</h3>
-                                        <p className="text-xs text-slate-500">
-                                            Add products, portfolio photos, or services for your AI assistant to display as interactive cards in chat.
-                                        </p>
+
+                                    <div className="flex flex-wrap items-center gap-2.5 text-xs">
+                                        <div className="bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-2">
+                                            <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold">Indexed Images</span>
+                                            <span className={`font-semibold ${imageUsage.maxImages > 0 && imageUsage.currentImages >= imageUsage.maxImages ? 'text-amber-600' : 'text-slate-800'}`}>
+                                                {imageUsage.maxImages === 0 ? "Not included" : `${imageUsage.currentImages} / ${imageUsage.maxImages}`}
+                                            </span>
+                                        </div>
+                                        <div className="bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-2">
+                                            <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold">Max File Size</span>
+                                            <span className="font-semibold text-slate-800">
+                                                {imageUsage.maxImageFileBytes === 0 ? "—" : `${Math.round(imageUsage.maxImageFileBytes / 1048576)} MB each`}
+                                            </span>
+                                        </div>
+                                        <div className="bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-2">
+                                            <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold">Knowledge Storage</span>
+                                            <span className="font-semibold text-slate-800">
+                                                {imageUsage.knowledgeLimitBytes === 0 ? "—" : `${(imageUsage.knowledgeUsedBytes / 1048576).toFixed(1)} / ${(imageUsage.knowledgeLimitBytes / 1048576).toFixed(0)} MB`}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
+                            )}
+
+                            {/* Plan Restriction Callout */}
+                            {imageUsage && (!imageUsage.aiEnabled || imageUsage.maxImages === 0) ? (
+                                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-8 text-center flex flex-col items-center">
+                                    <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 border border-amber-100">
+                                        <AlertCircle className="w-5 h-5" />
+                                    </div>
+                                    <h3 className="font-semibold text-sm text-slate-900 mb-1">AI Image Indexing Not Available on Current Plan</h3>
+                                    <p className="text-xs text-slate-500 max-w-md mx-auto mb-5">
+                                        The $9 Smart Page plan does not include AI image indexing. Upgrade to Smart Page + AI to index up to 50 photos (10 MB each) that your assistant can recommend with rich cards in chat.
+                                    </p>
+                                    <a
+                                        href="/dashboard/billing"
+                                        className="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs py-2.5 px-5 rounded-xl shadow-xs transition-colors cursor-pointer"
+                                    >
+                                        Upgrade to Smart Page + AI
+                                    </a>
+                                </div>
+                            ) : (
+                                /* New Visual Catalog Item Form */
+                                <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+                                            <ImageIcon className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-sm text-slate-900">Add Visual Catalog Item</h3>
+                                            <p className="text-xs text-slate-500">
+                                                Add products, portfolio photos, or services for your AI assistant to display as interactive cards in chat.
+                                            </p>
+                                        </div>
+                                    </div>
 
                                 <form onSubmit={handleAddVisual} className="space-y-4 pt-2">
                                     {/* Bulk Image Upload Dropzone */}
@@ -892,7 +1041,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                                 isVisualDragging
                                                     ? "border-slate-900 bg-slate-50"
                                                     : "border-slate-200 hover:border-slate-400 hover:bg-slate-50/60"
-                                            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                                            } ${isSavingVisual ? "opacity-50 cursor-not-allowed" : ""}`}
                                         >
                                             <div className="flex flex-col items-center text-center">
                                                 <UploadCloud className="w-5 h-5 text-slate-400 mb-1" />
@@ -908,7 +1057,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                                 multiple
                                                 accept="image/*"
                                                 className="hidden"
-                                                disabled={loading}
+                                                disabled={isSavingVisual}
                                                 onChange={e => {
                                                     if (e.target.files) {
                                                         handleVisualFilesSelected(e.target.files);
@@ -953,7 +1102,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                                         multiple
                                                         accept="image/*"
                                                         className="hidden"
-                                                        disabled={loading}
+                                                        disabled={isSavingVisual}
                                                         onChange={e => {
                                                             if (e.target.files) {
                                                                 handleVisualFilesSelected(e.target.files);
@@ -977,7 +1126,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                                 placeholder="e.g. Master Bedroom Interior Design (4 Views)"
                                                 value={newVisual.title}
                                                 onChange={e => setNewVisual(prev => ({ ...prev, title: e.target.value }))}
-                                                disabled={loading}
+                                                disabled={isSavingVisual}
                                                 className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
                                                 required
                                             />
@@ -991,7 +1140,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                                 placeholder="e.g. Scandinavian oak furniture with panoramic windows and custom warm ambient lighting."
                                                 value={newVisual.description}
                                                 onChange={e => setNewVisual(prev => ({ ...prev, description: e.target.value }))}
-                                                disabled={loading}
+                                                disabled={isSavingVisual}
                                                 rows={2}
                                                 className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all resize-none"
                                             />
@@ -1006,7 +1155,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                                 <select
                                                     value={newVisual.currency}
                                                     onChange={e => setNewVisual(prev => ({ ...prev, currency: e.target.value }))}
-                                                    disabled={loading}
+                                                    disabled={isSavingVisual}
                                                     className="w-20 px-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400"
                                                 >
                                                     <option value="$">$ (USD)</option>
@@ -1022,7 +1171,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                                     placeholder="e.g. 299.00"
                                                     value={newVisual.price}
                                                     onChange={e => setNewVisual(prev => ({ ...prev, price: e.target.value }))}
-                                                    disabled={loading}
+                                                    disabled={isSavingVisual}
                                                     className="flex-1 px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
                                                 />
                                             </div>
@@ -1038,7 +1187,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                                 placeholder="https://example.com/product/chair"
                                                 value={newVisual.redirectUrl}
                                                 onChange={e => setNewVisual(prev => ({ ...prev, redirectUrl: e.target.value }))}
-                                                disabled={loading}
+                                                disabled={isSavingVisual}
                                                 className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
                                             />
                                         </div>
@@ -1053,7 +1202,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                                 placeholder="room design, bedroom, modern interior, chair"
                                                 value={newVisual.queries}
                                                 onChange={e => setNewVisual(prev => ({ ...prev, queries: e.target.value }))}
-                                                disabled={loading}
+                                                disabled={isSavingVisual}
                                                 className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all"
                                             />
                                         </div>
@@ -1062,10 +1211,10 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                     <div className="flex justify-end pt-2">
                                         <button
                                             type="submit"
-                                            disabled={loading || !newVisual.title.trim() || visualFiles.length === 0}
+                                            disabled={isSavingVisual || !newVisual.title.trim() || visualFiles.length === 0}
                                             className="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs py-2.5 px-6 rounded-xl shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                                         >
-                                            {loading ? (
+                                            {isSavingVisual ? (
                                                 <>
                                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                                     Uploading & Saving...
@@ -1080,6 +1229,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                     </div>
                                 </form>
                             </div>
+                            )}
 
                             {/* Catalog Items Grid */}
                             <div className="space-y-4">

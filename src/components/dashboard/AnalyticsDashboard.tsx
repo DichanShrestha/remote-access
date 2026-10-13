@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { 
   Users, 
   MessageSquare, 
   CalendarDays, 
-  ThumbsUp, 
-  ThumbsDown,
+  ThumbsUp,
   TrendingUp,
-  Activity,
-  MousePointerClick
+  MousePointerClick,
+  ArrowUpRight,
+  Sparkles,
+  BarChart3
 } from 'lucide-react';
 
 type AnalyticsData = {
@@ -25,202 +26,247 @@ type AnalyticsData = {
 export default function AnalyticsDashboard({ data }: { data: AnalyticsData }) {
   const totalLeads = data.leads.length + data.botLeads.length;
   
-  // Calculate booking conversion rate
   const bookingConversion = data.bookingStats.opportunities > 0 
     ? Math.round((data.bookingStats.clicks / data.bookingStats.opportunities) * 100) 
     : 0;
 
+  const maxQuestionCount = data.topQuestions.length > 0 
+    ? Math.max(...data.topQuestions.map(q => q.count)) 
+    : 1;
+
   return (
-    <div className="max-w-6xl mx-auto w-full animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+    <div className="max-w-[1240px] mx-auto space-y-6 pb-16">
+      {/* Header */}
+      <header className="flex flex-col sm:flex-row sm:items-end justify-between pb-6 border-b border-[#E8E5DF] gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">Analytics Overview</h1>
-          <p className="text-slate-500">Insights into your page and AI assistant performance.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[#171717]">Analytics</h1>
+          <p className="text-sm text-[#737373] mt-1">Performance insights for your page and AI assistant.</p>
         </div>
-        <div className="bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-green-500" />
-          Live Metrics
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#E8E5DF] bg-white shadow-2xs">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+          </span>
+          <span className="text-xs font-medium text-[#565850]">Live</span>
         </div>
-      </div>
+      </header>
 
-      {/* KPI Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <MetricCard 
-          title="Total Leads" 
+      {/* KPI Row */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard 
+          label="Total Leads" 
           value={totalLeads} 
-          icon={<Users className="w-5 h-5 text-blue-600" />}
-          trend="+12% this week"
-          color="bg-blue-50"
+          icon={<Users size={16} strokeWidth={2} />}
+          accent="#171717"
         />
-        <MetricCard 
-          title="AI Conversations" 
-          value={data.totalConversations} 
-          icon={<MessageSquare className="w-5 h-5 text-indigo-600" />}
-          trend="Active engagement"
-          color="bg-indigo-50"
+        <KpiCard 
+          label="AI Conversations" 
+          value={data.totalConversations}
+          icon={<MessageSquare size={16} strokeWidth={2} />}
+          accent="#171717"
         />
-        <MetricCard 
-          title="Booking Clicks" 
-          value={data.bookingStats.clicks} 
-          icon={<CalendarDays className="w-5 h-5 text-emerald-600" />}
-          trend={`${bookingConversion}% conversion`}
-          color="bg-emerald-50"
+        <KpiCard 
+          label="Booking Clicks" 
+          value={data.bookingStats.clicks}
+          icon={<CalendarDays size={16} strokeWidth={2} />}
+          accent="#171717"
+          detail={`${bookingConversion}% conversion`}
         />
-        <MetricCard 
-          title="Satisfaction" 
-          value={`${data.satisfaction.percentage}%`} 
-          icon={<ThumbsUp className="w-5 h-5 text-orange-600" />}
-          trend={`${data.satisfaction.upvotes} positive ratings`}
-          color="bg-orange-50"
+        <KpiCard 
+          label="Satisfaction" 
+          value={`${data.satisfaction.percentage}%`}
+          icon={<ThumbsUp size={16} strokeWidth={2} />}
+          accent="#171717"
+          detail={`${data.satisfaction.upvotes} upvotes`}
         />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 mb-8">
+      {/* Middle Row: Booking Funnel + Top Questions */}
+      <div className="grid gap-4 lg:grid-cols-2">
         {/* Booking Funnel */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h3 className="font-semibold text-lg text-slate-900 mb-6 flex items-center gap-2">
-            <MousePointerClick className="w-5 h-5 text-slate-400" />
-            Booking Funnel
-          </h3>
-          <div className="flex flex-col gap-4">
-            <div className="relative">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-slate-700">Opportunities Shown</span>
-                <span className="font-bold">{data.bookingStats.opportunities}</span>
-              </div>
-              <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-slate-400 w-full rounded-full"></div>
-              </div>
-            </div>
-            
-            <div className="relative">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-slate-700">Link Clicks</span>
-                <span className="font-bold">{data.bookingStats.clicks}</span>
-              </div>
-              <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out"
-                  style={{ width: `${bookingConversion}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            <div className="mt-4 p-4 bg-emerald-50 rounded-xl text-emerald-700 text-sm flex items-start gap-3">
-              <div className="p-2 bg-emerald-100 rounded-lg shrink-0">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="font-semibold block">Conversion Rate: {bookingConversion}%</span>
-                <span className="opacity-90">Of users who see the booking link, {bookingConversion}% click to schedule.</span>
-              </div>
+        <section className="bg-white border border-[#E8E5DF] rounded-2xl shadow-xs p-6">
+          <div className="flex items-center gap-2 pb-4 border-b border-[#F2EFE9] mb-5">
+            <span className="w-7 h-7 rounded-lg bg-[#F2EFE9] flex items-center justify-center text-[#565850]">
+              <MousePointerClick size={14} strokeWidth={2} />
+            </span>
+            <h2 className="text-sm font-semibold text-[#171717]">Booking Funnel</h2>
+          </div>
+          
+          <div className="space-y-4">
+            <FunnelRow 
+              label="Opportunities Shown" 
+              value={data.bookingStats.opportunities} 
+              percent={100} 
+            />
+            <FunnelRow 
+              label="Link Clicks" 
+              value={data.bookingStats.clicks} 
+              percent={bookingConversion} 
+            />
+          </div>
+
+          <div className="mt-5 flex items-start gap-3 p-3.5 rounded-xl bg-[#FBF9F5] border border-[#F2EFE9]">
+            <span className="w-7 h-7 rounded-lg bg-[#E8E5DF] flex items-center justify-center flex-shrink-0 text-[#565850]">
+              <TrendingUp size={13} strokeWidth={2.2} />
+            </span>
+            <div>
+              <span className="text-xs font-semibold text-[#171717] block">
+                {bookingConversion}% conversion rate
+              </span>
+              <span className="text-[11px] text-[#737373] leading-relaxed">
+                {bookingConversion > 0 
+                  ? `${bookingConversion}% of visitors who see the booking link click to schedule.`
+                  : 'No booking data yet. Clicks will be tracked once your link is shown.'}
+              </span>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Top Questions */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col">
-          <h3 className="font-semibold text-lg text-slate-900 mb-6 flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-slate-400" />
-            Top AI Questions
-          </h3>
+        {/* Top AI Questions */}
+        <section className="bg-white border border-[#E8E5DF] rounded-2xl shadow-xs p-6 flex flex-col">
+          <div className="flex items-center gap-2 pb-4 border-b border-[#F2EFE9] mb-5">
+            <span className="w-7 h-7 rounded-lg bg-[#F2EFE9] flex items-center justify-center text-[#565850]">
+              <Sparkles size={14} strokeWidth={2} />
+            </span>
+            <h2 className="text-sm font-semibold text-[#171717]">Top AI Questions</h2>
+          </div>
+
           {data.topQuestions.length > 0 ? (
-            <div className="flex-1 flex flex-col justify-center gap-4">
+            <div className="flex-1 flex flex-col justify-center space-y-3">
               {data.topQuestions.map((q, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center shrink-0">
+                <div key={i} className="flex items-center gap-3">
+                  <span className="w-5 h-5 rounded-md bg-[#F2EFE9] text-[10px] font-bold text-[#565850] flex items-center justify-center flex-shrink-0">
                     {i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-[#171717] truncate">&ldquo;{q.question}&rdquo;</p>
+                    <div className="mt-1.5 h-1 rounded-full bg-[#F2EFE9] overflow-hidden">
+                      <div 
+                        className="h-full rounded-full bg-[#171717] transition-all duration-700 ease-out"
+                        style={{ width: `${(q.count / maxQuestionCount) * 100}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl py-2 px-4 text-sm font-medium text-slate-700 truncate">
-                    "{q.question}"
-                  </div>
-                  <div className="text-sm font-bold text-slate-400 shrink-0">
-                    {q.count} times
-                  </div>
+                  <span className="text-[11px] font-medium text-[#8C8D85] flex-shrink-0 tabular-nums">
+                    {q.count}×
+                  </span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-              <MessageSquare className="w-12 h-12 mb-4 opacity-20" />
-              <p>No questions asked yet.</p>
+            <div className="flex-1 flex flex-col items-center justify-center py-8 text-center">
+              <span className="w-10 h-10 rounded-xl bg-[#F2EFE9] flex items-center justify-center text-[#8C8D85] mb-3">
+                <MessageSquare size={18} strokeWidth={1.5} />
+              </span>
+              <p className="text-xs text-[#8C8D85]">No questions asked yet.</p>
+              <p className="text-[11px] text-[#B0AFA7] mt-0.5">Questions from visitors will appear here.</p>
             </div>
           )}
-        </div>
+        </section>
       </div>
 
-      {/* Recent Leads Preview */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-8">
-        <div className="p-6 border-b border-slate-100">
-          <h3 className="font-semibold text-lg text-slate-900 flex items-center gap-2">
-            <Users className="w-5 h-5 text-slate-400" />
-            Recent Leads
-          </h3>
+      {/* Recent Leads Table */}
+      <section className="bg-white border border-[#E8E5DF] rounded-2xl shadow-xs overflow-hidden">
+        <div className="px-6 py-5 border-b border-[#F2EFE9] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-[#F2EFE9] flex items-center justify-center text-[#565850]">
+              <Users size={14} strokeWidth={2} />
+            </span>
+            <h2 className="text-sm font-semibold text-[#171717]">Recent Leads</h2>
+          </div>
+          {totalLeads > 5 && (
+            <a href="/dashboard/leads" className="text-xs font-medium text-[#737373] hover:text-[#171717] transition-colors flex items-center gap-1">
+              View all <ArrowUpRight size={12} />
+            </a>
+          )}
         </div>
-        <div className="overflow-x-auto">
-          {totalLeads > 0 ? (
-            <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 text-slate-500 font-medium">
-                <tr>
-                  <th className="px-6 py-4">Name</th>
-                  <th className="px-6 py-4">Contact</th>
-                  <th className="px-6 py-4">Source</th>
-                  <th className="px-6 py-4 text-right">Date</th>
+
+        {totalLeads > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-[#F2EFE9]">
+                  <th className="px-6 py-3 text-[10px] font-semibold text-[#8C8D85] uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-[10px] font-semibold text-[#8C8D85] uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-3 text-[10px] font-semibold text-[#8C8D85] uppercase tracking-wider">Source</th>
+                  <th className="px-6 py-3 text-[10px] font-semibold text-[#8C8D85] uppercase tracking-wider text-right">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {/* Interleave or show top botLeads & leads */}
+              <tbody>
                 {[...data.botLeads, ...data.leads]
                   .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                   .slice(0, 5)
                   .map((lead: any, i: number) => (
-                  <tr key={i} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-slate-900">
+                  <tr key={i} className="border-b border-[#F2EFE9] last:border-b-0 hover:bg-[#FBF9F5] transition-colors">
+                    <td className="px-6 py-3.5 text-xs font-medium text-[#171717]">
                       {lead.name || "Anonymous"}
                     </td>
-                    <td className="px-6 py-4 text-slate-500">
-                      <div>{lead.email || '-'}</div>
-                      <div className="text-xs">{lead.phone || ''}</div>
+                    <td className="px-6 py-3.5">
+                      <div className="text-xs text-[#565850]">{lead.email || '—'}</div>
+                      {lead.phone && <div className="text-[11px] text-[#8C8D85] mt-0.5">{lead.phone}</div>}
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                    <td className="px-6 py-3.5">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-[#F2EFE9] text-[#565850] border border-[#E8E5DF]">
                         {lead.source || "AI Chat"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right text-slate-500">
-                      {new Date(lead.createdAt).toLocaleDateString()}
+                    <td className="px-6 py-3.5 text-right text-[11px] text-[#8C8D85] tabular-nums">
+                      {new Date(lead.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          ) : (
-             <div className="p-10 flex flex-col items-center justify-center text-slate-400 text-sm">
-                <Users className="w-10 h-10 mb-3 opacity-20" />
-                No leads captured yet. Your AI assistant or page forms will collect them here.
-             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        ) : (
+          <div className="px-6 py-12 flex flex-col items-center justify-center text-center">
+            <span className="w-10 h-10 rounded-xl bg-[#F2EFE9] flex items-center justify-center text-[#8C8D85] mb-3">
+              <Users size={18} strokeWidth={1.5} />
+            </span>
+            <p className="text-xs text-[#8C8D85]">No leads captured yet.</p>
+            <p className="text-[11px] text-[#B0AFA7] mt-0.5">Your AI assistant or page forms will collect them here.</p>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
 
-function MetricCard({ title, value, icon, trend, color }: { title: string, value: string | number, icon: React.ReactNode, trend: string, color: string }) {
+/* ─── Sub-components ─── */
+
+function KpiCard({ label, value, icon, accent, detail }: { 
+  label: string; value: string | number; icon: React.ReactNode; accent: string; detail?: string;
+}) {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-      <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      <div className="flex justify-between items-start mb-4 relative z-10">
-        <div className={`p-3 rounded-xl ${color}`}>
+    <div className="bg-white border border-[#E8E5DF] rounded-2xl p-5 shadow-xs group hover:border-[#D5D3CB] transition-colors">
+      <div className="flex items-center justify-between mb-4">
+        <span className="w-8 h-8 rounded-xl bg-[#F2EFE9] flex items-center justify-center text-[#565850] group-hover:bg-[#E8E5DF] transition-colors">
           {icon}
-        </div>
+        </span>
+        {detail && (
+          <span className="text-[10px] font-medium text-[#8C8D85] bg-[#FBF9F5] px-1.5 py-0.5 rounded">
+            {detail}
+          </span>
+        )}
       </div>
-      <div className="relative z-10">
-        <div className="text-3xl font-bold tracking-tight text-slate-900 mb-1">{value}</div>
-        <div className="text-sm font-medium text-slate-500 mb-3">{title}</div>
-        <div className="text-xs font-medium text-slate-400 bg-slate-50 inline-block px-2 py-1 rounded-md">
-          {trend}
-        </div>
+      <div className="text-2xl font-bold tracking-tight text-[#171717] tabular-nums">{value}</div>
+      <div className="text-[11px] font-medium text-[#8C8D85] mt-0.5">{label}</div>
+    </div>
+  );
+}
+
+function FunnelRow({ label, value, percent }: { label: string; value: number; percent: number }) {
+  return (
+    <div>
+      <div className="flex justify-between items-baseline mb-1.5">
+        <span className="text-xs font-medium text-[#565850]">{label}</span>
+        <span className="text-sm font-bold text-[#171717] tabular-nums">{value}</span>
+      </div>
+      <div className="h-1.5 w-full bg-[#F2EFE9] rounded-full overflow-hidden">
+        <div 
+          className="h-full bg-[#171717] rounded-full transition-all duration-700 ease-out"
+          style={{ width: `${Math.max(percent, 2)}%` }}
+        />
       </div>
     </div>
   );

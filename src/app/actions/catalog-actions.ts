@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { generateGeminiEmbedding } from "@/lib/ai/gemini-embeddings";
-import { requireAIEntitlement } from "@/lib/billing/entitlements";
+import { requireAIEntitlement, getUserEntitlement } from "@/lib/billing/entitlements";
 
 async function fetchImageAsBase64(url: string) {
     try {
@@ -69,12 +69,83 @@ async function processImageEmbeddings(
     }));
 }
 
+/**
+ * Get current AI image usage and limits for the authenticated user.
+ */
+export async function getAIImageUsage() {
+    const user = await authService.requireUser();
+    const { entitlement, account } = await getUserEntitlement(user.id);
+    const limits = entitlement.limits;
+
+    const currentCount = await prisma.catalogImage.count({ where: { catalogItem: { userId: user.id } } });
+    const knowledgeUsedBytes = Number(account.usage?.knowledgeBytes || 0);
+
+    return {
+        currentImages: currentCount,
+        maxImages: limits.aiImages,
+        maxImageFileBytes: limits.aiImageFileBytes,
+        knowledgeUsedBytes,
+        knowledgeLimitBytes: limits.knowledgeBytes,
+        aiEnabled: entitlement.aiEnabled,
+        plan: entitlement.plan,
+    };
+}
+
+/**
+ * Enforce AI image limits before uploading.
+ * Checks: AI entitlement, per-file size, image count, knowledge storage capacity.
+ */
+async function enforceAIImageGuards(
+    userId: string,
+    incomingImageCount: number,
+    incomingTotalBytes: number,
+    perFileSizes: number[]
+) {
+    const { entitlement, account } = await getUserEntitlement(userId);
+
+    if (!entitlement.aiEnabled) {
+        throw new Error("AI image indexing requires an active trial or Smart Page + AI plan.");
+    }
+
+    const limits = entitlement.limits;
+
+    if (limits.aiImages === 0) {
+        throw new Error("AI image indexing is not available on your current plan. Upgrade to Smart Page + AI.");
+    }
+
+    // Per-file size check
+    for (const size of perFileSizes) {
+        if (size > limits.aiImageFileBytes) {
+            const limitMB = Math.floor(limits.aiImageFileBytes / 1024 / 1024);
+            throw new Error(`Each AI image must be ${limitMB} MB or smaller on your current plan.`);
+        }
+    }
+
+    // Total image count check
+    const currentCount = await prisma.catalogImage.count({ where: { catalogItem: { userId } } });
+    if (currentCount + incomingImageCount > limits.aiImages) {
+        const remaining = Math.max(0, limits.aiImages - currentCount);
+        throw new Error(
+            `You can add ${remaining} more AI image(s). Your plan allows ${limits.aiImages} total. You're uploading ${incomingImageCount}.`
+        );
+    }
+
+    // Knowledge storage check (images count toward the shared knowledge storage budget)
+    const knowledgeUsedBytes = Number(account.usage?.knowledgeBytes || 0);
+    if (knowledgeUsedBytes + incomingTotalBytes > limits.knowledgeBytes) {
+        const remainingMB = ((limits.knowledgeBytes - knowledgeUsedBytes) / 1024 / 1024).toFixed(1);
+        throw new Error(
+            `This upload would exceed your knowledge storage limit. You have ${remainingMB} MB remaining.`
+        );
+    }
+}
+
 export async function createVisualSet(
     botId: string,
     title: string,
     description: string,
     triggerQueries: string[],
-    images: { publicUrl: string; caption: string | null; order: number }[],
+    images: { publicUrl: string; caption: string | null; order: number; sizeBytes?: number }[],
     price?: number | null,
     currency?: string | null,
     redirectUrl?: string | null
@@ -84,9 +155,28 @@ export async function createVisualSet(
     const user = await authService.requireUser();
     await requireAIEntitlement(user.id);
 
-
     if (!title) throw new Error("Title is required");
     if (!images || images.length === 0) throw new Error("At least one image is required");
+
+    // Enforce AI image limits
+    const perFileSizes = images.map(img => img.sizeBytes || 0);
+    const totalBytes = perFileSizes.reduce((sum, s) => sum + s, 0);
+    await enforceAIImageGuards(user.id, images.length, totalBytes, perFileSizes);
+
+    // Duplicate check: prevent re-indexing the same image URL for this bot
+    const existingUrls = new Set(
+        (await prisma.catalogImage.findMany({
+            where: { catalogItem: { botId, userId: user.id } },
+            select: { publicUrl: true }
+        })).map(img => img.publicUrl)
+    );
+    const uniqueImages = images.filter(img => !existingUrls.has(img.publicUrl));
+    if (uniqueImages.length === 0) {
+        throw new Error("All selected images have already been indexed for this bot.");
+    }
+    if (uniqueImages.length < images.length) {
+        console.warn(`Skipped ${images.length - uniqueImages.length} duplicate image(s) that were already indexed.`);
+    }
 
     const newSet = await prisma.catalogItem.create({
         data: {
@@ -98,17 +188,28 @@ export async function createVisualSet(
             price: price ?? null,
             currency: currency ?? null,
             redirectUrl: redirectUrl ?? null,
-            status: "ready", // The set itself is ready immediately
+            status: "ready",
             images: {
-                create: images.map(img => ({
+                create: uniqueImages.map(img => ({
                     publicUrl: img.publicUrl,
                     caption: img.caption,
                     order: img.order,
+                    sizeBytes: BigInt(img.sizeBytes || 0),
                     status: "processing"
                 }))
             }
         }
     });
+
+    // Increment knowledge storage bytes for the image sizes
+    const addedBytes = uniqueImages.reduce((sum, img) => sum + (img.sizeBytes || 0), 0);
+    if (addedBytes > 0) {
+        await prisma.usage.upsert({
+            where: { userId: user.id },
+            create: { userId: user.id, knowledgeBytes: BigInt(addedBytes) },
+            update: { knowledgeBytes: { increment: BigInt(addedBytes) } }
+        });
+    }
 
     const createdImages = await prisma.catalogImage.findMany({ where: { catalogItemId: newSet.id } });
     const imageIds = createdImages.map(img => img.id);
@@ -127,7 +228,7 @@ export async function updateVisualSet(
     title: string,
     description: string,
     triggerQueries: string[],
-    images: { id?: string; publicUrl: string; caption: string | null; order: number }[],
+    images: { id?: string; publicUrl: string; caption: string | null; order: number; sizeBytes?: number }[],
     price?: number | null,
     currency?: string | null,
     redirectUrl?: string | null
@@ -136,7 +237,6 @@ export async function updateVisualSet(
 
     const user = await authService.requireUser();
     await requireAIEntitlement(user.id);
-
 
     if (!title) throw new Error("Title is required");
 
@@ -155,7 +255,17 @@ export async function updateVisualSet(
         }
     }
 
+    // Identify truly new images (no id) for limit checks
+    const newImages = images.filter(img => !img.id);
+    if (newImages.length > 0) {
+        const perFileSizes = newImages.map(img => img.sizeBytes || 0);
+        const totalNewBytes = perFileSizes.reduce((sum, s) => sum + s, 0);
+        await enforceAIImageGuards(user.id, newImages.length, totalNewBytes, perFileSizes);
+    }
+
     const imagesToProcess: string[] = [];
+    let bytesAdded = 0;
+    let bytesRemoved = 0;
 
     // Start a transaction to update the set and manage its images
     await prisma.$transaction(async (tx) => {
@@ -184,6 +294,9 @@ export async function updateVisualSet(
         const imagesToDelete = existingImages.filter(img => !incomingImageIds.has(img.id));
 
         if (imagesToDelete.length > 0) {
+            // Track bytes being removed for knowledge storage decrement
+            bytesRemoved += imagesToDelete.reduce((sum, img) => sum + Number(img.sizeBytes), 0);
+
             await tx.catalogImage.deleteMany({
                 where: { id: { in: imagesToDelete.map(img => img.id) } }
             });
@@ -219,19 +332,40 @@ export async function updateVisualSet(
                     });
                 }
             } else {
+                // Duplicate check for new images within this bot
+                const existing = await tx.catalogImage.findFirst({
+                    where: { publicUrl: img.publicUrl, catalogItem: { botId, userId: user.id } }
+                });
+                if (existing) {
+                    console.warn(`Skipping duplicate image URL: ${img.publicUrl}`);
+                    continue;
+                }
+
                 const newImg = await tx.catalogImage.create({
                     data: {
                         catalogItemId: itemId,
                         publicUrl: img.publicUrl,
                         caption: img.caption,
                         order: img.order,
+                        sizeBytes: BigInt(img.sizeBytes || 0),
                         status: "processing"
                     }
                 });
+                bytesAdded += (img.sizeBytes || 0);
                 imagesToProcess.push(newImg.id);
             }
         }
     });
+
+    // Update knowledge storage usage (net change)
+    const netBytes = bytesAdded - bytesRemoved;
+    if (netBytes !== 0) {
+        await prisma.usage.upsert({
+            where: { userId: user.id },
+            create: { userId: user.id, knowledgeBytes: BigInt(Math.max(0, netBytes)) },
+            update: { knowledgeBytes: { increment: BigInt(netBytes) } }
+        });
+    }
 
     if (imagesToProcess.length > 0) {
         await processImageEmbeddings(botId, itemId, title, description, normalizedTriggers, imagesToProcess);
@@ -267,7 +401,7 @@ export async function deleteVisualSet(itemId: string, botId: string) {
 
 
 
-    // Fetch images before deletion for storage cleanup
+    // Fetch images before deletion for storage cleanup and byte tracking
     const item = await prisma.catalogItem.findUnique({
         where: { id: itemId, botId, userId: user.id },
         include: { images: true }
@@ -275,9 +409,23 @@ export async function deleteVisualSet(itemId: string, botId: string) {
 
     if (!item) return { success: false };
 
+    // Calculate total bytes from images being deleted for knowledge storage decrement
+    const totalImageBytes = item.images.reduce((sum, img) => sum + Number(img.sizeBytes), 0);
+
     await prisma.catalogItem.delete({
         where: { id: itemId, botId, userId: user.id }
     });
+
+    // Decrement knowledge storage for removed image bytes (clamped to 0)
+    if (totalImageBytes > 0) {
+        const currentUsage = await prisma.usage.findUnique({ where: { userId: user.id } });
+        const currentBytes = Number(currentUsage?.knowledgeBytes || 0);
+        const newBytes = Math.max(0, currentBytes - totalImageBytes);
+        await prisma.usage.updateMany({
+            where: { userId: user.id },
+            data: { knowledgeBytes: BigInt(newBytes) }
+        });
+    }
 
     // Cleanup storage
     try {
@@ -404,9 +552,10 @@ export async function searchVisualSets(
 }
 
 /**
- * Upload multiple catalog images (supports bulk uploads)
+ * Upload multiple catalog images (supports bulk uploads).
+ * Enforces AI image plan limits on file size, count, and knowledge storage.
  */
-export async function uploadCatalogImages(formData: FormData): Promise<{ urls: string[] }> {
+export async function uploadCatalogImages(formData: FormData): Promise<{ urls: string[]; sizes: number[] }> {
     const user = await authService.requireUser();
     await requireAIEntitlement(user.id);
 
@@ -415,15 +564,20 @@ export async function uploadCatalogImages(formData: FormData): Promise<{ urls: s
         throw new Error("No image files selected");
     }
 
+    // Collect sizes for guard checks
+    const perFileSizes = files.map(f => f.size);
+    const totalBytes = perFileSizes.reduce((sum, s) => sum + s, 0);
+
+    // Enforce limits before uploading anything
+    await enforceAIImageGuards(user.id, files.length, totalBytes, perFileSizes);
+
     const uploadedUrls: string[] = [];
+    const uploadedSizes: number[] = [];
 
     for (const file of files) {
         if (!file || typeof file.arrayBuffer !== "function") continue;
         if (!file.type.startsWith("image/")) {
             throw new Error(`"${file.name}" is not an image`);
-        }
-        if (file.size > 20 * 1024 * 1024) {
-            throw new Error(`"${file.name}" exceeds 20MB limit`);
         }
 
         const extension = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8) || 'jpg';
@@ -439,11 +593,12 @@ export async function uploadCatalogImages(formData: FormData): Promise<{ urls: s
 
         const publicUrl = storageService.publicUrl({ bucket, key: objectKey });
         uploadedUrls.push(publicUrl);
+        uploadedSizes.push(file.size);
     }
 
     if (uploadedUrls.length === 0) {
         throw new Error("No valid images were uploaded");
     }
 
-    return { urls: uploadedUrls };
+    return { urls: uploadedUrls, sizes: uploadedSizes };
 }

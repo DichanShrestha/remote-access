@@ -20,7 +20,17 @@ export async function getKnowledgeUploadPolicy() {
     if (!account) throw new Error('Workspace not found');
     const entitlement = getSmartPageEntitlement(account);
     const sources = await prisma.dataSource.count({ where: { userId: user.id, type: { not: 'qa' }, status: { not: 'error' } } });
-    return { allowed: entitlement.aiEnabled, maxFileBytes: entitlement.limits.knowledgeFileBytes, remainingBytes: Math.max(0, entitlement.limits.knowledgeBytes - Number(account.usage?.knowledgeBytes || 0)), sourcesRemaining: Math.max(0, entitlement.limits.knowledgeSources - sources) };
+    return {
+        allowed: entitlement.aiEnabled,
+        maxFileBytes: entitlement.limits.knowledgeFileBytes,
+        remainingBytes: Math.max(0, entitlement.limits.knowledgeBytes - Number(account.usage?.knowledgeBytes || 0)),
+        totalBytesLimit: entitlement.limits.knowledgeBytes,
+        usedBytes: Number(account.usage?.knowledgeBytes || 0),
+        sourcesRemaining: Math.max(0, entitlement.limits.knowledgeSources - sources),
+        sourcesLimit: entitlement.limits.knowledgeSources,
+        sourcesUsed: sources,
+        plan: entitlement.plan
+    };
 }
 
 /**
