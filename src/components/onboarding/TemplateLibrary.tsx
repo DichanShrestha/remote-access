@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowRight,
   Eye,
@@ -66,7 +67,7 @@ export function TemplateLibrary({ templates }: { templates: Template[] }) {
     <main className="onboard-library premium-library">
       <header className="onboard-top">
         <Link href="/" className="onboard-brand">
-          <span className="onboard-mark">s.</span> Pageory
+          <Image src="/logo.png" alt="Pageory" width={28} height={28} className="rounded-md object-contain" /> Pageory
         </Link>
         <span>
           01 <i /> 02
@@ -271,7 +272,7 @@ export function TemplateLibrary({ templates }: { templates: Template[] }) {
                       <span className="w-2.5 h-2.5 rounded-full bg-[#82c974]" />
                     </div>
                     <div className="flex-1 max-w-md mx-auto h-5 bg-white rounded-md border border-[#dedcd4] flex items-center px-2 text-[10px] text-[#8e8f88] truncate font-mono">
-                      smartpage.app/preview/{previewTemplate.id}
+                      pageory.app/preview/{previewTemplate.id}
                     </div>
                   </div>
                   <iframe

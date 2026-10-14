@@ -4,6 +4,7 @@ import { GroupNode, PageDocument, PageNode } from '@/lib/page-engine/schemas';
 import { renderSection } from './sections/AllSections';
 import { isGroup } from '@/lib/page-engine/operations';
 import { ReactLenis } from 'lenis/react';
+import Image from 'next/image';
 import { ChatbotWidget } from '../knowchat/ChatbotWidget';
 
 type PageRendererProps = {

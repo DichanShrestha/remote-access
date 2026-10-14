@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, ArrowRight, Check, ShieldCheck, Sparkles, ExternalLink } from 'lucide-react';
 import { startCurrentFreeTrial, createOnboardingCheckout } from '@/app/onboarding/actions';
 import { getPlanPrice, getWhatsAppUrl, NEPAL_TRIAL_MESSAGE, PAID_PLANS, type PricingMode } from '@/lib/pricing';
@@ -88,7 +89,7 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
           <span>Back</span>
         </Link>
         <Link href="/" style={styles.brand}>
-          <span style={styles.brandMark}>s.</span> Pageory
+          <Image src="/logo.png" alt="Pageory" width={28} height={28} style={{ borderRadius: '6px', objectFit: 'contain' }} /> Pageory
         </Link>
         <div style={styles.statusBadge}>
           <span style={styles.statusDot} />
@@ -144,7 +145,7 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
             </div>
 
             <p style={styles.planDescription}>
-              For creators & businesses wanting a clean, high-converting digital presence.
+              Everything you need to present your work professionally and give visitors a clear way to connect with you.
             </p>
 
             <div style={styles.divider} />
@@ -211,7 +212,7 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
             </div>
 
             <p style={{ ...styles.planDescription, color: '#9B9C94' }}>
-              For brands that want an AI assistant capturing leads and answering questions 24/7.
+              Add an AI chatbot that answers visitor questions from your knowledge and helps interested visitors take the next step.
             </p>
 
             <div style={{ ...styles.divider, borderColor: '#3C3D37' }} />

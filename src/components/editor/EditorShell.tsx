@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
 import { GroupNode, PageDocument, PageNode, PageSection, SectionType } from '@/lib/page-engine/schemas';
 import { findNode, findNodeParentId, insertNode, isGroup, moveNode, removeSection, updateNode, updateSection, duplicateSection, toggleSectionVisibility, getNodeDepth } from '@/lib/page-engine/operations';
 import { ComponentRegistry } from '@/lib/page-engine/registry';
@@ -241,7 +243,10 @@ export function EditorShell({
       {/* LEFT COLUMN: Section List */}
       <div className="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-20">
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-          <h2 className="font-bold text-base tracking-tight">Layers</h2>
+          <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-85 transition" title="Back to Dashboard">
+            <Image src="/logo.png" alt="Pageory" width={24} height={24} className="rounded-md object-contain" />
+            <span className="font-bold text-sm tracking-tight text-slate-800 dark:text-slate-100">Pageory</span>
+          </Link>
           <div className="flex items-center gap-2 text-xs text-slate-400">
             {isSaving ? <span className="animate-pulse text-blue-500">Saving…</span> : <span>Saved</span>}
           </div>

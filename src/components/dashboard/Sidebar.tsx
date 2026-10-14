@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 const NAV_GROUPS = [
   {
@@ -81,7 +82,10 @@ export function Sidebar() {
     <>
       {/* Mobile Header & Hamburger */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-[#E8E5DF] bg-[#FBF9F5] z-20 relative">
-        <div className="font-bold text-xl tracking-tight text-[#171717]">Pageory</div>
+        <div className="font-bold text-xl tracking-tight text-[#171717] flex items-center gap-2.5">
+          <Image src="/logo.png" alt="Pageory" width={28} height={28} className="rounded-lg object-contain" priority />
+          <span>Pageory</span>
+        </div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="p-2 -mr-2 rounded-md text-[#737373] hover:bg-[#F2EFE9]"
@@ -109,8 +113,8 @@ export function Sidebar() {
         )}
       >
         <div className={cn("hidden md:flex h-16 items-center px-4 border-b border-[#E8E5DF] bg-[#FBF9F5] transition-all flex-shrink-0", visuallyCollapsed ? (isEditor ? "group-hover:px-6 justify-center group-hover:justify-start" : "justify-center") : "px-6")}>
-          <div className={cn("w-8 h-8 rounded-lg bg-[#171717] flex-shrink-0 flex items-center justify-center text-[#FBF9F5] font-bold text-sm", visuallyCollapsed && !isEditor && "mx-auto")}>
-            S
+          <div className={cn("w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center", visuallyCollapsed && !isEditor && "mx-auto")}>
+            <Image src="/logo.png" alt="Pageory" width={32} height={32} className="object-contain" priority />
           </div>
           <span className={cn(
             "font-bold text-lg tracking-tight ml-3 whitespace-nowrap text-[#171717] transition-opacity duration-300",

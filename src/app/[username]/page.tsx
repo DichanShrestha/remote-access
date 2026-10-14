@@ -14,29 +14,52 @@ interface PublicPageProps {
 
 export async function generateMetadata({ params }: PublicPageProps) {
   const { username } = await params;
+  if (username.toLowerCase() === 'demo') {
+    return {
+      title: 'Pageory Demo Page',
+      description: 'Explore a sample personal page built with Pageory.',
+      alternates: { canonical: '/demo' },
+    };
+  }
   const profile = await db.profile.findUnique({
     where: { username: username.toLowerCase() },
     include: { page: true, user: { include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } } }
   });
 
   if (!profile || !profile.page || !profile.page.isPublished) {
-    return { title: 'Page Not Found' };
+    return { title: 'Page Not Found', robots: { index: false, follow: false } };
   }
 
   // Parse config safely
   const parsed = PageDocumentSchema.safeParse(profile.page.publishedConfig);
   if (!parsed.success) {
-    return { title: profile.displayName || profile.username };
+    return { title: profile.displayName || profile.username, robots: { index: false, follow: false } };
   }
 
   const { settings } = parsed.data;
+  const entitlement = getSmartPageEntitlement(profile.user);
+  const unavailable = entitlement.trialExpired && new Date() > entitlement.publicGraceEndsAt;
+  const title = settings.seoTitle || (profile.displayName || profile.username);
+  const description = settings.seoDescription || profile.bio || 'Discover this Pageory page.';
 
   return {
-    title: settings.seoTitle || `${profile.displayName || profile.username} | Pageory`,
-    description: settings.seoDescription || profile.bio || "",
+    title,
+    description,
+    alternates: { canonical: `/${profile.username}` },
+    ...(unavailable ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
-      images: settings.ogImage ? [settings.ogImage] : [],
-    }
+      type: 'website',
+      title,
+      description,
+      url: `https://pageory.app/${profile.username}`,
+      images: settings.ogImage ? [settings.ogImage] : undefined,
+    },
+    twitter: {
+      card: settings.ogImage ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      images: settings.ogImage ? [settings.ogImage] : undefined,
+    },
   };
 }
 

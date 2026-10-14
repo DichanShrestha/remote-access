@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ReactLenis } from 'lenis/react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, Menu, Sparkles } from 'lucide-react'
 import { AuthButton } from '@/components/auth-button'
 import { getPlanPrice, getPricingModeCookie, getWhatsAppUrl, NEPAL_TRIAL_MESSAGE, PAID_PLANS, type PricingMode, WHATSAPP_NUMBER } from '@/lib/pricing'
@@ -19,12 +20,17 @@ const templates = [
 ]
 
 const faqs = [
-  ['What is Pageory?', 'Pageory turns the link in your social bio into a polished, interactive home for your work, offers, and audience.'],
+  ['What is Pageory?', 'Pageory helps creators and professionals turn their online presence into opportunities. Create one beautiful page to showcase your work, offers, and story. An AI chatbot answers visitor questions using information you provide, helping interested people take the next step toward an inquiry, booking, or collaboration.'],
   ['Do I need to know how to code?', 'No. Choose a template, personalize it in the visual editor, and publish when it feels right.'],
-  ['How does the AI conversation work?', 'Your page can answer visitor questions using the information you provide, then guide interested people toward the next step.'],
-  ['Can I collect leads and bookings?', 'Yes. Add forms and booking links to give visitors a direct way to get in touch or schedule with you.'],
+  ['How does the AI chatbot work?', 'You provide information about your work, services, offers, and other relevant details. Your AI chatbot uses that knowledge to answer visitor questions and help them understand what you offer. Its answers depend on the information you provide.'],
+  ['Can I collect leads and bookings?', 'Pageory gives visitors a clear way to express interest, contact you, or move to a booking destination. The goal is to make the next step easier when someone is interested in your work.'],
   ['Can I change my page later?', 'Absolutely. Update your content, layout, and styling whenever you need to.'],
 ]
+
+const planDescriptions = {
+  smart_page: 'Everything you need to present your work professionally and give visitors a clear way to connect with you.',
+  smart_page_ai: 'Add an AI chatbot that answers visitor questions from your knowledge and helps interested visitors take the next step.',
+}
 
 export function LandingPage({ user, initialPricingMode }: { user: User; initialPricingMode: PricingMode }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -54,7 +60,7 @@ export function LandingPage({ user, initialPricingMode }: { user: User; initialP
     <ReactLenis root options={{ lerp: 0.085, smoothWheel: true }}>
       <main className="landing-page bg-[#FFFEFB]">
         <nav className="lp-nav">
-          <a href="#top" className="lp-brand" aria-label="Pageory home"><span className="brand-mark"><i /><i /><i /></span><span>Pageory</span></a>
+          <a href="#top" className="lp-brand" aria-label="Pageory home"><Image src="/logo.png" alt="Pageory" width={28} height={28} className="rounded-lg object-contain" priority /><span>Pageory</span></a>
           <div className={`lp-nav-links ${menuOpen ? 'open' : ''}`}>
             <a href="#features" onClick={() => setMenuOpen(false)}>Features</a><a href="#templates" onClick={() => setMenuOpen(false)}>Templates</a><a href="#pricing" onClick={() => setMenuOpen(false)}>Pricing</a>
           </div>
@@ -99,7 +105,7 @@ export function LandingPage({ user, initialPricingMode }: { user: User; initialP
               Showcase what you do on one beautiful page. An AI chatbot answers visitor questions and helps turn interest into client inquiries, booked calls, and brand deals.
             </p>
             <div className="hero-actions">
-              <Link className="button button-dark" href={startHref}>Create your Pageory <ArrowRight size={16} /></Link>
+              <Link className="button button-dark" href={startHref}>Create your page <ArrowRight size={16} /></Link>
               <a className="text-link" href="#templates">Explore templates <ArrowDown size={14} /></a>
             </div>
             <div className="hero-proof">
@@ -116,7 +122,7 @@ export function LandingPage({ user, initialPricingMode }: { user: User; initialP
             <div className="hero-note note-bottom border border-[#E8E5DF] rounded-full"><span className="online-dot" /> Your page is ready when they are.</div>
             <span className="stage-index">01 — 03</span>
           </div>
-          <div className="hero-bottom relative z-10"><span>THE NEW HOME FOR YOUR BIO</span><span>SCROLL TO SEE WHAT’S POSSIBLE ↓</span></div>
+          <div className="hero-bottom relative z-10"><span>YOUR ONLINE PRESENCE, WORKING HARDER</span><span>SCROLL TO SEE WHAT’S POSSIBLE ↓</span></div>
         </section>
 
         <div className="benefit-marquee" aria-label="Premium templates, AI chat, lead capture, analytics, built for social"><div className="marquee-track">{Array.from({ length: 2 }, (_, repeat) => <span key={repeat}>PREMIUM TEMPLATES <b>✳</b> AI THAT ANSWERS <b>✳</b> LEAD CAPTURE <b>✳</b> REAL ANALYTICS <b>✳</b> MADE FOR SOCIAL <b>✳</b> A PAGE THAT CONVERTS <b>✳</b></span>)}</div></div>
@@ -132,7 +138,7 @@ export function LandingPage({ user, initialPricingMode }: { user: User; initialP
           <div className="editor-showcase reveal">
             <div className="editor-browser-bar">
               <div className="browser-dots"><i /><i /><i /></div>
-              <span>smartpage.app / editor</span>
+              <span>pageory.app / editor</span>
               <span className="browser-live"><i /> LIVE PREVIEW</span>
             </div>
             <video
@@ -149,8 +155,15 @@ export function LandingPage({ user, initialPricingMode }: { user: User; initialP
         </section>
 
         <section className="journey-section section-pad " id="features">
-          <div className="journey-top reveal"><p className="kicker !text-white">03 / MORE THAN A PRETTY PAGE</p><h2>Your page doesn’t just<br /><em>look good.</em></h2><p>It keeps the conversation going after the scroll.</p></div>
-          <div className="journey-flow reveal"><div className="journey-line" /><div className="journey-step"><span className="step-no">01</span><div className="step-icon social-icon"><span>◎</span></div><h3>They find you</h3><p>One tap from your social bio.</p><span className="step-tag">SOCIAL VISITOR</span></div><div className="journey-step"><span className="step-no">02</span><div className="step-icon page-icon"><span className="brand-mark"><i /><i /><i /></span></div><h3>They get the picture</h3><p>Your work, offers, and story in one place.</p><span className="step-tag">PAGEORY PAGE</span></div><div className="journey-step"><span className="step-no">03</span><div className="step-icon ai-icon"><Sparkles size={21} /></div><h3>They ask. It answers.</h3><p>A helpful AI conversation, shaped by you.</p><span className="step-tag">AI CONVERSATION</span></div><div className="journey-step"><span className="step-no">04</span><div className="step-icon lead-icon"><Check size={22} /></div><h3>You meet the right people</h3><p>Interest becomes an inquiry, booking, or lead.</p><span className="step-tag">LEAD CAPTURED</span></div></div>
+          <div className="journey-top reveal">
+            <p className="kicker !text-[#d4b194] text-xs font-semibold tracking-[0.2em]">03 / MORE THAN A PRETTY PAGE</p>
+            <h2 className="!text-[#FDFCF8]">
+              Your page doesn’t just<br />
+              <em className="!text-white">look good.</em>
+            </h2>
+            <p className="!text-[#d6d5ce]">It keeps the conversation going after the scroll.</p>
+          </div>
+          <div className="journey-flow reveal"><div className="journey-line" /><div className="journey-step"><span className="step-no">01</span><div className="step-icon social-icon"><span>◎</span></div><h3>They find you</h3><p>One tap from your social bio.</p><span className="step-tag">SOCIAL VISITOR</span></div><div className="journey-step"><span className="step-no">02</span><div className="step-icon page-icon"><Image src="/logo.png" alt="Pageory" width={32} height={32} className="object-contain rounded-md" /></div><h3>They get the picture</h3><p>Your work, offers, and story in one place.</p><span className="step-tag">PAGEORY PAGE</span></div><div className="journey-step"><span className="step-no">03</span><div className="step-icon ai-icon"><Sparkles size={21} /></div><h3>They ask. It answers.</h3><p>A helpful AI conversation, shaped by you.</p><span className="step-tag">AI CONVERSATION</span></div><div className="journey-step"><span className="step-no">04</span><div className="step-icon lead-icon"><Check size={22} /></div><h3>You meet the right people</h3><p>Interest becomes an inquiry, booking, or lead.</p><span className="step-tag">LEAD CAPTURED</span></div></div>
           <div className="journey-footnote"><span>*</span> Your AI answers from the information you choose to share.</div>
         </section>
 
@@ -158,24 +171,38 @@ export function LandingPage({ user, initialPricingMode }: { user: User; initialP
           <div className="outcomes-intro reveal"><p className="kicker">04 / BUILT AROUND YOUR NEXT STEP</p><h2>Everything in its<br /><em>right place.</em></h2><p>Thoughtful tools that help the right people understand what you do — and do something about it.</p></div>
           <div className="outcome-list">
             {[
-              ['A page with presence', 'Premium templates that feel designed around you, not poured into a preset.', '01'],
-              ['Answers while you’re away', 'AI responds to visitor questions using the knowledge you provide.', '02'],
-              ['A clear path to connect', 'Capture inquiries, collect details, or send people straight to booking.', '03'],
-              ['Know what’s working', 'Understand how people find and move through your page.', '04'],
-              ['Change your mind freely', 'Adjust sections, colors, and content without starting over.', '05'],
+              ['A page that feels like you', 'Premium templates that bring your work, story, and offers together in one place—so visitors quickly understand what you do.', '01'],
+              ['Answers while you’re away', 'Your AI chatbot answers visitor questions using the knowledge you provide, even when you’re not available.', '02'],
+              ['Give interest somewhere to go', 'Help visitors take the next step with inquiries, contact details, or a direct path to booking.', '03'],
+              ['Understand what gets attention', 'Use visitor and page analytics to understand how people discover and engage with your page.', '04'],
+              ['Keep your page current', 'Update your sections, colors, and content as your work and offers evolve.', '05'],
             ].map(([title, text, number]) => <div className="outcome-row reveal" key={number}><span className="outcome-no">{number}</span><h3>{title}</h3><p>{text}</p><ArrowUpRight size={18} /></div>)}
           </div>
         </section>
 
-        <section className="comparison-section section-pad" id="comparison"><div className="comparison-intro reveal"><p className="kicker">05 / THE DIFFERENCE IS THE WHOLE POINT</p><h2>Less link list.<br /><em>More you.</em></h2><p>A quick way to see where Pageory fits.</p></div><div className="comparison-table reveal"><div className="compare-head"><span>WHAT MATTERS</span><span>PAGEORY</span><span>LINK DIRECTORY</span><span>TRADITIONAL SITE</span></div>{[['Designed page templates', true, 'Varies', true], ['AI answers from your content', true, false, 'Add-on'], ['Built-in lead capture', true, 'Varies', true], ['Purpose-built for social bios', true, true, false], ['Visual editing, no code', true, true, 'Varies']].map(([label, a, b, c]) => <div className="compare-row" key={String(label)}><span>{label}</span><span>{a === true ? <Check size={16} /> : a}</span><span>{b === true ? <Check size={16} /> : b === false ? '—' : b}</span><span>{c === true ? <Check size={16} /> : c === false ? '—' : c}</span></div>)}<p className="comparison-note">Features vary by provider and plan. Comparison focuses on common product formats.</p></div></section>
+        <section className="comparison-section section-pad" id="comparison"><div className="comparison-intro reveal"><p className="kicker">05 / THE DIFFERENCE IS THE WHOLE POINT</p><h2>More than a page.<br /><em>A path to opportunity.</em></h2><p>A quick way to see where Pageory fits.</p></div><div className="comparison-table reveal"><div className="compare-head"><span>WHAT MATTERS</span><span>PAGEORY</span><span>LINK DIRECTORY</span><span>TRADITIONAL SITE</span></div>{[['Designed page templates', true, 'Varies', true], ['AI answers from your content', true, false, 'Add-on'], ['Built-in lead capture', true, 'Varies', true], ['Purpose-built for social bios', true, true, false], ['Visual editing, no code', true, true, 'Varies']].map(([label, a, b, c]) => <div className="compare-row" key={String(label)}><span>{label}</span><span>{a === true ? <Check size={16} /> : a}</span><span>{b === true ? <Check size={16} /> : b === false ? '—' : b}</span><span>{c === true ? <Check size={16} /> : c === false ? '—' : c}</span></div>)}<p className="comparison-note">Features vary by provider and plan. Comparison focuses on common product formats.</p></div></section>
 
-        <section className="pricing-section section-pad" id="pricing"><div className="pricing-card reveal"><div className="pricing-art"><div className="pricing-orb orb-a" /><div className="pricing-orb orb-b" /><div className="pricing-note">Less friction.<br /><em>More connection.</em></div><div className="pricing-mini-phone"><PhoneFrame template="creator-profile" label="Pageory sample" /></div></div><div className="pricing-copy"><p className="kicker">06 / YOUR NEXT CHAPTER</p><h2>Plans that grow<br />with <em>you.</em></h2><div className="pricing-mode" role="group" aria-label="Choose pricing location"><button type="button" aria-pressed={pricingMode === 'nepal'} onClick={() => selectPricingMode('nepal')}>🇳🇵 Nepal (NPR)</button><button type="button" aria-pressed={pricingMode === 'international'} onClick={() => selectPricingMode('international')}>🌍 International (USD)</button></div><p>Fixed monthly pricing. Annual billing isn’t supported right now.</p><div className="pricing-plans">{(['smart_page', 'smart_page_ai'] as const).map((planId) => { const plan = PAID_PLANS[planId]; const price = getPlanPrice(planId, pricingMode); const whatsappUrl = pricingMode === 'nepal' ? getWhatsAppUrl(plan.whatsappMessage(price.display), WHATSAPP_NUMBER) : null; const features = planId === 'smart_page' ? ['1 custom live page', '250 MB page media and image storage', 'Custom handle URL and QR code', 'Core analytics and visitor tracking'] : ['Everything in Starter', '800 AI replies each month', '20 knowledge sources', '200 verified FAQs', '50 AI catalog images']; return <article className="pricing-plan" key={planId}><div><h3>{plan.name}</h3><p className="pricing-price">{price.display}<span>/month</span></p></div><ul>{features.map((feature) => <li key={feature}><Check size={14} />{feature}</li>)}</ul>{pricingMode === 'nepal' ? (whatsappUrl ? <a className="button button-dark" href={whatsappUrl} target="_blank" rel="noopener noreferrer">Purchase via WhatsApp <ArrowRight size={15} /></a> : <Link className="button button-dark" href={startHref}>Get started <ArrowRight size={15} /></Link>) : <Link className="button button-dark" href={startHref}>Choose {plan.name} <ArrowRight size={15} /></Link>}</article> })}</div>{pricingMode === 'nepal' ? (() => { const trialUrl = getWhatsAppUrl(NEPAL_TRIAL_MESSAGE, WHATSAPP_NUMBER); return trialUrl ? <a className="pricing-trial" href={trialUrl} target="_blank" rel="noopener noreferrer">Request Free Trial on WhatsApp</a> : <Link className="pricing-trial" href={startHref}>Start your 14-day free trial</Link> })() : <p className="pricing-foot">14-day free trial</p>}</div></div></section>
+        <section className="pricing-section section-pad" id="pricing"><div className="pricing-card reveal"><div className="pricing-art"><div className="pricing-orb orb-a" /><div className="pricing-orb orb-b" /><div className="pricing-note">Less friction.<br /><em>More connection.</em></div><div className="pricing-mini-phone"><PhoneFrame template="creator-profile" label="Pageory sample" /></div></div><div className="pricing-copy"><p className="kicker">06 / YOUR NEXT CHAPTER</p><h2>Plans that grow<br />with <em>you.</em></h2><div className="pricing-mode" role="group" aria-label="Choose pricing location"><button type="button" aria-pressed={pricingMode === 'nepal'} onClick={() => selectPricingMode('nepal')}>🇳🇵 Nepal (NPR)</button><button type="button" aria-pressed={pricingMode === 'international'} onClick={() => selectPricingMode('international')}>🌍 International (USD)</button></div><p>Fixed monthly pricing. Annual billing isn’t supported right now.</p><div className="pricing-plans">{(['smart_page', 'smart_page_ai'] as const).map((planId) => { const plan = PAID_PLANS[planId]; const price = getPlanPrice(planId, pricingMode); const whatsappUrl = pricingMode === 'nepal' ? getWhatsAppUrl(plan.whatsappMessage(price.display), WHATSAPP_NUMBER) : null; const features = planId === 'smart_page' ? ['1 custom live page', '250 MB page media and image storage', 'Custom handle URL and QR code', 'Core analytics and visitor tracking'] : ['Everything in Starter', '800 AI replies each month', '20 knowledge sources', '200 verified FAQs', '50 catalog product images in chat']; return <article className="pricing-plan" key={planId}><div><h3>{plan.name}</h3><p className="pricing-price">{price.display}<span>/month</span></p><p className="text-[10px] text-[#777972] mt-1.5 leading-snug">{planDescriptions[planId]}</p></div><ul>{features.map((feature) => <li key={feature}><Check size={14} />{feature}</li>)}</ul>{pricingMode === 'nepal' ? (whatsappUrl ? <a className="button button-dark" href={whatsappUrl} target="_blank" rel="noopener noreferrer">Purchase via WhatsApp <ArrowRight size={15} /></a> : <Link className="button button-dark" href={startHref}>Get started <ArrowRight size={15} /></Link>) : <Link className="button button-dark" href={startHref}>Choose {plan.name} <ArrowRight size={15} /></Link>}</article> })}</div>{pricingMode === 'nepal' ? (() => { const trialUrl = getWhatsAppUrl(NEPAL_TRIAL_MESSAGE, WHATSAPP_NUMBER); return trialUrl ? <a className="pricing-trial" href={trialUrl} target="_blank" rel="noopener noreferrer">Request Free Trial on WhatsApp</a> : <Link className="pricing-trial" href={startHref}>Start your 14-day free trial</Link> })() : <p className="pricing-foot">14-day free trial</p>}</div></div></section>
 
         <section className="faq-section section-pad" id="faq"><div className="faq-title reveal"><p className="kicker">A FEW GOOD QUESTIONS</p><h2>Good to <em>know.</em></h2></div><div className="faq-list">{faqs.map(([question, answer], index) => <div className={`faq-item ${faqOpen === index ? 'active' : ''}`} key={question}><button onClick={() => setFaqOpen(faqOpen === index ? null : index)} aria-expanded={faqOpen === index}><span>{question}</span><ChevronDown size={18} /></button>{faqOpen === index && <p>{answer}</p>}</div>)}</div></section>
 
-        <section className="final-cta"><div className="final-glow" /><p className="kicker">YOUR BIO CAN DO MORE</p><h2>Make the next click<br /><em>mean something.</em></h2><Link href={startHref} className="button button-light">Build your Pageory <ArrowRight size={16} /></Link><span>One link. A world of possibility.</span></section>
+        <section className="final-cta">
+          <div className="final-glow" />
+          <p className="kicker !text-[#d4b194] text-xs font-semibold tracking-[0.2em]">YOUR ONLINE PRESENCE CAN DO MORE</p>
+          <h2 className="!text-[#FDFCF8]">
+            Make the next click<br />
+            <em className="!text-white">mean something.</em>
+          </h2>
+          <p className="text-[13px] md:text-sm text-[#d6d5ce] max-w-[520px] mt-4 leading-relaxed">
+            Bring your work, your offers, and your next opportunity together on one beautiful page—with an AI chatbot ready to answer visitor questions.
+          </p>
+          <div className="flex items-center gap-5 mt-7 flex-wrap justify-center">
+            <Link href={startHref} className="button button-light !mt-0">Create your page <ArrowRight size={16} /></Link>
+            <a href="#templates" className="text-link !text-[#d6d5ce] hover:!text-white">Explore templates <ArrowDown size={14} /></a>
+          </div>
+        </section>
 
-        <footer className="lp-footer"><a href="#top" className="lp-brand"><span className="brand-mark"><i /><i /><i /></span><span>Pageory</span></a><span className="footer-note">A little more than a link in bio.</span><div className="footer-links"><a href="#features">Features</a><a href="#templates">Templates</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="mailto:hello@smartpage.app">Contact</a></div><span className="copyright">© {new Date().getFullYear()} Pageory</span></footer>
+        <footer className="lp-footer"><a href="#top" className="lp-brand"><Image src="/logo.png" alt="Pageory" width={24} height={24} className="rounded-md object-contain" /><span>Pageory</span></a><span className="footer-note">One beautiful page. More ways to connect.</span><div className="footer-links"><a href="#features">Features</a><a href="#templates">Templates</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></div><span className="copyright">© {new Date().getFullYear()} Pageory</span></footer>
       </main>
     </ReactLenis>
   )

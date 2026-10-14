@@ -881,7 +881,7 @@ function formatBytes(bytes: number): string {
                     <div>
                       <h3 className="text-lg font-bold text-[#171717]">Starter</h3>
                       <p className="text-xs text-[#737373] mt-0.5">
-                        Clean luxury landing page for creators & businesses.
+                        Everything you need to present your work professionally and give visitors a clear way to connect with you.
                       </p>
                     </div>
                     <div className="text-right">
@@ -939,7 +939,7 @@ function formatBytes(bytes: number): string {
                   <div className="mb-4">
                     <h3 className="text-lg font-bold">Growth</h3>
                     <p className="text-xs text-[#B0AFA7] mt-0.5">
-                      Everything in Starter plus a 24/7 AI sales assistant.
+                      Add an AI chatbot that answers visitor questions from your knowledge and helps interested visitors take the next step.
                     </p>
                     <div className="mt-3">
                       <span className="text-2xl font-bold">{getPlanPrice("smart_page_ai", pricingMode).display}</span>
