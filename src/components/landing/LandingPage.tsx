@@ -66,7 +66,7 @@ export function LandingPage({ user, initialPricingMode }: { user: User; initialP
           {/* Rich Warm Luxury Ambient Glows (Background Only) */}
           <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
             {/* Primary Golden-Amber Glow centered behind Phone Mockups */}
-            <div 
+            <div
               className="absolute top-[45%] right-[-8%] sm:right-[2%] md:right-[8%] -translate-y-1/2 w-[720px] md:w-[900px] h-[720px] md:h-[900px] rounded-full blur-[75px] md:blur-[95px] opacity-95"
               style={{
                 background: 'radial-gradient(circle, rgba(248, 212, 142, 0.9) 0%, rgba(242, 185, 102, 0.6) 35%, rgba(249, 225, 172, 0.25) 60%, transparent 75%)'
@@ -74,7 +74,7 @@ export function LandingPage({ user, initialPricingMode }: { user: User; initialP
             />
 
             {/* Upper Warm Halo behind the Top of Mockups */}
-            <div 
+            <div
               className="absolute top-[10%] right-[3%] w-[520px] h-[520px] rounded-full blur-[70px] opacity-80"
               style={{
                 background: 'radial-gradient(circle, rgba(250, 220, 155, 0.85) 0%, rgba(244, 192, 115, 0.45) 45%, transparent 70%)'
@@ -82,7 +82,7 @@ export function LandingPage({ user, initialPricingMode }: { user: User; initialP
             />
 
             {/* Soft Ambient Transition Glow behind Headline */}
-            <div 
+            <div
               className="absolute top-[38%] left-[-8%] md:left-[0%] -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[110px] opacity-60"
               style={{
                 background: 'radial-gradient(circle, rgba(248, 222, 170, 0.7) 0%, rgba(243, 200, 138, 0.3) 50%, transparent 75%)'
@@ -148,8 +148,8 @@ export function LandingPage({ user, initialPricingMode }: { user: User; initialP
           </div>
         </section>
 
-        <section className="journey-section section-pad" id="features">
-          <div className="journey-top reveal"><p className="kicker">03 / MORE THAN A PRETTY PAGE</p><h2>Your page doesn’t just<br /><em>look good.</em></h2><p>It keeps the conversation going after the scroll.</p></div>
+        <section className="journey-section section-pad " id="features">
+          <div className="journey-top reveal"><p className="kicker !text-white">03 / MORE THAN A PRETTY PAGE</p><h2>Your page doesn’t just<br /><em>look good.</em></h2><p>It keeps the conversation going after the scroll.</p></div>
           <div className="journey-flow reveal"><div className="journey-line" /><div className="journey-step"><span className="step-no">01</span><div className="step-icon social-icon"><span>◎</span></div><h3>They find you</h3><p>One tap from your social bio.</p><span className="step-tag">SOCIAL VISITOR</span></div><div className="journey-step"><span className="step-no">02</span><div className="step-icon page-icon"><span className="brand-mark"><i /><i /><i /></span></div><h3>They get the picture</h3><p>Your work, offers, and story in one place.</p><span className="step-tag">PAGEORY PAGE</span></div><div className="journey-step"><span className="step-no">03</span><div className="step-icon ai-icon"><Sparkles size={21} /></div><h3>They ask. It answers.</h3><p>A helpful AI conversation, shaped by you.</p><span className="step-tag">AI CONVERSATION</span></div><div className="journey-step"><span className="step-no">04</span><div className="step-icon lead-icon"><Check size={22} /></div><h3>You meet the right people</h3><p>Interest becomes an inquiry, booking, or lead.</p><span className="step-tag">LEAD CAPTURED</span></div></div>
           <div className="journey-footnote"><span>*</span> Your AI answers from the information you choose to share.</div>
         </section>

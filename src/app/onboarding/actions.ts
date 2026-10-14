@@ -8,7 +8,7 @@ import { PageDocumentSchema } from '@/lib/page-engine/schemas';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { TIER_LIMITS, TRIAL_MS } from '@/lib/tier-limits';
+import { getSmartPageEntitlement, TIER_LIMITS, TRIAL_MS } from '@/lib/tier-limits';
 import { cookies, headers } from 'next/headers';
 import { getInitialPricingMode, PRICING_MODE_COOKIE } from '@/lib/pricing';
 
@@ -146,12 +146,32 @@ export async function saveOnboardingUsername(value: string) {
   if (username !== user.profile.username && !(await authService.isUsernameAvailable(username))) {
     return { error: 'That username is already taken. Try another.' };
   }
+  const page = await db.page.findUnique({ where: { profileId: user.profile.id } });
+  if (!page || !page.draftConfig || !Object.keys(page.draftConfig as object).length) {
+    return { error: 'Your page draft is missing. Please return to the editor and try again.' };
+  }
+  const account = await db.user.findUnique({
+    where: { id: user.id },
+    include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } },
+  });
+  const entitlement = account ? getSmartPageEntitlement(account) : null;
+  const alreadyActivated = Boolean(entitlement?.paidActive || entitlement?.onTrial);
   try {
-    await db.profile.update({ where: { id: user.profile.id }, data: { username } });
+    await db.$transaction(async (tx) => {
+      await tx.profile.update({ where: { id: user.profile!.id }, data: { username } });
+      if (alreadyActivated) {
+        await tx.page.update({
+          where: { id: page.id },
+          data: { publishedConfig: page.draftConfig as Prisma.InputJsonValue, isPublished: true },
+        });
+      }
+    });
   } catch {
     return { error: 'That username was just claimed. Try another.' };
   }
   revalidatePath('/dashboard');
+  revalidatePath(`/${username}`);
+  if (alreadyActivated) redirect('/dashboard');
   redirect('/onboarding/plan');
 }
 
