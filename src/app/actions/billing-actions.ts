@@ -9,7 +9,7 @@ import { cookies, headers } from "next/headers";
 import { getInitialPricingMode, PRICING_MODE_COOKIE } from "@/lib/pricing";
 
 export async function createCheckoutSession(
-    productId: string,
+    productId?: string,
     planId: string = "smart_page",
     type: "subscription" | "one_time" = "subscription"
 ) {
@@ -21,18 +21,22 @@ export async function createCheckoutSession(
 
     if (!dodo || !process.env.DODO_API_KEY) throw new Error("Billing is temporarily unavailable. Please try again later.");
     const canonicalPlan = normalizePlan(planId);
-    const configuredProduct = canonicalPlan === "smart_page_ai" ? process.env.DODO_PRODUCT_SMART_PAGE_AI : process.env.DODO_PRODUCT_SMART_PAGE;
-    if (!configuredProduct || productId !== configuredProduct) throw new Error("This plan is not configured for checkout.");
+    const configuredProduct = canonicalPlan === "smart_page_ai"
+      ? (process.env.DODO_PRODUCT_SMART_PAGE_AI || process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE_AI)
+      : (process.env.DODO_PRODUCT_SMART_PAGE || process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE);
+
+    const targetProductId = configuredProduct || (productId && productId.startsWith("pdt_") ? productId : undefined);
+    if (!targetProductId) throw new Error("This plan is not configured for checkout.");
 
     try {
         const session = await dodo.checkoutSessions.create({
             customer: { email: user.email!, name: user.email! },
-            product_cart: [{ product_id: productId, quantity: 1 }],
+            product_cart: [{ product_id: targetProductId, quantity: 1 }],
             metadata: { user_id: user.id, plan_id: canonicalPlan },
             feature_flags: {
                 allow_discount_code: true
             },
-            return_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/billing`,
+            return_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/settings?tab=billing`,
         });
 
         return { payment_link: session.checkout_url };

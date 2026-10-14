@@ -253,12 +253,7 @@ export function SettingsClient({
     setBillingError(null);
     startBillingTransition(async () => {
       try {
-        const productId =
-          productIdEnv ||
-          (planId === "smart_page_ai"
-            ? "prod_smart_page_ai"
-            : "prod_smart_page");
-        const res = await createCheckoutSession(productId, planId);
+        const res = await createCheckoutSession(productIdEnv || undefined, planId);
         if (res.payment_link) {
           window.location.href = res.payment_link;
         } else {
