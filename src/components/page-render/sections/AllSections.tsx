@@ -460,11 +460,122 @@ export function CarouselSection({ section, theme }: { section: any; theme: Theme
   );
 }
 
+// Helper to transform any video URL (YouTube, Vimeo, Loom, direct video) into an embeddable URL
+export function formatVideoEmbedUrl(url: string | undefined | null): string {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+
+  // Direct video file
+  if (/\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  try {
+    const urlString = trimmed.startsWith('http://') || trimmed.startsWith('https://') 
+      ? trimmed 
+      : `https://${trimmed}`;
+    const parsed = new URL(urlString);
+    const hostname = parsed.hostname.toLowerCase().replace(/^www\./, '');
+
+    // YouTube formats: watch, embed, shorts, live, youtu.be
+    if (hostname === 'youtube.com' || hostname === 'm.youtube.com' || hostname === 'youtu.be') {
+      let videoId = '';
+      const t = parsed.searchParams.get('t') || parsed.searchParams.get('start');
+
+      if (hostname === 'youtu.be') {
+        videoId = parsed.pathname.replace(/^\//, '').split('/')[0];
+      } else if (parsed.pathname.startsWith('/embed/')) {
+        videoId = parsed.pathname.replace(/^\/embed\//, '').split('/')[0];
+      } else if (parsed.pathname.startsWith('/shorts/')) {
+        videoId = parsed.pathname.replace(/^\/shorts\//, '').split('/')[0];
+      } else if (parsed.pathname.startsWith('/live/')) {
+        videoId = parsed.pathname.replace(/^\/live\//, '').split('/')[0];
+      } else {
+        videoId = parsed.searchParams.get('v') || '';
+      }
+
+      if (videoId) {
+        videoId = videoId.split('&')[0].split('?')[0].trim();
+        const params = new URLSearchParams();
+        params.set('rel', '0');
+        if (t) {
+          const matchTime = t.match(/(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?/i);
+          if (matchTime) {
+            const hours = parseInt(matchTime[1] || '0', 10);
+            const mins = parseInt(matchTime[2] || '0', 10);
+            const secs = parseInt(matchTime[3] || '0', 10);
+            const total = hours * 3600 + mins * 60 + secs;
+            if (total > 0) params.set('start', total.toString());
+          } else {
+            params.set('start', t.replace('s', ''));
+          }
+        }
+        return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+      }
+    }
+
+    // Vimeo
+    if (hostname.includes('vimeo.com')) {
+      const match = parsed.pathname.match(/\/(\d+)/);
+      if (match && match[1]) {
+        return `https://player.vimeo.com/video/${match[1]}`;
+      }
+    }
+
+    // Loom
+    if (hostname.includes('loom.com')) {
+      if (parsed.pathname.includes('/share/')) {
+        return parsed.toString().replace('/share/', '/embed/');
+      }
+    }
+  } catch {}
+
+  // Fallback regex if URL parsing didn't catch it
+  const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=|shorts\/|live\/)|youtu\.be\/)([^"&?\/\s]+)/i;
+  const ytMatch = trimmed.match(ytRegex);
+  if (ytMatch && ytMatch[1]) {
+    return `https://www.youtube.com/embed/${ytMatch[1]}?rel=0`;
+  }
+
+  return trimmed;
+}
+
 // ── Video ──────────────────────────────────────────────────────
 export function VideoSection({ section, theme }: { section: any; theme: ThemeConfig }) {
-  const { url, title } = section.content;
-  const variant = section.variant || 'default';
-  const embedUrl = url.includes('watch?v=') ? url.replace('watch?v=', 'embed/') : url;
+  const { url = '', title = '' } = section?.content || {};
+  const variant = section?.variant || 'default';
+  const embedUrl = formatVideoEmbedUrl(url);
+  const isDirectVideo = /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(embedUrl);
+
+  const videoPlayer = (
+    <div className="w-full h-full bg-slate-950 flex items-center justify-center">
+      {!embedUrl ? (
+        <div className="flex flex-col items-center justify-center text-slate-400 p-6 text-center">
+          <svg className="w-12 h-12 mb-2 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-xs font-medium">Add a video URL in settings</p>
+        </div>
+      ) : isDirectVideo ? (
+        <video
+          src={embedUrl}
+          controls
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <iframe
+          src={embedUrl}
+          className="w-full h-full border-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+          title={title || 'Video'}
+        />
+      )}
+    </div>
+  );
 
   if (variant === 'blur-fade') {
     return (
@@ -474,7 +585,7 @@ export function VideoSection({ section, theme }: { section: any; theme: ThemeCon
             {/* Soft decorative background shape */}
             <div className="absolute -inset-4 md:-inset-8 rounded-[2rem] opacity-[0.04]" style={{ backgroundColor: theme.primaryColor }} />
             <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-2xl relative z-10 border border-slate-200/50 dark:border-slate-800/50">
-              <iframe src={embedUrl} className="w-full h-full border-0" allowFullScreen title={title || 'Video'} />
+              {videoPlayer}
             </div>
           </div>
         </BlurFade>
@@ -486,7 +597,7 @@ export function VideoSection({ section, theme }: { section: any; theme: ThemeCon
     <section className="py-12 px-4 md:px-8 max-w-4xl mx-auto">
       {title && <h2 className="text-2xl font-bold mb-6 text-center">{title}</h2>}
       <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-2xl ring-1 ring-slate-900/10">
-        <iframe src={embedUrl} className="w-full h-full border-0" allowFullScreen title={title || 'Video'} />
+        {videoPlayer}
       </div>
     </section>
   );
