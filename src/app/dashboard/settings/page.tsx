@@ -97,6 +97,7 @@ export default async function SettingsPage({
   const usageMetrics: UsageMetrics = {
     plan,
     isTrial: subscription?.status === "trialing",
+    isPaidActive: entitlement?.paidActive ?? false,
     trialDaysRemaining,
     trialEnd: subscription?.trialEnd
       ? subscription.trialEnd.toISOString()

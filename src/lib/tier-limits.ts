@@ -32,7 +32,22 @@ export function getSmartPageEntitlement(user: { createdAt: Date; trialGrantedAt?
   const paidActive = !!sub && ['active', 'past_due'].includes(sub.status || '') && (!sub.currentPeriodEnd || sub.currentPeriodEnd > now);
   const onTrial = sub?.status === 'trialing' && trialEnd > now;
   const plan = paidActive ? normalizePlan(sub?.planId || sub?.tier) : onTrial ? 'trial' : 'smart_page';
-  return { plan, limits: SMART_PAGE_LIMITS[plan], aiEnabled: plan !== 'smart_page', trialStart, trialEnd, trialExpired: !!(sub || user.trialGrantedAt) && !paidActive && !onTrial && now >= trialEnd, publicGraceEndsAt: new Date(trialEnd.getTime() + 3 * 24 * 60 * 60 * 1000), paidActive, onTrial };
+  const effectivePeriodEnd = sub?.currentPeriodEnd && sub.currentPeriodEnd > trialEnd ? sub.currentPeriodEnd : trialEnd;
+  const publicGraceEndsAt = new Date(effectivePeriodEnd.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const isPaidExpired = !!sub && !paidActive && sub.status !== 'trialing';
+
+  return {
+    plan,
+    limits: SMART_PAGE_LIMITS[plan],
+    aiEnabled: plan !== 'smart_page',
+    trialStart,
+    trialEnd,
+    trialExpired: !!(sub || user.trialGrantedAt) && !paidActive && !onTrial && now >= trialEnd,
+    publicGraceEndsAt,
+    paidActive,
+    onTrial,
+    isPaidExpired,
+  };
 }
 
 export function getEffectiveTier(user: { createdAt: Date; subscriptions?: { tier: string; status?: string; trialEnd?: Date | null; currentPeriodEnd?: Date | null }[] | null }): TierType {

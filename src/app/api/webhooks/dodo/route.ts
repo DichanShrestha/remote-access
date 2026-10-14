@@ -45,18 +45,15 @@ export async function POST(req: Request) {
       const periodStart = data.previous_billing_date ? new Date(data.previous_billing_date) : undefined;
       const periodEnd = data.next_billing_date ? new Date(data.next_billing_date) : undefined;
       let aiAccessEndedAt = sub?.aiAccessEndedAt || null;
-      const common = {
-        planId: plan, tier: plan, billingMethod: 'dodo', dodoSubscriptionId: subscriptionId,
-        dodoCustomerId: data.customer_id || data.customer?.customer_id || sub?.dodoCustomerId,
-        currentPeriodStart: periodStart || sub?.currentPeriodStart,
-        currentPeriodEnd: periodEnd || sub?.currentPeriodEnd,
-        cancelAtPeriodEnd: Boolean(data.cancel_at_next_billing_date), lastProviderEventAt: eventAt,
-      };
+      let cancelAtPeriodEnd = Boolean(data.cancel_at_next_billing_date);
+      let effectivePeriodEnd = periodEnd || sub?.currentPeriodEnd;
       let status = sub?.status || 'pending';
       let repliesUsed = sub?.aiRepliesUsed || 0;
       let periodStartSaved = sub?.aiRepliesPeriodStart;
+
       if (type === 'subscription.active' || type === 'subscription.renewed' || type === 'subscription.unpaused') {
         status = 'active';
+        cancelAtPeriodEnd = Boolean(data.cancel_at_next_billing_date);
         // Only successful activation or an explicit renewal for a genuinely new provider period resets AI replies.
         const confirmedNewPeriod = !!periodStart && (!sub?.aiRepliesPeriodStart || periodStart > sub.aiRepliesPeriodStart);
         const newlyActivatedAI = type === 'subscription.active' && plan === 'smart_page_ai' && (sub?.status !== 'active' || normalizePlan(sub?.planId) !== 'smart_page_ai');
@@ -68,9 +65,22 @@ export async function POST(req: Request) {
         else if (plan === 'smart_page' && sub?.status === 'trialing') aiAccessEndedAt = eventAt;
       } else if (type === 'subscription.failed' || type === 'subscription.on_hold') {
         status = 'past_due';
+      } else if (type === 'subscription.paused') {
+        status = 'paused';
+        aiAccessEndedAt = eventAt;
       } else if (type === 'subscription.cancelled' || type === 'subscription.expired') {
-        status = type === 'subscription.cancelled' && periodEnd && periodEnd > new Date() ? 'active' : 'expired';
-        if (normalizePlan(sub?.planId) === 'smart_page_ai' && status === 'expired') aiAccessEndedAt = periodEnd || eventAt;
+        const isCancelAtNextBilling = Boolean(data.cancel_at_next_billing_date);
+        if (type === 'subscription.cancelled' && isCancelAtNextBilling && periodEnd && periodEnd > new Date()) {
+          // Scheduled cancellation at period end: remain active until the billing cycle expires
+          status = 'active';
+          cancelAtPeriodEnd = true;
+        } else {
+          // Immediate cancellation (e.g. from Dodo dashboard) or expired subscription
+          status = type === 'subscription.expired' ? 'expired' : 'canceled';
+          cancelAtPeriodEnd = false;
+          effectivePeriodEnd = data.cancelled_at ? new Date(data.cancelled_at) : eventAt;
+          aiAccessEndedAt = effectivePeriodEnd;
+        }
       } else if (type === 'subscription.plan_changed') {
         status = providerStatus === 'active' ? 'active' : sub?.status || 'pending';
         const confirmedNewPeriod = !!periodStart && (!sub?.aiRepliesPeriodStart || periodStart > sub.aiRepliesPeriodStart);
@@ -80,12 +90,33 @@ export async function POST(req: Request) {
           aiAccessEndedAt = null;
         } else if (plan === 'smart_page' && (normalizePlan(sub?.planId) === 'smart_page_ai' || sub?.status === 'trialing')) aiAccessEndedAt = eventAt;
       } else if (type === 'subscription.updated') {
-        // Cancellation scheduling and metadata updates never create new paid access or reset quota.
-        status = sub?.status || (providerStatus === 'active' ? 'active' : 'pending');
+        if (providerStatus === 'cancelled') {
+          status = 'canceled';
+          effectivePeriodEnd = data.cancelled_at ? new Date(data.cancelled_at) : eventAt;
+          aiAccessEndedAt = effectivePeriodEnd;
+        } else if (providerStatus === 'paused') {
+          status = 'paused';
+          aiAccessEndedAt = eventAt;
+        } else {
+          status = sub?.status || (providerStatus === 'active' ? 'active' : 'pending');
+        }
       } else if (type === 'payment.succeeded') {
         // Payment events alone are not sufficient to infer a subscription period or plan.
         status = sub?.status || 'pending';
       }
+
+      const common = {
+        planId: plan,
+        tier: plan,
+        billingMethod: 'dodo',
+        dodoSubscriptionId: subscriptionId,
+        dodoCustomerId: data.customer_id || data.customer?.customer_id || sub?.dodoCustomerId,
+        currentPeriodStart: periodStart || sub?.currentPeriodStart,
+        currentPeriodEnd: effectivePeriodEnd,
+        cancelAtPeriodEnd,
+        lastProviderEventAt: eventAt,
+      };
+
       const writeData = { ...common, status, aiRepliesUsed: repliesUsed, aiRepliesPeriodStart: periodStartSaved, aiAccessEndedAt };
       if (sub) await tx.subscription.update({ where: { id: sub.id }, data: writeData });
       else await tx.subscription.create({ data: { userId, ...writeData, planId: plan, tier: plan } });

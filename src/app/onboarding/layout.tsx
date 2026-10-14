@@ -16,6 +16,8 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
     <SubscriptionGate
       active={!!entitlement?.trialExpired}
       trialEnd={entitlement?.trialEnd.toISOString() || new Date().toISOString()}
+      isPaidExpired={entitlement?.isPaidExpired}
+      publicGraceEndsAt={entitlement?.publicGraceEndsAt.toISOString()}
     >
       {children}
     </SubscriptionGate>

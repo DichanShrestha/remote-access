@@ -47,6 +47,7 @@ import { getPlanPrice, getWhatsAppUrl, PAID_PLANS, type PricingMode, WHATSAPP_NU
 export interface UsageMetrics {
   plan: "trial" | "smart_page" | "smart_page_ai";
   isTrial: boolean;
+  isPaidActive?: boolean;
   trialDaysRemaining: number;
   trialEnd: string | null;
   currentPeriodEnd: string | null;
@@ -375,10 +376,14 @@ export function SettingsClient({
       statusBadgeClass = "bg-[#FDF3F3] text-[#D14F4F] border-[#FADCDC]";
     } else if (
       subscription.status === "canceled" ||
+      subscription.status === "cancelled" ||
       subscription.status === "expired"
     ) {
       statusBadgeText = "Canceled";
       statusBadgeClass = "bg-[#F2EFE9] text-[#737373] border-[#E8E5DF]";
+    } else if (subscription.status === "paused") {
+      statusBadgeText = "Paused";
+      statusBadgeClass = "bg-amber-50 text-amber-700 border-amber-200";
     }
   }
 
@@ -917,11 +922,11 @@ function formatBytes(bytes: number): string {
                     handleCheckoutPlan(process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE || "", "smart_page")}
                   disabled={
                     isBillingPending ||
-                    (pricingMode !== "nepal" && usageMetrics.plan === "smart_page" && !usageMetrics.isTrial)
+                    (pricingMode !== "nepal" && usageMetrics.plan === "smart_page" && !usageMetrics.isTrial && usageMetrics.isPaidActive)
                   }
                   className="w-full py-2.5 px-4 rounded-xl border border-[#E8E5DF] bg-white hover:bg-[#F2EFE9] text-[#171717] text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {pricingMode === "nepal" ? "Purchase via WhatsApp" : usageMetrics.plan === "smart_page" && !usageMetrics.isTrial
+                  {pricingMode === "nepal" ? "Purchase via WhatsApp" : usageMetrics.plan === "smart_page" && !usageMetrics.isTrial && usageMetrics.isPaidActive
                     ? "Current Active Plan"
                     : `Switch to Starter (${getPlanPrice("smart_page", pricingMode).display}/month)`}
                 </button>
@@ -976,11 +981,11 @@ function formatBytes(bytes: number): string {
                     handleCheckoutPlan(process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE_AI || "", "smart_page_ai")}
                   disabled={
                     isBillingPending ||
-                    (pricingMode !== "nepal" && usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial)
+                    (pricingMode !== "nepal" && usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial && usageMetrics.isPaidActive)
                   }
                   className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#F2EFE9] text-[#171717] text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
                 >
-                  {pricingMode === "nepal" ? "Purchase via WhatsApp" : usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial
+                  {pricingMode === "nepal" ? "Purchase via WhatsApp" : usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial && usageMetrics.isPaidActive
                     ? "Current Active Plan"
                     : `Upgrade to Growth (${getPlanPrice("smart_page_ai", pricingMode).display}/month)`}
                 </button>

@@ -18,7 +18,12 @@ export default async function EditorLayout({
     <div className="flex h-screen w-full flex-col md:flex-row overflow-hidden bg-slate-100 dark:bg-slate-950">
       <Sidebar />
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <SubscriptionGate active={!!entitlement?.trialExpired} trialEnd={entitlement?.trialEnd.toISOString() || new Date().toISOString()}>
+        <SubscriptionGate
+          active={!!entitlement?.trialExpired}
+          trialEnd={entitlement?.trialEnd.toISOString() || new Date().toISOString()}
+          isPaidExpired={entitlement?.isPaidExpired}
+          publicGraceEndsAt={entitlement?.publicGraceEndsAt.toISOString()}
+        >
           {entitlement?.onTrial && <TrialBanner trialEnd={entitlement.trialEnd} />}
           {children}
         </SubscriptionGate>
