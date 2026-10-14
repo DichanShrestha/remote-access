@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
     FileText,
     Globe,
@@ -328,7 +329,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
         try {
             const policy = await getKnowledgeUploadPolicy();
             if (!policy.allowed) {
-                throw new Error("AI knowledge requires an active trial or Smart Page + AI plan.");
+                throw new Error("AI knowledge requires an active trial or Growth plan.");
             }
             if (file.size > policy.maxFileBytes) {
                 throw new Error(`This file exceeds your ${Math.floor(policy.maxFileBytes / 1048576)} MB per-file limit.`);
@@ -426,7 +427,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
     const handleVisualFilesSelected = (files: FileList | File[]) => {
         if (!files || files.length === 0) return;
         if (imageUsage && (!imageUsage.aiEnabled || imageUsage.maxImages === 0)) {
-            toast.error("AI image indexing is not available on your plan. Upgrade to Smart Page + AI.");
+            toast.error("AI image indexing is not available on your plan. Upgrade to Growth.");
             return;
         }
 
@@ -946,7 +947,7 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                             <div className="flex items-center gap-2">
                                                 <h4 className="text-sm font-semibold text-slate-900">AI Image Knowledge Quota</h4>
                                                 <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                                                    {imageUsage.plan === 'smart_page_ai' ? 'Smart Page + AI' : imageUsage.plan === 'trial' ? '14-day Trial' : 'Smart Page ($9)'}
+                                                    {imageUsage.plan === 'smart_page_ai' ? 'Growth' : imageUsage.plan === 'trial' ? '14-day Trial' : 'Starter'}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-slate-500 mt-0.5">
@@ -986,14 +987,14 @@ export function KnowledgePanel({ botId }: { botId: string }) {
                                     </div>
                                     <h3 className="font-semibold text-sm text-slate-900 mb-1">AI Image Indexing Not Available on Current Plan</h3>
                                     <p className="text-xs text-slate-500 max-w-md mx-auto mb-5">
-                                        The $9 Smart Page plan does not include AI image indexing. Upgrade to Smart Page + AI to index up to 50 photos (10 MB each) that your assistant can recommend with rich cards in chat.
+                                        The Starter plan does not include AI image indexing. Upgrade to Growth to index up to 50 photos (10 MB each) that your assistant can recommend with rich cards in chat.
                                     </p>
-                                    <a
+                                    <Link
                                         href="/dashboard/billing"
                                         className="bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs py-2.5 px-5 rounded-xl shadow-xs transition-colors cursor-pointer"
                                     >
-                                        Upgrade to Smart Page + AI
-                                    </a>
+                                        Upgrade to Growth
+                                    </Link>
                                 </div>
                             ) : (
                                 /* New Visual Catalog Item Form */

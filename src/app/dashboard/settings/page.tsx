@@ -2,6 +2,8 @@ import { authService } from "@/services/auth";
 import db from "@/lib/prisma";
 import { SettingsClient, UsageMetrics } from "@/components/dashboard/SettingsClient";
 import { getSmartPageEntitlement, SMART_PAGE_LIMITS } from "@/lib/tier-limits";
+import { cookies, headers } from "next/headers";
+import { getInitialPricingMode, PRICING_MODE_COOKIE } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -12,6 +14,8 @@ export default async function SettingsPage({
   searchParams?: Promise<{ tab?: string }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : undefined;
+  const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
+  const pricingMode = getInitialPricingMode(cookieStore.get(PRICING_MODE_COOKIE)?.value, requestHeaders.get("x-vercel-ip-country"));
   const initialTab = resolvedParams?.tab === "account" ? "account" : "billing";
 
   const user = await authService.requireUser();
@@ -140,6 +144,7 @@ export default async function SettingsPage({
   return (
     <SettingsClient
       initialTab={initialTab}
+      pricingMode={pricingMode}
       user={{
         id: user.id,
         email: user.email,

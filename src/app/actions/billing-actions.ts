@@ -5,6 +5,8 @@ import { dodo } from "@/lib/dodopayments";
 import db from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { normalizePlan, TRIAL_MS } from "@/lib/tier-limits";
+import { cookies, headers } from "next/headers";
+import { getInitialPricingMode, PRICING_MODE_COOKIE } from "@/lib/pricing";
 
 export async function createCheckoutSession(
     productId: string,
@@ -12,6 +14,10 @@ export async function createCheckoutSession(
     type: "subscription" | "one_time" = "subscription"
 ) {
     const user = await authService.requireUser();
+    const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
+    if (getInitialPricingMode(cookieStore.get(PRICING_MODE_COOKIE)?.value, requestHeaders.get("x-vercel-ip-country")) === "nepal") {
+        throw new Error("Nepal subscriptions are arranged through WhatsApp. Please use the WhatsApp purchase option.");
+    }
 
     if (!dodo || !process.env.DODO_API_KEY) throw new Error("Billing is temporarily unavailable. Please try again later.");
     const canonicalPlan = normalizePlan(planId);

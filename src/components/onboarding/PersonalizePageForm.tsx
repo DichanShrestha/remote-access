@@ -37,7 +37,7 @@ export function PersonalizePageForm({ templateId, templateName, displayName, use
   }
 
   return <main className="personalize-page premium-personalize">
-    <header className="onboard-top"><Link href="/onboarding/templates" className="onboard-back"><ArrowLeft size={15}/> Templates</Link><Link href="/" className="onboard-brand"><span className="onboard-mark">s.</span> Smart Page</Link><span>02 <i/> 02</span></header>
+    <header className="onboard-top"><Link href="/onboarding/templates" className="onboard-back"><ArrowLeft size={15}/> Templates</Link><Link href="/" className="onboard-brand"><span className="onboard-mark">s.</span> Pageory</Link><span>02 <i/> 02</span></header>
     <div className="personalize-layout"><div className="personalize-heading"><p className="onboard-kicker">A FEW DETAILS</p><h1>Make it <em>yours.</em></h1><p>Your {templateName} page is ready. Add a name and memorable address; you can personalize everything else in the editor.</p><div className="personalize-template"><span>YOUR TEMPLATE</span><strong>{templateName}</strong><Link href="/onboarding/templates">Change <ArrowRight size={13}/></Link></div></div>
       <form className="personalize-form" onSubmit={submit}>
         <label htmlFor="displayName">Page or business name</label><input id="displayName" name="displayName" value={name} onChange={(event) => setName(event.target.value)} placeholder="The name visitors will know" maxLength={80} required autoFocus />

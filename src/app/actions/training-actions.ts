@@ -43,7 +43,7 @@ export async function uploadAndTrainFiles(botId: string, formData: FormData) {
     const billing = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } });
     if (!billing) throw new Error("Workspace not found");
     const entitlement = getSmartPageEntitlement(billing);
-    if (!entitlement.aiEnabled) throw new Error("Knowledge training requires an active trial or Smart Page + AI plan.");
+    if (!entitlement.aiEnabled) throw new Error("Knowledge training requires an active trial or Growth plan.");
 
 
 
@@ -188,7 +188,7 @@ export async function crawlAndTrain(botId: string, url: string) {
     const billing = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 }, usage: true } });
     if (!billing) throw new Error("Workspace not found");
     const entitlement = getSmartPageEntitlement(billing);
-    if (!entitlement.aiEnabled) throw new Error("Knowledge training requires an active trial or Smart Page + AI plan.");
+    if (!entitlement.aiEnabled) throw new Error("Knowledge training requires an active trial or Growth plan.");
     const sourceCount = await prisma.dataSource.count({ where: { userId: user.id, type: { not: 'qa' }, status: { not: 'error' } } });
     if (sourceCount >= entitlement.limits.knowledgeSources) throw new Error(`Your plan allows ${entitlement.limits.knowledgeSources} knowledge sources.`);
 

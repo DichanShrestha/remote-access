@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Check, ShieldCheck, Sparkles, ExternalLink } from 'lucide-react';
 import { startCurrentFreeTrial, createOnboardingCheckout } from '@/app/onboarding/actions';
+import { getPlanPrice, getWhatsAppUrl, NEPAL_TRIAL_MESSAGE, PAID_PLANS, type PricingMode } from '@/lib/pricing';
 
 interface PlanSelectionProps {
   username: string;
@@ -11,6 +12,7 @@ interface PlanSelectionProps {
   endsAt: string;
   trialEligible: boolean;
   trialIneligibleReason?: string;
+  pricingMode: PricingMode;
 }
 
 const BASE_FEATURES = [
@@ -29,7 +31,7 @@ const AI_FEATURES = [
   'Knowledge base & FAQ builder',
 ];
 
-export function PlanSelection({ username, domain, endsAt, trialEligible, trialIneligibleReason }: PlanSelectionProps) {
+export function PlanSelection({ username, domain, endsAt, trialEligible, trialIneligibleReason, pricingMode }: PlanSelectionProps) {
   const [selectedPlan, setSelectedPlan] = useState<'smart_page' | 'smart_page_ai'>('smart_page_ai');
   const [isPending, startTransition] = useTransition();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
@@ -56,6 +58,12 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
   };
 
   const handleSubscribe = (planId: 'smart_page' | 'smart_page_ai') => {
+    if (pricingMode === 'nepal') {
+      const plan = PAID_PLANS[planId];
+      const url = getWhatsAppUrl(plan.whatsappMessage(getPlanPrice(planId, 'nepal').display));
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
     setPendingAction(`subscribe_${planId}`);
     setError('');
     startTransition(async () => {
@@ -79,9 +87,9 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
           <ArrowLeft size={14} />
           <span>Back</span>
         </Link>
-        <a href="/" style={styles.brand}>
-          <span style={styles.brandMark}>s.</span> Smart Page
-        </a>
+        <Link href="/" style={styles.brand}>
+          <span style={styles.brandMark}>s.</span> Pageory
+        </Link>
         <div style={styles.statusBadge}>
           <span style={styles.statusDot} />
           Page ready
@@ -104,7 +112,7 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
         {/* Plan Cards */}
         <div style={styles.cardsGrid}>
 
-          {/* Smart Page — $9/mo */}
+          {/* Starter */}
           <div
             style={{
               ...styles.card,
@@ -123,15 +131,15 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
               }}>
                 {selectedPlan === 'smart_page' && <div style={styles.radioInner} />}
               </div>
-              <span style={styles.planLabel}>Standard</span>
+              <span style={styles.planLabel}>Starter</span>
             </div>
 
             <div style={styles.planNameRow}>
-              <h2 style={styles.planName}>Smart Page</h2>
+              <h2 style={styles.planName}>Starter</h2>
             </div>
 
             <div style={styles.priceRow}>
-              <span style={styles.priceAmount}>$9</span>
+              <span style={styles.priceAmount}>{getPlanPrice('smart_page', pricingMode).display}</span>
               <span style={styles.pricePeriod}>/month</span>
             </div>
 
@@ -158,12 +166,12 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
                 ...(isLoading ? styles.btnDisabled : {}),
               }}
             >
-              {pendingAction === 'subscribe_smart_page' ? 'Redirecting…' : 'Subscribe — $9/mo'}
-              {pendingAction !== 'subscribe_smart_page' && <ExternalLink size={13} />}
+              {pricingMode === 'nepal' ? 'Purchase via WhatsApp' : pendingAction === 'subscribe_smart_page' ? 'Redirecting…' : `Subscribe — ${getPlanPrice('smart_page', 'international').display}/month`}
+              {pricingMode !== 'nepal' && pendingAction !== 'subscribe_smart_page' && <ExternalLink size={13} />}
             </button>
           </div>
 
-          {/* Smart Page + AI — $29/mo */}
+          {/* Growth */}
           <div
             style={{
               ...styles.card,
@@ -194,11 +202,11 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
             </div>
 
             <div style={styles.planNameRow}>
-              <h2 style={{ ...styles.planName, color: '#FDFCF8' }}>Smart Page + AI</h2>
+              <h2 style={{ ...styles.planName, color: '#FDFCF8' }}>Growth</h2>
             </div>
 
             <div style={styles.priceRow}>
-              <span style={{ ...styles.priceAmount, color: '#FDFCF8' }}>$29</span>
+              <span style={{ ...styles.priceAmount, color: '#FDFCF8' }}>{getPlanPrice('smart_page_ai', pricingMode).display}</span>
               <span style={{ ...styles.pricePeriod, color: '#A1A299' }}>/month</span>
             </div>
 
@@ -209,7 +217,7 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
             <div style={{ ...styles.divider, borderColor: '#3C3D37' }} />
 
             <div style={styles.includesLabel}>
-              Everything in Smart Page, plus:
+              Everything in Starter, plus:
             </div>
 
             <ul style={styles.featureList}>
@@ -229,8 +237,8 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
                 ...(isLoading ? styles.btnDisabled : {}),
               }}
             >
-              {pendingAction === 'subscribe_smart_page_ai' ? 'Redirecting…' : 'Subscribe — $29/mo'}
-              {pendingAction !== 'subscribe_smart_page_ai' && <ExternalLink size={13} />}
+              {pricingMode === 'nepal' ? 'Purchase via WhatsApp' : pendingAction === 'subscribe_smart_page_ai' ? 'Redirecting…' : `Subscribe — ${getPlanPrice('smart_page_ai', 'international').display}/month`}
+              {pricingMode !== 'nepal' && pendingAction !== 'subscribe_smart_page_ai' && <ExternalLink size={13} />}
             </button>
           </div>
         </div>
@@ -243,12 +251,12 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
                 <div style={styles.trialInfo}>
                   <h3 style={styles.trialTitle}>Not ready to commit?</h3>
                   <p style={styles.trialDescription}>
-                    Start a <strong>14-day free trial</strong> of the <strong>{selectedPlan === 'smart_page_ai' ? 'Smart Page + AI' : 'Smart Page'}</strong> plan.
-                    No credit card required — you won't be charged when it ends.
+                    Start a <strong>14-day free trial</strong> of the <strong>{selectedPlan === 'smart_page_ai' ? 'Growth' : 'Starter'}</strong> plan.
+                    {pricingMode === 'nepal' ? ' Request the trial through WhatsApp; it will not start until approved.' : " No credit card required — you won't be charged when it ends."}
                   </p>
                 </div>
                 <button
-                  onClick={handleStartTrial}
+                  onClick={pricingMode === 'nepal' ? () => { const url = getWhatsAppUrl(NEPAL_TRIAL_MESSAGE); if (url) window.open(url, '_blank', 'noopener,noreferrer'); } : handleStartTrial}
                   disabled={isLoading}
                   style={{
                     ...styles.trialBtn,
@@ -257,7 +265,7 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
                 >
                   {pendingAction === 'trial' ? 'Publishing your page…' : (
                     <>
-                      Start free trial
+                      {pricingMode === 'nepal' ? 'Request Free Trial on WhatsApp' : 'Start free trial'}
                       <ArrowRight size={14} />
                     </>
                   )}

@@ -81,7 +81,7 @@ export function Sidebar() {
     <>
       {/* Mobile Header & Hamburger */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-[#E8E5DF] bg-[#FBF9F5] z-20 relative">
-        <div className="font-bold text-xl tracking-tight text-[#171717]">Smart Page</div>
+        <div className="font-bold text-xl tracking-tight text-[#171717]">Pageory</div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="p-2 -mr-2 rounded-md text-[#737373] hover:bg-[#F2EFE9]"
@@ -116,7 +116,7 @@ export function Sidebar() {
             "font-bold text-lg tracking-tight ml-3 whitespace-nowrap text-[#171717] transition-opacity duration-300",
             visuallyCollapsed ? (isEditor ? "opacity-0 group-hover:opacity-100" : "opacity-0 hidden") : "opacity-100"
           )}>
-            Smart Page
+            Pageory
           </span>
         </div>
 

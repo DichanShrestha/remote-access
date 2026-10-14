@@ -66,7 +66,7 @@ export function TemplateLibrary({ templates }: { templates: Template[] }) {
     <main className="onboard-library premium-library">
       <header className="onboard-top">
         <Link href="/" className="onboard-brand">
-          <span className="onboard-mark">s.</span> Smart Page
+          <span className="onboard-mark">s.</span> Pageory
         </Link>
         <span>
           01 <i /> 02

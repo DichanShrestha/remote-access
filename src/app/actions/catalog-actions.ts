@@ -104,13 +104,13 @@ async function enforceAIImageGuards(
     const { entitlement, account } = await getUserEntitlement(userId);
 
     if (!entitlement.aiEnabled) {
-        throw new Error("AI image indexing requires an active trial or Smart Page + AI plan.");
+        throw new Error("AI image indexing requires an active trial or Growth plan.");
     }
 
     const limits = entitlement.limits;
 
     if (limits.aiImages === 0) {
-        throw new Error("AI image indexing is not available on your current plan. Upgrade to Smart Page + AI.");
+        throw new Error("AI image indexing is not available on your current plan. Upgrade to Growth.");
     }
 
     // Per-file size check

@@ -24,7 +24,7 @@ export function PageRenderer({ document, isPreview, pageId, botId }: PageRendere
 
       {settings.showFooterBranding && (
         <footer className="py-8 text-center text-slate-400 text-sm relative z-10">
-          Powered by <a href="#" className="font-semibold hover:text-slate-600 dark:hover:text-slate-200 transition-colors">Smart Pages</a>
+          Powered by <a href="#" className="font-semibold hover:text-slate-600 dark:hover:text-slate-200 transition-colors">Pageory</a>
         </footer>
       )}
 

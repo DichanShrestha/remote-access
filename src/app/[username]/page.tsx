@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PublicPageProps) {
   const { settings } = parsed.data;
 
   return {
-    title: settings.seoTitle || `${profile.displayName || profile.username} | Smart Pages`,
+    title: settings.seoTitle || `${profile.displayName || profile.username} | Pageory`,
     description: settings.seoDescription || profile.bio || "",
     openGraph: {
       images: settings.ogImage ? [settings.ogImage] : [],
@@ -60,7 +60,7 @@ export default async function PublicPage({ params }: PublicPageProps) {
 
   const entitlement = getSmartPageEntitlement(profile.user);
   if (entitlement.trialExpired && new Date() > entitlement.publicGraceEndsAt) {
-    return <div className="min-h-screen grid place-items-center bg-[#FDFCF8] p-6 text-center"><div><h1 className="font-serif text-3xl text-[#292A25]">This page is temporarily unavailable</h1><p className="mt-3 text-[#777970]">The owner can restore it by choosing a Smart Page plan.</p></div></div>;
+    return <div className="min-h-screen grid place-items-center bg-[#FDFCF8] p-6 text-center"><div><h1 className="font-serif text-3xl text-[#292A25]">This page is temporarily unavailable</h1><p className="mt-3 text-[#777970]">The owner can restore it by choosing a Pageory plan.</p></div></div>;
   }
 
   const parsed = PageDocumentSchema.safeParse(profile.page.publishedConfig);
@@ -70,7 +70,7 @@ export default async function PublicPage({ params }: PublicPageProps) {
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
         <div className="text-center p-8 bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full border border-red-200 dark:border-red-900">
           <h2 className="text-2xl font-bold mb-2">Configuration Error</h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-4">This page's configuration is invalid and cannot be displayed.</p>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">This page&apos;s configuration is invalid and cannot be displayed.</p>
           <pre className="text-left text-xs bg-slate-100 dark:bg-slate-900 p-4 rounded overflow-auto text-red-500">
             {parsed.error.message}
           </pre>

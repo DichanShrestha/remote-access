@@ -120,7 +120,7 @@ export function DashboardHome({ data }: { data: DashboardData }) {
               </p>
               <h2 className="text-lg font-bold text-[#171717]">Setup Checklist</h2>
               <p className="text-xs text-[#737373] mt-0.5">
-                {isComplete ? 'Your page is set up. Keep this checklist nearby whenever you need it.' : 'A few small steps make your Smart Page convert effectively.'}
+                {isComplete ? 'Your page is set up. Keep this checklist nearby whenever you need it.' : 'A few small steps make your Pageory convert effectively.'}
               </p>
             </div>
           </div>
@@ -213,7 +213,7 @@ export function DashboardHome({ data }: { data: DashboardData }) {
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-9 h-2 bg-[#171717] rounded-full z-10"/>
               <iframe 
                 src={`/${data.username}`} 
-                title={`${data.name} Smart Page preview`} 
+                title={`${data.name} Pageory preview`}
                 loading="lazy"
                 className="w-[390px] h-[660px] border-0 origin-top-left transform scale-[0.31] pointer-events-none bg-white"
               />
@@ -417,7 +417,7 @@ export function DashboardHome({ data }: { data: DashboardData }) {
             <div className="text-center space-y-1">
               <span className="text-xs font-mono uppercase tracking-wider text-[#737373]">PUBLIC ADDRESS</span>
               <h3 className="text-lg font-bold text-[#171717]">Page QR Code</h3>
-              <p className="text-xs text-[#737373]">Scan with a mobile camera to open your Smart Page.</p>
+              <p className="text-xs text-[#737373]">Scan with a mobile camera to open your Pageory.</p>
             </div>
 
             <div className="my-6 p-4 bg-[#FBF9F5] border border-[#E8E5DF] rounded-xl flex items-center justify-center">

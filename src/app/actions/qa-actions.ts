@@ -152,7 +152,7 @@ export async function saveQA(
     const account = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 }, usage: true } });
     if (!account) throw new Error("Workspace not found");
     const entitlement = getSmartPageEntitlement(account);
-    if (!entitlement.aiEnabled) throw new Error("AI knowledge is available during your trial or with Smart Page + AI.");
+    if (!entitlement.aiEnabled) throw new Error("AI knowledge is available during your trial or with Growth.");
     const faqCount = await prisma.qAPair.count({ where: { userId: user.id } });
     if (!data.id && faqCount >= entitlement.limits.faqEntries) throw new Error(`Your plan allows ${entitlement.limits.faqEntries} FAQ entries.`);
 

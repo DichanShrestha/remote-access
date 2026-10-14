@@ -57,7 +57,7 @@ export async function POST(req: Request) {
         const owner = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } });
         if (!owner) return new Response("Workspace not found", { status: 404 });
         const entitlement = getSmartPageEntitlement(owner);
-        if (!entitlement.aiEnabled) return Response.json({ error: "AI is unavailable on your current plan. Choose Smart Page + AI to restore your assistant." }, { status: 402 });
+        if (!entitlement.aiEnabled) return Response.json({ error: "AI is unavailable on your current plan. Choose Growth to restore your assistant." }, { status: 402 });
 
         // 2. Per-Bot Custom Rate Limit
         const botLimit = rateLimit(`bot-chat:${botId}:${ip}`, {
@@ -218,7 +218,7 @@ export async function POST(req: Request) {
         while (boundedMessages.length > 1 && systemTokens + estimate(JSON.stringify(boundedMessages)) > AI_MAX_INPUT_TOKENS) boundedMessages = boundedMessages.slice(1);
         if (systemTokens + estimate(JSON.stringify(boundedMessages)) > AI_MAX_INPUT_TOKENS) return new Response("Your message exceeds the 6,000 token request limit. Please shorten it and try again.", { status: 413 });
         const reservation = await reserveAIReply(user.id, botId, owner.subscriptions[0]?.id, entitlement.limits.aiReplies, entitlement.onTrial ? 'trialing' : 'active');
-        if (!reservation) return Response.json({ error: "Your AI reply allowance is used up. Upgrade to Smart Page + AI or wait for the next billing period." }, { status: 429 });
+        if (!reservation) return Response.json({ error: "Your AI reply allowance is used up. Upgrade to Growth or wait for the next billing period." }, { status: 429 });
 
         // Extremely native lead intent detection based on the user's latest query
         const buyingIntentRegex = /(pricing|cost|quote|how much|buy|purchase|upgrade|contact sales|talk to sales|demo|interested)/i;

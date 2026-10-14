@@ -35,7 +35,7 @@ export async function composePage(prompt: string, pageId: string) {
   const { object } = await generateObject({
     model: getDefaultChatModel(),
     schema: PageDocumentSchema,
-    system: `You are an expert web designer and copywriter building a premium "Smart Page".
+    system: `You are an expert web designer and copywriter building a premium "Pageory".
 The user will provide an intent or content description.
 You must generate a complete, beautiful page document adhering strictly to the schema.
 Choose appropriate theme settings (colors, radius, style). Make the design WOW the user.
@@ -67,7 +67,7 @@ export async function editSection(prompt: string, section: any, pageId: string) 
     model: getDefaultChatModel(),
     schema: PageSectionSchema,
     system: `You are an expert web editor and copywriter.
-The user wants to edit a specific section of their Smart Page.
+The user wants to edit a specific section of their Pageory.
 Apply the user's requested changes and return the FULL updated section JSON.
 CRITICAL: Do NOT change the section's 'id' or 'type'. 
 Only modify the 'content' or 'layout' properties to fulfill the user's request.

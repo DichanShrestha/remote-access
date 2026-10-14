@@ -76,7 +76,7 @@ export async function POST(req: Request) {
         const owner = await prisma.user.findUnique({ where: { id: bot.userId }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } });
         if (!owner) return new Response("Workspace not found", { status: 404, headers: corsHeaders() });
         const entitlement = getSmartPageEntitlement(owner);
-        if (!entitlement.aiEnabled) return new Response(JSON.stringify({ error: "AI is unavailable on your current plan. Choose Smart Page + AI to restore your assistant." }), { status: 402, headers: { "Content-Type": "application/json", ...corsHeaders() } });
+        if (!entitlement.aiEnabled) return new Response(JSON.stringify({ error: "AI is unavailable on your current plan. Choose Growth to restore your assistant." }), { status: 402, headers: { "Content-Type": "application/json", ...corsHeaders() } });
 
         // 2. Per-Bot Custom Rate Limit
         const botLimit = rateLimit(`bot-public:${botId}:${ip}`, {
@@ -231,7 +231,7 @@ export async function POST(req: Request) {
         const subscription = owner.subscriptions[0];
         const quota = entitlement.limits.aiReplies;
         const reservation = await reserveAIReply(owner.id, botId, subscription?.id, quota, entitlement.onTrial ? 'trialing' : 'active');
-        if (!reservation) return new Response(JSON.stringify({ error: "Your AI reply allowance is used up. Upgrade to Smart Page + AI or wait for the next billing period." }), { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders() } });
+        if (!reservation) return new Response(JSON.stringify({ error: "Your AI reply allowance is used up. Upgrade to Growth or wait for the next billing period." }), { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders() } });
 
         // Stream response
         const result = streamText({

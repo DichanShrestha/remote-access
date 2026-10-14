@@ -67,7 +67,7 @@ export default async function LeadsPage({
           </div>
           <h2 className="text-xl font-bold tracking-tight text-[#171717] mb-2">Set Up Your Page First</h2>
           <p className="text-xs text-[#737373] mb-8 max-w-md">
-            Create your Smart Page and enable the AI chatbot to start capturing leads automatically.
+            Create your Pageory and enable the AI chatbot to start capturing leads automatically.
           </p>
           <Link
             href="/editor"

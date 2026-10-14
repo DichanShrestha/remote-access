@@ -42,6 +42,7 @@ import {
 } from "@/app/actions/billing-actions";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { getPlanPrice, getWhatsAppUrl, PAID_PLANS, type PricingMode, WHATSAPP_NUMBER } from "@/lib/pricing";
 
 export interface UsageMetrics {
   plan: "trial" | "smart_page" | "smart_page_ai";
@@ -88,6 +89,7 @@ export interface UsageMetrics {
 
 interface SettingsClientProps {
   initialTab?: "billing" | "account";
+  pricingMode: PricingMode;
   user: {
     id: string;
     email: string | null;
@@ -113,6 +115,7 @@ interface SettingsClientProps {
 
 export function SettingsClient({
   initialTab = "billing",
+  pricingMode,
   user,
   hasPage: initialHasPage,
   subscription,
@@ -245,6 +248,7 @@ export function SettingsClient({
   };
 
   const handleCheckoutPlan = (productIdEnv: string, planId: string) => {
+    if (pricingMode === "nepal") return;
     setBillingError(null);
     startBillingTransition(async () => {
       try {
@@ -263,6 +267,13 @@ export function SettingsClient({
         setBillingError(err.message || "Failed to start checkout.");
       }
     });
+  };
+
+  const handleWhatsAppPurchase = (planId: "smart_page" | "smart_page_ai") => {
+    const plan = PAID_PLANS[planId];
+    const url = getWhatsAppUrl(plan.whatsappMessage(getPlanPrice(planId, "nepal").display), WHATSAPP_NUMBER);
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
+    else setBillingError("WhatsApp sales contact is unavailable. Please contact support.");
   };
 
   const handleStartTrial = (planId: string) => {
@@ -331,9 +342,9 @@ export function SettingsClient({
   if (subscription) {
     const rawPlan = (subscription.planId || subscription.tier || "").toLowerCase();
     if (rawPlan.includes("ai") || rawPlan.includes("knowchat")) {
-      planTitle = "Smart Page + AI ($29/mo)";
+      planTitle = `Growth (${getPlanPrice("smart_page_ai", pricingMode).display}/month)`;
     } else {
-      planTitle = "Smart Page ($9/mo)";
+      planTitle = `Starter (${getPlanPrice("smart_page", pricingMode).display}/month)`;
     }
 
     if (subscription.status === "trialing" && subscription.trialEnd) {
@@ -533,7 +544,7 @@ function formatBytes(bytes: number): string {
                 </span>
                 <span>
                   You have used 80% or more of your allocated quotas. Consider
-                  upgrading to Smart Page + AI to ensure visitor chat and storage
+                  upgrading to Growth to ensure visitor chat and storage
                   are never interrupted.
                 </span>
               </div>
@@ -612,7 +623,7 @@ function formatBytes(bytes: number): string {
                     </>
                   ) : (
                     <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-[#F2EFE9] text-[#737373] border border-[#E8E5DF]">
-                      Not included in Smart Page ($9/mo)
+                      Not included in Starter
                     </span>
                   )}
                 </div>
@@ -650,7 +661,7 @@ function formatBytes(bytes: number): string {
               ) : (
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
                   <p className="text-xs text-[#737373]">
-                    Upgrade to Smart Page + AI to unlock 800 monthly assistant
+                    Upgrade to Growth to unlock 800 monthly assistant
                     replies, automatic lead qualification, and booking triggers.
                   </p>
                   <button
@@ -663,7 +674,7 @@ function formatBytes(bytes: number): string {
                     }
                     className="px-3.5 py-1.5 rounded-lg bg-[#171717] hover:bg-[#262626] text-white text-xs font-semibold transition-colors shrink-0"
                   >
-                    Upgrade to AI ($29/mo)
+                    Upgrade to Growth
                   </button>
                 </div>
               )}
@@ -863,21 +874,19 @@ function formatBytes(bytes: number): string {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-              {/* Plan 1: Smart Page */}
+              {/* Plan 1: Pageory */}
               <div className="p-6 rounded-2xl bg-[#FBF9F5] border border-[#E8E5DF] flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-lg font-bold text-[#171717]">
-                        Smart Page
-                      </h3>
+                      <h3 className="text-lg font-bold text-[#171717]">Starter</h3>
                       <p className="text-xs text-[#737373] mt-0.5">
                         Clean luxury landing page for creators & businesses.
                       </p>
                     </div>
                     <div className="text-right">
                       <span className="text-2xl font-bold text-[#171717]">
-                        $9
+                        {getPlanPrice("smart_page", pricingMode).display}
                       </span>
                       <span className="text-xs text-[#8C8D85]"> / month</span>
                     </div>
@@ -904,25 +913,21 @@ function formatBytes(bytes: number): string {
                 </div>
 
                 <button
-                  onClick={() =>
-                    handleCheckoutPlan(
-                      process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE || "",
-                      "smart_page"
-                    )
-                  }
+                  onClick={() => pricingMode === "nepal" ? handleWhatsAppPurchase("smart_page") :
+                    handleCheckoutPlan(process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE || "", "smart_page")}
                   disabled={
                     isBillingPending ||
-                    (usageMetrics.plan === "smart_page" && !usageMetrics.isTrial)
+                    (pricingMode !== "nepal" && usageMetrics.plan === "smart_page" && !usageMetrics.isTrial)
                   }
                   className="w-full py-2.5 px-4 rounded-xl border border-[#E8E5DF] bg-white hover:bg-[#F2EFE9] text-[#171717] text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {usageMetrics.plan === "smart_page" && !usageMetrics.isTrial
+                  {pricingMode === "nepal" ? "Purchase via WhatsApp" : usageMetrics.plan === "smart_page" && !usageMetrics.isTrial
                     ? "Current Active Plan"
-                    : "Switch to Smart Page ($9/mo)"}
+                    : `Switch to Starter (${getPlanPrice("smart_page", pricingMode).display}/month)`}
                 </button>
               </div>
 
-              {/* Plan 2: Smart Page + AI (Recommended) */}
+              {/* Plan 2: Growth (Recommended) */}
               <div className="p-6 rounded-2xl bg-[#171717] text-white flex flex-col justify-between shadow-lg relative overflow-hidden">
                 <div className="absolute top-4 right-4">
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-[#171717] uppercase tracking-wider">
@@ -932,12 +937,12 @@ function formatBytes(bytes: number): string {
 
                 <div>
                   <div className="mb-4">
-                    <h3 className="text-lg font-bold">Smart Page + AI</h3>
+                    <h3 className="text-lg font-bold">Growth</h3>
                     <p className="text-xs text-[#B0AFA7] mt-0.5">
-                      Everything in Smart Page plus a 24/7 AI sales assistant.
+                      Everything in Starter plus a 24/7 AI sales assistant.
                     </p>
                     <div className="mt-3">
-                      <span className="text-2xl font-bold">$29</span>
+                      <span className="text-2xl font-bold">{getPlanPrice("smart_page_ai", pricingMode).display}</span>
                       <span className="text-xs text-[#B0AFA7]"> / month</span>
                     </div>
                   </div>
@@ -967,21 +972,17 @@ function formatBytes(bytes: number): string {
                 </div>
 
                 <button
-                  onClick={() =>
-                    handleCheckoutPlan(
-                      process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE_AI || "",
-                      "smart_page_ai"
-                    )
-                  }
+                  onClick={() => pricingMode === "nepal" ? handleWhatsAppPurchase("smart_page_ai") :
+                    handleCheckoutPlan(process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE_AI || "", "smart_page_ai")}
                   disabled={
                     isBillingPending ||
-                    (usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial)
+                    (pricingMode !== "nepal" && usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial)
                   }
                   className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#F2EFE9] text-[#171717] text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
                 >
-                  {usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial
+                  {pricingMode === "nepal" ? "Purchase via WhatsApp" : usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial
                     ? "Current Active Plan"
-                    : "Upgrade to Smart Page + AI ($29/mo)"}
+                    : `Upgrade to Growth (${getPlanPrice("smart_page_ai", pricingMode).display}/month)`}
                 </button>
               </div>
             </div>
@@ -1233,7 +1234,7 @@ function formatBytes(bytes: number): string {
                     Delete Page
                   </h3>
                   <p className="text-xs text-[#737373] mt-0.5 max-w-md">
-                    Permanently unpublish and remove your Smart Page. Your
+                    Permanently unpublish and remove your Pageory. Your
                     account and login remain active.
                   </p>
                 </div>
@@ -1287,7 +1288,7 @@ function formatBytes(bytes: number): string {
               Delete Your Page?
             </h3>
             <p className="text-xs text-[#737373] leading-relaxed mb-6">
-              This will permanently delete your custom Smart Page configuration
+              This will permanently delete your custom Pageory configuration
               and unpublish your site. This action cannot be undone.
             </p>
 

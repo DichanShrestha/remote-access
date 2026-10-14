@@ -104,7 +104,7 @@ export async function enforceMessageGuard(botId: string) {
 
     let monthlyMessages = user.usage?.monthlyMessages || 0;
     
-    // In Smart Page, there can be multiple subscriptions. We take the active one or the first one.
+    // In Pageory, there can be multiple subscriptions. We take the active one or the first one.
     // For simplicity, we just take the first one or default to 0.
     const sub = user.subscriptions?.[0];
     let creditWallet = sub?.creditWallet || 0;

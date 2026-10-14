@@ -69,7 +69,7 @@ export function TrainingModal({ botId, isOpen, onClose }: { botId: string; isOpe
         setLoading(true);
         try {
             const policy = await getKnowledgeUploadPolicy();
-            if (!policy.allowed) throw new Error("AI knowledge requires an active trial or Smart Page + AI plan.");
+            if (!policy.allowed) throw new Error("AI knowledge requires an active trial or Growth plan.");
             if (file.size > policy.maxFileBytes) throw new Error(`This file exceeds your ${Math.floor(policy.maxFileBytes / 1048576)} MB per-file limit.`);
             if (file.size > policy.remainingBytes) throw new Error("This upload exceeds your remaining knowledge storage.");
             if (policy.sourcesRemaining < 1) throw new Error("You have reached your knowledge-source limit.");

@@ -9,12 +9,12 @@ export async function getUserEntitlement(userId: string) {
 
 export async function requirePageAccess(userId: string) {
   const { entitlement } = await getUserEntitlement(userId);
-  if (entitlement.trialExpired) throw new Error('Your trial has ended. Choose a plan to continue managing your Smart Page.');
+  if (entitlement.trialExpired) throw new Error('Your trial has ended. Choose a plan to continue managing your Pageory.');
   return entitlement;
 }
 
 export async function requireAIEntitlement(userId: string) {
   const entitlement = await requirePageAccess(userId);
-  if (!entitlement.aiEnabled) throw new Error('AI features require an active trial or Smart Page + AI plan.');
+  if (!entitlement.aiEnabled) throw new Error('AI features require an active trial or Growth plan.');
   return entitlement;
 }

@@ -247,7 +247,7 @@ export async function completeOnboarding() {
 
     await prisma.user.update({
         where: { id: user.id },
-        data: {}, // Removing onboardingComplete as it's not in Smart Page User
+        data: {}, // Removing onboardingComplete as it's not in Pageory User
     });
 
     revalidatePath("/dashboard");

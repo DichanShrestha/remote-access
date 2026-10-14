@@ -9,6 +9,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { TIER_LIMITS, TRIAL_MS } from '@/lib/tier-limits';
+import { cookies, headers } from 'next/headers';
+import { getInitialPricingMode, PRICING_MODE_COOKIE } from '@/lib/pricing';
 
 export async function selectOnboardingPath(type: TemplateCategory) {
   const user = await authService.requireUser();
@@ -213,6 +215,10 @@ export async function checkTrialEligibility(): Promise<{ eligible: boolean; reas
 /** Publish the page and redirect the user to a Dodo checkout session. */
 export async function createOnboardingCheckout(planId: 'smart_page' | 'smart_page_ai') {
   const user = await authService.requireUser();
+  const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
+  if (getInitialPricingMode(cookieStore.get(PRICING_MODE_COOKIE)?.value, requestHeaders.get('x-vercel-ip-country')) === 'nepal') {
+    return { error: 'Nepal subscriptions are arranged through WhatsApp. Please use the WhatsApp purchase option.' };
+  }
   if (!user.profile) return { error: 'Your profile is not ready yet.' };
 
   const page = await db.page.findUnique({ where: { profileId: user.profile.id } });
