@@ -24,11 +24,13 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'pill', label: 'Pill Navigation', previewNode: <PlaceholderSVG /> },
     { id: 'overlay', label: 'Overlay', previewNode: <PlaceholderSVG /> },
     { id: 'transparent-overlay', label: 'Transparent Overlay', previewNode: <PlaceholderSVG /> },
+    { id: 'tattoo-minimal', label: 'Tattoo Minimal', previewNode: <PlaceholderSVG /> },
   ],
   'site-footer': [
     { id: 'columns', label: 'Link Columns', previewNode: <PlaceholderSVG /> },
     { id: 'compact', label: 'Compact', previewNode: <PlaceholderSVG /> },
     { id: 'classic-serif', label: 'Classic Serif', previewNode: <PlaceholderSVG /> },
+    { id: 'tattoo-wordmark', label: 'Tattoo Wordmark', previewNode: <PlaceholderSVG /> },
   ],
   // Hero uses its own built-in variant picker in HeroInspector
   'rich-text': [
@@ -54,6 +56,7 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'portfolio-about', label: 'Portfolio About', previewNode: <PlaceholderSVG /> },
     { id: 'story-split', label: 'Story Split', previewNode: <PlaceholderSVG /> },
     { id: 'arch', label: 'Arched Frame', previewNode: <PlaceholderSVG /> },
+    { id: 'tattoo-artist', label: 'Tattoo Artist Story', previewNode: <PlaceholderSVG /> },
   ],
   carousel: [
     { 
@@ -78,6 +81,8 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'masonry', label: 'Masonry', previewNode: <PlaceholderSVG /> },
     { id: 'chroma', label: 'Chroma Grid', previewNode: <PlaceholderSVG /> },
     { id: 'bounce', label: 'Bounce Cards', previewNode: <PlaceholderSVG /> },
+    { id: 'tattoo-board', label: 'Tattoo Flash Board', previewNode: <PlaceholderSVG /> },
+    { id: 'tattoo-strip', label: 'Tattoo Photo Strip', previewNode: <PlaceholderSVG /> },
   ],
   services: [
     { id: 'portfolio-band', label: 'Portfolio Band', previewNode: <PlaceholderSVG /> },
@@ -104,6 +109,7 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'marquee', label: 'Infinite Marquee', previewNode: <PlaceholderSVG /> },
     { id: 'editorial-quotes', label: 'Editorial Quotes', previewNode: <PlaceholderSVG /> },
   ],
+  quote: [{ id: 'default', label: 'Quote', previewNode: <PlaceholderSVG /> }, { id: 'tattoo-quote', label: 'Tattoo Quote', previewNode: <PlaceholderSVG /> }],
   'case-studies': [
     { id: 'default', label: 'Case Study Cards', previewNode: <PlaceholderSVG /> },
     { id: 'editorial-rows', label: 'Editorial Rows', previewNode: <PlaceholderSVG /> },
@@ -127,6 +133,8 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
   'lead-form': [
     { id: 'card-centered', label: 'Card Centered', previewNode: <PlaceholderSVG /> },
     { id: 'split-layout', label: 'Split Layout', previewNode: <PlaceholderSVG /> },
+    { id: 'editorial-panel', label: 'Editorial Panel', previewNode: <PlaceholderSVG /> },
+    { id: 'tattoo-inquiry', label: 'Tattoo Inquiry', previewNode: <PlaceholderSVG /> },
   ],
   'social-links': [
     { id: 'default', label: 'Standard Row', previewNode: <PlaceholderSVG /> },
@@ -143,10 +151,12 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
   timeline: [
     { id: 'vertical', label: 'Vertical Timeline', previewNode: <PlaceholderSVG /> },
     { id: 'chronology', label: 'Chronology', previewNode: <PlaceholderSVG /> },
+    { id: 'tattoo-process', label: 'Tattoo Process', previewNode: <PlaceholderSVG /> },
   ],
   faq: [
     { id: 'default', label: 'Standard Accordion', previewNode: <PlaceholderSVG /> },
     { id: 'spacious', label: 'Spacious Split', previewNode: <PlaceholderSVG /> },
     { id: 'pill-accordion', label: 'Pill Accordion', previewNode: <PlaceholderSVG /> },
+    { id: 'tattoo-compact', label: 'Tattoo Compact', previewNode: <PlaceholderSVG /> },
   ],
 };

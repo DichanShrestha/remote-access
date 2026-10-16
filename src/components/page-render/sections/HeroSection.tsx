@@ -20,6 +20,8 @@ type SubProps = {
   content: HeroContent;
   theme: ThemeConfig;
   textContrast?: 'auto' | 'light' | 'dark';
+  backgroundColor?: string;
+  textColor?: string;
 };
 
 // ─── Contrast Engine ───────────────────────────────────────────
@@ -631,6 +633,28 @@ function SpeakerEditorialHero({ content }: SubProps) {
   );
 }
 
+function TattooCoverHero({ content, backgroundColor, textColor }: SubProps) {
+  const photos = content.galleryImages || [];
+  return <section className="relative flex min-h-[100svh] w-full flex-col items-center justify-center overflow-hidden px-4 pb-5 pt-20 sm:px-8 sm:pt-24" style={{ backgroundColor: backgroundColor || '#0c0d0c', color: textColor || '#e9e7dc' }}>
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-35" style={{ background: 'radial-gradient(ellipse at 18% 62%, #343431 0, transparent 38%), radial-gradient(ellipse at 83% 50%, #292a27 0, transparent 35%)' }} />
+    <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center text-center">
+      {content.eyebrow && <p className="mb-4 text-[8px] font-medium uppercase tracking-[0.23em] text-white/55 sm:mb-5 sm:text-[10px]">{content.eyebrow}</p>}
+      <h1 className="max-w-[16ch] font-serif text-[clamp(2.6rem,8.2vw,7rem)] font-normal leading-[0.82] tracking-[-0.055em] text-[#e9e7dc]">{content.title}</h1>
+      {(content.headline || content.subtitle) && <p className="mt-4 max-w-lg text-[10px] leading-relaxed text-white/65 sm:mt-5 sm:text-sm">{content.headline}{content.headline && content.subtitle ? <br /> : null}{content.subtitle}</p>}
+      {photos.length > 0 && <div className="relative mt-8 h-[23vw] min-h-[110px] max-h-[260px] w-[calc(100%+2rem)] overflow-hidden sm:mt-9 sm:h-[22vw] sm:min-h-[180px]">
+        <div className="absolute inset-0 flex items-center justify-center gap-1 sm:gap-3">
+          {photos.map((photo: any, i: number) => <figure key={photo.id || i} className="relative h-[86%] w-[18vw] min-w-[18vw] rotate-[var(--tilt)] overflow-hidden rounded-xl border border-white/15 shadow-2xl sm:w-[14vw] sm:min-w-[14vw] sm:rounded-2xl" style={{ '--tilt': `${[-4, 2, -2, 3, -3, 2, -4, 3][i % 8]}deg` } as React.CSSProperties}><img src={photo.url} alt={photo.caption || ''} className="h-full w-full object-cover" />{photo.caption && <figcaption className="sr-only">{photo.caption}</figcaption>}</figure>)}
+        </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#0c0d0c] to-transparent" />
+      </div>}
+      <div className="relative z-10 mt-4 flex justify-center gap-2 sm:mt-5 sm:gap-3">
+        {content.buttonText && <a href={content.buttonUrl || '#contact'} data-page-button className="rounded-full bg-[#e3e2d8] px-4 py-2 text-[9px] font-medium text-[#171715] sm:px-5 sm:py-2.5 sm:text-xs">{content.buttonText}</a>}
+        {content.secondaryButtonText && <a href={content.secondaryButtonUrl || '#board'} className="rounded-full border border-white/30 px-4 py-2 text-[9px] text-[#e9e7dc] sm:px-5 sm:py-2.5 sm:text-xs">{content.secondaryButtonText}</a>}
+      </div>
+    </div>
+  </section>;
+}
+
 function RestaurantCoverHero({ content }: SubProps) {
   return <section className="relative flex min-h-[54svh] w-full items-end justify-center overflow-hidden bg-neutral-900 text-white md:min-h-[620px]">
     {content.imageUrl && <img src={content.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />}
@@ -989,6 +1013,7 @@ const VARIANT_MAP: Record<string, React.ComponentType<SubProps>> = {
   'fashion-editorial': FashionEditorialHero,
   'keynote': SpeakerEditorialHero,
   'speaker-editorial': SpeakerEditorialHero,
+  'tattoo-cover': TattooCoverHero,
   'cover-story': RestaurantCoverHero,
   'restaurant-cover': RestaurantCoverHero,
   'split-wide': (props) => <SplitHero {...props} wide />,
@@ -1002,7 +1027,7 @@ export function HeroSection({ section, theme, isPreview }: HeroProps & { isPrevi
   const Layout = VARIANT_MAP[variant] || EditorialCenter;
   const textContrast = (section as any).textContrast || 'auto';
 
-  const heroContent = <Layout content={content} theme={theme} textContrast={textContrast} />;
+  const heroContent = <Layout content={content} theme={theme} textContrast={textContrast} backgroundColor={section.backgroundColor} textColor={section.textColor} />;
   const zoomReveal = (section as any).zoomReveal;
   const zoomWord = (section as any).zoomWord || content.title?.split(' ')[0] || 'Hello';
 

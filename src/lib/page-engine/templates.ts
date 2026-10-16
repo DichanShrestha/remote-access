@@ -1019,6 +1019,54 @@ export const TEMPLATE_SPA_SALON: PageDocument = {
 // ═══════════════════════════════════════════════════════════════════
 // TEMPLATE MAP — for lookup by ID
 // ═══════════════════════════════════════════════════════════════════
+export const TEMPLATE_TATTOO_ARTIST: PageDocument = {
+  version: 1,
+  theme: { style: 'premium-minimal', primaryColor: '#d2d1c6', radius: 'small', density: 'spacious' },
+  settings: { showFooterBranding: false, enableSmoothScrolling: true },
+  sections: [
+    { id: 'site-header', type: 'site-navbar', variant: 'tattoo-minimal', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { logoText: 'ROWAN BLACK', links: [{ id: 'nav-about', label: 'About', url: '#artist' }, { id: 'nav-process', label: 'Process', url: '#process' }, { id: 'nav-board', label: 'Flash board', url: '#board' }], primaryLabel: 'Book Appointment', primaryUrl: '#contact' } },
+    { id: 'hero', type: 'hero', variant: 'tattoo-cover', layout: 'center', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', textContrast: 'light', content: { eyebrow: 'ROWAN BLACK · TORONTO', title: 'The Kind of Tattoo You Won’t Regret.', headline: 'Exclusive blackwork tattoos by appointment only.', subtitle: 'Where clean design meets permanent art.', buttonText: 'Book an Appointment', buttonUrl: '#contact', secondaryButtonText: 'View The Flash Board', secondaryButtonUrl: '#board', galleryImages: [
+      { id: 'hero-1', url: '/templates/tattoo/hero-1.jpg', caption: 'Blackwork tattoo in progress' },
+      { id: 'hero-2', url: '/templates/tattoo/hero-2.jpg', caption: 'Custom linework' },
+      { id: 'hero-3', url: '/templates/tattoo/hero-3.jpg', caption: 'Tattoo session' },
+      { id: 'hero-4', url: '/templates/tattoo/hero-4.jpg', caption: 'Blackwork detail' },
+      { id: 'hero-5', url: '/templates/tattoo/hero-5.jpg', caption: 'Tattoo work' },
+      { id: 'hero-6', url: '/templates/tattoo/hero-6.jpg', caption: 'Artist portrait' },
+      { id: 'hero-7', url: '/templates/tattoo/hero-7.jpg', caption: 'Studio session' },
+      { id: 'hero-8', url: '/templates/tattoo/hero-8.jpg', caption: 'Tattoo detail' },
+    ] } },
+    { id: 'artist', type: 'feature-split', variant: 'tattoo-artist', layout: 'image-left', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { eyebrow: 'MEET THE ARTIST', title: 'Meet The Artist', description: 'Rowan Black is a Toronto-based tattoo artist creating thoughtful, lasting blackwork. Each piece starts with a conversation and is drawn for the person who will wear it.', imageUrl: '/templates/tattoo/artist.jpg', imageAlt: 'Tattoo artist Rowan Black', imageLabel: 'Rowan', secondaryImageUrl: '/templates/tattoo/artist-session.jpg', checkpoints: [{ id: 'artist-note-1', text: 'Custom designs, drawn with you and made for you.' }, { id: 'artist-note-2', text: 'A calm, thoughtful process from first message to healed work.' }, { id: 'artist-note-3', text: 'Specialising in blackwork, fine line, and illustrative tattoos.' }] } },
+    { id: 'board', type: 'gallery', variant: 'tattoo-board', layout: 'grid', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { title: 'On The Board', description: 'A few recent pieces and works in progress. Every tattoo is designed to be one of one.', images: [
+      { id: 'board-1', url: '/templates/tattoo/board-1.jpg', caption: '09.02.2025' },
+      { id: 'board-2', url: '/templates/tattoo/board-2.jpg', caption: '20.10.2022', note: 'Let’s get a little more detail on this one' },
+      { id: 'board-3', url: '/templates/tattoo/board-3.jpg', caption: '16.12.2023' },
+      { id: 'board-4', url: '/templates/tattoo/board-4.jpg', caption: '01.02.2023' },
+      { id: 'board-5', url: '/templates/tattoo/board-5.jpg', caption: '29.06.2023', note: 'Artist’s pick' },
+      { id: 'board-6', url: '/templates/tattoo/board-6.jpg', caption: '03.08.2022' },
+      { id: 'board-7', url: '/templates/tattoo/board-7.jpg', caption: '25.01.2025' },
+      { id: 'board-8', url: '/templates/tattoo/board-8.jpg', caption: '25.10.2022' },
+      { id: 'board-9', url: '/templates/tattoo/board-9.jpg', caption: '01.08.2022', note: 'Tiny flash, big meaning' },
+    ] } },
+    { id: 'process', type: 'timeline', variant: 'tattoo-process', layout: 'vertical', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { title: 'From Idea To Ink', description: 'Here’s how we bring your tattoo to life, guiding you through every step of the process from start to finish.', items: [
+      { id: 'process-1', label: 'Share Your Idea', description: 'Tell us what you have in mind. We’ll talk through your vision, placement, and style so the design feels personal and right for you.' },
+      { id: 'process-2', label: 'Bring It To Paper', description: 'Once we understand your idea, I create a one-of-a-kind design tailored to you. We’ll refine the composition, placement, and details together.' },
+      { id: 'process-3', label: 'The Tattoo Session', description: 'On the day of your appointment, we confirm placement and work through the process at a comfortable pace, with breaks whenever you need them.' },
+      { id: 'process-4', label: 'Keeping It Sharp', description: 'Your tattoo deserves good aftercare. You’ll leave with clear healing instructions and everything you need to care for your new piece.' },
+    ] } },
+    { id: 'faq', type: 'faq', variant: 'tattoo-compact', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { title: 'Frequently Asked Questions', subtitle: 'A few things you might want to know before booking.', items: [
+      { id: 'faq-1', question: 'How do I book an appointment?', answer: 'Use the booking form below with a short description of your idea, placement, and approximate size. I’ll reply with next steps.' },
+      { id: 'faq-2', question: 'Do you require a deposit?', answer: 'A deposit is required to reserve your appointment and goes toward the cost of your tattoo.' },
+      { id: 'faq-3', question: 'Can I see your designs before booking?', answer: 'We’ll discuss references and direction first. Custom drawings are shared with booked clients as the appointment approaches.' },
+      { id: 'faq-4', question: 'Can I bring a friend to my session?', answer: 'Please ask when booking. Space is limited, but one quiet guest may be possible.' },
+      { id: 'faq-5', question: 'Do you take walk-ins?', answer: 'All sessions are by appointment so every design gets the time and attention it deserves.' },
+      { id: 'faq-6', question: 'How should I prepare for my appointment?', answer: 'Get a good night of sleep, eat beforehand, stay hydrated, and wear clothing that gives easy access to the tattoo area.' },
+    ] } },
+    { id: 'quote', type: 'quote', variant: 'tattoo-quote', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { text: 'Black ink is timeless — it doesn’t follow trends or fade with fashion. It’s about boldness, permanence, and creating art that stands the test of time.' } },
+    { id: 'contact', type: 'lead-form', variant: 'tattoo-inquiry', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { title: 'Let’s Create Something Permanent.', description: 'Custom tattoos are available by appointment only. Share your idea and I’ll create a design made to last a lifetime.', buttonText: 'Submit Information', successMessage: 'Thanks for reaching out. Rowan will be in touch soon.', nameLabel: 'Full Name', namePlaceholder: 'Your name', contactLabel: 'Phone Number', contactPlaceholder: 'Your phone number', messageLabel: 'Tattoo Idea', messagePlaceholder: 'Tell me what you have in mind…', email: 'hello@rowanblack.com', instagram: 'https://instagram.com/rowanblack', location: 'Private Studio · Queen Street West, Toronto, ON' } },
+    { id: 'footer', type: 'site-footer', variant: 'tattoo-wordmark', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { logoText: 'ROWAN BLACK', description: 'Custom blackwork tattoos by appointment in Toronto.', links: [{ id: 'footer-book', group: 'Studio', label: 'Book an appointment', url: '#contact' }, { id: 'footer-board', group: 'Studio', label: 'Flash board', url: '#board' }], socialLinks: [{ id: 'footer-instagram', label: 'Instagram', url: 'https://instagram.com' }], legalLinks: [{ id: 'footer-copy', label: '© 2026 Rowan Black. All rights reserved.', url: '#top' }, { id: 'footer-privacy', label: 'Privacy Policy', url: '#' }] } },
+  ],
+};
+
 export const TEMPLATES_MAP: Record<string, PageDocument> = {
   'creator-profile': TEMPLATE_CREATOR_PROFILE,
   'creator-newsletter': TEMPLATE_CREATOR_NEWSLETTER,
@@ -1032,4 +1080,5 @@ export const TEMPLATES_MAP: Record<string, PageDocument> = {
   'creator-fashion': TEMPLATE_CREATOR_FASHION,
   'creator-speaker': TEMPLATE_CREATOR_SPEAKER,
   'spa-salon': TEMPLATE_SPA_SALON,
+  'tattoo-artist': TEMPLATE_TATTOO_ARTIST,
 };

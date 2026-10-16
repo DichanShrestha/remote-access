@@ -26,6 +26,14 @@ export function SiteNavbar({ section, theme }: { section: NavbarSection; theme: 
     {menuOpen && <nav aria-label="Main navigation" className="absolute left-5 top-14 flex min-w-40 flex-col gap-3 bg-black/80 p-5 text-xs backdrop-blur sm:left-8">{content.links.map(link => <a key={link.id} href={link.url} onClick={() => setMenuOpen(false)}>{link.label}</a>)}</nav>}
   </header>;
 
+  if (section.variant === 'tattoo-minimal') return <header className="absolute left-0 top-0 z-30 w-full px-3 py-3 sm:px-6 sm:py-5" style={{ backgroundColor: section.backgroundColor || 'transparent', color: section.textColor || '#e9e7dc' }}>
+    <div className="mx-auto flex max-w-6xl items-center justify-between gap-2">
+      <a href="#top" className="shrink-0 text-[7px] font-bold tracking-[0.08em] sm:text-[10px]">{content.logoText}</a>
+      <nav aria-label="Main navigation" className="flex items-center gap-2 sm:gap-6">{content.links.map(link => <a key={link.id} href={link.url} className="whitespace-nowrap text-[7px] text-white/65 transition hover:text-white sm:text-[10px]">{link.label}</a>)}</nav>
+      {content.primaryLabel && <a href={content.primaryUrl || '#contact'} className="shrink-0 rounded-full bg-[#e3e2d8] px-2.5 py-1 text-[6px] font-medium text-[#171715] sm:px-3.5 sm:py-1.5 sm:text-[9px]">{content.primaryLabel}</a>}
+    </div>
+  </header>;
+
   return (
     <header className={`w-full px-5 py-3 text-current @md:px-8 ${pill ? 'absolute left-0 top-0 z-20 flex justify-center mt-2' : overlay ? 'absolute left-0 top-0 z-20' : ''}`}>
       <div className={`mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 ${centered ? '@md:flex-col @md:justify-center' : ''} ${pill ? `relative w-fit transition-all duration-300 border border-neutral-200/70 bg-white/90 px-1.5 py-1 text-sm shadow-sm backdrop-blur ${menuOpen ? 'rounded-[2rem] @md:rounded-full' : 'rounded-full'}` : ''}`}>
@@ -79,6 +87,14 @@ export function SiteFooter({ section }: { section: FooterSection }) {
     groups.set(link.group, group);
     return groups;
   }, new Map());
+
+  if (section.variant === 'tattoo-wordmark') return <footer className="w-full px-6 pb-8 pt-12 text-current sm:px-10 md:px-[7%]">
+    <div className="mx-auto max-w-6xl border-t border-current/15 pt-6">
+      <div className="mb-5 flex items-center justify-between gap-4 text-[9px] text-current/45"><span>{content.legalLinks[0]?.label || '© 2026. All rights reserved.'}</span><nav className="flex gap-4">{content.legalLinks.slice(1).map(link => <a key={link.id} href={link.url}>{link.label}</a>)}</nav></div>
+      <a href="#top" className="block overflow-hidden whitespace-nowrap text-[clamp(2.8rem,12vw,10rem)] font-sans font-black leading-[0.82] tracking-[-0.075em] text-current/80">{content.logoText}</a>
+      {content.description && <p className="mt-5 text-[10px] text-current/50">{content.description}</p>}
+    </div>
+  </footer>;
 
   if (section.variant === 'restaurant') return <footer className="w-full bg-[#c8ad78] px-6 py-10 text-white sm:px-10 md:px-[10%] md:py-14"><div className="mx-auto max-w-6xl"><div className="grid gap-8 md:grid-cols-[1.2fr_0.8fr_1fr_1.2fr]"><div className="font-serif text-2xl leading-[0.9]">{content.logoText}</div>{[...linkGroups.entries()].map(([name, links]) => <nav key={name} aria-label={name}><h2 className="mb-3 text-[8px] font-semibold uppercase tracking-wide">{name}</h2><ul className="space-y-2">{links.map(link => <li key={link.id}><a href={link.url} className="text-[9px] opacity-90 hover:opacity-100">{link.label}</a></li>)}</ul></nav>)}<div><p className="text-[9px] leading-relaxed">{content.description}</p>{content.socialLinks.length > 0 && <div className="mt-5 flex gap-2">{content.socialLinks.map(link => <a key={link.id} href={link.url} aria-label={link.label} className="grid h-7 w-7 place-items-center rounded-full border border-white/70 text-[9px]">{link.label.slice(0, 1)}</a>)}</div>}</div></div><div className="mt-8 flex flex-wrap justify-between gap-3 border-t border-white/60 pt-4 text-[8px]"><span>{content.legalLinks[0]?.label || '© 2025 Osteria San Rocco'}</span><div className="flex gap-4">{content.legalLinks.slice(1).map(link => <a key={link.id} href={link.url}>{link.label}</a>)}</div></div></div></footer>;
 

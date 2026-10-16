@@ -263,6 +263,35 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
 
   const urls = images.map((img: any) => img.url);
 
+  if (variant === 'tattoo-strip') return <section className="relative w-full overflow-hidden bg-[#0c0d0c] pb-7 pt-1 sm:pb-9">
+    <div className="relative h-[24vw] min-h-[84px] max-h-[250px] sm:h-[19vw] sm:min-h-[120px]">
+      <div className="absolute inset-x-0 top-0 flex h-full -translate-x-[7%] items-center justify-center gap-1 sm:gap-3">
+        {images.map((img: any, i: number) => <figure key={img.id || i} className="relative h-[86%] w-[16vw] min-w-[16vw] rotate-[var(--tilt)] overflow-hidden rounded-[1rem] border border-white/15 shadow-2xl sm:w-[15vw] sm:min-w-[15vw]" style={{ '--tilt': `${[-5, 3, -2, 4, -3, 2, -4][i % 7]}deg` } as React.CSSProperties}><img src={img.url} alt={img.caption || ''} className="h-full w-full object-cover" />{img.caption && <figcaption className="sr-only">{img.caption}</figcaption>}</figure>)}
+      </div>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#0c0d0c] to-transparent" />
+    </div>
+    <div className="relative z-10 flex justify-center gap-2 px-5">
+      {section.content.buttonText && <a href={section.content.buttonUrl || '#contact'} data-page-button className="rounded-full bg-[#d4d3c8] px-4 py-2 text-[8px] font-medium text-[#171715] shadow-sm sm:text-[10px]">{section.content.buttonText}</a>}
+      {section.content.secondaryButtonText && <a href={section.content.secondaryButtonUrl || '#board'} className="rounded-full border border-white/25 px-4 py-2 text-[8px] text-[#e9e7dc] sm:text-[10px]">{section.content.secondaryButtonText}</a>}
+    </div>
+  </section>;
+
+  if (variant === 'tattoo-board') {
+    return <section className="w-full px-6 py-20 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-28">
+      <div className="mx-auto mb-8 max-w-6xl text-center sm:mb-10">
+        <div className="mx-auto max-w-[12ch]"><h2 className="font-serif text-[clamp(1.7rem,6vw,4rem)] leading-[0.84] tracking-[-0.05em]">{section.content.title || 'On The Board'}</h2>{section.content.description && <p className="mx-auto mt-3 max-w-xs text-[7px] leading-relaxed text-white/55 sm:text-xs">{section.content.description}</p>}</div>
+      </div>
+      <div className="mx-auto grid max-w-5xl grid-cols-3 items-center gap-x-4 gap-y-7 sm:gap-x-10 sm:gap-y-14">
+        {images.map((img: any, i: number) => <figure key={img.id || i} className="relative mx-auto w-full max-w-[230px] rotate-[var(--tilt)] rounded-[10px] bg-[#e9e9dc] p-2 pb-8 text-[#171715] shadow-[0_12px_35px_#0008] sm:p-3 sm:pb-10" style={{ '--tilt': `${[-4, 3, -2, 4, -3, 2][i % 6]}deg` } as React.CSSProperties}>
+          <img src={img.url} alt={img.caption || ''} className="aspect-[4/5] w-full object-cover" />
+          {img.caption && <figcaption className="absolute inset-x-2 bottom-2 truncate text-[9px] font-semibold uppercase tracking-wide sm:inset-x-3 sm:bottom-3 sm:text-[10px]">{img.caption}</figcaption>}
+          <span aria-hidden="true" className="absolute -top-3 left-1/2 h-6 w-16 -translate-x-1/2 rotate-[-8deg] bg-white/40 shadow-sm" />
+          {img.note && <span className="absolute -right-5 bottom-8 z-10 w-16 rotate-[9deg] bg-[#f4df67] px-2 py-2 font-serif text-[8px] font-semibold uppercase leading-tight text-[#1d1d18] shadow-md sm:-right-7 sm:w-20 sm:text-[10px]">{img.note}</span>}
+        </figure>)}
+      </div>
+    </section>;
+  }
+
   if (variant === 'masonry') {
     return (
       <section className="py-12 px-4 md:px-8 max-w-6xl mx-auto">
@@ -1083,10 +1112,17 @@ export function AnnouncementSection({ section, theme }: { section: any; theme: T
 }
 
 // ── Lead Form ──────────────────────────────────────────────────
-function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: string; theme: ThemeConfig; pageId?: string; sectionId: string }) {
+function LeadFormFields({ buttonText, theme, pageId, sectionId, variant = '', content = {} }: { buttonText: string; theme: ThemeConfig; pageId?: string; sectionId: string; variant?: string; content?: any }) {
   const [activeChips, setActiveChips] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const tattooInquiry = variant === 'tattoo-inquiry';
+  const fieldClass = tattooInquiry
+    ? 'w-full rounded-xl border border-white/15 bg-transparent px-3 py-2.5 text-[8px] text-[#e9e7dc] placeholder:text-white/25 focus:border-white/35 focus:outline-none sm:px-4 sm:py-3 sm:text-xs'
+    : 'w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm';
+  const labelClass = tattooInquiry
+    ? 'mb-1.5 block text-[7px] text-white/60 sm:text-[10px]'
+    : 'block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2';
 
   const chips = ['Web Design', 'Branding', 'Growth', 'Other'];
 
@@ -1101,7 +1137,8 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: 
     setLoading(true);
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
+    const email = tattooInquiry ? '' : formData.get('email') as string;
+    const phone = tattooInquiry ? formData.get('phone') as string : undefined;
     const message = formData.get('message') as string;
 
     await submitLead({
@@ -1110,6 +1147,7 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: 
       componentType: 'lead-form',
       name,
       email,
+      phone,
       message,
       customData: { services: activeChips },
     });
@@ -1125,7 +1163,7 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: 
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
         </div>
         <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">Message sent!</h3>
-        <p className="text-neutral-600 dark:text-neutral-400 text-sm">We'll get back to you as soon as possible.</p>
+        <p className="text-neutral-600 dark:text-neutral-400 text-sm">{content.successMessage || "We'll get back to you as soon as possible."}</p>
       </div>
     );
   }
@@ -1133,7 +1171,7 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: 
   return (
     <form className="flex flex-col gap-5 w-full" onSubmit={handleSubmit}>
       {/* Service Pills */}
-      <div className="flex flex-wrap gap-2 mb-1">
+      {!tattooInquiry && <div className="flex flex-wrap gap-2 mb-1">
         {chips.map(chip => (
           <button
             key={chip}
@@ -1144,24 +1182,24 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: 
             {chip}
           </button>
         ))}
-      </div>
+      </div>}
 
       {/* Name */}
       <div>
-        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Full Name</label>
-        <input name="name" type="text" required placeholder="John Doe" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
+        <label className={labelClass}>{content.nameLabel || 'Full Name'}</label>
+        <input name="name" type="text" required placeholder={content.namePlaceholder || 'John Doe'} className={fieldClass} />
       </div>
 
       {/* Email */}
       <div>
-        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Email Address</label>
-        <input name="email" type="email" required placeholder="john@company.com" className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm" />
+        <label className={labelClass}>{content.contactLabel || 'Email Address'}</label>
+        <input name={tattooInquiry ? 'phone' : 'email'} type={tattooInquiry ? 'tel' : 'email'} required placeholder={content.contactPlaceholder || (tattooInquiry ? '+1 (555) 000-0000' : 'john@company.com')} className={fieldClass} />
       </div>
 
       {/* Message */}
       <div>
-        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2">Your Message</label>
-        <textarea name="message" required placeholder="Tell us about your project..." rows={4} className="w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm resize-none" />
+        <label className={labelClass}>{content.messageLabel || 'Your Message'}</label>
+        <textarea name="message" required placeholder={content.messagePlaceholder || 'Tell us about your project...'} rows={tattooInquiry ? 5 : 4} className={`${fieldClass} resize-none`} />
       </div>
 
       {/* CTA Button */}
@@ -1182,6 +1220,28 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId }: { buttonText: 
 export function LeadFormSection({ section, theme, pageId }: { section: any; theme: ThemeConfig; pageId?: string }) {
   const { title, description, buttonText } = section.content;
   const variant = section.variant || 'card-centered';
+
+  if (variant === 'tattoo-inquiry') {
+    const infoCards = [
+      { title: 'Email me at', value: section.content.email, href: section.content.email ? `mailto:${section.content.email}` : undefined, icon: '✉' },
+      { title: 'Follow me on Instagram', value: section.content.instagram?.replace(/^https?:\/\//, ''), href: section.content.instagram, icon: '◎' },
+      { title: 'Tattooing at', value: section.content.location, icon: '♧' },
+    ].filter(item => item.value);
+    return <section className="w-full bg-[#0c0d0c] px-6 py-14 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-20">
+      <div className="mx-auto max-w-6xl">
+        <h2 className="mb-7 max-w-[13ch] font-serif text-[clamp(1.9rem,6.8vw,4.5rem)] leading-[0.84] tracking-[-0.05em]">{title || 'Let’s Create Something Permanent.'}</h2>
+        <div className="grid grid-cols-[0.92fr_1.08fr] items-start gap-4 sm:gap-8 md:gap-12">
+          <div>
+            {description && <p className="mb-5 text-[7px] leading-[1.4] text-white/55 sm:mb-8 sm:text-[11px]">{description}</p>}
+            <div className="flex flex-col gap-2 sm:gap-3">{infoCards.map(card => <a key={card.title} href={card.href || '#'} className="flex min-h-12 items-center gap-2 rounded-lg border border-white/10 px-2 py-2 sm:min-h-16 sm:gap-3 sm:px-3"><span className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-white/20 text-[10px] sm:h-7 sm:w-7 sm:text-sm">{card.icon}</span><span className="min-w-0"><span className="block text-[6px] text-white/45 sm:text-[8px]">{card.title}</span><span className="mt-1 block truncate text-[6px] sm:text-[9px]">{card.value}</span></span></a>)}</div>
+          </div>
+          <div className="rounded-lg border border-white/10 p-2.5 sm:rounded-xl sm:p-4">
+            <LeadFormFields buttonText={buttonText} theme={theme} pageId={pageId} sectionId={section.id} variant="tattoo-inquiry" content={section.content} />
+          </div>
+        </div>
+      </div>
+    </section>;
+  }
 
   if (variant === 'split-layout') {
     return (
@@ -1602,6 +1662,7 @@ export function ContactSection({ section, theme, pageId }: { section: z.infer<ty
 // ── Quote ──────────────────────────────────────────────────────
 export function QuoteSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { text, author } = section.content;
+  if (section.variant === 'tattoo-quote') return <section className="w-full px-6 py-24 text-center text-[#e9e7dc] md:py-32"><blockquote className="mx-auto max-w-4xl font-serif text-xl leading-relaxed tracking-[-0.02em] sm:text-2xl md:text-3xl">“{text}”</blockquote>{author && <cite className="mt-5 block text-[10px] uppercase tracking-[0.2em] text-white/45 not-italic">{author}</cite>}</section>;
   return (
     <section className="py-16 px-4 md:px-8 max-w-3xl mx-auto text-center relative">
       <div className="absolute top-8 left-1/2 -translate-x-1/2 text-8xl font-serif opacity-10 select-none" style={{ color: theme.primaryColor }}>"</div>
@@ -1785,6 +1846,19 @@ export function TimelineSection({ section, theme }: { section: any; theme: Theme
   });
 
   const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
+  if (section.variant === 'tattoo-process') return <section className="w-full bg-[#0c0d0c] px-6 py-20 text-[#e9e7dc] sm:px-10 md:px-[12%] md:py-28">
+    <div className="mx-auto max-w-5xl">
+      <div className="mb-8 max-w-[14rem] sm:mb-10 sm:max-w-sm"><h2 className="font-serif text-[clamp(2rem,7vw,4rem)] leading-[0.82] tracking-[-0.055em]">{title || 'From Idea To Ink'}</h2>{section.content.description && <p className="mt-4 text-[8px] leading-[1.4] text-white/55 sm:mt-5 sm:text-xs">{section.content.description}</p>}</div>
+      <div className="relative grid grid-cols-2 gap-x-3 gap-y-9 sm:gap-x-8 sm:gap-y-12">
+        <svg aria-hidden="true" className="pointer-events-none absolute -inset-x-1 top-0 z-0 h-full w-[calc(100%+8px)] overflow-visible" viewBox="0 0 320 450" preserveAspectRatio="none"><path d="M310 8 C245 30 155 75 115 127 S225 198 310 248 S172 319 115 365" fill="none" stroke="#b5221c" strokeWidth="1.2" /></svg>
+        {items.map((item: any, i: number) => <article key={item.id} className={`relative z-10 w-[72%] rounded-md border border-[#e5e5dc]/30 bg-[#c5c6bd] p-2.5 shadow-[0_8px_22px_#0008] sm:max-w-[340px] sm:rounded-lg sm:p-5 ${i % 2 === 0 ? 'justify-self-end' : 'justify-self-start'}`} style={{ gridColumnStart: i % 2 === 0 ? 2 : 1, gridRowStart: i + 1 }}>
+          <span className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-[#df1111] shadow-[0_1px_6px_#0008] sm:h-4 sm:w-4" />
+          <div data-color-preserve className="text-[#171715]"><p className="font-serif text-[9px] leading-none opacity-55 sm:text-xs">0{i + 1} ✳</p><h3 className="mt-1 font-serif text-[10px] font-semibold leading-tight sm:mt-2 sm:text-xl">{item.label}</h3><p className="mt-1.5 text-[6px] leading-[1.25] opacity-75 sm:mt-2 sm:text-[11px]">{item.description}</p></div>
+        </article>)}
+      </div>
+    </div>
+  </section>;
 
   if (layout === 'restaurant-history') return <section className="w-full bg-white px-6 py-14 text-neutral-900 sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="font-serif text-4xl md:text-5xl">{title || 'La nostra storia'}</h2><div className="flex gap-2 text-sm text-[#c6a66b]"><button aria-label="Previous years" className="grid h-8 w-8 place-items-center rounded-full border border-current">←</button><button aria-label="Next years" className="grid h-8 w-8 place-items-center rounded-full border border-current">→</button></div></div><div className="mb-5 flex min-w-max items-end gap-10 border-b border-neutral-400 px-5">{items.map((item: any, index: number) => <a key={item.id} href={`#history-${item.id}`} className={`relative pb-3 font-serif text-3xl italic ${index === 0 ? 'text-[#c6a66b]' : 'text-neutral-900'}`}>{item.label}<span className={`absolute -bottom-1 left-0 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-[#c6a66b]' : 'bg-neutral-900'}`} /></a>)}</div><div className="grid gap-4 md:grid-cols-3">{items.map((item: any) => <article id={`history-${item.id}`} key={item.id} className="scroll-mt-8">{item.imageUrl && <img src={item.imageUrl} alt="" className="mb-3 aspect-[1.35/1] w-full object-cover" />}<p className="text-[9px] leading-relaxed text-neutral-600">{item.description}</p></article>)}</div></div></section>;
 
@@ -2004,6 +2078,21 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
     <div className="aspect-[1.05/1] overflow-hidden"><img src={content.imageUrl} alt={content.imageAlt || content.title} className="h-full w-full object-cover" /></div>
     <div className="flex flex-col gap-6">{content.eyebrow && <p className="text-[8px] uppercase tracking-[0.16em] text-[#b99c65]">{content.eyebrow}</p>}{content.title && <h2 className="font-serif text-3xl leading-tight md:text-4xl">{content.title}</h2>}{content.description && <p className="max-w-md text-[10px] leading-relaxed text-neutral-600">{content.description}</p>}{content.secondaryImageUrl && <img src={content.secondaryImageUrl} alt="" className="mt-1 aspect-[1.5/1] w-full object-cover md:max-w-sm" />}</div>
   </div></section>;
+
+  if (section.variant === 'tattoo-artist') return <section className="w-full bg-[#0c0d0c] px-6 py-16 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-24">
+    <div className="mx-auto grid max-w-5xl grid-cols-[0.75fr_1.25fr] items-start gap-3 sm:gap-8 md:gap-12">
+      <div className="relative mt-1 overflow-hidden rounded-md shadow-2xl">
+        <img src={content.imageUrl} alt={content.imageAlt || content.title} className="aspect-[0.65/1] w-full object-cover" />
+        {content.imageLabel && <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-2 pt-8 font-serif text-[clamp(1.5rem,6vw,4rem)] leading-none tracking-[-0.06em] text-white">{content.imageLabel}</span>}
+      </div>
+      <div className="relative z-10 -ml-2 flex flex-col sm:-ml-5">
+        {content.eyebrow && <p className="mb-1 text-[7px] font-semibold uppercase tracking-[0.18em] text-white/50 sm:text-[9px]">{content.eyebrow}</p>}
+        <h2 className="max-w-[9ch] font-serif text-[clamp(1.4rem,5.5vw,3.8rem)] leading-[0.83] tracking-[-0.05em]">{content.title}</h2>
+        <ul className="mt-4 flex flex-col gap-3 sm:mt-6 sm:gap-4">{content.checkpoints.map((item, i) => <li key={item.id} className="flex items-start gap-2 text-[7px] leading-[1.35] text-white/65 sm:gap-3 sm:text-[10px]"><span className="font-serif text-sm leading-none text-[#c7c6bb] sm:text-lg">✳</span><span>{item.text}</span></li>)}</ul>
+        {content.secondaryImageUrl && <img src={content.secondaryImageUrl} alt="A recent tattoo session" className="mt-4 aspect-[1.65/1] w-[calc(100%+1rem)] -translate-x-4 rounded-sm object-cover shadow-lg sm:mt-7 sm:w-full sm:translate-x-0" />}
+      </div>
+    </div>
+  </section>;
 
   if (section.variant === 'salon-arch') {
     return (

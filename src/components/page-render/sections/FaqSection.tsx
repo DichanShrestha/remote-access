@@ -16,6 +16,18 @@ export function FaqSection({ section, theme }: FaqProps) {
 
   const variant = section.variant || 'default';
 
+  if (variant === 'tattoo-compact') {
+    return <section className="w-full px-6 py-20 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-28">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-7 flex items-end justify-between gap-3 sm:mb-8"><h2 className="max-w-[9ch] font-serif text-[clamp(1.7rem,6vw,4rem)] leading-[0.84] tracking-[-0.05em]">{content.title}</h2>{(content.subtitle || content.description) && <p className="max-w-[12rem] text-[7px] leading-[1.35] text-white/55 sm:text-xs">{content.subtitle || content.description}</p>}</div>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:gap-x-5 sm:gap-y-3">{content.items.map((item, index) => <div key={item.id} className="overflow-hidden rounded-full border border-white/15">
+          <button className="flex min-h-8 w-full items-center justify-between gap-1.5 px-2.5 py-1.5 text-left text-[6px] leading-tight text-[#e9e7dc] sm:min-h-10 sm:gap-4 sm:px-4 sm:py-2.5 sm:text-[11px]" onClick={() => setOpenIndex(openIndex === index ? null : index)}><span>{item.question}</span><span className="grid h-4 w-4 shrink-0 place-items-center rounded-full border border-white/20 text-[9px] sm:h-5 sm:w-5 sm:text-xs">{openIndex === index ? '−' : '+'}</span></button>
+          {openIndex === index && <p className="px-3 pb-3 text-[7px] leading-relaxed text-white/60 sm:px-4 sm:text-[11px]">{item.answer}</p>}
+        </div>)}</div>
+      </div>
+    </section>;
+  }
+
   if (variant === 'spacious') {
     return (
       <section className="py-32 px-6 w-full max-w-4xl mx-auto">

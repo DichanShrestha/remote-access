@@ -43,6 +43,7 @@ export const HeroSectionSchema = BaseSectionSchema.extend({
     secondaryButtonText: z.string().optional(),
     secondaryButtonUrl: z.string().optional(),
     imageUrl: z.string().optional(),
+    galleryImages: z.array(z.object({ id: z.string(), url: z.string(), caption: z.string().optional() })).optional(),
     avatarUrl: z.string().optional(),
     secondaryImageUrl: z.string().optional(),
     location: z.string().optional(),
@@ -138,7 +139,13 @@ export const ImageSectionSchema = BaseSectionSchema.extend({
 export const GallerySectionSchema = BaseSectionSchema.extend({
   type: z.literal('gallery'),
   content: z.object({
-    images: z.array(z.object({ id: z.string(), url: z.string(), caption: z.string().optional() })),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    buttonText: z.string().optional(),
+    buttonUrl: z.string().optional(),
+    secondaryButtonText: z.string().optional(),
+    secondaryButtonUrl: z.string().optional(),
+    images: z.array(z.object({ id: z.string(), url: z.string(), caption: z.string().optional(), note: z.string().optional() })),
   }),
   layout: z.enum(['grid', 'masonry']).default('grid'),
 });
@@ -295,6 +302,15 @@ export const LeadFormSectionSchema = BaseSectionSchema.extend({
     description: z.string().optional(),
     buttonText: z.string().default('Submit'),
     successMessage: z.string().default('Thanks! We will be in touch.'),
+    nameLabel: z.string().optional(),
+    namePlaceholder: z.string().optional(),
+    contactLabel: z.string().optional(),
+    contactPlaceholder: z.string().optional(),
+    messageLabel: z.string().optional(),
+    messagePlaceholder: z.string().optional(),
+    email: z.string().optional(),
+    instagram: z.string().optional(),
+    location: z.string().optional(),
   }),
 });
 
@@ -420,6 +436,7 @@ export const TimelineSectionSchema = BaseSectionSchema.extend({
   type: z.literal('timeline'),
   content: z.object({
     title: z.string().optional(),
+    description: z.string().optional(),
     items: z.array(z.object({
       id: z.string(),
       label: z.string(),
@@ -455,6 +472,7 @@ export const FeatureSplitSectionSchema = BaseSectionSchema.extend({
     imageUrl: z.string(),
     secondaryImageUrl: z.string().optional(),
     imageAlt: z.string().optional(),
+    imageLabel: z.string().optional(),
     buttonText: z.string().optional(),
     buttonUrl: z.string().optional(),
   }),
