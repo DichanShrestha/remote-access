@@ -46,7 +46,11 @@ export async function mergeTemplateContent(oldDoc: PageDocument, templateId: str
         const section = node as PageSection;
         const match = oldSections.find(s => s.type === section.type && !usedOldSectionIds.has(s.id));
         if (match && match.content) {
-          section.content = structuredClone(match.content);
+          // Keep template-specific hero defaults (for example, a hero photo strip)
+          // when the user's previous hero doesn't define those fields.
+          section.content = section.type === 'hero'
+            ? { ...structuredClone(section.content), ...structuredClone(match.content) }
+            : structuredClone(match.content);
           usedOldSectionIds.add(match.id);
         }
       }
