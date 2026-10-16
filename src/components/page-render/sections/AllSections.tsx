@@ -263,7 +263,7 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
 
   const urls = images.map((img: any) => img.url);
 
-  if (variant === 'tattoo-strip') return <section className="relative w-full overflow-hidden bg-[#0c0d0c] pb-7 pt-1 sm:pb-9">
+  if (variant === 'photo-strip') return <section className="relative w-full overflow-hidden bg-[#0c0d0c] pb-7 pt-1 sm:pb-9">
     <div className="relative h-[24vw] min-h-[84px] max-h-[250px] sm:h-[19vw] sm:min-h-[120px]">
       <div className="absolute inset-x-0 top-0 flex h-full -translate-x-[7%] items-center justify-center gap-1 sm:gap-3">
         {images.map((img: any, i: number) => <figure key={img.id || i} className="relative h-[86%] w-[16vw] min-w-[16vw] rotate-[var(--tilt)] overflow-hidden rounded-[1rem] border border-white/15 shadow-2xl sm:w-[15vw] sm:min-w-[15vw]" style={{ '--tilt': `${[-5, 3, -2, 4, -3, 2, -4][i % 7]}deg` } as React.CSSProperties}><img src={img.url} alt={img.caption || ''} className="h-full w-full object-cover" />{img.caption && <figcaption className="sr-only">{img.caption}</figcaption>}</figure>)}
@@ -276,7 +276,7 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
     </div>
   </section>;
 
-  if (variant === 'tattoo-board') {
+  if (variant === 'pinboard') {
     return <section className="w-full px-6 py-20 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-28">
       <div className="mx-auto mb-8 max-w-6xl text-center sm:mb-10">
         <div><h2 className="font-serif text-[clamp(1.7rem,6vw,4rem)] leading-[0.84] tracking-[-0.05em] whitespace-nowrap">{section.content.title || 'On The Board'}</h2>{section.content.description && <p className="mx-auto mt-3 max-w-md text-[7px] leading-relaxed text-white/55 sm:text-xs">{section.content.description}</p>}</div>
@@ -1116,7 +1116,7 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId, variant = '', co
   const [activeChips, setActiveChips] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const tattooInquiry = variant === 'tattoo-inquiry';
+  const tattooInquiry = variant === 'split-inquiry';
   const fieldClass = tattooInquiry
     ? 'w-full rounded-xl border border-white/15 bg-transparent px-3 py-2.5 text-[8px] text-[#e9e7dc] placeholder:text-white/25 focus:border-white/35 focus:outline-none sm:px-4 sm:py-3 sm:text-xs'
     : 'w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm';
@@ -1221,7 +1221,7 @@ export function LeadFormSection({ section, theme, pageId }: { section: any; them
   const { title, description, buttonText } = section.content;
   const variant = section.variant || 'card-centered';
 
-  if (variant === 'tattoo-inquiry') {
+  if (variant === 'split-inquiry') {
     const infoCards = [
       { title: 'Email me at', value: section.content.email, href: section.content.email ? `mailto:${section.content.email}` : undefined, icon: '✉' },
       { title: 'Follow me on Instagram', value: section.content.instagram?.replace(/^https?:\/\//, ''), href: section.content.instagram, icon: '◎' },
@@ -1236,7 +1236,7 @@ export function LeadFormSection({ section, theme, pageId }: { section: any; them
             <div className="flex flex-col gap-2 sm:gap-3">{infoCards.map(card => <a key={card.title} href={card.href || '#'} className="flex min-h-12 items-center gap-2 rounded-lg border border-white/10 px-2 py-2 sm:min-h-16 sm:gap-3 sm:px-3"><span className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-white/20 text-[10px] sm:h-7 sm:w-7 sm:text-sm">{card.icon}</span><span className="min-w-0"><span className="block text-[6px] text-white/45 sm:text-[8px]">{card.title}</span><span className="mt-1 block truncate text-[6px] sm:text-[9px]">{card.value}</span></span></a>)}</div>
           </div>
           <div className="rounded-lg border border-white/10 p-2.5 sm:rounded-xl sm:p-4">
-            <LeadFormFields buttonText={buttonText} theme={theme} pageId={pageId} sectionId={section.id} variant="tattoo-inquiry" content={section.content} />
+            <LeadFormFields buttonText={buttonText} theme={theme} pageId={pageId} sectionId={section.id} variant="split-inquiry" content={section.content} />
           </div>
         </div>
       </div>
@@ -1662,7 +1662,7 @@ export function ContactSection({ section, theme, pageId }: { section: z.infer<ty
 // ── Quote ──────────────────────────────────────────────────────
 export function QuoteSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { text, author } = section.content;
-  if (section.variant === 'tattoo-quote') return <section className="w-full px-6 py-24 text-center text-[#e9e7dc] md:py-32"><blockquote className="mx-auto max-w-4xl font-serif text-xl leading-relaxed tracking-[-0.02em] sm:text-2xl md:text-3xl">“{text}”</blockquote>{author && <cite className="mt-5 block text-[10px] uppercase tracking-[0.2em] text-white/45 not-italic">{author}</cite>}</section>;
+  if (section.variant === 'editorial-statement') return <section className="w-full px-6 py-24 text-center text-[#e9e7dc] md:py-32"><blockquote className="mx-auto max-w-4xl font-serif text-xl leading-relaxed tracking-[-0.02em] sm:text-2xl md:text-3xl">“{text}”</blockquote>{author && <cite className="mt-5 block text-[10px] uppercase tracking-[0.2em] text-white/45 not-italic">{author}</cite>}</section>;
   return (
     <section className="py-16 px-4 md:px-8 max-w-3xl mx-auto text-center relative">
       <div className="absolute top-8 left-1/2 -translate-x-1/2 text-8xl font-serif opacity-10 select-none" style={{ color: theme.primaryColor }}>"</div>
@@ -1924,7 +1924,7 @@ export function TimelineSection({ section, theme }: { section: any; theme: Theme
 
   const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
-  if (section.variant === 'tattoo-process') return <TattooProcessSection section={section} title={title} items={items} />;
+  if (section.variant === 'pinned-thread') return <TattooProcessSection section={section} title={title} items={items} />;
 
   if (layout === 'restaurant-history') return <section className="w-full bg-white px-6 py-14 text-neutral-900 sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="font-serif text-4xl md:text-5xl">{title || 'La nostra storia'}</h2><div className="flex gap-2 text-sm text-[#c6a66b]"><button aria-label="Previous years" className="grid h-8 w-8 place-items-center rounded-full border border-current">←</button><button aria-label="Next years" className="grid h-8 w-8 place-items-center rounded-full border border-current">→</button></div></div><div className="mb-5 flex min-w-max items-end gap-10 border-b border-neutral-400 px-5">{items.map((item: any, index: number) => <a key={item.id} href={`#history-${item.id}`} className={`relative pb-3 font-serif text-3xl italic ${index === 0 ? 'text-[#c6a66b]' : 'text-neutral-900'}`}>{item.label}<span className={`absolute -bottom-1 left-0 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-[#c6a66b]' : 'bg-neutral-900'}`} /></a>)}</div><div className="grid gap-4 md:grid-cols-3">{items.map((item: any) => <article id={`history-${item.id}`} key={item.id} className="scroll-mt-8">{item.imageUrl && <img src={item.imageUrl} alt="" className="mb-3 aspect-[1.35/1] w-full object-cover" />}<p className="text-[9px] leading-relaxed text-neutral-600">{item.description}</p></article>)}</div></div></section>;
 
@@ -2145,7 +2145,7 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
     <div className="flex flex-col gap-6">{content.eyebrow && <p className="text-[8px] uppercase tracking-[0.16em] text-[#b99c65]">{content.eyebrow}</p>}{content.title && <h2 className="font-serif text-3xl leading-tight md:text-4xl">{content.title}</h2>}{content.description && <p className="max-w-md text-[10px] leading-relaxed text-neutral-600">{content.description}</p>}{content.secondaryImageUrl && <img src={content.secondaryImageUrl} alt="" className="mt-1 aspect-[1.5/1] w-full object-cover md:max-w-sm" />}</div>
   </div></section>;
 
-  if (section.variant === 'tattoo-artist') return <section className="w-full bg-[#0c0d0c] px-6 py-16 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-24">
+  if (section.variant === 'bio-spotlight') return <section className="w-full bg-[#0c0d0c] px-6 py-16 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-24">
     <div className="mx-auto grid max-w-5xl grid-cols-[0.75fr_1.25fr] items-start gap-3 sm:gap-8 md:gap-12">
       <div className="relative mt-1 overflow-hidden rounded-md shadow-2xl">
         <img src={content.imageUrl} alt={content.imageAlt || content.title} className="aspect-[0.65/1] w-full object-cover" />

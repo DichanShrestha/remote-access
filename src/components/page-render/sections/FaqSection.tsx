@@ -16,7 +16,7 @@ export function FaqSection({ section, theme }: FaqProps) {
 
   const variant = section.variant || 'default';
 
-  if (variant === 'tattoo-compact') {
+  if (variant === 'compact-grid') {
     return <section className="w-full px-6 py-20 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-28">
       <div className="mx-auto max-w-6xl">
         <div className="mb-7 flex items-end justify-between gap-3 sm:mb-8"><h2 className="max-w-[9ch] font-serif text-[clamp(1.7rem,6vw,4rem)] leading-[0.84] tracking-[-0.05em]">{content.title}</h2>{(content.subtitle || content.description) && <p className="max-w-[12rem] text-[7px] leading-[1.35] text-white/55 sm:text-xs">{content.subtitle || content.description}</p>}</div>

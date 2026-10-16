@@ -26,7 +26,7 @@ export function SiteNavbar({ section, theme }: { section: NavbarSection; theme: 
     {menuOpen && <nav aria-label="Main navigation" className="absolute left-5 top-14 flex min-w-40 flex-col gap-3 bg-black/80 p-5 text-xs backdrop-blur sm:left-8">{content.links.map(link => <a key={link.id} href={link.url} onClick={() => setMenuOpen(false)}>{link.label}</a>)}</nav>}
   </header>;
 
-  if (section.variant === 'tattoo-minimal') return <header className="absolute left-0 top-0 z-30 w-full px-3 py-3 sm:px-6 sm:py-5" style={{ backgroundColor: section.backgroundColor || 'transparent', color: section.textColor || '#e9e7dc' }}>
+  if (section.variant === 'floating-clean') return <header className="absolute left-0 top-0 z-30 w-full px-3 py-3 sm:px-6 sm:py-5" style={{ backgroundColor: section.backgroundColor || 'transparent', color: section.textColor || '#e9e7dc' }}>
     <div className="mx-auto flex max-w-6xl items-center justify-between gap-2">
       <a href="#top" className="shrink-0 text-[7px] font-bold tracking-[0.08em] sm:text-[10px]">{content.logoText}</a>
       <nav aria-label="Main navigation" className="flex items-center gap-2 sm:gap-6">{content.links.map(link => <a key={link.id} href={link.url} className="whitespace-nowrap text-[7px] text-white/65 transition hover:text-white sm:text-[10px]">{link.label}</a>)}</nav>
@@ -88,7 +88,7 @@ export function SiteFooter({ section }: { section: FooterSection }) {
     return groups;
   }, new Map());
 
-  if (section.variant === 'tattoo-wordmark') return <footer className="w-full px-6 pb-8 pt-12 text-current sm:px-10 md:px-[7%]">
+  if (section.variant === 'giant-wordmark') return <footer className="w-full px-6 pb-8 pt-12 text-current sm:px-10 md:px-[7%]">
     <div className="mx-auto max-w-6xl border-t border-current/15 pt-6">
       <div className="mb-5 flex items-center justify-between gap-4 text-[9px] text-current/45"><span>{content.legalLinks[0]?.label || '© 2026. All rights reserved.'}</span><nav className="flex gap-4">{content.legalLinks.slice(1).map(link => <a key={link.id} href={link.url}>{link.label}</a>)}</nav></div>
       <a href="#top" className="block overflow-hidden whitespace-nowrap text-[clamp(2.8rem,12vw,10rem)] font-sans font-black leading-[0.82] tracking-[-0.075em] text-current/80">{content.logoText}</a>

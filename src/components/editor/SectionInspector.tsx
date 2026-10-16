@@ -788,7 +788,7 @@ function HeroInspector({ section, onChange }: { section: PageSection; onChange: 
         <MediaPicker label="Hero Image" value={deepGet(section, 'content.imageUrl') || ''} onChange={v => handleFieldChange('content.imageUrl', v)} />
         <MediaPicker label="Avatar / Photo" value={deepGet(section, 'content.avatarUrl') || ''} onChange={v => handleFieldChange('content.avatarUrl', v)} />
         {section.variant === 'fashion-editorial' && <MediaPicker label="Collage Photo" value={deepGet(section, 'content.secondaryImageUrl') || ''} onChange={v => handleFieldChange('content.secondaryImageUrl', v)} />}
-        {section.variant === 'tattoo-cover' && <div className="mt-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+        {(section.variant === 'curved-strip' || (deepGet(section, 'content.galleryImages') || []).length > 0) && <div className="mt-2 border-t border-slate-100 pt-3 dark:border-slate-800">
           <div className="mb-2 flex items-center justify-between"><span className="text-xs font-medium text-slate-500">Hero Photo Strip</span><button type="button" onClick={() => handleFieldChange('content.galleryImages', [...(deepGet(section, 'content.galleryImages') || []), { id: `hero-photo-${Date.now()}`, url: '', caption: '' }])} className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"><Plus className="h-3 w-3" /> Add photo</button></div>
           {(deepGet(section, 'content.galleryImages') || []).map((photo: any, index: number) => <div key={photo.id || index} className="mb-3 rounded-lg border border-slate-200 p-2 dark:border-slate-700">
             <div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-semibold text-slate-400">Photo {index + 1}</span><button type="button" aria-label={`Remove photo ${index + 1}`} onClick={() => handleFieldChange('content.galleryImages', deepGet(section, 'content.galleryImages').filter((_: any, i: number) => i !== index))} className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-500"><Trash className="h-3.5 w-3.5" /></button></div>
@@ -959,7 +959,7 @@ function HeroVariantPicker({ currentVariant, onChange }: { currentVariant: strin
     { id: 'arch', label: 'Arch', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><path d="M20 28V10a10 10 0 0 1 20 0v18" stroke="currentColor" strokeWidth="1.5" opacity="0.4" fill="none"/><rect x="22" y="12" width="16" height="14" rx="1" fill="currentColor" opacity="0.12"/><rect x="8" y="6" width="12" height="2" rx="1" fill="currentColor" opacity="0.5"/><rect x="8" y="10" width="10" height="2" rx="1" fill="currentColor" opacity="0.3"/><rect x="8" y="14" width="8" height="3" rx="1.5" fill="currentColor" opacity="0.4"/></svg>
     )},
-    { id: 'tattoo-cover', label: 'Tattoo Cover', icon: (
+    { id: 'curved-strip', label: 'Curved Strip', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect width="60" height="32" rx="2" fill="currentColor" opacity=".12"/><rect x="13" y="7" width="34" height="5" rx="1" fill="currentColor" opacity=".7"/><rect x="17" y="14" width="26" height="3" rx="1" fill="currentColor" opacity=".4"/><rect x="22" y="20" width="16" height="2" rx="1" fill="currentColor" opacity=".3"/></svg>
     )},
   ];

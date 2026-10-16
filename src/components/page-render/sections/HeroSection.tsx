@@ -1013,7 +1013,8 @@ const VARIANT_MAP: Record<string, React.ComponentType<SubProps>> = {
   'fashion-editorial': FashionEditorialHero,
   'keynote': SpeakerEditorialHero,
   'speaker-editorial': SpeakerEditorialHero,
-  'tattoo-cover': TattooCoverHero,
+  'curved-strip': TattooCoverHero,
+  'tattoo-cover': TattooCoverHero, // backward compat
   'cover-story': RestaurantCoverHero,
   'restaurant-cover': RestaurantCoverHero,
   'split-wide': (props) => <SplitHero {...props} wide />,
