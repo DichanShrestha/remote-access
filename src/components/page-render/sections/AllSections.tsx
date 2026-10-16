@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { z } from 'zod';
 import { PageSection, ThemeConfig, FeatureSplitSectionSchema, ValueCardsSectionSchema, CaseStudiesSectionSchema, ContactSectionSchema, StatsSectionSchema, SiteFooterSectionSchema, SiteNavbarSectionSchema, BlogListSectionSchema } from '@/lib/page-engine/schemas';
 import { HeroSection } from './HeroSection';
@@ -279,7 +279,7 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
   if (variant === 'tattoo-board') {
     return <section className="w-full px-6 py-20 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-28">
       <div className="mx-auto mb-8 max-w-6xl text-center sm:mb-10">
-        <div className="mx-auto max-w-[12ch]"><h2 className="font-serif text-[clamp(1.7rem,6vw,4rem)] leading-[0.84] tracking-[-0.05em]">{section.content.title || 'On The Board'}</h2>{section.content.description && <p className="mx-auto mt-3 max-w-xs text-[7px] leading-relaxed text-white/55 sm:text-xs">{section.content.description}</p>}</div>
+        <div><h2 className="font-serif text-[clamp(1.7rem,6vw,4rem)] leading-[0.84] tracking-[-0.05em] whitespace-nowrap">{section.content.title || 'On The Board'}</h2>{section.content.description && <p className="mx-auto mt-3 max-w-md text-[7px] leading-relaxed text-white/55 sm:text-xs">{section.content.description}</p>}</div>
       </div>
       <div className="mx-auto grid max-w-5xl grid-cols-3 items-center gap-x-4 gap-y-7 sm:gap-x-10 sm:gap-y-14">
         {images.map((img: any, i: number) => <figure key={img.id || i} className="relative mx-auto w-full max-w-[230px] rotate-[var(--tilt)] rounded-[10px] bg-[#e9e9dc] p-2 pb-8 text-[#171715] shadow-[0_12px_35px_#0008] sm:p-3 sm:pb-10" style={{ '--tilt': `${[-4, 3, -2, 4, -3, 2][i % 6]}deg` } as React.CSSProperties}>
@@ -1835,6 +1835,83 @@ function TimelineStep({ item, index, theme }: { item: any, index: number, theme:
   );
 }
 
+function TattooProcessSection({ section, title, items }: { section: any; title: string; items: any[] }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pinRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const [pathD, setPathD] = useState('');
+
+  const calcPath = useCallback(() => {
+    const container = containerRef.current;
+    if (!container || pinRefs.current.length < 2) return;
+    const cRect = container.getBoundingClientRect();
+    const points = pinRefs.current
+      .map((el) => {
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { x: r.left + r.width / 2 - cRect.left, y: r.top + r.height / 2 - cRect.top };
+      })
+      .filter(Boolean) as { x: number; y: number }[];
+    if (points.length < 2) return;
+
+    let d = `M${points[0].x} ${points[0].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const midY = (p0.y + p1.y) / 2;
+      // Create a generous outward curve
+      const curveOutX = p0.x < p1.x ? Math.min(p0.x, p1.x) - 60 : Math.max(p0.x, p1.x) + 60;
+      d += ` C${p0.x} ${midY}, ${curveOutX} ${midY}, ${p1.x} ${p1.y}`;
+    }
+    setPathD(d);
+  }, []);
+
+  useEffect(() => {
+    calcPath();
+    const ro = new ResizeObserver(calcPath);
+    if (containerRef.current) ro.observe(containerRef.current);
+    window.addEventListener('resize', calcPath);
+    return () => { ro.disconnect(); window.removeEventListener('resize', calcPath); };
+  }, [calcPath, items]);
+
+  return (
+    <section className="w-full bg-[#0c0d0c] px-6 py-20 text-[#e9e7dc] sm:px-10 md:px-[12%] md:py-28">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-8 max-w-[14rem] sm:mb-10 sm:max-w-sm">
+          <h2 className="font-serif text-[clamp(2rem,7vw,4rem)] leading-[0.82] tracking-[-0.055em]">{title || 'From Idea To Ink'}</h2>
+          {section.content.description && <p className="mt-4 text-[8px] leading-[1.4] text-white/55 sm:mt-5 sm:text-xs">{section.content.description}</p>}
+        </div>
+        <div ref={containerRef} className="relative grid grid-cols-2 gap-x-3 gap-y-9 sm:gap-x-8 sm:gap-y-12">
+          {/* Red thread SVG */}
+          <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible">
+            {pathD && <path d={pathD} fill="none" stroke="#b5221c" strokeWidth="2" strokeLinecap="round" />}
+          </svg>
+          {items.map((item: any, i: number) => {
+            const isRight = i % 2 === 0; // even index → right column
+            return (
+              <article
+                key={item.id}
+                className={`relative z-10 w-[72%] rounded-md border border-[#e5e5dc]/30 bg-[#c5c6bd] p-2.5 shadow-[0_8px_22px_#0008] sm:max-w-[340px] sm:rounded-lg sm:p-5 ${isRight ? 'justify-self-end' : 'justify-self-start'}`}
+                style={{ gridColumnStart: isRight ? 2 : 1, gridRowStart: i + 1 }}
+              >
+                {/* Pin – positioned on the edge facing the thread */}
+                <span
+                  ref={(el) => { pinRefs.current[i] = el; }}
+                  className={`absolute h-3 w-3 rounded-full bg-[#df1111] shadow-[0_1px_6px_#0008] sm:h-4 sm:w-4 ${isRight ? '-left-1.5 top-3 sm:-left-2 sm:top-4' : '-right-1.5 top-3 sm:-right-2 sm:top-4'}`}
+                />
+                <div data-color-preserve className="text-[#171715]">
+                  <p className="font-serif text-[9px] leading-none opacity-55 sm:text-xs">0{i + 1} ✳</p>
+                  <h3 className="mt-1 font-serif text-[10px] font-semibold leading-tight sm:mt-2 sm:text-xl">{item.label}</h3>
+                  <p className="mt-1.5 text-[6px] leading-[1.25] opacity-75 sm:mt-2 sm:text-[11px]">{item.description}</p>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function TimelineSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, items } = section.content;
   const layout = section.layout || 'vertical';
@@ -1847,18 +1924,7 @@ export function TimelineSection({ section, theme }: { section: any; theme: Theme
 
   const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
-  if (section.variant === 'tattoo-process') return <section className="w-full bg-[#0c0d0c] px-6 py-20 text-[#e9e7dc] sm:px-10 md:px-[12%] md:py-28">
-    <div className="mx-auto max-w-5xl">
-      <div className="mb-8 max-w-[14rem] sm:mb-10 sm:max-w-sm"><h2 className="font-serif text-[clamp(2rem,7vw,4rem)] leading-[0.82] tracking-[-0.055em]">{title || 'From Idea To Ink'}</h2>{section.content.description && <p className="mt-4 text-[8px] leading-[1.4] text-white/55 sm:mt-5 sm:text-xs">{section.content.description}</p>}</div>
-      <div className="relative grid grid-cols-2 gap-x-3 gap-y-9 sm:gap-x-8 sm:gap-y-12">
-        <svg aria-hidden="true" className="pointer-events-none absolute -inset-x-1 top-0 z-0 h-full w-[calc(100%+8px)] overflow-visible" viewBox="0 0 320 450" preserveAspectRatio="none"><path d="M310 8 C245 30 155 75 115 127 S225 198 310 248 S172 319 115 365" fill="none" stroke="#b5221c" strokeWidth="1.2" /></svg>
-        {items.map((item: any, i: number) => <article key={item.id} className={`relative z-10 w-[72%] rounded-md border border-[#e5e5dc]/30 bg-[#c5c6bd] p-2.5 shadow-[0_8px_22px_#0008] sm:max-w-[340px] sm:rounded-lg sm:p-5 ${i % 2 === 0 ? 'justify-self-end' : 'justify-self-start'}`} style={{ gridColumnStart: i % 2 === 0 ? 2 : 1, gridRowStart: i + 1 }}>
-          <span className="absolute -right-1.5 -top-1.5 h-3 w-3 rounded-full bg-[#df1111] shadow-[0_1px_6px_#0008] sm:h-4 sm:w-4" />
-          <div data-color-preserve className="text-[#171715]"><p className="font-serif text-[9px] leading-none opacity-55 sm:text-xs">0{i + 1} ✳</p><h3 className="mt-1 font-serif text-[10px] font-semibold leading-tight sm:mt-2 sm:text-xl">{item.label}</h3><p className="mt-1.5 text-[6px] leading-[1.25] opacity-75 sm:mt-2 sm:text-[11px]">{item.description}</p></div>
-        </article>)}
-      </div>
-    </div>
-  </section>;
+  if (section.variant === 'tattoo-process') return <TattooProcessSection section={section} title={title} items={items} />;
 
   if (layout === 'restaurant-history') return <section className="w-full bg-white px-6 py-14 text-neutral-900 sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="font-serif text-4xl md:text-5xl">{title || 'La nostra storia'}</h2><div className="flex gap-2 text-sm text-[#c6a66b]"><button aria-label="Previous years" className="grid h-8 w-8 place-items-center rounded-full border border-current">←</button><button aria-label="Next years" className="grid h-8 w-8 place-items-center rounded-full border border-current">→</button></div></div><div className="mb-5 flex min-w-max items-end gap-10 border-b border-neutral-400 px-5">{items.map((item: any, index: number) => <a key={item.id} href={`#history-${item.id}`} className={`relative pb-3 font-serif text-3xl italic ${index === 0 ? 'text-[#c6a66b]' : 'text-neutral-900'}`}>{item.label}<span className={`absolute -bottom-1 left-0 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-[#c6a66b]' : 'bg-neutral-900'}`} /></a>)}</div><div className="grid gap-4 md:grid-cols-3">{items.map((item: any) => <article id={`history-${item.id}`} key={item.id} className="scroll-mt-8">{item.imageUrl && <img src={item.imageUrl} alt="" className="mb-3 aspect-[1.35/1] w-full object-cover" />}<p className="text-[9px] leading-relaxed text-neutral-600">{item.description}</p></article>)}</div></div></section>;
 
