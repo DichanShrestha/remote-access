@@ -31,7 +31,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     { url: 'https://pageory.app/', changeFrequency: 'weekly', priority: 1 },
-    { url: 'https://pageory.app/demo', changeFrequency: 'monthly', priority: 0.6 },
     ...indexableProfiles
       .filter(({ username }) => username.toLowerCase() !== 'demo')
       .map(({ username, page }) => ({
