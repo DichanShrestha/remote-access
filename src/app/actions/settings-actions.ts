@@ -3,6 +3,7 @@
 import { authService } from "@/services/auth";
 import db from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { storageService } from '@/lib/storage/service';
 
@@ -165,6 +166,14 @@ export async function deleteUserAccount(): Promise<{ success?: boolean; error?: 
     await db.user.delete({
       where: { id: user.id },
     });
+
+    // Cleanly delete from Supabase Auth so no orphaned auth credentials remain
+    try {
+      const supabaseAdmin = createAdminClient();
+      await supabaseAdmin.auth.admin.deleteUser(user.id);
+    } catch (authErr) {
+      console.warn("Could not delete Supabase auth user:", authErr);
+    }
 
     // Log the user out from Supabase Auth session
     const supabase = await createClient();

@@ -53,7 +53,6 @@ export async function crawlWebsite(url: string): Promise<CrawlResult> {
         }
 
         const markdown = await response.text();
-        console.log("markdown in crawler-actiom.ts", markdown)
 
         // Extract basic metadata from markdown
         const titleMatch = markdown.match(/^#\s+(.*)/m);

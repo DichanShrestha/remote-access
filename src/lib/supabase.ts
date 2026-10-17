@@ -9,16 +9,14 @@ import { storageService } from './storage/service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-// Service role key is private and should NEVER be used on the client
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+import { createAdminClient } from './supabase/admin';
 
 // 2. Supabase Clients
 // Regular client for Auth and RLS-compliant operations
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Admin client for backend-only operations (Vault, Storage management, etc.)
-// CAUTION: Only use in Server Components, API routes, or Server Actions.
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+// Admin client for backend-only operations (delegates to server-only createAdminClient)
+export const getSupabaseAdmin = () => createAdminClient();
 
 // 3. Specialized Helpers
 export const knoChat = {
@@ -67,7 +65,7 @@ export const knoChat = {
     vault: {
         async getSecret(secretId: string) {
             // Direct access to vault.decrypted_secrets for backend logic
-            const { data, error } = await supabaseAdmin
+            const { data, error } = await getSupabaseAdmin()
                 .from('decrypted_secrets')
                 .select('decrypted_secret')
                 .eq('id', secretId)

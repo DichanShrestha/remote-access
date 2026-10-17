@@ -25,7 +25,7 @@ export async function createCheckoutSession(
       ? (process.env.DODO_PRODUCT_SMART_PAGE_AI || process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE_AI)
       : (process.env.DODO_PRODUCT_SMART_PAGE || process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE);
 
-    const targetProductId = configuredProduct || (productId && productId.startsWith("pdt_") ? productId : undefined);
+    const targetProductId = configuredProduct;
     if (!targetProductId) throw new Error("This plan is not configured for checkout.");
 
     try {

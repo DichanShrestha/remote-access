@@ -5,7 +5,11 @@ import prisma from '@/lib/prisma'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/onboarding'
+  const rawNext = searchParams.get('next') ?? '/onboarding'
+  // Prevent Open Redirect (reject absolute URLs, protocol-relative '//', or backslashes)
+  const next = (rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.startsWith('/\\'))
+    ? rawNext
+    : '/onboarding'
 
   if (code) {
     const supabase = await createClient()

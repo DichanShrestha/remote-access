@@ -17,6 +17,16 @@ export async function GET(req: Request) {
             return new Response("Missing botId", { status: 400 });
         }
 
+        // Verify bot ownership to prevent IDOR
+        const bot = await prisma.bot.findFirst({
+            where: { id: botId, userId: user.id },
+            select: { id: true },
+        });
+
+        if (!bot) {
+            return new Response("Bot not found or unauthorized", { status: 404 });
+        }
+
         // Fetch all chat messages for this bot
         const allMessages = await prisma.chatMessage.findMany({
             where: { botId },

@@ -152,9 +152,6 @@ export function buildSystemPrompt(
     purpose: string = "general", // Append at the end to prevent breaking existing calls
     bookingLink?: string | null
 ): string {
-
-    console.log("context in rag: ", context)
-
     const toneMap: Record<string, string> = {
         friendly: "Warm, approachable, conversational. Accuracy always comes first.",
         professional: "Formal, precise, thorough.",

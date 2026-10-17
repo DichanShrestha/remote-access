@@ -1,5 +1,6 @@
 import React from 'react';
 import { z } from 'zod';
+import DOMPurify from 'isomorphic-dompurify';
 import { RichTextSectionSchema, ThemeConfig } from '@/lib/page-engine/schemas';
 import SplitText from '@/components/SplitText';
 import BlurText from '@/components/BlurText';
@@ -22,12 +23,13 @@ const stripHtml = (html: string) => {
 export function RichTextSection({ section, theme }: RichTextProps) {
   const { variant = 'default', content } = section;
   const rawText = stripHtml(content.text);
+  const sanitizedHtml = DOMPurify.sanitize(content.text || '');
 
   if (variant === 'architecture-about') {
     return <section className="w-full bg-white px-6 py-16 text-[#123b38] sm:px-10 md:px-[10%] md:py-20">
       <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-[0.7fr_1.3fr] md:gap-12">
         <p className="text-[10px] font-semibold uppercase">About us</p>
-        <div className="prose prose-sm max-w-none prose-headings:mb-4 prose-headings:text-2xl prose-headings:font-semibold prose-headings:leading-tight prose-headings:tracking-tight prose-p:text-[10px] prose-p:leading-relaxed prose-p:text-neutral-600" dangerouslySetInnerHTML={{ __html: content.text }} />
+        <div className="prose prose-sm max-w-none prose-headings:mb-4 prose-headings:text-2xl prose-headings:font-semibold prose-headings:leading-tight prose-headings:tracking-tight prose-p:text-[10px] prose-p:leading-relaxed prose-p:text-neutral-600" dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
       </div>
     </section>;
   }
@@ -79,7 +81,7 @@ export function RichTextSection({ section, theme }: RichTextProps) {
           </div>
           <div 
             className="w-full md:w-2/3 prose prose-lg dark:prose-invert prose-headings:font-serif prose-p:text-slate-500 dark:prose-p:text-slate-400 prose-p:leading-loose prose-a:text-slate-900 dark:prose-a:text-white hover:prose-a:text-opacity-80"
-            dangerouslySetInnerHTML={{ __html: content.text }}
+            dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
           />
         </div>
       </section>
@@ -89,7 +91,7 @@ export function RichTextSection({ section, theme }: RichTextProps) {
   return (
     <section className="py-8 px-6 w-full max-w-3xl mx-auto prose prose-slate dark:prose-invert prose-lg text-slate-700 dark:text-slate-300">
       <div 
-        dangerouslySetInnerHTML={{ __html: content.text }} 
+        dangerouslySetInnerHTML={{ __html: sanitizedHtml }} 
       />
     </section>
   );

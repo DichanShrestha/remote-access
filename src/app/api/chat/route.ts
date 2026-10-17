@@ -162,8 +162,6 @@ export async function POST(req: Request) {
             )
             : [];
 
-        console.log("Relavent chunks: ", relevantChunks)
-
         // 5. Catalog Search Guard — gate based on tier entitlement
         let catalogContext = "";
         let catalogVisualSetXml = "";

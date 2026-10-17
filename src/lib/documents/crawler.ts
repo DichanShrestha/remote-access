@@ -72,14 +72,11 @@ export async function crawlWebsite(
             }
 
             const content = await response.text();
-            console.log("content in crawler.ts", content)
 
             // Jina returns clean Markdown. We can use the URL as the title since we don't parse the HTML title tag.
             // (Alternatively we could try to extract the first heading #, but URL is safer fallback).
             const titleMatch = content.match(/^#\s+(.*)/m);
             const title = titleMatch ? titleMatch[1].trim() : currentUrl;
-
-            console.log("Cleaned text:", content.slice(0, 100) + "...");
 
             if (content.length > 200) {
                 results.push({ url: currentUrl, content, title });

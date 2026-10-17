@@ -74,7 +74,6 @@ export async function POST(req: Request) {
                 const catalogResults = await searchVisualSets(botId, query, catalogSearchLimit);
                 const relevantCatalogItems = (catalogResults as any[]).filter(r => r.similarity > 0.3);
 
-                console.log("relevant visual sets (playground): ", relevantCatalogItems)
                 if (relevantCatalogItems.length > 0) {
                     catalogContext = `\n\n[RECOMMENDED CATALOG ITEMS]\n` + relevantCatalogItems.map((set: any) => {
                         const parts = [`- ${set.title}`];

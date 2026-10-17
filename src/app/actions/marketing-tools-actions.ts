@@ -1,7 +1,31 @@
 "use server";
 
+import { rateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
+
 export async function runChatbotAudit(url: string) {
     try {
+        const headerStore = await headers();
+        const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
+        const limitCheck = rateLimit(`audit:${ip}`, { limit: 5, windowSeconds: 60 });
+        if (!limitCheck.success) {
+            return { error: "RATE_LIMITED", message: "Too many audit requests. Please try again in a minute." };
+        }
+
+        let parsedUrl: URL;
+        try {
+            parsedUrl = new URL(url.startsWith("http") ? url : `https://${url}`);
+            if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+                return { error: "INVALID_URL", message: "Invalid URL protocol." };
+            }
+            const host = parsedUrl.hostname.toLowerCase();
+            if (host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host.endsWith(".internal") || host.endsWith(".local")) {
+                return { error: "INVALID_URL", message: "Target URL cannot be a private or local address." };
+            }
+        } catch {
+            return { error: "INVALID_URL", message: "Please provide a valid website URL." };
+        }
+
         const jinaKey = process.env.JINA_API_KEY;
         const geminiKey = process.env.GEMINI_FREE_API_KEY;
 

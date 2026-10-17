@@ -505,20 +505,24 @@ export async function searchVisualSets(
             if (queryEmbedding && queryEmbedding.length > 0) {
                 const vectorString = `[${queryEmbedding.join(',')}]`;
 
-                // Exclude already found items
-                const excludeIds = results.map(r => `'${r.id}'`).join(',');
-                const excludeClause = excludeIds ? `AND i.catalog_item_id NOT IN (${excludeIds})` : '';
+                // Exclude already found items safely using Prisma.sql
+                const excludeIds = results.map(r => r.id).filter(id => /^[0-9a-f-]{36}$/i.test(id));
+                const excludeClause = excludeIds.length > 0
+                    ? Prisma.sql`AND i.catalog_item_id NOT IN (${Prisma.join(excludeIds.map(id => Prisma.sql`${id}::uuid`))})`
+                    : Prisma.empty;
 
-            // Group by item_id and get the max similarity among its images
-            const semanticMatches = await prisma.$queryRawUnsafe<Array<{ id: string; similarity: number }>>(`
-                SELECT i.catalog_item_id as "id", MAX(1 - (i.embedding <=> $1::vector)) as similarity
-                FROM "catalog_images" i
-                JOIN "catalog_items" t ON i.catalog_item_id = t.id
-                WHERE t.bot_id = $2::uuid AND t.status = 'ready' AND i.status = 'ready' AND i.embedding IS NOT NULL ${excludeClause}
-                GROUP BY i.catalog_item_id
-                ORDER BY similarity DESC
-                LIMIT $3
-            `, vectorString, botId, matchCount - results.length);
+                const limitVal = matchCount - results.length;
+
+                // Group by item_id and get the max similarity among its images using parameterized query
+                const semanticMatches = await prisma.$queryRaw<Array<{ id: string; similarity: number }>>`
+                    SELECT i.catalog_item_id as "id", MAX(1 - (i.embedding <=> ${vectorString}::vector)) as similarity
+                    FROM "catalog_images" i
+                    JOIN "catalog_items" t ON i.catalog_item_id = t.id
+                    WHERE t.bot_id = ${botId}::uuid AND t.status = 'ready' AND i.status = 'ready' AND i.embedding IS NOT NULL ${excludeClause}
+                    GROUP BY i.catalog_item_id
+                    ORDER BY similarity DESC
+                    LIMIT ${limitVal}
+                `;
 
             if (semanticMatches.length > 0) {
                 const semanticIds = semanticMatches.map(sm => sm.id);
