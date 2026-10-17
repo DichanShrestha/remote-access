@@ -202,7 +202,7 @@ export function LandingPage({ user, initialPricingMode }: { user: User; initialP
           </div>
         </section>
 
-        <footer className="lp-footer"><a href="#top" className="lp-brand"><Image src="/logo.png" alt="Pageory" width={24} height={24} className="rounded-md object-contain" /><span>Pageory</span></a><span className="footer-note">One beautiful page. More ways to connect.</span><div className="footer-links"><a href="#features">Features</a><a href="#templates">Templates</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></div><span className="copyright">© {new Date().getFullYear()} Pageory</span></footer>
+        <footer className="lp-footer"><a href="#top" className="lp-brand"><Image src="/logo.png" alt="Pageory" width={24} height={24} className="rounded-md object-contain" /><span>Pageory</span></a><span className="footer-note">One beautiful page. More ways to connect.</span><div className="footer-links"><a href="#features">Features</a><a href="#templates">Templates</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></div></footer>
       </main>
     </ReactLenis>
   )
