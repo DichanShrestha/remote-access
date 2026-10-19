@@ -30,3 +30,10 @@ export class UnauthorizedError extends AppError {
     this.name = 'UnauthorizedError';
   }
 }
+
+export class AccountSuspendedError extends AppError {
+  constructor() {
+    super('This Pageory account is suspended. Contact support for assistance.', 'ACCOUNT_SUSPENDED', 403);
+    this.name = 'AccountSuspendedError';
+  }
+}

@@ -40,9 +40,10 @@ import {
   cancelManualSubscription,
   startFreeTrial
 } from "@/app/actions/billing-actions";
+import { createInternationalAffiliateCheckout, createManualAffiliatePurchase, validateAffiliateCode } from "@/app/actions/affiliate-actions";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { getPlanPrice, getWhatsAppUrl, PAID_PLANS, type PricingMode, WHATSAPP_NUMBER } from "@/lib/pricing";
+import { getPlanPrice, getPricingModeCookie, PAID_PLANS, type PricingMode } from "@/lib/pricing";
 
 export interface UsageMetrics {
   plan: "trial" | "smart_page" | "smart_page_ai";
@@ -90,7 +91,9 @@ export interface UsageMetrics {
 
 interface SettingsClientProps {
   initialTab?: "billing" | "account";
+  accountOnly?: boolean;
   pricingMode: PricingMode;
+  pricingLockedToNepal?: boolean;
   user: {
     id: string;
     email: string | null;
@@ -116,7 +119,9 @@ interface SettingsClientProps {
 
 export function SettingsClient({
   initialTab = "billing",
-  pricingMode,
+  accountOnly = false,
+  pricingMode: initialPricingMode,
+  pricingLockedToNepal = false,
   user,
   hasPage: initialHasPage,
   subscription,
@@ -124,6 +129,7 @@ export function SettingsClient({
 }: SettingsClientProps) {
   const router = useRouter();
   const supabase = createClient();
+  const [pricingMode, setPricingMode] = useState<PricingMode>(initialPricingMode);
 
   // Tab State
   const [activeTab, setActiveTab] = useState<"billing" | "account">(initialTab);
@@ -149,6 +155,9 @@ export function SettingsClient({
   // Billing State
   const [isBillingPending, startBillingTransition] = useTransition();
   const [billingError, setBillingError] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoResult, setPromoResult] = useState<{ valid: boolean; discountAvailable?: boolean; discountPercent?: number; message: string } | null>(null);
+  const [checkingPromo, setCheckingPromo] = useState(false);
 
   // Danger Zone State
   const [hasPage, setHasPage] = useState(initialHasPage);
@@ -200,7 +209,7 @@ export function SettingsClient({
     e.preventDefault();
     setAccountFeedback(null);
 
-    if (usernameStatus === "unavailable") {
+    if (!accountOnly && usernameStatus === "unavailable") {
       setAccountFeedback({
         type: "error",
         message: "That username is taken or reserved. Please pick another."
@@ -208,7 +217,7 @@ export function SettingsClient({
       return;
     }
 
-    if (usernameStatus === "invalid") {
+    if (!accountOnly && usernameStatus === "invalid") {
       setAccountFeedback({
         type: "error",
         message: "Username must be 3–30 letters, numbers, dashes, or underscores."
@@ -217,7 +226,7 @@ export function SettingsClient({
     }
 
     startAccountTransition(async () => {
-      const res = await updateAccountProfile({ name, username });
+      const res = await updateAccountProfile({ name, username: accountOnly ? "" : username });
       if (res.error) {
         setAccountFeedback({ type: "error", message: res.error });
       } else {
@@ -253,6 +262,15 @@ export function SettingsClient({
     setBillingError(null);
     startBillingTransition(async () => {
       try {
+        if (promoCode.trim() && !promoResult?.valid) {
+          setBillingError("Apply a valid promo code before continuing, or clear the code field.");
+          return;
+        }
+        if (promoCode.trim() && promoResult?.valid) {
+          const result = await createInternationalAffiliateCheckout(planId as "smart_page" | "smart_page_ai", promoCode.trim());
+          if (result.error) { setBillingError(result.error); return; }
+          if (result.checkoutUrl) { window.location.href = result.checkoutUrl; return; }
+        }
         const res = await createCheckoutSession(productIdEnv || undefined, planId);
         if (res.payment_link) {
           window.location.href = res.payment_link;
@@ -265,11 +283,36 @@ export function SettingsClient({
     });
   };
 
-  const handleWhatsAppPurchase = (planId: "smart_page" | "smart_page_ai") => {
-    const plan = PAID_PLANS[planId];
-    const url = getWhatsAppUrl(plan.whatsappMessage(getPlanPrice(planId, "nepal").display), WHATSAPP_NUMBER);
-    if (url) window.open(url, "_blank", "noopener,noreferrer");
-    else setBillingError("WhatsApp sales contact is unavailable. Please contact support.");
+  const handleNepalPurchase = (planId: "smart_page" | "smart_page_ai") => {
+    setBillingError(null);
+    startBillingTransition(async () => {
+      try {
+        if (promoCode.trim() && !promoResult?.valid) {
+          setBillingError("Apply a valid promo code before continuing, or clear the code field.");
+          return;
+        }
+        const result = await createManualAffiliatePurchase(planId, promoResult?.valid ? promoCode.trim() || undefined : undefined);
+        if (result.error) { setBillingError(result.error); return; }
+        if (result.purchaseId) router.push(`/onboarding/payment/${result.purchaseId}`);
+      } catch (err: unknown) {
+        setBillingError(err instanceof Error ? err.message : "Could not start the payment.");
+      }
+    });
+  };
+
+  const handleValidatePromo = async () => {
+    setCheckingPromo(true);
+    setPromoResult(null);
+    try { setPromoResult(await validateAffiliateCode(promoCode)); }
+    catch { setPromoResult({ valid: false, message: "Could not check this promo code. Please try again." }); }
+    finally { setCheckingPromo(false); }
+  };
+
+  const handlePricingMode = (mode: PricingMode) => {
+    if (pricingLockedToNepal && mode !== "nepal") return;
+    setPricingMode(mode);
+    document.cookie = getPricingModeCookie(mode);
+    setBillingError(null);
   };
 
   const handleStartTrial = (planId: string) => {
@@ -487,16 +530,16 @@ function formatBytes(bytes: number): string {
       <header className="flex flex-col sm:flex-row sm:items-end justify-between pb-6 border-b border-[#E8E5DF] gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-[#171717]">
-            Settings & Billing
+            {accountOnly ? "Account Settings" : "Settings & Billing"}
           </h1>
           <p className="text-sm text-[#737373] mt-1">
-            Manage your plan subscription, resource limits, and account profile.
+            {accountOnly ? "Manage your account profile." : "Manage your plan subscription, resource limits, and account profile."}
           </p>
         </div>
       </header>
 
       {/* Segmented Navigation Tabs */}
-      <div className="flex items-center gap-1.5 p-1 bg-[#F2EFE9] border border-[#E8E5DF] rounded-xl w-fit">
+      {!accountOnly && <div className="flex items-center gap-1.5 p-1 bg-[#F2EFE9] border border-[#E8E5DF] rounded-xl w-fit">
         <button
           onClick={() => handleTabChange("billing")}
           className={cn(
@@ -527,12 +570,12 @@ function formatBytes(bytes: number): string {
           <UserIcon size={14} />
           <span>Account Profile</span>
         </button>
-      </div>
+      </div>}
 
       {/* ───────────────────────────────────────────────────────────── */}
       {/* TAB 1: BILLING & TIER LIMITS */}
       {/* ───────────────────────────────────────────────────────────── */}
-      {activeTab === "billing" && (
+      {!accountOnly && activeTab === "billing" && (
         <div className="space-y-6">
           {/* Warning Banner if Near Limit */}
           {isNearAnyLimit && (
@@ -873,6 +916,25 @@ function formatBytes(bytes: number): string {
               </p>
             </div>
 
+            <div className="mb-5 flex flex-wrap items-center gap-2" role="group" aria-label="Billing location">
+              <span className="mr-1 text-xs font-semibold text-[#737373]">Billing location</span>
+              <button type="button" aria-pressed={pricingMode === "nepal"} onClick={() => handlePricingMode("nepal")} className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${pricingMode === "nepal" ? "border-[#292A25] bg-[#292A25] text-white" : "border-[#D8D5CD]"}`}>🇳🇵 Nepal · NPR</button>
+              {!pricingLockedToNepal && <button type="button" aria-pressed={pricingMode === "international"} onClick={() => handlePricingMode("international")} className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${pricingMode === "international" ? "border-[#292A25] bg-[#292A25] text-white" : "border-[#D8D5CD]"}`}>International · USD</button>}
+              {pricingLockedToNepal && <span className="text-xs text-[#737373]">Pricing is based on your Nepal location.</span>}
+            </div>
+
+            <div className="mb-6 rounded-2xl border border-[#E8E5DF] bg-[#FBF9F5] p-5">
+                <label htmlFor="billing-promo-code" className="block text-sm font-semibold text-[#171717]">Have a promo code?</label>
+                <p className="mt-1 text-xs text-[#737373]">An account can use one promo code once. A used discount cannot be applied again on a later purchase.</p>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <input id="billing-promo-code" value={promoCode} onChange={(event) => { setPromoCode(event.target.value.toUpperCase()); setPromoResult(null); }} maxLength={40} placeholder="Enter promo code" className="min-w-0 flex-1 rounded-xl border border-[#D8D5CD] bg-white px-3 py-2.5 text-sm" />
+                  <button type="button" disabled={!promoCode.trim() || checkingPromo} onClick={handleValidatePromo} className="rounded-xl border border-[#D8D5CD] px-4 py-2.5 text-sm font-semibold disabled:opacity-50">{checkingPromo ? "Checking…" : "Apply code"}</button>
+                </div>
+                {promoResult && <p role="status" className={`mt-2 text-sm ${promoResult.valid ? "text-green-700" : "text-red-700"}`}>{promoResult.message}{promoResult.valid && promoResult.discountAvailable && promoResult.discountPercent ? ` ${promoResult.discountPercent}% off your first eligible purchase.` : ""}</p>}
+                {promoResult?.valid && (() => { const percent = promoResult.discountAvailable ? promoResult.discountPercent || 0 : 0; return <div className="mt-2 space-y-1 text-xs text-[#565850]">{(["smart_page", "smart_page_ai"] as const).map((planId) => { const price = getPlanPrice(planId, pricingMode); return <p key={planId}><strong>{PAID_PLANS[planId].name}:</strong> {price.currency} {price.amount.toLocaleString()} original · {price.currency} {(price.amount * percent / 100).toFixed(2)} discount · <strong>{price.currency} {(price.amount * (1 - percent / 100)).toFixed(2)} payable</strong></p>; })}</div>; })()}
+            </div>
+            {billingError && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{billingError}</p>}
+
             <div className="grid gap-6 md:grid-cols-2">
               {/* Plan 1: Pageory */}
               <div className="p-6 rounded-2xl bg-[#FBF9F5] border border-[#E8E5DF] flex flex-col justify-between">
@@ -913,7 +975,7 @@ function formatBytes(bytes: number): string {
                 </div>
 
                 <button
-                  onClick={() => pricingMode === "nepal" ? handleWhatsAppPurchase("smart_page") :
+                  onClick={() => pricingMode === "nepal" ? handleNepalPurchase("smart_page") :
                     handleCheckoutPlan(process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE || "", "smart_page")}
                   disabled={
                     isBillingPending ||
@@ -921,7 +983,7 @@ function formatBytes(bytes: number): string {
                   }
                   className="w-full py-2.5 px-4 rounded-xl border border-[#E8E5DF] bg-white hover:bg-[#F2EFE9] text-[#171717] text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {pricingMode === "nepal" ? "Purchase via WhatsApp" : usageMetrics.plan === "smart_page" && !usageMetrics.isTrial && usageMetrics.isPaidActive
+                  {pricingMode === "nepal" ? isBillingPending ? "Preparing payment…" : "Continue to Nepal payment" : usageMetrics.plan === "smart_page" && !usageMetrics.isTrial && usageMetrics.isPaidActive
                     ? "Current Active Plan"
                     : `Switch to Starter (${getPlanPrice("smart_page", pricingMode).display}/month)`}
                 </button>
@@ -972,7 +1034,7 @@ function formatBytes(bytes: number): string {
                 </div>
 
                 <button
-                  onClick={() => pricingMode === "nepal" ? handleWhatsAppPurchase("smart_page_ai") :
+                  onClick={() => pricingMode === "nepal" ? handleNepalPurchase("smart_page_ai") :
                     handleCheckoutPlan(process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE_AI || "", "smart_page_ai")}
                   disabled={
                     isBillingPending ||
@@ -980,7 +1042,7 @@ function formatBytes(bytes: number): string {
                   }
                   className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#F2EFE9] text-[#171717] text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
                 >
-                  {pricingMode === "nepal" ? "Purchase via WhatsApp" : usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial && usageMetrics.isPaidActive
+                  {pricingMode === "nepal" ? isBillingPending ? "Preparing payment…" : "Continue to Nepal payment" : usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial && usageMetrics.isPaidActive
                     ? "Current Active Plan"
                     : `Upgrade to Growth (${getPlanPrice("smart_page_ai", pricingMode).display}/month)`}
                 </button>
@@ -993,7 +1055,7 @@ function formatBytes(bytes: number): string {
       {/* ───────────────────────────────────────────────────────────── */}
       {/* TAB 2: ACCOUNT PROFILE & DANGER ZONE */}
       {/* ───────────────────────────────────────────────────────────── */}
-      {activeTab === "account" && (
+      {(accountOnly || activeTab === "account") && (
         <div className="space-y-6">
           {/* SECTION: ACCOUNT PROFILE */}
           <section className="bg-white border border-[#E8E5DF] rounded-2xl p-6 sm:p-8 shadow-xs">
@@ -1003,10 +1065,10 @@ function formatBytes(bytes: number): string {
               </span>
               <div>
                 <h2 className="text-lg font-bold text-[#171717]">
-                  Account Information
+                  {accountOnly ? "Account Profile" : "Account Information"}
                 </h2>
                 <p className="text-xs text-[#737373] mt-0.5">
-                  Update your personal details and custom URL handle.
+                  {accountOnly ? "Update your personal details." : "Update your personal details and custom URL handle."}
                 </p>
               </div>
             </div>
@@ -1048,7 +1110,7 @@ function formatBytes(bytes: number): string {
                 />
               </div>
 
-              <div>
+              {!accountOnly && <div>
                 <label
                   htmlFor="account-username"
                   className="block text-[11px] font-semibold text-[#171717] uppercase tracking-wider mb-2"
@@ -1116,7 +1178,7 @@ function formatBytes(bytes: number): string {
                     </span>
                   )}
                 </div>
-              </div>
+              </div>}
 
               {accountFeedback && (
                 <div
@@ -1135,8 +1197,7 @@ function formatBytes(bytes: number): string {
                 type="submit"
                 disabled={
                   isUpdatingAccount ||
-                  usernameStatus === "checking" ||
-                  usernameStatus === "unavailable"
+                  (!accountOnly && (usernameStatus === "checking" || usernameStatus === "unavailable"))
                 }
                 className="px-5 py-2.5 bg-[#171717] hover:bg-[#262626] text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-xs"
               >
@@ -1152,6 +1213,7 @@ function formatBytes(bytes: number): string {
             </form>
           </section>
 
+          {!accountOnly && <>
           {/* SECTION: DATA EXPORT */}
           <section className="bg-white border border-[#E8E7E1] rounded-2xl p-6 sm:p-8 shadow-xs">
             <div className="flex items-center gap-3 pb-6 border-b border-[#F2EFE9] mb-6">
@@ -1273,6 +1335,7 @@ function formatBytes(bytes: number): string {
               </div>
             </div>
           </section>
+          </>}
         </div>
       )}
 

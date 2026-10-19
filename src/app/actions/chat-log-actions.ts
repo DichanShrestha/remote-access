@@ -11,7 +11,7 @@ import type { ConversationSummary, ConversationMessage } from "@/types/conversat
  */
 export async function getBotConversations(botId: string): Promise<ConversationSummary[]> {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
 
 
@@ -79,7 +79,7 @@ export async function getConversationMessages(
     sessionId: string
 ): Promise<ConversationMessage[]> {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
 
 
@@ -113,7 +113,7 @@ export async function deleteConversation(
     sessionId: string
 ): Promise<{ success: boolean }> {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
 
 

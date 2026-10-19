@@ -3,9 +3,10 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, ArrowRight, Check, ShieldCheck, Sparkles, ExternalLink } from 'lucide-react';
-import { startCurrentFreeTrial, createOnboardingCheckout } from '@/app/onboarding/actions';
-import { getPlanPrice, getWhatsAppUrl, NEPAL_TRIAL_MESSAGE, PAID_PLANS, type PricingMode } from '@/lib/pricing';
+import { ArrowLeft, ArrowRight, Check, ShieldCheck, Sparkles, MessageCircle } from 'lucide-react';
+import { requestPlanAccess, setOnboardingPricingMode } from '@/app/onboarding/actions';
+import { validateAffiliateCode } from '@/app/actions/affiliate-actions';
+import { getPlanPrice, getWhatsAppUrl, getPricingModeCookie, type PricingMode } from '@/lib/pricing';
 
 interface PlanSelectionProps {
   username: string;
@@ -14,6 +15,8 @@ interface PlanSelectionProps {
   trialEligible: boolean;
   trialIneligibleReason?: string;
   pricingMode: PricingMode;
+  pricingLockedToNepal: boolean;
+  pendingRequest: { id: string; requestType: string; planId: string } | null;
 }
 
 const BASE_FEATURES = [
@@ -32,11 +35,15 @@ const AI_FEATURES = [
   'Knowledge base & FAQ builder',
 ];
 
-export function PlanSelection({ username, domain, endsAt, trialEligible, trialIneligibleReason, pricingMode }: PlanSelectionProps) {
+export function PlanSelection({ username, domain, endsAt, trialEligible, trialIneligibleReason, pricingMode: initialPricingMode, pricingLockedToNepal, pendingRequest }: PlanSelectionProps) {
+  const [pricingMode, setPricingMode] = useState<PricingMode>(initialPricingMode);
   const [selectedPlan, setSelectedPlan] = useState<'smart_page' | 'smart_page_ai'>('smart_page_ai');
   const [isPending, startTransition] = useTransition();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [affiliateCode, setAffiliateCode] = useState('');
+  const [codeResult, setCodeResult] = useState<{ valid: boolean; discountAvailable?: boolean; discountPercent?: number; message: string } | null>(null);
+  const [checkingCode, setCheckingCode] = useState(false);
 
   const endDate = new Date(endsAt).toLocaleDateString('en-US', {
     month: 'long',
@@ -45,35 +52,34 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
     timeZone: 'UTC',
   });
 
-  const handleStartTrial = () => {
-    if (!trialEligible) return;
-    setPendingAction('trial');
+  const handleRequest = (planId: 'smart_page' | 'smart_page_ai', requestType: 'trial' | 'plan') => {
+    if (requestType === 'trial' && !trialEligible) return;
+    const actionName = `${requestType}_${planId}`;
+    setPendingAction(actionName);
     setError('');
+    const whatsappWindow = window.open('about:blank', '_blank');
     startTransition(async () => {
-      const result = await startCurrentFreeTrial(selectedPlan);
-      if (result?.error) {
-        setError(result.error);
+      try {
+        const result = await requestPlanAccess(planId, requestType, affiliateCode.trim() || undefined);
+        if (!result || 'error' in result) {
+          if (whatsappWindow) whatsappWindow.close();
+          setError(result?.error || 'Could not submit your request. Please try again.');
+          setPendingAction(null);
+          return;
+        }
+        const plan = planId === 'smart_page_ai' ? 'Growth' : 'Starter';
+        const price = getPlanPrice(planId, pricingMode);
+        const quote = requestType === 'trial' ? 'a free trial request' : `${price.currency} ${result.amount.toLocaleString()} per month${result.discountPercent ? ` after ${result.discountPercent}% referral discount` : ''}`;
+        const message = `Hi, I would like to request ${requestType === 'trial' ? `a free trial of ${plan}` : `${plan} access`} (${quote}). My Pageory request ID is ${result.requestId}.${affiliateCode.trim() ? ` Referral code: ${affiliateCode.trim().toUpperCase()}.` : ''} Please review my request. I understand access starts only after Pageory approves it.`;
+        const url = getWhatsAppUrl(message);
+        if (!url) throw new Error('WhatsApp contact is not configured. Please contact Pageory support.');
+        if (whatsappWindow) whatsappWindow.location.href = url;
+        else window.location.href = url;
         setPendingAction(null);
-      }
-    });
-  };
-
-  const handleSubscribe = (planId: 'smart_page' | 'smart_page_ai') => {
-    if (pricingMode === 'nepal') {
-      const plan = PAID_PLANS[planId];
-      const url = getWhatsAppUrl(plan.whatsappMessage(getPlanPrice(planId, 'nepal').display));
-      if (url) window.open(url, '_blank', 'noopener,noreferrer');
-      return;
-    }
-    setPendingAction(`subscribe_${planId}`);
-    setError('');
-    startTransition(async () => {
-      const result = await createOnboardingCheckout(planId);
-      if (result && 'error' in result && result.error) {
-        setError(result.error);
+      } catch (requestError) {
+        if (whatsappWindow) whatsappWindow.close();
+        setError(requestError instanceof Error ? requestError.message : 'Could not submit your request. Please try again.');
         setPendingAction(null);
-      } else if (result && 'checkoutUrl' in result && result.checkoutUrl) {
-        window.location.href = result.checkoutUrl;
       }
     });
   };
@@ -106,9 +112,30 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
           </p>
         </div>
 
+        {pendingRequest && <section role="status" style={{ ...styles.trialCard, marginBottom: 22 }}><strong>Your access request is pending review</strong><p style={{ margin: '7px 0', fontSize: 13, color: '#62645E' }}>Request {pendingRequest.id} · {pendingRequest.requestType === 'trial' ? 'free trial' : pendingRequest.planId === 'smart_page_ai' ? 'Growth' : 'Starter'}. Your plan will not activate until Pageory approves it.</p><button type="button" onClick={() => { const plan = pendingRequest.planId === 'smart_page_ai' ? 'Growth' : 'Starter'; const message = `Hi, I submitted Pageory access request ${pendingRequest.id} for ${pendingRequest.requestType === 'trial' ? `a free trial of ${plan}` : `${plan} access`}. Please review my request.`; const url = getWhatsAppUrl(message); if (url) window.open(url, '_blank', 'noopener,noreferrer'); }} style={{ ...styles.trialBtn, padding: '9px 12px' }}><MessageCircle size={14} /> Continue in WhatsApp</button></section>}
+
+        <section style={{ ...styles.trialCard, marginBottom: 22 }} aria-label="Billing location">
+          <strong style={{ display: 'block', fontSize: 14, marginBottom: 9 }}>Billing location</strong>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+            <button type="button" aria-pressed={pricingMode === 'nepal'} onClick={async () => { try { await setOnboardingPricingMode('nepal'); document.cookie = getPricingModeCookie('nepal'); setPricingMode('nepal'); setCodeResult(null); } catch (error) { setError(error instanceof Error ? error.message : 'Could not update billing location.'); } }} style={{ ...styles.trialBtn, padding: '8px 12px', opacity: pricingMode === 'nepal' ? 1 : 0.7 }}>🇳🇵 Nepal · NPR</button>
+            {!pricingLockedToNepal && <button type="button" aria-pressed={pricingMode === 'international'} onClick={async () => { try { await setOnboardingPricingMode('international'); document.cookie = getPricingModeCookie('international'); setPricingMode('international'); setCodeResult(null); } catch (error) { setError(error instanceof Error ? error.message : 'Could not update billing location.'); } }} style={{ ...styles.trialBtn, padding: '8px 12px', opacity: pricingMode === 'international' ? 1 : 0.7 }}>International · USD</button>}
+            {pricingLockedToNepal && <span style={{ fontSize: 12, color: '#777972' }}>Nepal pricing is selected based on your location.</span>}
+          </div>
+        </section>
+
         {error && (
           <div style={styles.errorBanner}>{error}</div>
         )}
+
+        <section style={{ ...styles.trialCard, marginBottom: 22 }}>
+          <label htmlFor="affiliate-code" style={{ display: 'block', fontWeight: 600, marginBottom: 8 }}>Have an affiliate referral code?</label>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <input id="affiliate-code" value={affiliateCode} onChange={(event) => { setAffiliateCode(event.target.value.toUpperCase()); setCodeResult(null); }} placeholder="Enter code (optional)" maxLength={40} style={{ minWidth: 220, flex: 1, border: '1px solid #d9d6ce', borderRadius: 9, padding: '10px 12px', background: '#fff' }} />
+            <button type="button" disabled={!affiliateCode.trim() || checkingCode} onClick={async () => { setCheckingCode(true); setError(''); const result = await validateAffiliateCode(affiliateCode); setCodeResult(result); setCheckingCode(false); }} style={{ ...styles.trialBtn, padding: '10px 14px' }}>{checkingCode ? 'Checking…' : 'Apply code'}</button>
+          </div>
+          {codeResult && <p style={{ margin: '8px 0 0', fontSize: 13, color: codeResult.valid ? '#475b3b' : '#a33b32' }}>{codeResult.message}{codeResult.valid && codeResult.discountAvailable && codeResult.discountPercent ? ` ${codeResult.discountPercent}% will be taken off the first eligible purchase.` : ''}</p>}
+          {codeResult?.valid && <p style={{ margin: '10px 0 0', fontSize: 13, color: '#292A25' }}><strong>{selectedPlan === 'smart_page_ai' ? 'Growth' : 'Starter'}:</strong> {getPlanPrice(selectedPlan, pricingMode).currency} {getPlanPrice(selectedPlan, pricingMode).amount.toLocaleString()} original · {getPlanPrice(selectedPlan, pricingMode).currency} {(getPlanPrice(selectedPlan, pricingMode).amount * (codeResult.discountAvailable ? codeResult.discountPercent || 0 : 0) / 100).toFixed(2)} discount · <strong>{getPlanPrice(selectedPlan, pricingMode).currency} {(getPlanPrice(selectedPlan, pricingMode).amount * (1 - (codeResult.discountAvailable ? codeResult.discountPercent || 0 : 0) / 100)).toFixed(2)} payable</strong></p>}
+        </section>
 
         {/* Plan Cards */}
         <div style={styles.cardsGrid}>
@@ -160,15 +187,15 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
             </ul>
 
             <button
-              onClick={(e) => { e.stopPropagation(); handleSubscribe('smart_page'); }}
-              disabled={isLoading}
+              onClick={(e) => { e.stopPropagation(); handleRequest('smart_page', 'plan'); }}
+              disabled={isLoading || !!pendingRequest}
               style={{
                 ...styles.subscribeBtn,
                 ...(isLoading ? styles.btnDisabled : {}),
               }}
             >
-              {pricingMode === 'nepal' ? 'Purchase via WhatsApp' : pendingAction === 'subscribe_smart_page' ? 'Redirecting…' : `Subscribe — ${getPlanPrice('smart_page', 'international').display}/month`}
-              {pricingMode !== 'nepal' && pendingAction !== 'subscribe_smart_page' && <ExternalLink size={13} />}
+              {pendingAction === 'plan_smart_page' ? 'Preparing request…' : 'Request Starter on WhatsApp'}
+              <MessageCircle size={14} />
             </button>
           </div>
 
@@ -231,15 +258,15 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
             </ul>
 
             <button
-              onClick={(e) => { e.stopPropagation(); handleSubscribe('smart_page_ai'); }}
-              disabled={isLoading}
+              onClick={(e) => { e.stopPropagation(); handleRequest('smart_page_ai', 'plan'); }}
+              disabled={isLoading || !!pendingRequest}
               style={{
                 ...styles.subscribeBtnLight,
                 ...(isLoading ? styles.btnDisabled : {}),
               }}
             >
-              {pricingMode === 'nepal' ? 'Purchase via WhatsApp' : pendingAction === 'subscribe_smart_page_ai' ? 'Redirecting…' : `Subscribe — ${getPlanPrice('smart_page_ai', 'international').display}/month`}
-              {pricingMode !== 'nepal' && pendingAction !== 'subscribe_smart_page_ai' && <ExternalLink size={13} />}
+              {pendingAction === 'plan_smart_page_ai' ? 'Preparing request…' : 'Request Growth on WhatsApp'}
+              <MessageCircle size={14} />
             </button>
           </div>
         </div>
@@ -252,21 +279,21 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
                 <div style={styles.trialInfo}>
                   <h3 style={styles.trialTitle}>Not ready to commit?</h3>
                   <p style={styles.trialDescription}>
-                    Start a <strong>14-day free trial</strong> of the <strong>{selectedPlan === 'smart_page_ai' ? 'Growth' : 'Starter'}</strong> plan.
-                    {pricingMode === 'nepal' ? ' Request the trial through WhatsApp; it will not start until approved.' : " No credit card required — you won't be charged when it ends."}
+                    Request a <strong>14-day free trial</strong> of the <strong>{selectedPlan === 'smart_page_ai' ? 'Growth' : 'Starter'}</strong> plan. It will start only after Pageory reviews and approves your request.
                   </p>
                 </div>
                 <button
-                  onClick={pricingMode === 'nepal' ? () => { const url = getWhatsAppUrl(NEPAL_TRIAL_MESSAGE); if (url) window.open(url, '_blank', 'noopener,noreferrer'); } : handleStartTrial}
-                  disabled={isLoading}
+                  onClick={() => handleRequest(selectedPlan, 'trial')}
+                  disabled={isLoading || !!pendingRequest}
                   style={{
                     ...styles.trialBtn,
                     ...(isLoading ? styles.btnDisabled : {}),
                   }}
                 >
-                  {pendingAction === 'trial' ? 'Publishing your page…' : (
+                  {pendingAction === `trial_${selectedPlan}` ? 'Preparing request…' : (
                     <>
-                      {pricingMode === 'nepal' ? 'Request Free Trial on WhatsApp' : 'Start free trial'}
+                      Request Free Trial on WhatsApp
+                      <MessageCircle size={14} />
                       <ArrowRight size={14} />
                     </>
                   )}
@@ -288,8 +315,8 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
           <ShieldCheck size={15} style={{ color: '#898A82', flexShrink: 0 }} />
           <span>
             {trialEligible
-              ? `Free trial runs through ${endDate}. No card collected, no auto-charges. Switch or upgrade anytime.`
-              : 'Cancel anytime. Switch or upgrade plans from your dashboard.'}
+              ? `No access begins until your free trial request is approved. Estimated start information: ${endDate}.`
+              : 'Sending a request does not activate a plan. Pageory reviews every request before access starts.'}
           </span>
         </div>
       </div>

@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getInitialPricingMode, getPlanPrice, getPricingModeCookie, getWhatsAppUrl, NEPAL_TRIAL_MESSAGE, PAID_PLANS } from './pricing';
 
-test('pricing mode uses the saved choice before country detection', () => {
-  assert.equal(getInitialPricingMode('international', 'NP'), 'international');
+test('Nepal location overrides a saved preference while other locations retain it', () => {
+  assert.equal(getInitialPricingMode('international', 'NP'), 'nepal');
   assert.equal(getInitialPricingMode('nepal', 'US'), 'nepal');
   assert.equal(getInitialPricingMode(null, 'NP'), 'nepal');
   assert.equal(getInitialPricingMode(null, null), 'international');

@@ -9,7 +9,7 @@ import db from '@/lib/prisma';
 
 export async function composePage(prompt: string, pageId: string) {
   if (pageId !== 'demo-id') {
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     // Basic usage accounting: ensure profile exists
     const profile = await db.profile.findUnique({
@@ -52,7 +52,7 @@ Generate high-quality, conversion-optimized copy. Ensure unique IDs for all sect
 
 export async function editSection(prompt: string, section: any, pageId: string) {
   if (pageId !== 'demo-id') {
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     const profile = await db.profile.findUnique({ where: { userId: user.id } });
     if (!profile) throw new Error("Profile not found");
 

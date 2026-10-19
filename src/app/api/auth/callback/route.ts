@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     const { error, data } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
+      const affiliateIntent = next === '/affiliate/apply' || next === '/dashboard/affiliate';
       // Sync user to Prisma
       let dbUser = await prisma.user.findUnique({
         where: { id: data.user.id },
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
         })
       }
 
-      if (!dbUser.profile) {
+      if (!dbUser.profile && !affiliateIntent) {
         // Auto-create a profile for the user
         const baseUsername = (data.user.email?.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9_-]/g, '')
         let username = baseUsername

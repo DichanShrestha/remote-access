@@ -9,11 +9,11 @@ import {
   PenTool,
   MessageSquare,
   Users,
-  UserCheck,
   Brain,
   LineChart,
   Settings,
-  CreditCard,
+  HandCoins,
+  ShieldCheck,
   Menu,
   X,
   PanelLeftClose,
@@ -24,7 +24,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-const NAV_GROUPS = [
+const CREATOR_NAV_GROUPS = [
   {
     label: 'OVERVIEW',
     items: [
@@ -60,7 +60,7 @@ const NAV_GROUPS = [
   }
 ];
 
-export function Sidebar() {
+export function Sidebar({ isAdmin = false, isCreator = true, isAffiliate = false, showBecomeAffiliate = false }: { isAdmin?: boolean; isCreator?: boolean; isAffiliate?: boolean; showBecomeAffiliate?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -74,6 +74,25 @@ export function Sidebar() {
   };
 
   const isEditor = pathname?.startsWith('/editor');
+
+  const navGroups = isCreator
+    ? CREATOR_NAV_GROUPS.map((group) => group.label === 'ACCOUNT' ? {
+        ...group,
+        items: [
+          ...group.items,
+          ...(showBecomeAffiliate ? [{ name: 'Become an Affiliate', href: '/affiliate/apply', icon: HandCoins }] : []),
+          ...(isAffiliate ? [{ name: 'Affiliate Program', href: '/dashboard/affiliate', icon: HandCoins }] : []),
+          ...(isAdmin ? [{ name: 'Admin Dashboard', href: '/admin', icon: ShieldCheck }] : []),
+        ],
+      } : group)
+    : [
+        { label: 'OVERVIEW', items: [{ name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }] },
+        ...(isAffiliate ? [{ label: 'AFFILIATE', items: [{ name: 'Affiliate Program', href: '/dashboard/affiliate', icon: HandCoins }] }] : []),
+        { label: 'ACCOUNT', items: [
+          { name: 'Account Settings', href: '/dashboard/settings', icon: Settings },
+          ...(isAdmin ? [{ name: 'Admin Dashboard', href: '/admin', icon: ShieldCheck }] : []),
+        ] },
+      ];
 
   // Determine actual visual state
   const visuallyCollapsed = isEditor ? true : isCollapsed;
@@ -125,7 +144,7 @@ export function Sidebar() {
         </div>
 
         <div className="flex-1 overflow-y-auto py-6 px-3 no-scrollbar flex flex-col gap-6">
-          {NAV_GROUPS.map((group, i) => (
+          {navGroups.map((group, i) => (
             <div key={i} className="flex flex-col gap-1.5">
               <h4 className={cn(
                 "text-[10px] font-semibold text-[#8C8D85] uppercase tracking-[0.14em] mb-0.5 whitespace-nowrap overflow-hidden transition-all duration-300",

@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { authService } from "@/services/auth";
 
 export async function GET(req: Request) {
     try {
@@ -8,6 +9,10 @@ export async function GET(req: Request) {
 
         if (!user) {
             return new Response("Unauthorized", { status: 401 });
+        }
+        await authService.ensureActive(user.id);
+        if (!await prisma.profile.findUnique({ where: { userId: user.id }, select: { id: true } })) {
+            return new Response("Creator access required", { status: 403 });
         }
 
         const { searchParams } = new URL(req.url);

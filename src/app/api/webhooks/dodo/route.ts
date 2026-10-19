@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { dodo } from '@/lib/dodopayments';
 import db from '@/lib/prisma';
 import { normalizePlan } from '@/lib/tier-limits';
+import { addCalendarMonths, calculateCommission, fromMinorUnits, isWithinCommissionWindow } from '@/lib/affiliate-math';
+import { getAffiliateConfig, recordCommissionReversal } from '@/services/affiliates';
 
 type DodoEvent = { type?: string; timestamp?: string; data?: Record<string, any> };
 
@@ -25,9 +27,10 @@ export async function POST(req: Request) {
   try {
     await db.$transaction(async (tx) => {
       await tx.webhookEvent.create({ data: { eventId, provider: 'dodo', type, status: 'processing' } });
-      const subscriptionId = data.subscription_id || data.id;
+      const subscriptionId = data.subscription_id || (type.startsWith('subscription.') ? data.id : null);
       const existing = subscriptionId ? await tx.subscription.findFirst({ where: { dodoSubscriptionId: subscriptionId } }) : null;
-      const userId = data.metadata?.user_id || data.customer?.metadata?.user_id || existing?.userId;
+      const linkedPayment = (type === 'refund.succeeded' || type === 'dispute.lost') && data.payment_id ? await tx.affiliatePurchase.findUnique({ where: { paymentReference: data.payment_id }, select: { customerId: true } }) : null;
+      const userId = data.metadata?.user_id || data.customer?.metadata?.user_id || existing?.userId || linkedPayment?.customerId;
       if (!userId) {
         await tx.webhookEvent.update({ where: { eventId }, data: { status: 'ignored_missing_user' } });
         return;
@@ -101,7 +104,7 @@ export async function POST(req: Request) {
           status = sub?.status || (providerStatus === 'active' ? 'active' : 'pending');
         }
       } else if (type === 'payment.succeeded') {
-        // Payment events alone are not sufficient to infer a subscription period or plan.
+        // A signed successful payment event is collection evidence for the commission ledger.
         status = sub?.status || 'pending';
       }
 
@@ -109,7 +112,7 @@ export async function POST(req: Request) {
         planId: plan,
         tier: plan,
         billingMethod: 'dodo',
-        dodoSubscriptionId: subscriptionId,
+        dodoSubscriptionId: subscriptionId || sub?.dodoSubscriptionId,
         dodoCustomerId: data.customer_id || data.customer?.customer_id || sub?.dodoCustomerId,
         currentPeriodStart: periodStart || sub?.currentPeriodStart,
         currentPeriodEnd: effectivePeriodEnd,
@@ -120,6 +123,60 @@ export async function POST(req: Request) {
       const writeData = { ...common, status, aiRepliesUsed: repliesUsed, aiRepliesPeriodStart: periodStartSaved, aiAccessEndedAt };
       if (sub) await tx.subscription.update({ where: { id: sub.id }, data: writeData });
       else await tx.subscription.create({ data: { userId, ...writeData, planId: plan, tier: plan } });
+
+      if (type === 'payment.succeeded' && !data.is_update_payment_method && data.payment_id) {
+        if (data.discount_id || data.discount_ids?.length) {
+          await tx.user.update({ where: { id: userId }, data: { promoCodeUsedAt: eventAt } });
+        }
+        const metadataPurchaseId = data.metadata?.affiliate_purchase_id;
+        const initialPurchase = metadataPurchaseId ? await tx.affiliatePurchase.findUnique({ where: { id: metadataPurchaseId }, include: { referral: true } }) : null;
+        if (Number(initialPurchase?.discountPercent || 0) > 0) {
+          await tx.user.update({ where: { id: userId }, data: { promoCodeUsedAt: eventAt } });
+        }
+        const existingPayment = await tx.affiliatePurchase.findUnique({ where: { paymentReference: data.payment_id } });
+        if (!existingPayment) {
+          const referral = initialPurchase?.referral || await tx.customerReferral.findUnique({ where: { customerId: userId } });
+          if (referral) {
+            const paymentCurrency = String(data.currency || initialPurchase?.currency || 'USD').toUpperCase();
+            const settlementCurrency = String(data.settlement_currency || paymentCurrency).toUpperCase();
+            const settlementTax = data.settlement_tax ?? (settlementCurrency === paymentCurrency ? data.tax : 0) ?? 0;
+            const retainedRevenue = fromMinorUnits(Number(data.settlement_amount ?? data.total_amount ?? 0) - Number(settlementTax), settlementCurrency);
+            const grossPayment = fromMinorUnits(Number(data.total_amount ?? 0), paymentCurrency);
+            const taxAmount = fromMinorUnits(Number(data.tax ?? 0), paymentCurrency);
+            const paymentAt = new Date(data.created_at || eventAt);
+            const purchase = initialPurchase
+              ? await tx.affiliatePurchase.update({ where: { id: initialPurchase.id }, data: { paymentReference: data.payment_id, status: 'verified', currency: paymentCurrency, verifiedAmount: grossPayment, expectedAmount: grossPayment - taxAmount, verifiedAt: paymentAt, paymentDate: paymentAt, subscriptionId: sub?.id || null, verifiedBy: null } })
+              : await tx.affiliatePurchase.create({ data: { customerId: userId, referralId: referral.id, subscriptionId: sub?.id, planId: plan, paymentProvider: 'dodo', currency: paymentCurrency, originalAmount: grossPayment - taxAmount, expectedAmount: grossPayment - taxAmount, verifiedAmount: grossPayment, status: 'verified', verifiedAt: paymentAt, paymentDate: paymentAt, paymentReference: data.payment_id } });
+            const firstPaidAt = referral.firstPaidAt || paymentAt;
+            const updatedReferral = await tx.customerReferral.update({ where: { id: referral.id }, data: { firstPaidAt, discountUsed: referral.discountUsed || Number(initialPurchase?.discountPercent || 0) > 0 } });
+            const affiliateIsApproved = await tx.affiliateApplication.findFirst({ where: { userId: referral.affiliateId, status: 'approved' }, select: { id: true } });
+            const config = await getAffiliateConfig(tx);
+            if (affiliateIsApproved && retainedRevenue > 0 && isWithinCommissionWindow(paymentAt, firstPaidAt, config.eligibilityMonths)) {
+              const commissionPercent = Number(config.commissionPercent);
+              await tx.commission.create({ data: { affiliateId: updatedReferral.affiliateId, referralId: updatedReferral.id, purchaseId: purchase.id, subscriptionId: sub?.id, currency: settlementCurrency, eligibleRevenue: retainedRevenue, commissionPercent, amount: calculateCommission(retainedRevenue, commissionPercent), earnedAt: paymentAt, eligibilityEndsAt: addCalendarMonths(firstPaidAt, config.eligibilityMonths), eligibilityStatus: 'payable', payoutStatus: 'unpaid' } });
+            }
+          }
+        }
+      }
+
+      if ((type === 'refund.succeeded' || type === 'dispute.lost') && data.payment_id) {
+        const purchase = await tx.affiliatePurchase.findUnique({ where: { paymentReference: data.payment_id }, include: { commission: true } });
+        if (purchase?.commission) {
+          const reversalReference = String(data.refund_id || data.dispute_id || data.id || eventId);
+          const refundCurrency = String(data.currency || purchase.currency).toUpperCase();
+          const refundAmount = data.amount == null ? Number(purchase.verifiedAmount || purchase.expectedAmount) : fromMinorUnits(Number(data.amount), refundCurrency);
+          const gross = Number(purchase.verifiedAmount || purchase.expectedAmount);
+          const reversed = await recordCommissionReversal(tx, purchase.commission, { refundReference: reversalReference, refundAmount, refundCurrency, fraction: gross > 0 ? Math.min(1, refundAmount / gross) : 1, at: eventAt });
+          if (reversed) {
+            await tx.affiliatePurchase.update({ where: { id: purchase.id }, data: { ...(reversed.fullyReversed ? { status: 'refunded' } : {}), resolutionNote: `Dodo ${reversed.fullyReversed ? 'refund or chargeback' : 'partial refund or chargeback'}: ${reversalReference}` } });
+            if (reversed.fullyReversed && purchase.subscriptionId) {
+              const laterPayment = await tx.affiliatePurchase.findFirst({ where: { subscriptionId: purchase.subscriptionId, status: 'verified', paymentDate: { gt: purchase.paymentDate || purchase.createdAt } }, select: { id: true } });
+              if (!laterPayment) await tx.subscription.update({ where: { id: purchase.subscriptionId }, data: { status: 'canceled', cancelAtPeriodEnd: false } });
+            }
+            await tx.affiliateAuditEvent.create({ data: { actorId: null, action: type === 'dispute.lost' ? 'chargeback_reversed' : 'refund_reversed', entityType: 'commission', entityId: purchase.commission.id, details: { reference: reversalReference, refundAmount, refundCurrency, reversedCommission: reversed.commissionAmount } } });
+          }
+        }
+      }
       await tx.webhookEvent.update({ where: { eventId }, data: { status: 'processed' } });
     });
   } catch (err: any) {

@@ -5,7 +5,7 @@ import { authService } from "@/services/auth";
 import { requireAIEntitlement } from "@/lib/billing/entitlements";
 
 export async function getOrCreateBotForPage(pageId: string) {
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requireAIEntitlement(user.id);
     
     const page = await prisma.page.findFirst({
@@ -37,7 +37,7 @@ export async function getOrCreateBotForPage(pageId: string) {
 }
 
 export async function updateBotSettings(botId: string, data: any) {
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requireAIEntitlement(user.id);
     
     const bot = await prisma.bot.findUnique({ where: { id: botId } });

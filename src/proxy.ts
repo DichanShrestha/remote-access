@@ -2,9 +2,11 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-pageory-pathname', request.nextUrl.pathname)
   let supabaseResponse = NextResponse.next({
     request: {
-      headers: request.headers,
+      headers: requestHeaders,
     },
   })
 
@@ -24,7 +26,7 @@ export async function proxy(request: NextRequest) {
           })
           supabaseResponse = NextResponse.next({
             request: {
-              headers: request.headers,
+              headers: requestHeaders,
             },
           })
           supabaseResponse.cookies.set({
@@ -41,7 +43,7 @@ export async function proxy(request: NextRequest) {
           })
           supabaseResponse = NextResponse.next({
             request: {
-              headers: request.headers,
+              headers: requestHeaders,
             },
           })
           supabaseResponse.cookies.set({

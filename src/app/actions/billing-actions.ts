@@ -16,8 +16,9 @@ export async function createCheckoutSession(
     const user = await authService.requireUser();
     const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
     if (getInitialPricingMode(cookieStore.get(PRICING_MODE_COOKIE)?.value, requestHeaders.get("x-vercel-ip-country")) === "nepal") {
-        throw new Error("Nepal subscriptions are arranged through WhatsApp. Please use the WhatsApp purchase option.");
+        throw new Error("Nepal subscriptions use the manual payment flow. Please choose the Nepal payment option.");
     }
+    const accountPromo = await db.user.findUnique({ where: { id: user.id }, select: { promoCodeUsedAt: true } });
 
     if (!dodo || !process.env.DODO_API_KEY) throw new Error("Billing is temporarily unavailable. Please try again later.");
     const canonicalPlan = normalizePlan(planId);
@@ -33,9 +34,7 @@ export async function createCheckoutSession(
             customer: { email: user.email!, name: user.email! },
             product_cart: [{ product_id: targetProductId, quantity: 1 }],
             metadata: { user_id: user.id, plan_id: canonicalPlan },
-            feature_flags: {
-                allow_discount_code: true
-            },
+            feature_flags: { allow_discount_code: !accountPromo?.promoCodeUsedAt },
             return_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/settings?tab=billing`,
         });
 

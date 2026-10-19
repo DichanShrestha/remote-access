@@ -23,7 +23,7 @@ export type CrawlResult = {
  */
 export async function crawlWebsite(url: string): Promise<CrawlResult> {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     
 
@@ -84,7 +84,7 @@ export async function crawlWebsite(url: string): Promise<CrawlResult> {
  */
 export async function crawlAndStoreUrl(botId: string, url: string) {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     
 

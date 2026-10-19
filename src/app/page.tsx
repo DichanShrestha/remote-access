@@ -24,6 +24,7 @@ export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()])
-  const pricingMode = getInitialPricingMode(cookieStore.get(PRICING_MODE_COOKIE)?.value, requestHeaders.get('x-vercel-ip-country'))
-  return <LandingPage user={user} initialPricingMode={pricingMode} />
+  const countryCode = requestHeaders.get('x-vercel-ip-country');
+  const pricingMode = getInitialPricingMode(cookieStore.get(PRICING_MODE_COOKIE)?.value, countryCode)
+  return <LandingPage user={user} initialPricingMode={pricingMode} pricingLockedToNepal={countryCode?.trim().toUpperCase() === 'NP'} />
 }

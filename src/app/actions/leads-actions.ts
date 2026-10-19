@@ -39,7 +39,7 @@ export async function createLead(data: {
  */
 export async function getBotLeads(botId: string) {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     
 
@@ -61,7 +61,7 @@ export async function getBotLeads(botId: string) {
  */
 export async function deleteLead(leadId: string) {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     
 
@@ -89,7 +89,7 @@ export async function deleteLead(leadId: string) {
  */
 export async function exportLeadsToCSV(botId: string): Promise<string> {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     
 

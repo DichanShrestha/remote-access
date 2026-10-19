@@ -1,6 +1,7 @@
 import { resolveChatModel, GEMINI_DEFAULT_MODEL } from "@/lib/ai/providers";
 import { streamText } from "ai";
 import { createClient } from "@/lib/supabase/server";
+import { authService } from "@/services/auth";
 import { prisma } from "@/lib/prisma";
 import { retrieveRelevantChunks, formatContextForPrompt, buildSystemPrompt } from "@/lib/ai/rag";
 import { getUserApiKey } from "@/app/actions/settings-actions";
@@ -41,6 +42,10 @@ export async function POST(req: Request) {
 
         if (!user) {
             return new Response("Unauthorized", { status: 401 });
+        }
+        await authService.ensureActive(user.id);
+        if (!await prisma.profile.findUnique({ where: { userId: user.id }, select: { id: true } })) {
+            return new Response("Creator access required", { status: 403 });
         }
 
         // Use client-provided session ID or generate one

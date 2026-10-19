@@ -16,7 +16,7 @@ import { LeadCaptureSettings, DEFAULT_LEAD_CAPTURE_SETTINGS } from "@/types/lead
  */
 export async function createBot(data: BotFormData) {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requirePageAccess(user.id);
 
     
@@ -57,7 +57,7 @@ export async function createBot(data: BotFormData) {
  */
 export async function updateBot(botId: string, data: Partial<BotFormData>) {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requirePageAccess(user.id);
 
     
@@ -145,7 +145,7 @@ export async function updateBot(botId: string, data: Partial<BotFormData>) {
  */
 export async function deleteBot(botId: string) {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     
 
@@ -194,7 +194,7 @@ export async function deleteBot(botId: string) {
  */
 export async function getUserBots() {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     
 
@@ -216,7 +216,7 @@ export async function getBot(botId: string) {
     if (!botId || botId === "undefined") return null;
 
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     
 
@@ -241,7 +241,7 @@ export async function getBot(botId: string) {
  */
 export async function completeOnboarding() {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     
 
@@ -261,7 +261,7 @@ export async function completeOnboarding() {
  */
 export async function updateBotSystemPrompt(botId: string, systemPrompt: string) {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requireAIEntitlement(user.id);
 
     
@@ -322,7 +322,7 @@ ${businessContext}
  * Get lead capture trigger configuration
  */
 export async function getLeadCaptureConfig(botId: string): Promise<LeadCaptureSettings> {
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     const bot = await prisma.bot.findFirst({
         where: { id: botId, userId: user.id },
@@ -344,7 +344,7 @@ export async function getLeadCaptureConfig(botId: string): Promise<LeadCaptureSe
  * Update lead capture trigger configuration
  */
 export async function updateLeadCaptureConfig(botId: string, config: Partial<LeadCaptureSettings>) {
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     const existingBot = await prisma.bot.findFirst({
         where: { id: botId, userId: user.id },
@@ -392,7 +392,7 @@ export async function updateLeadCaptureConfig(botId: string, config: Partial<Lea
  */
 export async function getSuggestedQuestions(botId: string): Promise<string[]> {
     if (!botId) return [];
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     const bot = await prisma.bot.findFirst({
         where: { id: botId, userId: user.id },
@@ -416,7 +416,7 @@ export async function updateSuggestedQuestions(
     botId: string,
     questions: string[]
 ): Promise<{ success: boolean; questions: string[] }> {
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     const existingBot = await prisma.bot.findFirst({
         where: { id: botId, userId: user.id },

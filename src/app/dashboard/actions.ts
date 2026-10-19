@@ -6,7 +6,7 @@ import { TEMPLATES_MAP } from '@/lib/page-engine/templates';
 import { redirect } from 'next/navigation';
 
 export async function useTemplate(templateId: string) {
-  const user = await authService.requireUser();
+  const user = await authService.requireCreator();
 
   if (!user.profile) {
     throw new Error('Please create a profile first.');

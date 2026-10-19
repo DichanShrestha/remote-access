@@ -15,7 +15,7 @@ import { storageService } from "@/lib/storage/service";
 import { requireAIEntitlement } from "@/lib/billing/entitlements";
 
 export async function getKnowledgeUploadPolicy() {
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     const account = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 }, usage: true } });
     if (!account) throw new Error('Workspace not found');
     const entitlement = getSmartPageEntitlement(account);
@@ -39,7 +39,7 @@ export async function getKnowledgeUploadPolicy() {
  */
 export async function uploadAndTrainFiles(botId: string, formData: FormData) {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     const billing = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } } });
     if (!billing) throw new Error("Workspace not found");
     const entitlement = getSmartPageEntitlement(billing);
@@ -184,7 +184,7 @@ export async function uploadAndTrainFiles(botId: string, formData: FormData) {
  */
 export async function crawlAndTrain(botId: string, url: string) {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     const billing = await prisma.user.findUnique({ where: { id: user.id }, include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 }, usage: true } });
     if (!billing) throw new Error("Workspace not found");
     const entitlement = getSmartPageEntitlement(billing);
@@ -328,7 +328,7 @@ export async function crawlAndTrain(botId: string, url: string) {
  */
 export async function reTrainSource(dataSourceId: string) {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requireAIEntitlement(user.id);
 
 
@@ -407,7 +407,7 @@ export async function reTrainSource(dataSourceId: string) {
  */
 export async function deleteDataSource(dataSourceId: string) {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
 
 
@@ -445,7 +445,7 @@ export async function deleteDataSource(dataSourceId: string) {
  */
 export async function getTrainingStatus(botId: string) {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
 
 

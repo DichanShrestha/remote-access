@@ -10,7 +10,9 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { getSmartPageEntitlement, TIER_LIMITS, TRIAL_MS } from '@/lib/tier-limits';
 import { cookies, headers } from 'next/headers';
-import { getInitialPricingMode, PRICING_MODE_COOKIE } from '@/lib/pricing';
+import { getInitialPricingMode, PAID_PLANS, PRICING_MODE_COOKIE, type PricingMode } from '@/lib/pricing';
+import { getAffiliateConfig } from '@/services/affiliates';
+import { calculateDiscount } from '@/lib/affiliate-math';
 
 export async function selectOnboardingPath(type: TemplateCategory) {
   const user = await authService.requireUser();
@@ -94,8 +96,10 @@ export async function saveOnboardingPersonalization(input: unknown) {
 
   const doc = structuredClone(template.document);
   // Find hero in sections or groups and update title with user's display name
-  const updateHeroTitle = (nodes: any[]): boolean => {
-    for (const node of nodes) {
+  const updateHeroTitle = (nodes: unknown[]): boolean => {
+    for (const candidate of nodes) {
+      if (!candidate || typeof candidate !== 'object') continue;
+      const node = candidate as { type?: string; kind?: string; content?: Record<string, unknown>; children?: unknown[] };
       if (node.type === 'hero' && node.content) {
         node.content = { ...node.content, title: displayName };
         return true;
@@ -181,36 +185,9 @@ export async function onboardingTemplateIds() {
 }
 
 export async function startCurrentFreeTrial(planId: string = 'smart_page') {
-  const user = await authService.requireUser();
-  if (!user.profile) return { error: 'Your profile is not ready yet.' };
-  const page = await db.page.findUnique({ where: { profileId: user.profile.id } });
-  if (!page || !Object.keys(page.draftConfig as object).length) return { error: 'Choose and personalize a template before publishing.' };
-
-  const now = new Date();
-  const trialEndsAt = new Date(now.getTime() + TRIAL_MS);
-  const existing = await db.subscription.findFirst({ where: { userId: user.id }, orderBy: { updatedAt: 'desc' } });
-  const trialGrant = await db.user.findUnique({ where: { id: user.id }, select: { trialGrantedAt: true } });
-  if ((trialGrant?.trialGrantedAt || existing?.trialEverGranted || existing?.trialStart || existing?.status === 'trialing') && !['active', 'past_due'].includes(existing?.status || '')) {
-    if (!existing || existing.status !== 'trialing' || !existing.trialEnd || existing.trialEnd <= now) return { error: 'Your one-time trial has ended. Choose a paid plan to continue.' };
-  }
-  await db.$transaction(async (tx) => {
-      await tx.page.update({ where: { id: page.id }, data: { publishedConfig: page.draftConfig as unknown as Prisma.InputJsonValue, isPublished: true } });
-    if (existing?.status === 'trialing' && existing.trialEnd && existing.trialEnd > now) {
-      await tx.subscription.update({ where: { id: existing.id }, data: { planId: 'trial', tier: 'trial', currentPeriodEnd: existing.trialEnd } });
-    } else if (existing && ['active', 'past_due'].includes(existing.status)) {
-      // Publishing again never changes an existing paid entitlement.
-    } else if (!existing?.trialEverGranted && !existing?.trialStart) {
-      const claim = await tx.user.updateMany({ where: { id: user.id, trialGrantedAt: null }, data: { trialGrantedAt: now } });
-      if (!claim.count) throw new Error('Your one-time trial has already been used.');
-      if (existing) await tx.subscription.update({ where: { id: existing.id }, data: { status: 'trialing', planId: 'trial', currentPeriodEnd: trialEndsAt, tier: 'trial', billingMethod: 'none', trialStart: now, trialEnd: trialEndsAt, trialEverGranted: true } });
-      else await tx.subscription.create({ data: { userId: user.id, status: 'trialing', planId: 'trial', currentPeriodEnd: trialEndsAt, tier: 'trial', trialStart: now, trialEnd: trialEndsAt, trialEverGranted: true } });
-    } else {
-      throw new Error('Trial is unavailable for this account.');
-    }
-  });
-  revalidatePath('/dashboard');
-  revalidatePath(`/${user.profile.username}`);
-  redirect('/onboarding/complete');
+  await authService.requireUser();
+  void planId;
+  return { error: 'Trials are granted after your request is reviewed. Submit a request from the plan page.' };
 }
 
 export async function getCurrentTrialLimits() {
@@ -232,39 +209,65 @@ export async function checkTrialEligibility(): Promise<{ eligible: boolean; reas
   return { eligible: true };
 }
 
-/** Publish the page and redirect the user to a Dodo checkout session. */
-export async function createOnboardingCheckout(planId: 'smart_page' | 'smart_page_ai') {
+export async function setOnboardingPricingMode(mode: PricingMode) {
   const user = await authService.requireUser();
-  const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
-  if (getInitialPricingMode(cookieStore.get(PRICING_MODE_COOKIE)?.value, requestHeaders.get('x-vercel-ip-country')) === 'nepal') {
-    return { error: 'Nepal subscriptions are arranged through WhatsApp. Please use the WhatsApp purchase option.' };
-  }
-  if (!user.profile) return { error: 'Your profile is not ready yet.' };
+  const parsed = z.enum(['nepal', 'international']).safeParse(mode);
+  if (!parsed.success) throw new Error('Choose a valid billing location.');
+  const requestHeaders = await headers();
+  if (requestHeaders.get('x-vercel-ip-country')?.toUpperCase() === 'NP' && parsed.data !== 'nepal') throw new Error('Nepal billing is required for your location.');
+  (await cookies()).set(PRICING_MODE_COOKIE, parsed.data, { path: '/', maxAge: 31536000, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+  revalidatePath('/onboarding/plan');
+  return { success: true, userId: user.id };
+}
 
+export async function requestPlanAccess(planId: 'smart_page' | 'smart_page_ai', requestType: 'trial' | 'plan', rawAffiliateCode?: string) {
+  const user = await authService.requireUser();
+  if (!user.profile) return { error: 'Your Pageory profile is not ready yet.' };
+  if ((planId !== 'smart_page' && planId !== 'smart_page_ai') || !['trial', 'plan'].includes(requestType)) return { error: 'Choose a valid plan request.' };
   const page = await db.page.findUnique({ where: { profileId: user.profile.id } });
-  if (!page || !Object.keys(page.draftConfig as object).length) return { error: 'Choose and personalize a template before publishing.' };
-
-  // Publish the page first so it's live when the user returns from checkout
-  await db.page.update({ where: { id: page.id }, data: { publishedConfig: page.draftConfig as unknown as Prisma.InputJsonValue, isPublished: true } });
-
-  // Create checkout session via Dodo
-  const { dodo } = await import('@/lib/dodopayments');
-  if (!dodo || !process.env.DODO_API_KEY) return { error: 'Billing is temporarily unavailable. Please try again later.' };
-
-  const productId = planId === 'smart_page_ai' ? process.env.DODO_PRODUCT_SMART_PAGE_AI : process.env.DODO_PRODUCT_SMART_PAGE;
-  if (!productId) return { error: 'This plan is not configured for checkout.' };
-
+  if (!page || !Object.keys(page.draftConfig as object).length) return { error: 'Finish preparing your Pageory page before requesting access.' };
+  if (requestType === 'trial' && !(await checkTrialEligibility()).eligible) return { error: 'This account is not eligible for another free trial.' };
+  const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
+  const pricingMode = getInitialPricingMode(cookieStore.get(PRICING_MODE_COOKIE)?.value, requestHeaders.get('x-vercel-ip-country'));
+  const price = PAID_PLANS[planId][pricingMode];
+  const normalizedCode = rawAffiliateCode?.trim().toUpperCase() || '';
+  if (normalizedCode && !/^[A-Z0-9-]{4,40}$/.test(normalizedCode)) return { error: 'Enter a valid referral code.' };
   try {
-    const session = await dodo.checkoutSessions.create({
-      customer: { email: user.email!, name: user.email! },
-      product_cart: [{ product_id: productId, quantity: 1 }],
-      metadata: { user_id: user.id, plan_id: planId },
-      feature_flags: { allow_discount_code: true },
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/onboarding/complete`,
-    });
-    return { checkoutUrl: session.checkout_url };
-  } catch (e: any) {
-    console.error('Onboarding checkout creation failed:', e.message);
-    return { error: 'Could not start checkout. Please try again.' };
+    const request = await db.$transaction(async (tx) => {
+      const active = await tx.subscription.findFirst({ where: { userId: user.id, status: { in: ['active', 'past_due', 'trialing'] }, OR: [{ currentPeriodEnd: null }, { currentPeriodEnd: { gt: new Date() } }] } });
+      if (active) throw new Error('This account already has active access. Contact us if you need a plan change.');
+      const existingPending = await tx.planAccessRequest.findFirst({ where: { userId: user.id, status: 'pending' }, orderBy: { requestedAt: 'desc' } });
+      if (existingPending) throw new Error(`You already have a pending ${existingPending.requestType} request. Please continue the WhatsApp conversation or wait for Pageory to review it.`);
+
+      let referral = await tx.customerReferral.findUnique({ where: { customerId: user.id } });
+      if (normalizedCode) {
+        const code = await tx.affiliateCode.findFirst({ where: { code: { equals: normalizedCode, mode: 'insensitive' }, active: true, affiliate: { affiliateApplication: { status: 'approved' } } } });
+        if (!code) throw new Error('That referral code is not active.');
+        if (code.affiliateId === user.id) throw new Error('You cannot use your own referral code.');
+        if (referral && referral.codeId !== code.id) throw new Error('A referral code is already attached to your account.');
+        const historicPaid = await tx.subscription.findFirst({ where: { userId: user.id, billingMethod: { in: ['manual', 'dodo'] } } });
+        if (historicPaid && !referral) throw new Error('A referral code cannot be attached after your first paid subscription.');
+        if (!referral) referral = await tx.customerReferral.create({ data: { customerId: user.id, affiliateId: code.affiliateId, codeId: code.id } });
+      }
+      const historicPaid = await tx.subscription.findFirst({ where: { userId: user.id, billingMethod: { in: ['manual', 'dodo'] } } });
+      const promoUse = await tx.user.findUnique({ where: { id: user.id }, select: { promoCodeUsedAt: true } });
+      const config = await getAffiliateConfig(tx);
+      const discountPercent = requestType === 'plan' && referral && !historicPaid && !referral.discountUsed && !promoUse?.promoCodeUsedAt ? Number(config.customerDiscountPercent) : 0;
+      const discounted = calculateDiscount(price.amount, discountPercent);
+      const created = await tx.planAccessRequest.create({ data: { userId: user.id, requestType, planId, currency: price.currency, quotedAmount: requestType === 'trial' ? 0 : discounted.finalAmount, discountPercent, discountAmount: requestType === 'trial' ? 0 : discounted.discountAmount, referralCode: referral?.codeId ? (await tx.affiliateCode.findUnique({ where: { id: referral.codeId }, select: { code: true } }))?.code || null : null, affiliateId: referral?.affiliateId || null } });
+      await tx.affiliateAuditEvent.create({ data: { actorId: user.id, action: 'plan_access_requested', entityType: 'plan_access_request', entityId: created.id, details: { requestType, planId, currency: price.currency, quotedAmount: requestType === 'trial' ? 0 : discounted.finalAmount, referralCode: referral?.codeId ? normalizedCode || undefined : undefined } } });
+      return created;
+    }, { isolationLevel: 'Serializable' });
+    revalidatePath('/admin/subscriptions');
+    return { success: true, requestId: request.id, requestType, planId, currency: price.currency, amount: Number(request.quotedAmount), discountPercent: Number(request.discountPercent), reused: request.status === 'pending' && !normalizedCode };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Could not submit your access request.' };
   }
+}
+
+export async function createOnboardingCheckout(planId: "smart_page" | "smart_page_ai", rawAffiliateCode?: string) {
+  await authService.requireUser();
+  void planId;
+  void rawAffiliateCode;
+  return { error: "Choose a plan and submit a WhatsApp request. Access is granted only after Pageory approves it." };
 }

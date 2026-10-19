@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import db from '@/lib/prisma';
-import { UnauthorizedError } from '@/lib/errors';
+import { AccountSuspendedError, UnauthorizedError } from '@/lib/errors';
 import { z } from 'zod';
 
 const RESERVED_USERNAMES = new Set([
@@ -14,6 +14,11 @@ const usernameSchema = z.string()
   .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores, and dashes");
 
 export const authService = {
+  async ensureActive(userId: string) {
+    const account = await db.user.findUnique({ where: { id: userId }, select: { suspendedAt: true } });
+    if (account?.suspendedAt) throw new AccountSuspendedError();
+  },
+
   async requireUser() {
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -39,7 +44,15 @@ export const authService = {
       });
     }
 
+    if (dbUser.suspendedAt) throw new AccountSuspendedError();
+
     return dbUser;
+  },
+
+  async requireCreator() {
+    const user = await this.requireUser();
+    if (!user.profile) throw new UnauthorizedError('Creator access required');
+    return user;
   },
 
   async isUsernameAvailable(username: string): Promise<boolean> {

@@ -73,7 +73,7 @@ async function processImageEmbeddings(
  * Get current AI image usage and limits for the authenticated user.
  */
 export async function getAIImageUsage() {
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     const { entitlement, account } = await getUserEntitlement(user.id);
     const limits = entitlement.limits;
 
@@ -152,7 +152,7 @@ export async function createVisualSet(
 ) {
     const normalizedTriggers = triggerQueries.map(q => q.toLowerCase().trim()).filter(Boolean);
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requireAIEntitlement(user.id);
 
     if (!title) throw new Error("Title is required");
@@ -235,7 +235,7 @@ export async function updateVisualSet(
 ) {
     const normalizedTriggers = triggerQueries.map(q => q.toLowerCase().trim()).filter(Boolean);
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requireAIEntitlement(user.id);
 
     if (!title) throw new Error("Title is required");
@@ -377,7 +377,7 @@ export async function updateVisualSet(
 
 export async function getVisualSets(botId: string) {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requireAIEntitlement(user.id);
 
 
@@ -397,7 +397,7 @@ export async function getVisualSets(botId: string) {
 
 export async function deleteVisualSet(itemId: string, botId: string) {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
 
 
@@ -560,7 +560,7 @@ export async function searchVisualSets(
  * Enforces AI image plan limits on file size, count, and knowledge storage.
  */
 export async function uploadCatalogImages(formData: FormData): Promise<{ urls: string[]; sizes: number[] }> {
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requireAIEntitlement(user.id);
 
     const files = formData.getAll("files") as File[];

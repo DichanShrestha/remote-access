@@ -118,7 +118,7 @@ async function removeQAEmbeddings(qaId: string, botId: string, userId: string) {
  */
 export async function getQAs(botId: string) {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requireAIEntitlement(user.id);
 
 
@@ -139,7 +139,7 @@ export async function saveQA(
     data: { questions: string[]; answer: string; id?: string }
 ) {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
     await requireAIEntitlement(user.id);
 
 
@@ -217,7 +217,7 @@ export async function saveQA(
  */
 export async function deleteQA(qaId: string) {
 
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
 
 

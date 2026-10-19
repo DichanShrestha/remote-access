@@ -4,9 +4,21 @@ import { SettingsClient, UsageMetrics } from "@/components/dashboard/SettingsCli
 import { getSmartPageEntitlement, SMART_PAGE_LIMITS } from "@/lib/tier-limits";
 import { cookies, headers } from "next/headers";
 import { getInitialPricingMode, PRICING_MODE_COOKIE } from "@/lib/pricing";
+import { getAccountCapabilities } from '@/services/capabilities';
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+const emptyUsageMetrics: UsageMetrics = {
+  plan: "trial", isTrial: false, trialDaysRemaining: 0, trialEnd: null, currentPeriodEnd: null,
+  aiReplies: { used: 0, limit: 0, included: false },
+  knowledgeSources: { used: 0, limit: 0, included: false },
+  faqEntries: { used: 0, limit: 0, included: false },
+  aiImages: { used: 0, limit: 0, included: false },
+  knowledgeStorage: { usedBytes: 0, limitBytes: 0, included: false },
+  pageMediaStorage: { usedBytes: 0, limitBytes: 0, included: false },
+  indexedTokens: { used: 0, limit: 0, included: false },
+};
 
 export default async function SettingsPage({
   searchParams,
@@ -16,9 +28,12 @@ export default async function SettingsPage({
   const resolvedParams = searchParams ? await searchParams : undefined;
   const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
   const pricingMode = getInitialPricingMode(cookieStore.get(PRICING_MODE_COOKIE)?.value, requestHeaders.get("x-vercel-ip-country"));
+  const pricingLockedToNepal = requestHeaders.get("x-vercel-ip-country")?.trim().toUpperCase() === "NP";
   const initialTab = resolvedParams?.tab === "account" ? "account" : "billing";
 
   const user = await authService.requireUser();
+  const capabilities = await getAccountCapabilities(user.id);
+  const effectiveInitialTab = resolvedParams?.tab === "account" || !capabilities.creator ? "account" : "billing";
 
   const profile = await db.profile.findUnique({
     where: { userId: user.id },
@@ -144,8 +159,10 @@ export default async function SettingsPage({
 
   return (
     <SettingsClient
-      initialTab={initialTab}
+      accountOnly={!capabilities.creator}
+      initialTab={resolvedParams?.tab === "account" ? initialTab : effectiveInitialTab}
       pricingMode={pricingMode}
+      pricingLockedToNepal={pricingLockedToNepal}
       user={{
         id: user.id,
         email: user.email,
@@ -154,8 +171,8 @@ export default async function SettingsPage({
         username: profile?.username || null,
       }}
       hasPage={Boolean(profile?.page)}
-      subscription={formattedSubscription}
-      usageMetrics={usageMetrics}
+      subscription={capabilities.creator ? formattedSubscription : null}
+      usageMetrics={capabilities.creator ? usageMetrics : emptyUsageMetrics}
     />
   );
 }

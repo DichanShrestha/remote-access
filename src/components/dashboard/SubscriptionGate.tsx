@@ -17,7 +17,7 @@ export function SubscriptionGate({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  if (!active || ['/dashboard/billing', '/dashboard/settings'].includes(pathname)) return children;
+  if (!active || pathname.startsWith('/dashboard/affiliate') || ['/dashboard/billing', '/dashboard/settings'].includes(pathname)) return children;
 
   const graceDate = publicGraceEndsAt
     ? new Date(publicGraceEndsAt)

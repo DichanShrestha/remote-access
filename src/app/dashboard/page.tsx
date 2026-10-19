@@ -4,11 +4,25 @@ import db from '@/lib/prisma';
 import { authService } from '@/services/auth';
 import { getEffectiveTier } from '@/lib/tier-limits';
 import { DashboardHome } from '@/components/dashboard/DashboardHome';
+import Link from 'next/link';
 
 export default async function DashboardPage() {
   const user = await authService.requireUser();
   const profile = await db.profile.findUnique({ where: { userId: user.id }, include: { page: true } });
-  if (!profile?.page || !Object.keys(profile.page.draftConfig as object).length) redirect('/onboarding');
+  if (!profile?.page || !Object.keys(profile.page.draftConfig as object).length) {
+    const application = await db.affiliateApplication.findUnique({ where: { userId: user.id }, select: { status: true } });
+    if (application?.status === 'approved' && !profile) {
+      const [referralCount, activeReferrals, unpaid, paid] = await Promise.all([
+        db.customerReferral.count({ where: { affiliateId: user.id } }),
+        db.customerReferral.count({ where: { affiliateId: user.id, purchases: { some: { status: 'verified', subscription: { status: 'active' } } } } }),
+        db.commission.groupBy({ by: ['currency'], where: { affiliateId: user.id, payoutStatus: 'unpaid', eligibilityStatus: 'payable' }, _sum: { amount: true } }),
+        db.commission.groupBy({ by: ['currency'], where: { affiliateId: user.id, payoutStatus: 'paid' }, _sum: { amount: true } }),
+      ]);
+      return <main className="space-y-8 text-[#292A25]"><header><p className="text-xs font-semibold uppercase tracking-[.18em] text-[#777972]">Welcome to Pageory</p><h1 className="mt-2 text-3xl font-semibold">Affiliate dashboard</h1><p className="mt-2 text-sm text-[#777972]">Track your referrals and commissions from here.</p></header><section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"><Stat label="Attributed referrals" value={referralCount} /><Stat label="Active paying referrals" value={activeReferrals} /><div className="rounded-2xl border border-[#E8E5DF] bg-white p-5"><p className="text-sm text-[#777972]">Unpaid commissions</p>{unpaid.length ? unpaid.map((row) => <p key={row.currency} className="mt-2 text-xl font-semibold">{row.currency} {Number(row._sum.amount || 0).toFixed(2)}</p>) : <p className="mt-2 text-xl font-semibold">0.00</p>}</div><div className="rounded-2xl border border-[#E8E5DF] bg-white p-5"><p className="text-sm text-[#777972]">Paid commissions</p>{paid.length ? paid.map((row) => <p key={row.currency} className="mt-2 text-xl font-semibold">{row.currency} {Number(row._sum.amount || 0).toFixed(2)}</p>) : <p className="mt-2 text-xl font-semibold">0.00</p>}</div></section><Link href="/dashboard/affiliate" className="inline-flex rounded-xl bg-[#292A25] px-5 py-3 text-sm font-semibold text-white">Open affiliate program</Link></main>;
+    }
+    if (application?.status === 'pending') redirect('/affiliate/apply');
+    redirect('/onboarding');
+  }
   if (!profile.page.isPublished) redirect('/onboarding/claim');
 
   const [bot, subscription, pageLeads, pageLeadCount] = await Promise.all([
@@ -22,7 +36,7 @@ export default async function DashboardPage() {
     db.chatMessage.findMany({ where: { botId: bot.id, role: 'user' }, orderBy: { createdAt: 'desc' }, take: 4, select: { id: true, content: true, createdAt: true, sessionId: true } }),
     db.botLead.findMany({ where: { botId: bot.id }, orderBy: { createdAt: 'desc' }, take: 4 }),
     db.botLead.count({ where: { botId: bot.id } }),
-    (db as any).bookingEvent.count({ where: { botId: bot.id, event: 'booking_link_clicked' } }),
+    countBookingClicks(bot.id),
   ]) : [[], [], [], 0, 0];
   const tier = getEffectiveTier({ createdAt: user.createdAt, subscriptions: subscription ? [{ tier: subscription.tier }] : [] });
   const completedSources = bot?.dataSources.some((source) => source.status === 'completed') || false;
@@ -43,4 +57,13 @@ export default async function DashboardPage() {
     bookingClicks, trained, hasBot: Boolean(bot), profileComplete: Boolean(profile.displayName && profile.bio),
     recent, conversationCount: conversationGroups.length,
   }} />;
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return <div className="rounded-2xl border border-[#E8E5DF] bg-white p-5"><p className="text-sm text-[#777972]">{label}</p><p className="mt-2 text-2xl font-semibold">{value}</p></div>;
+}
+
+function countBookingClicks(botId: string) {
+  const bookingEvents = db as unknown as { bookingEvent: { count(args: { where: { botId: string; event: string } }): Promise<number> } };
+  return bookingEvents.bookingEvent.count({ where: { botId, event: 'booking_link_clicked' } });
 }

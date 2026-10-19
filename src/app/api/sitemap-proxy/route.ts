@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { authService } from "@/services/auth";
 
 function isPrivateOrLocalHost(hostname: string): boolean {
     const lower = hostname.toLowerCase();
@@ -38,6 +39,7 @@ export async function GET(req: NextRequest) {
     if (!user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    await authService.ensureActive(user.id);
 
     const url = req.nextUrl.searchParams.get("url");
 

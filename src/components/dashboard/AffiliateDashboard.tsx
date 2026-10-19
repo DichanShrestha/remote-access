@@ -1,0 +1,62 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { Check, Copy, Link2, Wallet } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { applyForAffiliate, updateAffiliateReferralCode } from '@/app/actions/affiliate-actions';
+
+type Props = {
+  application: { status: string; reviewNote?: string | null; code?: string | null; codeActive?: boolean } | null;
+  referrals: Array<{ id: string; referredAt: string; code: string; purchases: Array<{ id: string; planId: string; currency: string; amount: number; status: string; subscriptionStatus: string; createdAt: string; paymentDate: string | null; commission: { amount: number; payoutStatus: string; eligibilityStatus: string } | null }> }>;
+  commissions: Array<{ id: string; currency: string; amount: number; revenue: number; earnedAt: string; eligibilityStatus: string; payoutStatus: string }>;
+  payouts: Array<{ id: string; currency: string; amount: number; paidAt: string; method: string; reference: string; status: string }>;
+  totals: Array<{ currency: string; payable: number; unpaid: number; paid: number }>;
+};
+
+export function AffiliateDashboard({ application, referrals, commissions, payouts, totals }: Props) {
+  const router = useRouter();
+  const [details, setDetails] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [codeInput, setCodeInput] = useState(application?.code || '');
+  const [codeError, setCodeError] = useState('');
+  const [pending, startTransition] = useTransition();
+  if (!application || application.status === 'rejected') return <main className="mx-auto max-w-3xl space-y-6 text-[#292A25]"><header><p className="text-xs font-semibold uppercase tracking-[.18em] text-[#777972]">Pageory partners</p><h1 className="mt-2 text-3xl font-semibold">{application ? 'Update your affiliate application' : 'Become an affiliate'}</h1><p className="mt-2 text-sm text-[#6E7069]">Apply as a Nepal-based Pageory user. Your regular account stays unchanged. Affiliates receive commission on eligible verified subscription payments. {application?.reviewNote || ''}</p></header><form onSubmit={(event) => { event.preventDefault(); const confirmed = (event.currentTarget.elements.namedItem('basedInNepal') as HTMLInputElement).checked; startTransition(async () => { const result = await applyForAffiliate(details, confirmed); setNotice(result.error || 'Application submitted for review.'); if (!result.error) window.location.reload(); }); }} className="space-y-4 rounded-2xl border border-[#E8E5DF] bg-white p-6"><label className="flex gap-3 text-sm"><input name="basedInNepal" type="checkbox" required />I confirm that I am based in Nepal.</label><label className="block text-sm font-medium">How do you plan to share Pageory? <span className="font-normal text-[#777972]">(optional)</span><textarea maxLength={1000} value={details} onChange={(event) => setDetails(event.target.value)} rows={4} className="mt-2 block w-full rounded-xl border border-[#D8D5CD] p-3" /></label><button disabled={pending} className="rounded-xl bg-[#292A25] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{pending ? 'Submitting…' : application ? 'Resubmit application' : 'Submit application'}</button>{notice && <p role="status" className="text-sm">{notice}</p>}</form></main>;
+  if (application.status !== 'approved') return <main className="max-w-2xl rounded-2xl border border-[#E8E5DF] bg-white p-6"><p className="text-xs font-semibold uppercase tracking-[.18em] text-[#777972]">Affiliate application</p><h1 className="mt-2 text-2xl font-semibold">{application.status === 'pending' ? 'Application under review' : application.status === 'suspended' ? 'Affiliate access suspended' : 'Application not approved'}</h1><p className="mt-2 text-sm text-[#6E7069]">Your Pageory account remains available as usual. {application.reviewNote || ''}</p></main>;
+  const copyCode = async () => { if (!application.code) return; await navigator.clipboard.writeText(application.code); setCopied(true); setTimeout(() => setCopied(false), 1600); };
+  const saveCode = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setCodeError('');
+    startTransition(async () => {
+      let result = await updateAffiliateReferralCode(codeInput, false);
+      if ('requiresConfirmation' in result && result.requiresConfirmation) {
+        const confirmed = window.confirm(`This code has already been used by ${result.usedReferralCount} referral${result.usedReferralCount === 1 ? '' : 's'}. Changing it will stop new referrals from using the old code. Existing referrals and commissions will remain attached to your affiliate account. Continue?`);
+        if (!confirmed) {
+          toast.info('Your referral code was not changed.');
+          return;
+        }
+        result = await updateAffiliateReferralCode(codeInput, true);
+      }
+      if ('error' in result && result.error) {
+        setCodeError(result.error);
+        toast.error(result.error);
+        return;
+      }
+      if ('code' in result && result.code) setCodeInput(result.code);
+      setCodeError('');
+      toast.success('Referral code updated.');
+      router.refresh();
+    });
+  };
+  return <main className="space-y-8 text-[#292A25]"><header><p className="text-xs font-semibold uppercase tracking-[.18em] text-[#777972]">Pageory partners</p><h1 className="mt-2 text-3xl font-semibold">Affiliate dashboard</h1></header>
+    <section className="rounded-2xl border border-[#E8E5DF] bg-white p-5 sm:p-6"><div className="max-w-2xl"><h2 className="text-lg font-semibold">Customize your referral code</h2><p className="mt-1 text-sm text-[#777972]">Use 4–24 letters, numbers, or hyphens. Codes are not case sensitive and will be shown in uppercase.</p><form onSubmit={saveCode} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start"><div className="flex-1"><label htmlFor="affiliate-code" className="sr-only">Referral code</label><input id="affiliate-code" name="code" value={codeInput} maxLength={24} autoCapitalize="characters" autoComplete="off" onChange={(event) => { setCodeInput(event.target.value.toUpperCase()); setCodeError(''); }} aria-invalid={Boolean(codeError)} aria-describedby={codeError ? 'affiliate-code-error' : 'affiliate-code-help'} className="w-full rounded-xl border border-[#D8D5CD] px-4 py-3 font-semibold tracking-wider uppercase outline-none focus:border-[#292A25]" placeholder="YOUR-CODE" /><span id="affiliate-code-help" className="sr-only">Letters, numbers, and hyphens, 4 to 24 characters.</span>{codeError && <p id="affiliate-code-error" role="alert" className="mt-2 text-sm text-red-700">{codeError}</p>}</div><button disabled={pending || !codeInput.trim()} className="min-h-11 rounded-xl bg-[#292A25] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{pending ? 'Saving code…' : 'Save code'}</button></form><p className="mt-3 text-xs leading-5 text-[#777972]">If people have already used your current code, we’ll ask before changing it. Their referral and commission history stays linked to your account.</p></div></section>
+    <section className="flex flex-col justify-between gap-4 rounded-2xl bg-[#292A25] p-6 text-white sm:flex-row sm:items-center"><div><p className="text-xs uppercase tracking-widest text-white/60">Your referral code</p><div className="mt-2 flex items-center gap-3"><strong className="text-2xl tracking-wider">{application.code}</strong><button type="button" onClick={copyCode} aria-label="Copy referral code" className="rounded-lg bg-white/10 p-2 hover:bg-white/20">{copied ? <Check size={18} /> : <Copy size={18} />}</button></div>{!application.codeActive && <p className="mt-2 text-sm text-amber-200">This code is currently inactive.</p>}</div><p className="max-w-sm text-sm text-white/70">Customers can apply the code to their first eligible purchase. Commissions are recorded after payment verification.</p></section>
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{[
+      ['Attributed referrals', referrals.length], ['Pending payments', referrals.reduce((n, r) => n + r.purchases.filter((p) => p.status === 'pending').length, 0)], ['Paying referrals', referrals.filter((r) => r.purchases.some((p) => p.status === 'verified' && p.subscriptionStatus.startsWith('active'))).length], ['Canceled / expired', referrals.filter((r) => r.purchases.some((p) => ['canceled', 'expired', 'refunded'].includes(p.status) || /canceled|expired/.test(p.subscriptionStatus))).length],
+    ].map(([label, value]) => <div key={label} className="rounded-2xl border border-[#E8E5DF] bg-white p-5"><p className="text-sm text-[#777972]">{label}</p><strong className="mt-2 block text-2xl">{value}</strong></div>)}</section>
+    <section><h2 className="mb-3 text-xl font-semibold">Commission balances</h2><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{totals.length ? totals.map((t) => <div key={t.currency} className="rounded-2xl border border-[#E8E5DF] bg-white p-5"><p className="font-semibold">{t.currency}</p><p className="mt-3 text-sm">Eligible commissions <strong>{t.payable.toFixed(2)}</strong></p><p className="text-sm">Unpaid <strong>{t.unpaid.toFixed(2)}</strong></p><p className="text-sm">Paid <strong>{t.paid.toFixed(2)}</strong></p></div>) : <div className="rounded-2xl border border-[#E8E5DF] bg-white p-5 text-sm text-[#777972]">Commissions will appear after eligible payments are verified.</div>}</div></section>
+    <section><h2 className="mb-3 text-xl font-semibold">Referral history</h2><div className="overflow-x-auto rounded-2xl border border-[#E8E5DF] bg-white"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-[#F8F7F2] text-xs uppercase text-[#777972]"><tr>{['Referral', 'Date', 'Plan', 'Payment', 'Subscription', 'Amount', 'Commission'].map((h) => <th className="px-4 py-3" key={h}>{h}</th>)}</tr></thead><tbody>{referrals.flatMap((r) => r.purchases.length ? r.purchases.map((p) => <tr key={p.id} className="border-t border-[#EEECE6]"><td className="px-4 py-3">…{r.id}</td><td className="px-4 py-3">{new Date(r.referredAt).toLocaleDateString()}</td><td className="px-4 py-3">{p.planId === 'smart_page_ai' ? 'Growth' : 'Starter'}</td><td className="px-4 py-3 capitalize">{p.status}</td><td className="px-4 py-3 capitalize">{p.subscriptionStatus}</td><td className="px-4 py-3">{p.currency} {p.amount.toFixed(2)}</td><td className="px-4 py-3">{p.commission ? `${p.currency} ${p.commission.amount.toFixed(2)} · ${p.commission.payoutStatus}` : '—'}</td></tr>) : [<tr key={r.id} className="border-t border-[#EEECE6]"><td className="px-4 py-3">…{r.id}</td><td className="px-4 py-3">{new Date(r.referredAt).toLocaleDateString()}</td><td colSpan={5} className="px-4 py-3 text-[#777972]">No purchase yet</td></tr>])}{!referrals.length && <tr><td colSpan={7} className="px-4 py-8 text-center text-[#777972]">No referrals yet. Share your code to get started.</td></tr>}</tbody></table></div></section>
+    <section className="grid gap-6 lg:grid-cols-2"><div><h2 className="mb-3 flex items-center gap-2 text-xl font-semibold"><Wallet size={18} />Payout history</h2><div className="space-y-2">{payouts.length ? payouts.map((p) => <div key={p.id} className="rounded-xl border border-[#E8E5DF] bg-white p-4 text-sm"><div className="flex justify-between"><strong>{p.currency} {p.amount.toFixed(2)}</strong><span>{new Date(p.paidAt).toLocaleDateString()}</span></div><p className="mt-1 text-[#777972]">{p.method} · {p.reference} · {p.status}</p></div>) : <p className="rounded-xl border border-[#E8E5DF] bg-white p-4 text-sm text-[#777972]">No payouts recorded yet.</p>}</div></div><div><h2 className="mb-3 flex items-center gap-2 text-xl font-semibold"><Link2 size={18} />Commission ledger</h2><div className="max-h-72 space-y-2 overflow-y-auto">{commissions.length ? commissions.map((c) => <div key={c.id} className="rounded-xl border border-[#E8E5DF] bg-white p-4 text-sm"><div className="flex justify-between"><strong>{c.currency} {c.amount.toFixed(2)}</strong><span>{new Date(c.earnedAt).toLocaleDateString()}</span></div><p className="mt-1 text-[#777972]">{c.eligibilityStatus} · {c.payoutStatus} · on {c.currency} {c.revenue.toFixed(2)}</p></div>) : <p className="rounded-xl border border-[#E8E5DF] bg-white p-4 text-sm text-[#777972]">No commission entries yet.</p>}</div></div></section>
+  </main>;
+}

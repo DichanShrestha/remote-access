@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
-export function AuthButton({ user, label, className }: { user: any; label?: string; className?: string }) {
+export function AuthButton({ user, label, className, nextPath = '/onboarding' }: { user: any; label?: string; className?: string; nextPath?: string }) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -11,7 +11,7 @@ export function AuthButton({ user, label, className }: { user: any; label?: stri
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${location.origin}/api/auth/callback?next=/onboarding`,
+        redirectTo: `${location.origin}/api/auth/callback?next=${encodeURIComponent(nextPath)}`,
       },
     })
   }

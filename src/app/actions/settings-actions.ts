@@ -71,7 +71,9 @@ export async function updateAccountProfile(data: { name: string; username: strin
     }
 
     if (!user.profile) {
-      return { error: "Profile not found." };
+      await db.user.update({ where: { id: user.id }, data: { name: trimmedName } });
+      revalidatePath("/dashboard/settings");
+      return { success: true };
     }
 
     // Validate username if changed

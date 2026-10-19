@@ -30,7 +30,8 @@ export function getPricingModeCookie(mode: PricingMode): string {
 }
 
 export function getInitialPricingMode(saved: string | null | undefined, countryCode: string | null | undefined): PricingMode {
-  return normalizePricingMode(saved) ?? (countryCode?.toUpperCase() === "NP" ? "nepal" : "international");
+  if (countryCode?.trim().toUpperCase() === "NP") return "nepal";
+  return normalizePricingMode(saved) ?? "international";
 }
 
 export function getWhatsAppUrl(message: string, number = WHATSAPP_NUMBER): string | null {

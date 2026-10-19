@@ -8,7 +8,7 @@ import { getStringSize } from "@/lib/utils";
 
 export async function getUserUsage() {
     
-    const user = await authService.requireUser();
+    const user = await authService.requireCreator();
 
     
 

@@ -29,7 +29,7 @@ async function removeUnusedPageMedia(userId: string, configs: unknown[]) {
 }
 
 export async function uploadPageMedia(formData: FormData) {
-  const user = await authService.requireUser();
+  const user = await authService.requireCreator();
   await requirePageAccess(user.id);
   const file = formData.get('file');
   if (!(file instanceof File)) throw new Error('Choose an image to upload.');
@@ -62,7 +62,7 @@ export async function uploadPageMedia(formData: FormData) {
 }
 
 export async function saveDraftConfig(pageId: string, rawConfig: unknown) {
-  const user = await authService.requireUser();
+  const user = await authService.requireCreator();
   await requirePageAccess(user.id);
 
   // Basic validation before saving
@@ -93,7 +93,7 @@ export async function saveDraftConfig(pageId: string, rawConfig: unknown) {
 }
 
 export async function publishDraftConfig(pageId: string, rawConfig: unknown) {
-  const user = await authService.requireUser();
+  const user = await authService.requireCreator();
   const { entitlement } = await getUserEntitlement(user.id);
   const parsed = PageDocumentSchema.safeParse(rawConfig);
   if (!parsed.success) throw new Error('Invalid page configuration');

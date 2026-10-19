@@ -62,7 +62,7 @@ export async function mergeTemplateContent(oldDoc: PageDocument, templateId: str
 }
 
 export async function applyTemplateToPage(templateId: string) {
-  const user = await authService.requireUser();
+  const user = await authService.requireCreator();
   await requirePageAccess(user.id);
   if (!user.profile) throw new Error('Profile not found');
 
@@ -82,7 +82,7 @@ export async function applyTemplateToPage(templateId: string) {
 }
 
 export async function previewTemplate(oldDoc: PageDocument, templateId: string): Promise<PageDocument> {
-  const user = await authService.requireUser();
+  const user = await authService.requireCreator();
   if (!user.profile) throw new Error('Profile not found');
   return await mergeTemplateContent(oldDoc, templateId);
 }
