@@ -20,10 +20,16 @@ export default async function OnboardingPlanPage() {
   if (entitlement?.paidActive || entitlement?.onTrial) {
     redirect(profile.page.isPublished ? '/dashboard' : '/onboarding/claim');
   }
+  const pendingManualPurchase = await db.affiliatePurchase.findFirst({
+    where: { customerId: user.id, paymentProvider: 'manual', status: 'pending' },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true },
+  });
+  if (pendingManualPurchase) redirect(`/onboarding/payment/${pendingManualPurchase.id}`);
   const [trial, trialEligibility] = await Promise.all([getCurrentTrialLimits(), checkTrialEligibility()]);
   const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
   const pricingMode = getInitialPricingMode(cookieStore.get(PRICING_MODE_COOKIE)?.value, requestHeaders.get('x-vercel-ip-country'));
-  const pendingRequest = await db.planAccessRequest.findFirst({ where: { userId: user.id, status: 'pending' }, orderBy: { requestedAt: 'desc' }, select: { id: true, requestType: true, planId: true } });
+  const pendingRequest = await db.planAccessRequest.findFirst({ where: { userId: user.id, status: 'pending', requestType: 'trial' }, orderBy: { requestedAt: 'desc' }, select: { id: true, requestType: true, planId: true } });
   return (
     <PlanSelection
       username={profile.username}

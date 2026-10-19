@@ -142,7 +142,7 @@ export async function createManualAffiliatePurchase(planId: PaidPlanId, rawCode?
   }
 }
 
-export async function createInternationalAffiliateCheckout(planId: PaidPlanId, rawCode: string) {
+export async function createInternationalAffiliateCheckout(planId: PaidPlanId, rawCode?: string) {
   const user = await authService.requireUser();
   const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
   if (getInitialPricingMode(cookieStore.get(PRICING_MODE_COOKIE)?.value, requestHeaders.get('x-vercel-ip-country')) === 'nepal') {
@@ -155,8 +155,8 @@ export async function createInternationalAffiliateCheckout(planId: PaidPlanId, r
     ? process.env.DODO_PRODUCT_SMART_PAGE_AI || process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE_AI
     : process.env.DODO_PRODUCT_SMART_PAGE || process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE;
   if (!productId) return { error: 'This plan is not configured for checkout.' };
-  const parsedCode = codeSchema.safeParse(rawCode);
-  if (!parsedCode.success) return { error: 'Enter a valid promo code.' };
+  const parsedCode = rawCode?.trim() ? codeSchema.safeParse(rawCode) : null;
+  if (parsedCode && !parsedCode.success) return { error: 'Enter a valid promo code.' };
 
   let purchaseId: string | null = null;
   try {
@@ -164,23 +164,25 @@ export async function createInternationalAffiliateCheckout(planId: PaidPlanId, r
       if (await tx.affiliatePurchase.findFirst({ where: { customerId: user.id, status: 'pending' } })) {
         throw new Error('You already have a pending payment. Complete it or contact support before starting another purchase.');
       }
-      const code = await tx.affiliateCode.findFirst({
-        where: { code: { equals: parsedCode.data, mode: 'insensitive' }, active: true, affiliate: { affiliateApplication: { status: 'approved' } } },
-      });
-      if (!code) throw new Error('That promo code is not active.');
-      if (code.affiliateId === user.id) throw new Error('You cannot use your own promo code.');
       let referral = await tx.customerReferral.findUnique({ where: { customerId: user.id } });
-      if (referral && referral.codeId !== code.id) throw new Error('A referral code is already attached to your account.');
       const paidSubscription = await tx.subscription.findFirst({ where: { userId: user.id, billingMethod: { in: ['manual', 'dodo'] } } });
-      if (paidSubscription && !referral) throw new Error('A promo code cannot be attached after your first paid subscription.');
-      if (!referral) referral = await tx.customerReferral.create({ data: { customerId: user.id, affiliateId: code.affiliateId, codeId: code.id } });
+      if (parsedCode?.success) {
+        const code = await tx.affiliateCode.findFirst({
+          where: { code: { equals: parsedCode.data, mode: 'insensitive' }, active: true, affiliate: { affiliateApplication: { status: 'approved' } } },
+        });
+        if (!code) throw new Error('That promo code is not active.');
+        if (code.affiliateId === user.id) throw new Error('You cannot use your own promo code.');
+        if (referral && referral.codeId !== code.id) throw new Error('A referral code is already attached to your account.');
+        if (paidSubscription && !referral) throw new Error('A promo code cannot be attached after your first paid subscription.');
+        if (!referral) referral = await tx.customerReferral.create({ data: { customerId: user.id, affiliateId: code.affiliateId, codeId: code.id } });
+      }
       const promoUse = await tx.user.findUnique({ where: { id: user.id }, select: { promoCodeUsedAt: true } });
       const config = await getAffiliateConfig(tx);
-      const discountPercent = !paidSubscription && !referral.discountUsed && !promoUse?.promoCodeUsedAt ? Number(config.customerDiscountPercent) : 0;
+      const discountPercent = referral && !paidSubscription && !referral.discountUsed && !promoUse?.promoCodeUsedAt ? Number(config.customerDiscountPercent) : 0;
       const planPrice = PAID_PLANS[planId].international;
       const { discountAmount, finalAmount: expectedAmount } = calculateDiscount(planPrice.amount, discountPercent);
       return tx.affiliatePurchase.create({
-        data: { customerId: user.id, referralId: referral.id, planId, paymentProvider: 'dodo', currency: planPrice.currency, originalAmount: planPrice.amount, discountPercent, discountAmount, expectedAmount },
+        data: { customerId: user.id, referralId: referral?.id, planId, paymentProvider: 'dodo', currency: planPrice.currency, originalAmount: planPrice.amount, discountPercent, discountAmount, expectedAmount },
       });
     }, { isolationLevel: 'Serializable' });
     purchaseId = purchase.id;
@@ -198,6 +200,7 @@ export async function createInternationalAffiliateCheckout(planId: PaidPlanId, r
       feature_flags: { allow_discount_code: false },
       return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/settings?tab=billing`,
     });
+    if (!session.checkout_url) throw new Error('Checkout could not be opened. Please try again.');
     await db.affiliatePurchase.update({ where: { id: purchase.id }, data: { paymentReference: session.session_id } });
     revalidatePath('/dashboard/affiliate');
     return { checkoutUrl: session.checkout_url };

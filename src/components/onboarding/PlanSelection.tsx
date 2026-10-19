@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft, ArrowRight, Check, ShieldCheck, Sparkles, MessageCircle } from 'lucide-react';
 import { requestPlanAccess, setOnboardingPricingMode } from '@/app/onboarding/actions';
-import { validateAffiliateCode } from '@/app/actions/affiliate-actions';
+import { createInternationalAffiliateCheckout, createManualAffiliatePurchase, validateAffiliateCode } from '@/app/actions/affiliate-actions';
 import { getPlanPrice, getWhatsAppUrl, getPricingModeCookie, type PricingMode } from '@/lib/pricing';
 
 interface PlanSelectionProps {
@@ -44,6 +45,7 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
   const [affiliateCode, setAffiliateCode] = useState('');
   const [codeResult, setCodeResult] = useState<{ valid: boolean; discountAvailable?: boolean; discountPercent?: number; message: string } | null>(null);
   const [checkingCode, setCheckingCode] = useState(false);
+  const router = useRouter();
 
   const endDate = new Date(endsAt).toLocaleDateString('en-US', {
     month: 'long',
@@ -57,6 +59,25 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
     const actionName = `${requestType}_${planId}`;
     setPendingAction(actionName);
     setError('');
+    if (requestType === 'plan') {
+      startTransition(async () => {
+        try {
+          if (pricingMode === 'nepal') {
+            const result = await createManualAffiliatePurchase(planId, affiliateCode.trim() || undefined);
+            if ('error' in result) throw new Error(result.error);
+            router.push(`/onboarding/payment/${result.purchaseId}`);
+            return;
+          }
+          const result = await createInternationalAffiliateCheckout(planId, affiliateCode.trim() || undefined);
+          if ('error' in result) throw new Error(result.error);
+          window.location.href = result.checkoutUrl;
+        } catch (requestError) {
+          setError(requestError instanceof Error ? requestError.message : 'Could not start this purchase. Please try again.');
+          setPendingAction(null);
+        }
+      });
+      return;
+    }
     const whatsappWindow = window.open('about:blank', '_blank');
     startTransition(async () => {
       try {
@@ -194,8 +215,8 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
                 ...(isLoading ? styles.btnDisabled : {}),
               }}
             >
-              {pendingAction === 'plan_smart_page' ? 'Preparing request…' : 'Request Starter on WhatsApp'}
-              <MessageCircle size={14} />
+              {pendingAction === 'plan_smart_page' ? (pricingMode === 'nepal' ? 'Preparing payment…' : 'Opening checkout…') : pricingMode === 'nepal' ? 'Continue to payment' : `Subscribe — ${getPlanPrice('smart_page', pricingMode).display}/month`}
+              {pricingMode === 'nepal' ? null : <ArrowRight size={14} />}
             </button>
           </div>
 
@@ -265,8 +286,8 @@ export function PlanSelection({ username, domain, endsAt, trialEligible, trialIn
                 ...(isLoading ? styles.btnDisabled : {}),
               }}
             >
-              {pendingAction === 'plan_smart_page_ai' ? 'Preparing request…' : 'Request Growth on WhatsApp'}
-              <MessageCircle size={14} />
+              {pendingAction === 'plan_smart_page_ai' ? (pricingMode === 'nepal' ? 'Preparing payment…' : 'Opening checkout…') : pricingMode === 'nepal' ? 'Continue to payment' : `Subscribe — ${getPlanPrice('smart_page_ai', pricingMode).display}/month`}
+              {pricingMode === 'nepal' ? null : <ArrowRight size={14} />}
             </button>
           </div>
         </div>
