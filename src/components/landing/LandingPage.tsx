@@ -63,7 +63,7 @@ export function LandingPage({ user, initialPricingMode, pricingLockedToNepal = f
         <nav className="lp-nav">
           <a href="#top" className="lp-brand" aria-label="Pageory home"><Image src="/logo.png" alt="Pageory" width={28} height={28} className="rounded-lg object-contain" priority /><span>Pageory</span></a>
           <div className={`lp-nav-links ${menuOpen ? 'open' : ''}`}>
-            <a href="#features" onClick={() => setMenuOpen(false)}>Features</a><a href="#templates" onClick={() => setMenuOpen(false)}>Templates</a><a href="#pricing" onClick={() => setMenuOpen(false)}>Pricing</a><Link href="/affiliate/apply" onClick={() => setMenuOpen(false)}>Become an Affiliate</Link>
+            <a href="#features" onClick={() => setMenuOpen(false)}>Features</a><a href="#templates" onClick={() => setMenuOpen(false)}>Templates</a><a href="#pricing" onClick={() => setMenuOpen(false)}>Pricing</a>
           </div>
           <div className="lp-nav-actions"><Link className="lp-login" href="/affiliate/apply">Become an Affiliate</Link>{user ? <Link className="lp-login" href="/dashboard">Dashboard</Link> : <AuthButton user={user} label="Login" className="login-button" />}<Link className="button button-dark nav-cta" href={startHref}>Get started <ArrowUpRight size={15} /></Link></div>
           <button className="lp-menu" aria-label="Toggle navigation" onClick={() => setMenuOpen(!menuOpen)}><Menu size={20} /></button>
