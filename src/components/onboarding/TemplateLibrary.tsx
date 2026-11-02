@@ -112,7 +112,7 @@ export function TemplateLibrary({ templates }: { templates: Template[] }) {
                 <iframe
                   src={`/template-preview?id=${template.id}`}
                   title={`${template.name} preview`}
-                  loading={index < 4 ? 'eager' : 'lazy'}
+                  loading="lazy"
                   tabIndex={-1}
                 />
               </div>

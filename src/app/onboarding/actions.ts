@@ -5,6 +5,8 @@ import db from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { getAvailableTemplates, getTemplateDetails, type TemplateCategory } from '@/lib/page-engine/template-catalog';
 import { PageDocumentSchema } from '@/lib/page-engine/schemas';
+import { buildTemplatePages } from '@/lib/page-engine/template-pages';
+import { ensureTemplateStarterPages } from '@/lib/page-engine/template-page-store';
 import {
   extractWebsiteConfig,
   toPageContentDocument,
@@ -33,6 +35,7 @@ export async function chooseOnboardingTemplate(templateId: string) {
   if (!template) throw new Error('Choose an available template.');
   const home = await findHomePage(user.profile.id);
   const siteConfig = extractWebsiteConfig(template.document);
+  const { home: templateHome } = buildTemplatePages(templateId, template.document);
 
   // Pre-seed the homepage with the chosen template right away. The shared
   // website design is stored once and reused by every future page.
@@ -45,7 +48,7 @@ export async function chooseOnboardingTemplate(templateId: string) {
       await tx.page.update({
         where: { id: home.id },
         data: {
-          draftConfig: toPageContentDocument(template.document) as unknown as Prisma.InputJsonValue,
+          draftConfig: toPageContentDocument(templateHome) as unknown as Prisma.InputJsonValue,
           pageType: 'HOME',
           slug: '',
         },
@@ -58,10 +61,11 @@ export async function chooseOnboardingTemplate(templateId: string) {
           slug: '',
           pageType: 'HOME',
           navOrder: 0,
-          draftConfig: toPageContentDocument(template.document) as unknown as Prisma.InputJsonValue,
+          draftConfig: toPageContentDocument(templateHome) as unknown as Prisma.InputJsonValue,
         },
       });
     }
+    await ensureTemplateStarterPages(tx, user.profile!.id, templateId, template.document);
     await tx.website.upsert({
       where: { profileId: user.profile!.id },
       create: {
@@ -86,6 +90,7 @@ export async function selectOnboardingTemplateDirect(templateId: string) {
   if (!template) throw new Error('Choose an available template.');
   const home = await findHomePage(user.profile.id);
   const siteConfig = extractWebsiteConfig(template.document);
+  const { home: templateHome } = buildTemplatePages(templateId, template.document);
 
   await db.$transaction(async (tx) => {
     await tx.profile.update({
@@ -96,7 +101,7 @@ export async function selectOnboardingTemplateDirect(templateId: string) {
       await tx.page.update({
         where: { id: home.id },
         data: {
-          draftConfig: toPageContentDocument(template.document) as unknown as Prisma.InputJsonValue,
+          draftConfig: toPageContentDocument(templateHome) as unknown as Prisma.InputJsonValue,
           pageType: 'HOME',
           slug: '',
         },
@@ -109,10 +114,11 @@ export async function selectOnboardingTemplateDirect(templateId: string) {
           slug: '',
           pageType: 'HOME',
           navOrder: 0,
-          draftConfig: toPageContentDocument(template.document) as unknown as Prisma.InputJsonValue,
+          draftConfig: toPageContentDocument(templateHome) as unknown as Prisma.InputJsonValue,
         },
       });
     }
+    await ensureTemplateStarterPages(tx, user.profile!.id, templateId, template.document);
     await tx.website.upsert({
       where: { profileId: user.profile!.id },
       create: {
@@ -168,7 +174,8 @@ export async function saveOnboardingPersonalization(input: unknown) {
   if (!validated.success) return { error: 'We could not prepare this template. Please choose another.' };
 
   const home = await findHomePage(user.profile.id);
-  const pageContent = toPageContentDocument(validated.data);
+  const { home: personalizedHome } = buildTemplatePages(templateId, validated.data);
+  const pageContent = toPageContentDocument(personalizedHome);
   const siteConfig = extractWebsiteConfig(validated.data);
 
   await db.$transaction(async (tx) => {
@@ -196,6 +203,7 @@ export async function saveOnboardingPersonalization(input: unknown) {
         },
       });
     }
+    await ensureTemplateStarterPages(tx, user.profile!.id, templateId, validated.data);
     await tx.website.upsert({
       where: { profileId: user.profile!.id },
       create: {

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { lazy, Suspense, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { z } from 'zod';
 import { PageSection, ThemeConfig, FeatureSplitSectionSchema, ValueCardsSectionSchema, CaseStudiesSectionSchema, ContactSectionSchema, StatsSectionSchema, SiteFooterSectionSchema, SiteNavbarSectionSchema, BlogListSectionSchema } from '@/lib/page-engine/schemas';
 import { HeroSection } from './HeroSection';
@@ -13,42 +13,18 @@ import { motion, useScroll, useTransform, useInView } from 'motion/react';
 import { Marquee } from '@/components/ui/marquee';
 import { submitLead } from '@/actions/leads';
 
-// --- React Bits Components ---
-// @ts-ignore
-import Carousel from '@/components/Carousel';
-// @ts-ignore
-import Masonry from '@/components/Masonry';
-// @ts-ignore
-import ChromaGrid from '@/components/ChromaGrid';
-// @ts-ignore
-import BounceCards from '@/components/BounceCards';
-// @ts-ignore
-
-// @ts-ignore
-import ReflectiveCard from '@/components/ReflectiveCard';
-// @ts-ignore
-import SpotlightCard from '@/components/SpotlightCard';
-// @ts-ignore
-import BorderGlow from '@/components/BorderGlow';
-// @ts-ignore
-import GlareHover from '@/components/GlareHover';
-// @ts-ignore
-import ScrollReveal from '@/components/ScrollReveal';
-// @ts-ignore
-import GradualBlur from '@/components/GradualBlur';
-// @ts-ignore
-import Silk from '@/components/Silk';
-// @ts-ignore
-import GradientBlinds from '@/components/GradientBlinds';
-// @ts-ignore
-import Dock from '@/components/Dock';
-// @ts-ignore
-import CountUp from '@/components/CountUp';
-// @ts-ignore
-import Stepper from '@/components/Stepper';
+// Optional interaction-heavy presentation modules stay out of the base page chunk.
+const ChromaGrid = lazy(() => import('@/components/ChromaGrid'));
+const BounceCards = lazy(() => import('@/components/BounceCards'));
+const GlareHover = lazy(() => import('@/components/GlareHover'));
+const ScrollReveal = lazy(() => import('@/components/ScrollReveal'));
+const GradualBlur = lazy(() => import('@/components/GradualBlur'));
+const Dock = lazy(() => import('@/components/Dock'));
+const CountUp = lazy(() => import('@/components/CountUp'));
+const Stepper = lazy(() => import('@/components/Stepper'));
 import { MagicCard } from '@/components/ui/magic-card';
-import { ShineBorder } from '@/components/ui/shine-border';
 import { NumberTicker } from '@/components/ui/number-ticker';
+import { PageImage } from '@/components/page-render/PageImage';
 
 // ── URL Button ─────────────────────────────────────────────────
 export function UrlButtonSection({ section, theme }: { section: any; theme: ThemeConfig }) {
@@ -86,7 +62,7 @@ export function ImageButtonSection({ section }: { section: any; theme: ThemeConf
     <section className="py-4 px-4 md:px-8 max-w-xl mx-auto">
       <a href={url} target="_blank" rel="noopener noreferrer" className="group block w-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 relative">
         <div className="aspect-[16/9] w-full bg-slate-200 dark:bg-slate-800">
-          <img src={imageUrl} alt={label || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <PageImage src={imageUrl} alt={label || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         </div>
         {label && (
           <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 via-transparent to-transparent">
@@ -159,7 +135,7 @@ export function SocialLinksSection({ section, theme }: { section: any; theme: Th
     return (
       <section className="py-8 px-4 flex justify-center w-full my-4">
         {/* @ts-ignore */}
-        <Dock items={dockItems} size={56} magnification={72} />
+        <Suspense fallback={null}><Dock items={dockItems} size={56} magnification={72} /></Suspense>
       </section>
     );
   }
@@ -210,7 +186,7 @@ export function ImageSection({ section }: { section: any; theme: ThemeConfig }) 
     return (
       <section className="h-full min-h-72 w-full p-0">
         <figure className="h-full min-h-72 w-full">
-          <img src={url} alt={alt || caption || 'Image'} className="aspect-[4/3] h-full min-h-72 w-full object-cover md:aspect-auto" />
+          <PageImage src={url} alt={alt || caption || 'Image'} className="aspect-[4/3] h-full min-h-72 w-full object-cover md:aspect-auto" />
           {caption && <figcaption className="sr-only">{caption}</figcaption>}
         </figure>
       </section>
@@ -221,9 +197,9 @@ export function ImageSection({ section }: { section: any; theme: ThemeConfig }) 
     return (
       <section className={`py-10 ${layout === 'full' ? 'w-full' : 'px-4 md:px-8 max-w-5xl mx-auto'}`}>
         {/* @ts-ignore */}
-        <ScrollReveal>
-          <img src={url} alt={alt || caption || 'Image'} className={`w-full h-auto object-cover ${layout === 'full' ? '' : 'rounded-2xl shadow-lg'}`} />
-        </ScrollReveal>
+        <Suspense fallback={<PageImage src={url} alt={alt || caption || 'Image'} className={`w-full h-auto object-cover ${layout === 'full' ? '' : 'rounded-2xl shadow-lg'}`} />}>
+          <ScrollReveal scrollContainerRef={null}><PageImage src={url} alt={alt || caption || 'Image'} className={`w-full h-auto object-cover ${layout === 'full' ? '' : 'rounded-2xl shadow-lg'}`} /></ScrollReveal>
+        </Suspense>
         {caption && <p className="text-center text-sm text-slate-400 mt-4 italic">{caption}</p>}
       </section>
     );
@@ -232,9 +208,9 @@ export function ImageSection({ section }: { section: any; theme: ThemeConfig }) 
   if (variant === 'gradual-blur') {
     return (
       <section className={`py-10 relative ${layout === 'full' ? 'w-full' : 'px-4 md:px-8 max-w-5xl mx-auto'}`}>
-        <img src={url} alt={alt || caption || 'Image'} className={`w-full h-auto object-cover ${layout === 'full' ? '' : 'rounded-2xl shadow-lg'}`} />
+        <PageImage src={url} alt={alt || caption || 'Image'} className={`w-full h-auto object-cover ${layout === 'full' ? '' : 'rounded-2xl shadow-lg'}`} />
         {/* @ts-ignore */}
-        <GradualBlur position="bottom" strength={5} height="40%" />
+        <Suspense fallback={null}><GradualBlur position="bottom" strength={5} height="40%" /></Suspense>
         {caption && <p className="text-center text-sm text-slate-400 mt-4 italic">{caption}</p>}
       </section>
     );
@@ -244,7 +220,7 @@ export function ImageSection({ section }: { section: any; theme: ThemeConfig }) 
     <section className={`py-10 ${layout === 'full' ? 'w-full' : 'px-4 md:px-8 max-w-5xl mx-auto'}`}>
       <figure className="w-full group">
         <div className={`overflow-hidden ${layout === 'full' ? '' : 'rounded-2xl'} shadow-lg`}>
-          <img src={url} alt={alt || caption || 'Image'} className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-700" />
+          <PageImage src={url} alt={alt || caption || 'Image'} className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-700" />
         </div>
         {caption && <figcaption className="text-center text-sm text-slate-400 mt-4 italic">{caption}</figcaption>}
       </figure>
@@ -266,7 +242,7 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
   if (variant === 'photo-strip') return <section className="relative w-full overflow-hidden bg-[#0c0d0c] pb-7 pt-1 sm:pb-9">
     <div className="relative h-[24vw] min-h-[84px] max-h-[250px] sm:h-[19vw] sm:min-h-[120px]">
       <div className="absolute inset-x-0 top-0 flex h-full -translate-x-[7%] items-center justify-center gap-1 sm:gap-3">
-        {images.map((img: any, i: number) => <figure key={img.id || i} className="relative h-[86%] w-[16vw] min-w-[16vw] rotate-[var(--tilt)] overflow-hidden rounded-[1rem] border border-white/15 shadow-2xl sm:w-[15vw] sm:min-w-[15vw]" style={{ '--tilt': `${[-5, 3, -2, 4, -3, 2, -4][i % 7]}deg` } as React.CSSProperties}><img src={img.url} alt={img.caption || ''} className="h-full w-full object-cover" />{img.caption && <figcaption className="sr-only">{img.caption}</figcaption>}</figure>)}
+        {images.map((img: any, i: number) => <figure key={img.id || i} className="relative h-[86%] w-[16vw] min-w-[16vw] rotate-[var(--tilt)] overflow-hidden rounded-[1rem] border border-white/15 shadow-2xl sm:w-[15vw] sm:min-w-[15vw]" style={{ '--tilt': `${[-5, 3, -2, 4, -3, 2, -4][i % 7]}deg` } as React.CSSProperties}><PageImage src={img.url} alt={img.caption || ''} className="h-full w-full object-cover" />{img.caption && <figcaption className="sr-only">{img.caption}</figcaption>}</figure>)}
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#0c0d0c] to-transparent" />
     </div>
@@ -283,7 +259,7 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
       </div>
       <div className="mx-auto grid max-w-5xl grid-cols-3 items-center gap-x-4 gap-y-7 sm:gap-x-10 sm:gap-y-14">
         {images.map((img: any, i: number) => <figure key={img.id || i} className="relative mx-auto w-full max-w-[230px] rotate-[var(--tilt)] rounded-[10px] bg-[#e9e9dc] p-2 pb-8 text-[#171715] shadow-[0_12px_35px_#0008] sm:p-3 sm:pb-10" style={{ '--tilt': `${[-4, 3, -2, 4, -3, 2][i % 6]}deg` } as React.CSSProperties}>
-          <img src={img.url} alt={img.caption || ''} className="aspect-[4/5] w-full object-cover" />
+          <PageImage src={img.url} alt={img.caption || ''} className="aspect-[4/5] w-full object-cover" />
           {img.caption && <figcaption className="absolute inset-x-2 bottom-2 truncate text-[9px] font-semibold uppercase tracking-wide sm:inset-x-3 sm:bottom-3 sm:text-[10px]">{img.caption}</figcaption>}
           <span aria-hidden="true" className="absolute -top-3 left-1/2 h-6 w-16 -translate-x-1/2 rotate-[-8deg] bg-white/40 shadow-sm" />
           {img.note && <span className="absolute -right-5 bottom-8 z-10 w-16 rotate-[9deg] bg-[#f4df67] px-2 py-2 font-serif text-[8px] font-semibold uppercase leading-tight text-[#1d1d18] shadow-md sm:-right-7 sm:w-20 sm:text-[10px]">{img.note}</span>}
@@ -298,7 +274,7 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
         <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
           {images.map((img: any, i: number) => (
             <div key={img.id || i} className="break-inside-avoid group relative overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
-              <img
+              <PageImage
                 src={img.url}
                 alt={img.caption || ''}
                 className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
@@ -319,7 +295,9 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
     return (
       <section className="py-12 w-full max-w-7xl mx-auto">
         {/* @ts-ignore */}
-        <ChromaGrid items={urls.map((u: string) => ({ image: u }))} />
+        <Suspense fallback={<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{urls.map((url: string) => <PageImage key={url} src={url} alt="" className="aspect-square w-full object-cover" />)}</div>}>
+          <ChromaGrid items={urls.map((u: string) => ({ image: u }))} />
+        </Suspense>
       </section>
     );
   }
@@ -329,7 +307,9 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
       <section className="py-20 w-full max-w-7xl mx-auto flex items-center justify-center min-h-[500px] overflow-hidden">
         <div className="relative w-full max-w-[800px] h-[400px] flex items-center justify-center scale-75 md:scale-100">
           {/* @ts-ignore */}
-          <BounceCards images={urls} containerWidth="100%" containerHeight="100%" />
+          <Suspense fallback={<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{urls.map((url: string) => <PageImage key={url} src={url} alt="" className="aspect-square w-full object-cover" />)}</div>}>
+            <BounceCards images={urls} containerWidth={800} containerHeight={400} />
+          </Suspense>
         </div>
       </section>
     );
@@ -342,7 +322,7 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
       <div className={`grid gap-3 ${section.layout === 'masonry' ? 'grid-cols-2 md:grid-cols-4 items-start' : 'grid-cols-2 md:grid-cols-3'}`}>
         {images.map((img: any) => (
           <div key={img.id} className="group relative rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
-            <img src={img.url} alt={img.caption || ''} className={`w-full ${section.layout === 'masonry' ? 'h-auto' : 'aspect-square object-cover'} group-hover:scale-105 transition-transform duration-500`} />
+            <PageImage src={img.url} alt={img.caption || ''} className={`w-full ${section.layout === 'masonry' ? 'h-auto' : 'aspect-square object-cover'} group-hover:scale-105 transition-transform duration-500`} />
             {img.caption && (
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                 <span className="text-white text-sm font-medium">{img.caption}</span>
@@ -400,13 +380,13 @@ export function CarouselSection({ section, theme }: { section: any; theme: Theme
     <div className="mb-5 flex items-center justify-between px-6 sm:px-10 md:px-[7%]"><p className="text-[8px] font-semibold uppercase tracking-[0.22em]">The outfit diary</p><p className="text-[8px] uppercase tracking-[0.18em] text-neutral-400">Scroll to explore&nbsp; →</p></div>
     <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-10 md:gap-6 md:px-[7%]">
       {images.map((image: any) => <article key={image.id} className="w-[72vw] flex-none snap-start sm:w-[42vw] md:w-[calc((86vw-4.5rem)/4)] md:max-w-[280px]">
-        <img src={image.url} alt={image.caption || 'Outfit inspiration'} className="aspect-[0.78/1] w-full object-cover" />
+        <PageImage src={image.url} alt={image.caption || 'Outfit inspiration'} className="aspect-[0.78/1] w-full object-cover" />
         <p className="mt-3 text-center text-[8px] uppercase tracking-[0.15em] text-neutral-500">OUTFIT&nbsp; / &nbsp;{image.caption}</p>
       </article>)}
     </div>
   </section>;
 
-  if (variant === 'restaurant-featured') return <section className="w-full bg-white px-6 py-10 sm:px-10 md:px-[10%] md:py-14"><div className="mx-auto grid max-w-6xl grid-cols-[1fr_64px] gap-2 sm:grid-cols-[1fr_100px] md:gap-3"><div className="relative aspect-[1.65/1] overflow-hidden bg-neutral-100"><img src={images[currentIndex % images.length].url} alt={images[currentIndex % images.length].caption || ''} className="h-full w-full object-cover" /><span className="absolute right-4 top-1/2 grid h-14 w-14 -translate-y-1/2 place-items-center rounded-full bg-[#c6a66b] text-[8px] font-semibold uppercase text-white">{images[currentIndex % images.length].caption || 'Scopri'}</span><div className="absolute bottom-4 left-4 flex gap-2"><button onClick={() => setCurrentIndex(index => (index - 1 + images.length) % images.length)} aria-label="Previous dish" className="grid h-8 w-8 place-items-center rounded-full bg-white/90">←</button><button onClick={() => setCurrentIndex(index => (index + 1) % images.length)} aria-label="Next dish" className="grid h-8 w-8 place-items-center rounded-full bg-white/90">→</button></div></div><div className="flex flex-col gap-2">{images.filter((_: any, index: number) => index !== currentIndex % images.length).slice(0, 2).map((image: any) => <button key={image.id} onClick={() => setCurrentIndex(images.findIndex((item: any) => item.id === image.id))} className="min-h-0 flex-1 overflow-hidden"><img src={image.url} alt={image.caption || ''} className="h-full w-full object-cover" /></button>)}</div></div></section>;
+  if (variant === 'restaurant-featured') return <section className="w-full bg-white px-6 py-10 sm:px-10 md:px-[10%] md:py-14"><div className="mx-auto grid max-w-6xl grid-cols-[1fr_64px] gap-2 sm:grid-cols-[1fr_100px] md:gap-3"><div className="relative aspect-[1.65/1] overflow-hidden bg-neutral-100"><PageImage src={images[currentIndex % images.length].url} alt={images[currentIndex % images.length].caption || ''} className="h-full w-full object-cover" /><span className="absolute right-4 top-1/2 grid h-14 w-14 -translate-y-1/2 place-items-center rounded-full bg-[#c6a66b] text-[8px] font-semibold uppercase text-white">{images[currentIndex % images.length].caption || 'Scopri'}</span><div className="absolute bottom-4 left-4 flex gap-2"><button onClick={() => setCurrentIndex(index => (index - 1 + images.length) % images.length)} aria-label="Previous dish" className="grid h-8 w-8 place-items-center rounded-full bg-white/90">←</button><button onClick={() => setCurrentIndex(index => (index + 1) % images.length)} aria-label="Next dish" className="grid h-8 w-8 place-items-center rounded-full bg-white/90">→</button></div></div><div className="flex flex-col gap-2">{images.filter((_: any, index: number) => index !== currentIndex % images.length).slice(0, 2).map((image: any) => <button key={image.id} onClick={() => setCurrentIndex(images.findIndex((item: any) => item.id === image.id))} className="min-h-0 flex-1 overflow-hidden"><PageImage src={image.url} alt={image.caption || ''} className="h-full w-full object-cover" /></button>)}</div></div></section>;
 
   if (variant === 'flex') {
     return (
@@ -429,8 +409,12 @@ export function CarouselSection({ section, theme }: { section: any; theme: Theme
   if (variant === 'react-bits') {
     return (
       <section className="py-12 px-4 md:px-8 max-w-6xl mx-auto relative w-full">
-        {/* @ts-ignore */}
-        <Carousel items={formattedItems} />
+        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [scrollbar-width:thin]" tabIndex={0} aria-label="Image carousel; scroll horizontally to browse">
+          {images.map((image: any) => <figure key={image.id} className="w-[min(82vw,52rem)] shrink-0 snap-center">
+            <PageImage src={image.url} alt={image.caption || ''} sizes="(max-width: 768px) 82vw, 832px" className="aspect-video w-full rounded-lg bg-neutral-100 object-cover" />
+            {image.caption && <figcaption className="mt-3 text-sm text-neutral-600">{image.caption}</figcaption>}
+          </figure>)}
+        </div>
       </section>
     );
   }
@@ -451,7 +435,7 @@ export function CarouselSection({ section, theme }: { section: any; theme: Theme
   return (
     <section className="py-12 px-4 md:px-8 max-w-5xl mx-auto">
       <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-video bg-slate-900 group">
-        <img
+        <PageImage
           src={images[currentIndex].url}
           alt={images[currentIndex].caption || ''}
           className="w-full h-full object-cover transition-opacity duration-500"
@@ -669,7 +653,7 @@ export function ResumeSection({ section, theme }: { section: any; theme: ThemeCo
       <section className="py-16 px-4 md:px-8 max-w-4xl mx-auto">
         {title && <h2 className="text-3xl font-bold mb-10 text-center" style={{ color: theme.primaryColor }}>{title}</h2>}
         {/* @ts-ignore */}
-        <Stepper steps={steps} activeStep={0} />
+        <Suspense fallback={null}><Stepper steps={steps} activeStep={0} /></Suspense>
       </section>
     );
   }
@@ -704,7 +688,7 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
 
   const renderDescription = (desc?: string) => desc || <span className="opacity-60">Premium service offering tailored to your unique requirements and goals.</span>;
 
-  if (variant === 'salon-staggered') {
+  if (variant === 'salon-staggered' || variant === 'staggered') {
     return (
       <section className="py-16 md:py-24 px-6 max-w-6xl mx-auto text-current">
         {title && (
@@ -727,7 +711,7 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
                 <div className="w-full md:w-1/2 flex justify-center">
                   <div className="relative w-full max-w-sm aspect-[4/3] rounded-[2.5rem] overflow-hidden shadow-lg group bg-[#ede6dc]">
                     {item.imageUrl ? (
-                      <img
+                      <PageImage
                         src={item.imageUrl}
                         alt={item.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -800,7 +784,7 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
         <div className="border-t border-[#123b38]/30">
           {items.map((item: any, index: number) => <details key={item.id} open={index === 1} className="group border-b border-[#123b38]/30">
             <summary className="flex cursor-pointer list-none items-center gap-3 py-4 marker:hidden [&::-webkit-details-marker]:hidden"><span className="text-[9px] font-semibold">{String(index + 1).padStart(2, '0')}</span><span className="flex-1 text-2xl font-medium uppercase leading-none tracking-[-0.04em] text-[#bdd1e0] sm:text-3xl md:text-4xl">{item.title}</span><span className="text-2xl font-light group-open:text-[#123b38]"><span className="group-open:hidden">+</span><span className="hidden group-open:inline">−</span></span></summary>
-            <div className="grid gap-4 pb-5 pl-8 md:grid-cols-[1fr_1.2fr] md:pl-12">{item.imageUrl && <img src={item.imageUrl} alt="" className="h-20 w-full object-cover md:h-24 md:max-w-36" />}<div><p className="max-w-xl text-[10px] leading-relaxed text-neutral-600">{item.description}</p><div className="mt-3 flex flex-wrap gap-2 text-[8px] text-[#123b38]"><span className="rounded-full border border-current/30 px-2 py-1">Ongoing Support</span><span className="rounded-full border border-current/30 px-2 py-1">Space Planning</span><span className="rounded-full border border-current/30 px-2 py-1">Sustainable Design</span></div></div></div>
+            <div className="grid gap-4 pb-5 pl-8 md:grid-cols-[1fr_1.2fr] md:pl-12">{item.imageUrl && <PageImage src={item.imageUrl} alt="" className="h-20 w-full object-cover md:h-24 md:max-w-36" />}<div><p className="max-w-xl text-[10px] leading-relaxed text-neutral-600">{item.description}</p><div className="mt-3 flex flex-wrap gap-2 text-[8px] text-[#123b38]"><span className="rounded-full border border-current/30 px-2 py-1">Ongoing Support</span><span className="rounded-full border border-current/30 px-2 py-1">Space Planning</span><span className="rounded-full border border-current/30 px-2 py-1">Sustainable Design</span></div></div></div>
           </details>)}
         </div>
       </div>
@@ -884,12 +868,12 @@ export function ProductsSection({ section, theme }: { section: any; theme: Theme
   const { title, items } = section.content;
   const variant = section.variant || 'default';
 
-  if (variant === 'restaurant-menu') {
+  if (variant === 'restaurant-menu' || variant === 'categorized-menu') {
     const categories = Array.from(new Set(items.map((item: any) => item.category || 'Menu')));
-    return <section className="w-full bg-white px-6 py-14 text-neutral-900 sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[0.8fr_1fr] md:gap-12">
-      {section.content.menuImageUrl && <img src={section.content.menuImageUrl} alt="A selection from our kitchen" className="aspect-[0.8/1] w-full object-cover" />}
-      <div><div className="mb-5 flex items-end justify-between"><h2 className="font-serif text-4xl">{title || 'Menu'}</h2><a href="#menu" className="text-[8px] uppercase underline underline-offset-4">Vedi tutto</a></div><nav aria-label="Menu categories" className="mb-6 flex flex-wrap gap-x-3 text-[8px] uppercase text-[#bd9d62]">{categories.map((category: any, index: number) => <a key={category} href={`#menu-${index}`} className="whitespace-nowrap">{category}{index < categories.length - 1 && <span className="ml-3 text-neutral-400">/</span>}</a>)}</nav>
-        {categories.map((category: any, index: number) => <div key={category} id={`menu-${index}`} className="mb-5 scroll-mt-6"><h3 className="sr-only">{category}</h3><div className="border-t border-neutral-400">{items.filter((item: any) => (item.category || 'Menu') === category).map((item: any) => <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3 border-b border-neutral-300 py-3 text-[9px]"><div><p className="font-medium">{item.title}</p><p className="mt-1 text-[8px] leading-relaxed text-neutral-500">{item.description}</p></div><span className="whitespace-nowrap text-neutral-500">{item.price}</span></div>)}</div></div>)}
+    return <section className="w-full px-6 py-14 text-inherit sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[0.8fr_1fr] md:gap-12">
+      {section.content.menuImageUrl && <PageImage src={section.content.menuImageUrl} alt="A selection from our kitchen" className="aspect-[0.8/1] w-full object-cover" />}
+      <div><div className="mb-5 flex items-end justify-between"><h2 className="font-serif text-4xl">{title || 'Menu'}</h2><a href="#menu" className="text-xs uppercase underline underline-offset-4">Vedi tutto</a></div><nav aria-label="Menu categories" className="mb-6 flex flex-wrap gap-x-3 text-xs uppercase text-current/70">{categories.map((category: any, index: number) => <a key={category} href={`#menu-${index}`} className="whitespace-nowrap">{category}{index < categories.length - 1 && <span className="ml-3 opacity-50">/</span>}</a>)}</nav>
+        {categories.map((category: any, index: number) => <div key={category} id={`menu-${index}`} className="mb-5 scroll-mt-6"><h3 className="sr-only">{category}</h3><div className="border-t border-current/30">{items.filter((item: any) => (item.category || 'Menu') === category).map((item: any) => <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3 border-b border-current/20 py-3 text-sm"><div><p className="font-medium">{item.title}</p><p className="mt-1 text-xs leading-relaxed text-current/65">{item.description}</p></div><span className="whitespace-nowrap text-current/75">{item.price}</span></div>)}</div></div>)}
       </div>
     </div></section>;
   }
@@ -901,10 +885,10 @@ export function ProductsSection({ section, theme }: { section: any; theme: Theme
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
           {items.map((item: any) => (
             // @ts-ignore
-            <GlareHover key={item.id} className="rounded-2xl overflow-hidden bg-slate-900 border border-slate-800">
+            <Suspense key={item.id} fallback={<article className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">{item.imageUrl && <div className="aspect-square overflow-hidden"><PageImage src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" /></div>}<div className="p-4"><h3 className="text-sm font-bold text-white">{item.title}</h3><p className="mb-1 line-clamp-2 text-xs text-slate-400">{item.description}</p><div className="text-sm font-bold" style={{ color: theme.primaryColor }}>{item.price}</div></div></article>}><GlareHover className="rounded-2xl overflow-hidden bg-slate-900 border border-slate-800">
               {item.imageUrl && (
                 <div className="aspect-square overflow-hidden">
-                  <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                  <PageImage src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="p-4">
@@ -912,7 +896,7 @@ export function ProductsSection({ section, theme }: { section: any; theme: Theme
                 <p className="text-xs text-slate-400 mb-1 line-clamp-2">{item.description}</p>
                 <div className="font-bold text-sm" style={{ color: theme.primaryColor }}>{item.price}</div>
               </div>
-            </GlareHover>
+            </GlareHover></Suspense>
           ))}
         </div>
       </section>
@@ -928,7 +912,7 @@ export function ProductsSection({ section, theme }: { section: any; theme: Theme
             <div key={item.id} className="group flex flex-col gap-5">
               <MagicCard className="w-full aspect-[4/5] rounded-xl overflow-hidden cursor-pointer" gradientColor={theme.primaryColor + '10'}>
                 {item.imageUrl && (
-                  <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <PageImage src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 )}
               </MagicCard>
               <div className="flex flex-col gap-1.5 px-1">
@@ -954,7 +938,7 @@ export function ProductsSection({ section, theme }: { section: any; theme: Theme
           <div key={item.id} className="group">
             {item.imageUrl && (
               <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl mb-4 overflow-hidden shadow-sm">
-                <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <PageImage src={item.imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
             )}
             <h3 className="font-bold text-sm">{item.title}</h3>
@@ -989,7 +973,7 @@ function TestimonialCard({ item, isMarquee = false }: { item: any, isMarquee?: b
 
       <div className="flex items-center gap-3">
         {item.avatarUrl ? (
-          <img src={item.avatarUrl} alt={item.author} className="w-10 h-10 rounded-full object-cover border border-neutral-200 dark:border-slate-700" />
+          <PageImage src={item.avatarUrl} alt={item.author} className="w-10 h-10 rounded-full object-cover border border-neutral-200 dark:border-slate-700" />
         ) : (
           <div className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 flex items-center justify-center font-bold text-neutral-400">
             {item.author?.[0] || 'A'}
@@ -1008,7 +992,7 @@ export function TestimonialsSection({ section, theme }: { section: any; theme: T
   const { title, items } = section.content;
   const variant = section.variant || 'grid';
 
-  if (variant === 'salon-editorial') {
+  if (variant === 'salon-editorial' || variant === 'editorial-quotes') {
     return (
       <section className="py-20 md:py-28 px-6 max-w-6xl mx-auto text-current">
         <div className="mb-12">
@@ -1042,15 +1026,6 @@ export function TestimonialsSection({ section, theme }: { section: any; theme: T
             </div>
           ))}
         </div>
-        {/* Navigation circles */}
-        <div className="mt-8 flex justify-end gap-3">
-          <button type="button" aria-label="Previous" className="h-10 w-10 rounded-full border border-white/20 flex items-center justify-center text-current/70 hover:border-white/50 hover:text-white transition">
-            ←
-          </button>
-          <button type="button" aria-label="Next" className="h-10 w-10 rounded-full border border-white/20 flex items-center justify-center text-current/70 hover:border-white/50 hover:text-white transition">
-            →
-          </button>
-        </div>
       </section>
     );
   }
@@ -1065,20 +1040,23 @@ export function TestimonialsSection({ section, theme }: { section: any; theme: T
         {title && <h2 className="text-3xl md:text-4xl font-serif text-neutral-900 dark:text-white text-center mb-16">{title}</h2>}
 
         <div className="relative flex w-full flex-col items-center justify-center overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
-          <Marquee pauseOnHover className="[--duration:40s]">
+          <Marquee aria-hidden="true" pauseOnHover className="[--duration:40s]">
             {firstRow.map((item: any) => (
               <TestimonialCard key={item.id} item={item} isMarquee />
             ))}
           </Marquee>
 
           {secondRow.length > 0 && (
-            <Marquee reverse pauseOnHover className="[--duration:40s] mt-6">
+            <Marquee aria-hidden="true" reverse pauseOnHover className="[--duration:40s] mt-6">
               {secondRow.map((item: any) => (
                 <TestimonialCard key={item.id} item={item} isMarquee />
               ))}
             </Marquee>
           )}
         </div>
+        <ul className="sr-only">
+          {items.map((item: any) => <li key={item.id}>{item.quote} — {item.author}{item.role ? `, ${item.role}` : ''}</li>)}
+        </ul>
       </section>
     );
   }
@@ -1227,15 +1205,15 @@ export function LeadFormSection({ section, theme, pageId }: { section: any; them
       { title: 'Follow me on Instagram', value: section.content.instagram?.replace(/^https?:\/\//, ''), href: section.content.instagram, icon: '◎' },
       { title: 'Tattooing at', value: section.content.location, icon: '♧' },
     ].filter(item => item.value);
-    return <section className="w-full bg-[#0c0d0c] px-6 py-14 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-20">
+    return <section className="w-full overflow-x-clip bg-[#0c0d0c] px-6 py-14 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-20">
       <div className="mx-auto max-w-6xl">
         <h2 className="mb-7 max-w-[13ch] font-serif text-[clamp(1.9rem,6.8vw,4.5rem)] leading-[0.84] tracking-[-0.05em]">{title || 'Let’s Create Something Permanent.'}</h2>
-        <div className="grid grid-cols-[0.92fr_1.08fr] items-start gap-4 sm:gap-8 md:gap-12">
+        <div className="grid min-w-0 grid-cols-1 items-start gap-4 sm:grid-cols-[0.92fr_1.08fr] sm:gap-8 md:gap-12">
           <div>
-            {description && <p className="mb-5 text-[7px] leading-[1.4] text-white/55 sm:mb-8 sm:text-[11px]">{description}</p>}
-            <div className="flex flex-col gap-2 sm:gap-3">{infoCards.map(card => <a key={card.title} href={card.href || '#'} className="flex min-h-12 items-center gap-2 rounded-lg border border-white/10 px-2 py-2 sm:min-h-16 sm:gap-3 sm:px-3"><span className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-white/20 text-[10px] sm:h-7 sm:w-7 sm:text-sm">{card.icon}</span><span className="min-w-0"><span className="block text-[6px] text-white/45 sm:text-[8px]">{card.title}</span><span className="mt-1 block truncate text-[6px] sm:text-[9px]">{card.value}</span></span></a>)}</div>
+            {description && <p className="mb-5 text-[11px] leading-relaxed text-white/65 sm:mb-8 sm:text-sm">{description}</p>}
+            <div className="flex flex-col gap-2 sm:gap-3">{infoCards.map(card => <a key={card.title} href={card.href || '#'} className="flex min-h-12 min-w-0 items-center gap-2 rounded-lg border border-white/10 px-2 py-2 sm:min-h-16 sm:gap-3 sm:px-3"><span className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-white/20 text-[10px] sm:h-7 sm:w-7 sm:text-sm">{card.icon}</span><span className="min-w-0"><span className="block text-[10px] text-white/55 sm:text-xs">{card.title}</span><span className="mt-1 block truncate text-[10px] sm:text-sm">{card.value}</span></span></a>)}</div>
           </div>
-          <div className="rounded-lg border border-white/10 p-2.5 sm:rounded-xl sm:p-4">
+          <div className="min-w-0 rounded-lg border border-white/10 p-2.5 sm:rounded-xl sm:p-4">
             <LeadFormFields buttonText={buttonText} theme={theme} pageId={pageId} sectionId={section.id} variant="split-inquiry" content={section.content} />
           </div>
         </div>
@@ -1376,9 +1354,9 @@ export function CollectEmailsSection({ section, theme, pageId }: { section: any;
       {success ? (
         <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl text-sm font-medium">Subscribed successfully!</div>
       ) : (
-        <form className="flex gap-2" onSubmit={handleSubmit}>
-          <input name="email" type="email" required placeholder={placeholder || 'Your email'} className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2" />
-          <button type="submit" data-page-button disabled={loading} className="px-6 py-3 rounded-xl font-bold text-white text-sm shadow-lg hover:shadow-xl transition-all flex-shrink-0 disabled:opacity-70" style={{ backgroundColor: theme.primaryColor }}>
+        <form className="flex flex-col gap-2 sm:flex-row" onSubmit={handleSubmit}>
+          <input name="email" type="email" required placeholder={placeholder || 'Your email'} className="w-full min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 dark:border-slate-700 dark:bg-slate-900" />
+          <button type="submit" data-page-button disabled={loading} className="w-full shrink-0 rounded-xl px-4 py-3 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-70 sm:w-auto sm:px-6" style={{ backgroundColor: theme.primaryColor }}>
             {loading ? '...' : buttonText}
           </button>
         </form>
@@ -1409,7 +1387,7 @@ export function BookingSection({ section, theme }: { section: any; theme: ThemeC
         {step === 2 && <label className="block font-serif text-lg">Scegli un orario<select value={time} onChange={event => setTime(event.target.value)} className="mt-5 block h-12 w-full border border-white/70 bg-transparent px-3 font-sans text-sm text-[#6c5837]"><option>18:00</option><option>18:30</option><option>19:00</option><option>19:30</option><option>20:00</option><option>20:30</option></select></label>}
         <div className="mt-8 flex gap-2">{step > 0 && <button onClick={() => setStep(value => value - 1)} className="h-10 border border-white/70 px-5 text-[9px] font-semibold uppercase">Indietro</button>}{step < 2 ? <button onClick={() => setStep(value => value + 1)} className="h-10 flex-1 bg-white text-[9px] font-semibold uppercase tracking-wide text-[#81683e]">Continua</button> : <button onClick={sendReservation} className="h-10 flex-1 bg-white text-[9px] font-semibold uppercase tracking-wide text-[#81683e]">Richiedi prenotazione</button>}</div>
       </div>
-      {section.content.imageUrl && <img src={section.content.imageUrl} alt="A table set for dinner" className="min-h-[340px] w-full object-cover" />}
+      {section.content.imageUrl && <PageImage src={section.content.imageUrl} alt="A table set for dinner" className="min-h-[340px] w-full object-cover" />}
     </div></section>;
   }
   return (
@@ -1513,7 +1491,7 @@ export function ContactSection({ section, theme, pageId }: { section: z.infer<ty
   const { title, description, buttonText, email, phone, address } = section.content;
   const variant = section.variant || 'card-centered';
 
-  if (variant === 'salon-cards' || variant === 'cards-row') {
+  if (variant === 'salon-cards' || variant === 'cards-row' || variant === 'contact-cards') {
     return (
       <section className="py-16 md:py-24 px-6 max-w-6xl mx-auto text-center text-current">
         {section.content.eyebrow && (
@@ -1686,13 +1664,14 @@ export function MarqueeSection({ section, theme }: { section: any; theme: ThemeC
         <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-slate-50 dark:from-slate-900 to-transparent z-10" />
         {/* @ts-ignore */}
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23000000\' fill-opacity=\'1\' fill-rule=\'evenodd\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'3\'/%3E%3Cg/%3E%3C/svg%3E")' }} />
-        <Marquee reverse={section.layout === 'right'} pauseOnHover className="[--duration:25s]">
+        <Marquee aria-hidden="true" reverse={section.layout === 'right'} pauseOnHover className="[--duration:25s]">
           {[...Array(8)].map((_, i) => (
             <span key={i} className="text-sm md:text-base font-bold uppercase tracking-[0.3em] mx-12 opacity-80" style={{ color: theme.primaryColor }}>
               {text}
             </span>
           ))}
         </Marquee>
+        <p className="sr-only">{text}</p>
       </section>
     );
   }
@@ -1701,13 +1680,14 @@ export function MarqueeSection({ section, theme }: { section: any; theme: ThemeC
     <section className="py-6 overflow-hidden relative">
       <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-slate-100 dark:from-slate-950 to-transparent z-10" />
       <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-slate-100 dark:from-slate-950 to-transparent z-10" />
-      <Marquee reverse={section.layout === 'right'} pauseOnHover className="[--duration:20s]">
+      <Marquee aria-hidden="true" reverse={section.layout === 'right'} pauseOnHover className="[--duration:20s]">
         {[...Array(6)].map((_, i) => (
           <span key={i} className="text-2xl md:text-4xl font-black uppercase tracking-widest mx-4 opacity-30" style={{ color: theme.primaryColor }}>
             {text}
           </span>
         ))}
       </Marquee>
+      <p className="sr-only">{text}</p>
     </section>
   );
 }
@@ -1734,6 +1714,15 @@ export function DonateSection({ section, theme }: { section: any; theme: ThemeCo
 }
 
 // ── Countdown ──────────────────────────────────────────────────
+function CountdownUnit({ value, label, primaryColor }: { value: number; label: string; primaryColor: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="text-4xl font-black tabular-nums md:text-5xl" style={{ color: primaryColor }}>{String(value).padStart(2, '0')}</div>
+      <div className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-400">{label}</div>
+    </div>
+  );
+}
+
 export function CountdownSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, targetDate } = section.content;
   const variant = section.variant || 'default';
@@ -1762,19 +1751,19 @@ export function CountdownSection({ section, theme }: { section: any; theme: Them
         <div className="flex justify-center gap-6 md:gap-10">
           <div className="flex flex-col items-center">
             {/* @ts-ignore */}
-            <CountUp from={0} to={timeLeft.days} duration={2} className="text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.primaryColor }} />
+            <Suspense fallback={<span className="text-4xl font-black tabular-nums">{timeLeft.days}</span>}><CountUp from={0} to={timeLeft.days} duration={2} className="text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.primaryColor }} /></Suspense>
             <div className="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1">days</div>
           </div>
           <span className="text-3xl font-bold text-slate-200 dark:text-slate-700 self-start mt-2">:</span>
           <div className="flex flex-col items-center">
             {/* @ts-ignore */}
-            <CountUp from={0} to={timeLeft.hours} duration={2} className="text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.primaryColor }} />
+            <Suspense fallback={<span className="text-4xl font-black tabular-nums">{timeLeft.hours}</span>}><CountUp from={0} to={timeLeft.hours} duration={2} className="text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.primaryColor }} /></Suspense>
             <div className="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1">hours</div>
           </div>
           <span className="text-3xl font-bold text-slate-200 dark:text-slate-700 self-start mt-2">:</span>
           <div className="flex flex-col items-center">
             {/* @ts-ignore */}
-            <CountUp from={0} to={timeLeft.mins} duration={2} className="text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.primaryColor }} />
+            <Suspense fallback={<span className="text-4xl font-black tabular-nums">{timeLeft.mins}</span>}><CountUp from={0} to={timeLeft.mins} duration={2} className="text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.primaryColor }} /></Suspense>
             <div className="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1">mins</div>
           </div>
         </div>
@@ -1782,22 +1771,15 @@ export function CountdownSection({ section, theme }: { section: any; theme: Them
     );
   }
 
-  const Unit = ({ value, label }: { value: number; label: string }) => (
-    <div className="flex flex-col items-center">
-      <div className="text-4xl md:text-5xl font-black tabular-nums" style={{ color: theme.primaryColor }}>{String(value).padStart(2, '0')}</div>
-      <div className="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1">{label}</div>
-    </div>
-  );
-
   return (
     <section className="py-16 px-4 md:px-8 max-w-lg mx-auto text-center">
       {title && <h2 className="text-xl font-bold mb-8">{title}</h2>}
       <div className="flex justify-center gap-6 md:gap-10">
-        <Unit value={timeLeft.days} label="days" />
+        <CountdownUnit value={timeLeft.days} label="days" primaryColor={theme.primaryColor} />
         <span className="text-3xl font-bold text-slate-200 dark:text-slate-700 self-start mt-2">:</span>
-        <Unit value={timeLeft.hours} label="hours" />
+        <CountdownUnit value={timeLeft.hours} label="hours" primaryColor={theme.primaryColor} />
         <span className="text-3xl font-bold text-slate-200 dark:text-slate-700 self-start mt-2">:</span>
-        <Unit value={timeLeft.mins} label="mins" />
+        <CountdownUnit value={timeLeft.mins} label="mins" primaryColor={theme.primaryColor} />
       </div>
     </section>
   );
@@ -1926,7 +1908,7 @@ export function TimelineSection({ section, theme }: { section: any; theme: Theme
 
   if (section.variant === 'pinned-thread') return <TattooProcessSection section={section} title={title} items={items} />;
 
-  if (layout === 'restaurant-history') return <section className="w-full bg-white px-6 py-14 text-neutral-900 sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="font-serif text-4xl md:text-5xl">{title || 'La nostra storia'}</h2><div className="flex gap-2 text-sm text-[#c6a66b]"><button aria-label="Previous years" className="grid h-8 w-8 place-items-center rounded-full border border-current">←</button><button aria-label="Next years" className="grid h-8 w-8 place-items-center rounded-full border border-current">→</button></div></div><div className="mb-5 flex min-w-max items-end gap-10 border-b border-neutral-400 px-5">{items.map((item: any, index: number) => <a key={item.id} href={`#history-${item.id}`} className={`relative pb-3 font-serif text-3xl italic ${index === 0 ? 'text-[#c6a66b]' : 'text-neutral-900'}`}>{item.label}<span className={`absolute -bottom-1 left-0 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-[#c6a66b]' : 'bg-neutral-900'}`} /></a>)}</div><div className="grid gap-4 md:grid-cols-3">{items.map((item: any) => <article id={`history-${item.id}`} key={item.id} className="scroll-mt-8">{item.imageUrl && <img src={item.imageUrl} alt="" className="mb-3 aspect-[1.35/1] w-full object-cover" />}<p className="text-[9px] leading-relaxed text-neutral-600">{item.description}</p></article>)}</div></div></section>;
+  if (layout === 'restaurant-history') return <section className="w-full bg-white px-6 py-14 text-neutral-900 sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="font-serif text-4xl md:text-5xl">{title || 'La nostra storia'}</h2><div className="flex gap-2 text-sm text-[#c6a66b]"><button aria-label="Previous years" className="grid h-8 w-8 place-items-center rounded-full border border-current">←</button><button aria-label="Next years" className="grid h-8 w-8 place-items-center rounded-full border border-current">→</button></div></div><div className="mb-5 overflow-x-auto overscroll-x-contain"><div className="flex min-w-max items-end gap-10 border-b border-neutral-400 px-5">{items.map((item: any, index: number) => <a key={item.id} href={`#history-${item.id}`} className={`relative pb-3 font-serif text-3xl italic ${index === 0 ? 'text-[#c6a66b]' : 'text-neutral-900'}`}>{item.label}<span className={`absolute -bottom-1 left-0 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-[#c6a66b]' : 'bg-neutral-900'}`} /></a>)}</div></div><div className="grid gap-4 md:grid-cols-3">{items.map((item: any) => <article id={`history-${item.id}`} key={item.id} className="scroll-mt-8">{item.imageUrl && <PageImage src={item.imageUrl} alt="" className="mb-3 aspect-[1.35/1] w-full object-cover" />}<p className="text-[9px] leading-relaxed text-neutral-600">{item.description}</p></article>)}</div></div></section>;
 
   if (layout === 'horizontal-cards') {
     return (
@@ -2062,7 +2044,7 @@ export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseSt
   const { title, description, actionText, actionUrl, items } = section.content;
   if (section.variant === 'speaker-events') return <section className="w-full bg-[#ff715c] px-6 py-14 text-[#171717] sm:px-10 md:px-[8%] md:py-16">
     <div className="mx-auto max-w-6xl"><div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="mb-2 text-[8px] font-semibold uppercase tracking-[0.2em]">Ideas in motion</p><h2 className="font-serif text-3xl font-bold leading-tight md:text-4xl">{title || 'Seminars & lectures'}</h2>{description && <p className="mt-3 max-w-lg text-[10px] leading-relaxed text-neutral-800/75">{description}</p>}</div>{actionText && <a href={actionUrl || '#events'} className="bg-sky-500 px-5 py-3 text-[8px] font-semibold uppercase tracking-wide text-white">{actionText} &nbsp; →</a>}</div>
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">{items.map((item: any) => <article key={item.id} className="group relative min-h-[270px] overflow-hidden rounded-xl bg-neutral-900 text-white"><img src={item.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" /><div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent" /><div className="absolute left-3 top-3 bg-[#ff715c] px-2.5 py-2 text-center text-[8px] font-bold uppercase leading-tight">{item.date || 'LIVE'}<br /><span className="text-[7px] font-medium">{item.category || 'EVENT'}</span></div><div className="absolute inset-x-4 bottom-4"><p className="text-[7px] font-semibold uppercase tracking-[0.16em] text-white/70">{item.client || 'Talks & conversations'}</p><h3 className="mt-1 font-serif text-xl font-bold leading-tight">{item.title}</h3><p className="mt-1 line-clamp-2 text-[9px] leading-relaxed text-white/75">{item.description}</p>{item.url && <a href={item.url} className="mt-3 inline-block text-[8px] font-semibold uppercase tracking-wide underline underline-offset-4">{item.buttonText || 'Reserve a seat'}</a>}</div></article>)}</div>
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">{items.map((item: any) => <article key={item.id} className="group relative min-h-[270px] overflow-hidden rounded-xl bg-neutral-900 text-white"><PageImage src={item.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" /><div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent" /><div className="absolute left-3 top-3 bg-[#ff715c] px-2.5 py-2 text-center text-[8px] font-bold uppercase leading-tight">{item.date || 'LIVE'}<br /><span className="text-[7px] font-medium">{item.category || 'EVENT'}</span></div><div className="absolute inset-x-4 bottom-4"><p className="text-[7px] font-semibold uppercase tracking-[0.16em] text-white/70">{item.client || 'Talks & conversations'}</p><h3 className="mt-1 font-serif text-xl font-bold leading-tight">{item.title}</h3><p className="mt-1 line-clamp-2 text-[9px] leading-relaxed text-white/75">{item.description}</p>{item.url && <a href={item.url} className="mt-3 inline-block text-[8px] font-semibold uppercase tracking-wide underline underline-offset-4">{item.buttonText || 'Reserve a seat'}</a>}</div></article>)}</div>
     </div>
   </section>;
   if (section.variant === 'editorial-rows') {
@@ -2072,7 +2054,7 @@ export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseSt
           <div className="mb-10"><h2 className="text-2xl font-bold uppercase tracking-[0.08em]">{title || 'Projects'}</h2></div>
           <div className="space-y-10 md:space-y-12">
             {items.map((item: any) => <article key={item.id} className="grid items-center gap-5 md:grid-cols-[1.25fr_0.75fr] md:gap-8">
-              <a href={item.url || '#'} className="group block aspect-[1.65/1] overflow-hidden bg-neutral-200"><img src={item.imageUrl} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" /></a>
+              <a href={item.url || '#'} className="group block aspect-[1.65/1] overflow-hidden bg-neutral-200"><PageImage src={item.imageUrl} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" /></a>
               <div><p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-neutral-400">{item.date || item.category || 'Selected work'}</p><h3 className="max-w-xs text-xl font-bold uppercase leading-[1.05] tracking-[0.07em] sm:text-2xl">{item.title}</h3><p className="mt-3 text-[10px] leading-relaxed text-neutral-600">{item.description}</p><a href={item.url || '#'} className="mt-4 inline-flex items-center gap-3 text-[9px] font-semibold uppercase">{item.buttonText || 'View live'} <span className="grid h-8 w-8 place-items-center rounded-full border border-neutral-300 text-base">›</span></a></div>
             </article>)}
           </div>
@@ -2088,8 +2070,8 @@ export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseSt
       <div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><p className="text-[10px] font-semibold uppercase">Curated works we’re proud of</p>{actionText && <a href={actionUrl || '#'} className="border-b border-current/50 pb-1 text-[9px] uppercase">{actionText} ↘</a>}</div>
         <div className="grid items-center gap-6 md:grid-cols-[0.75fr_1.5fr_0.45fr]">
           <div><h3 className="text-xl font-semibold">{feature.title}</h3><p className="mt-2 text-[10px] leading-relaxed text-neutral-600">{feature.description}</p><p className="mt-3 text-[9px]">Client <strong>{feature.client}</strong></p><p className="mt-1 text-[9px]">{feature.location}</p><a href={feature.url || '#'} className="mt-3 inline-block border-b border-current pb-1 text-[9px] uppercase">See detail ↘</a><div className="mt-8 flex gap-6 text-sm"><span>←</span><span className="text-[9px]">01 / {String(items.length).padStart(2, '0')}</span><span>→</span></div></div>
-          <a href={feature.url || '#'} className="block aspect-[1.35/1] overflow-hidden rounded-md bg-neutral-100"><img src={feature.imageUrl} alt={feature.title} className="h-full w-full object-cover" /></a>
-          <div className="hidden flex-col gap-3 md:flex">{previews.slice(0, 2).map(item => <a key={item.id} href={item.url || '#'} className="block aspect-[1.15/1] overflow-hidden rounded-md bg-neutral-100"><img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" /></a>)}</div>
+          <a href={feature.url || '#'} className="block aspect-[1.35/1] overflow-hidden rounded-md bg-neutral-100"><PageImage src={feature.imageUrl} alt={feature.title} className="h-full w-full object-cover" /></a>
+          <div className="hidden flex-col gap-3 md:flex">{previews.slice(0, 2).map(item => <a key={item.id} href={item.url || '#'} className="block aspect-[1.15/1] overflow-hidden rounded-md bg-neutral-100"><PageImage src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" /></a>)}</div>
         </div>
       </div>
     </section>;
@@ -2106,7 +2088,7 @@ export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseSt
           {items.map((item: any) => (
             <article key={item.id} className="min-w-0">
               <a href={item.url || '#'} className="group block aspect-[4/3] overflow-hidden bg-white/10">
-                <img src={item.imageUrl} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+                <PageImage src={item.imageUrl} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
               </a>
               <h3 className="mt-4 text-sm font-semibold leading-snug">{item.title}</h3>
               <p className="mt-2 text-[11px] leading-relaxed text-current/70">{item.description}</p>
@@ -2121,7 +2103,7 @@ export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseSt
 
 export function BlogListSection({ section }: { section: z.infer<typeof BlogListSectionSchema> }) {
   const { title, actionText, actionUrl, items } = section.content;
-  if (section.variant === 'image-cards') return <section className="w-full bg-white px-6 py-16 text-[#123b38] sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="text-[10px] font-semibold uppercase">{title}</h2>{actionText && <a href={actionUrl || '#'} className="border-b border-current/50 pb-1 text-[9px] uppercase">{actionText} ↘</a>}</div><div className="grid gap-5 md:grid-cols-3">{items.map(item => <article key={item.id} className="min-w-0"><a href={item.url || '#'} className="block aspect-[1.35/1] overflow-hidden rounded-md bg-neutral-100"><img src={item.imageUrl} alt="" className="h-full w-full object-cover" /></a><p className="mt-3 text-[8px] text-[#123b38]/60">{item.date} &nbsp; • &nbsp; by Julie Hill</p><a href={item.url || '#'} className="line-clamp-2 text-sm font-semibold leading-snug text-neutral-900">{item.title}</a></article>)}</div></div></section>;
+  if (section.variant === 'image-cards') return <section className="w-full bg-white px-6 py-16 text-[#123b38] sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="text-[10px] font-semibold uppercase">{title}</h2>{actionText && <a href={actionUrl || '#'} className="border-b border-current/50 pb-1 text-[9px] uppercase">{actionText} ↘</a>}</div><div className="grid gap-5 md:grid-cols-3">{items.map(item => <article key={item.id} className="min-w-0"><a href={item.url || '#'} className="block aspect-[1.35/1] overflow-hidden rounded-md bg-neutral-100"><PageImage src={item.imageUrl} alt="" className="h-full w-full object-cover" /></a><p className="mt-3 text-[8px] text-[#123b38]/60">{item.date} &nbsp; • &nbsp; by Julie Hill</p><a href={item.url || '#'} className="line-clamp-2 text-sm font-semibold leading-snug text-neutral-900">{item.title}</a></article>)}</div></div></section>;
   return <section className="w-full rounded-b-[2rem] border-t border-neutral-400 bg-[#f4f4f6] px-6 py-14 text-[#171717] sm:px-10 md:px-[15%] md:py-20">
     <div className="mx-auto max-w-6xl">
       <div className="mb-8 flex items-center justify-between"><h2 className="text-2xl font-bold uppercase tracking-[0.08em]">{title}</h2>{actionText && <a href={actionUrl || '#'} className="rounded-full bg-neutral-900 px-6 py-3 text-[9px] font-semibold uppercase tracking-wide text-white">{actionText}</a>}</div>
@@ -2141,26 +2123,26 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
   const editorial = section.variant === 'editorial' || portfolioPortrait;
 
   if (section.variant === 'restaurant-story') return <section className="w-full bg-white px-6 py-12 text-neutral-900 sm:px-10 md:px-[10%] md:py-16"><div className={`mx-auto grid max-w-6xl items-center gap-6 md:grid-cols-2 md:gap-10 ${isImageLeft ? '' : 'md:[&>div:first-child]:order-2'}`}>
-    <div className="aspect-[1.05/1] overflow-hidden"><img src={content.imageUrl} alt={content.imageAlt || content.title} className="h-full w-full object-cover" /></div>
-    <div className="flex flex-col gap-6">{content.eyebrow && <p className="text-[8px] uppercase tracking-[0.16em] text-[#b99c65]">{content.eyebrow}</p>}{content.title && <h2 className="font-serif text-3xl leading-tight md:text-4xl">{content.title}</h2>}{content.description && <p className="max-w-md text-[10px] leading-relaxed text-neutral-600">{content.description}</p>}{content.secondaryImageUrl && <img src={content.secondaryImageUrl} alt="" className="mt-1 aspect-[1.5/1] w-full object-cover md:max-w-sm" />}</div>
+    <div className="aspect-[1.05/1] overflow-hidden"><PageImage src={content.imageUrl} alt={content.imageAlt || content.title} className="h-full w-full object-cover" /></div>
+    <div className="flex flex-col gap-6">{content.eyebrow && <p className="text-[8px] uppercase tracking-[0.16em] text-[#b99c65]">{content.eyebrow}</p>}{content.title && <h2 className="font-serif text-3xl leading-tight md:text-4xl">{content.title}</h2>}{content.description && <p className="max-w-md text-[10px] leading-relaxed text-neutral-600">{content.description}</p>}{content.secondaryImageUrl && <PageImage src={content.secondaryImageUrl} alt="" className="mt-1 aspect-[1.5/1] w-full object-cover md:max-w-sm" />}</div>
   </div></section>;
 
   if (section.variant === 'bio-spotlight') return <section className="w-full bg-[#0c0d0c] px-6 py-16 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-24">
     <div className="mx-auto grid max-w-5xl grid-cols-[0.75fr_1.25fr] items-start gap-3 sm:gap-8 md:gap-12">
       <div className="relative mt-1 overflow-hidden rounded-md shadow-2xl">
-        <img src={content.imageUrl} alt={content.imageAlt || content.title} className="aspect-[0.65/1] w-full object-cover" />
+        <PageImage src={content.imageUrl} alt={content.imageAlt || content.title} className="aspect-[0.65/1] w-full object-cover" />
         {content.imageLabel && <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-2 pt-8 font-serif text-[clamp(1.5rem,6vw,4rem)] leading-none tracking-[-0.06em] text-white">{content.imageLabel}</span>}
       </div>
       <div className="relative z-10 -ml-2 flex flex-col sm:-ml-5">
         {content.eyebrow && <p className="mb-1 text-[7px] font-semibold uppercase tracking-[0.18em] text-white/50 sm:text-[9px]">{content.eyebrow}</p>}
         <h2 className="max-w-[9ch] font-serif text-[clamp(1.4rem,5.5vw,3.8rem)] leading-[0.83] tracking-[-0.05em]">{content.title}</h2>
         <ul className="mt-4 flex flex-col gap-3 sm:mt-6 sm:gap-4">{content.checkpoints.map((item, i) => <li key={item.id} className="flex items-start gap-2 text-[7px] leading-[1.35] text-white/65 sm:gap-3 sm:text-[10px]"><span className="font-serif text-sm leading-none text-[#c7c6bb] sm:text-lg">✳</span><span>{item.text}</span></li>)}</ul>
-        {content.secondaryImageUrl && <img src={content.secondaryImageUrl} alt="A recent tattoo session" className="mt-4 aspect-[1.65/1] w-[calc(100%+1rem)] -translate-x-4 rounded-sm object-cover shadow-lg sm:mt-7 sm:w-full sm:translate-x-0" />}
+        {content.secondaryImageUrl && <PageImage src={content.secondaryImageUrl} alt="A recent tattoo session" className="mt-4 aspect-[1.65/1] w-[calc(100%+1rem)] -translate-x-4 rounded-sm object-cover shadow-lg sm:mt-7 sm:w-full sm:translate-x-0" />}
       </div>
     </div>
   </section>;
 
-  if (section.variant === 'salon-arch') {
+  if (section.variant === 'salon-arch' || section.variant === 'arch') {
     return (
       <section className="relative w-full overflow-hidden px-6 py-16 sm:px-10 md:py-24 text-current">
         <div className={cn(
@@ -2174,7 +2156,7 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
               <span data-color-preserve className="absolute -top-5 right-6 text-sm text-[#c5a880]/70 select-none">✦</span>
               <span data-color-preserve className="absolute bottom-6 -left-3 text-xs text-[#c5a880]/50 select-none">✧</span>
               <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-full rounded-b-2xl bg-[#ede6dc] shadow-xl ring-1 ring-black/10">
-                <img
+                <PageImage
                   src={content.imageUrl}
                   alt={content.title || ''}
                   className="h-full w-full object-cover object-center"
@@ -2224,7 +2206,7 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
         <div className="w-full lg:w-1/2">
           {content.imageUrl ? (
             <div className={`relative w-full overflow-hidden ${portfolioPortrait ? 'aspect-[3/4] max-w-sm' : editorial ? 'aspect-square' : 'aspect-square rounded-xl shadow-2xl'}`}>
-              <img src={content.imageUrl} alt={content.imageAlt || content.title} className="w-full h-full object-cover" />
+              <PageImage src={content.imageUrl} alt={content.imageAlt || content.title} className="w-full h-full object-cover" />
             </div>
           ) : (
             <div className="flex aspect-square w-full items-center justify-center bg-slate-100 text-slate-400">
@@ -2307,7 +2289,7 @@ function ValueCardsSection({ section, theme }: { section: z.infer<typeof ValueCa
                 <div>
                   <div className="flex items-center gap-4 mb-6">
                     {card.avatarUrl && (
-                      <img src={card.avatarUrl} alt={card.author} className="w-12 h-12 rounded-full object-cover" />
+                      <PageImage src={card.avatarUrl} alt={card.author} className="w-12 h-12 rounded-full object-cover" />
                     )}
                     <div>
                       <div className="font-semibold text-slate-900">{card.author}</div>

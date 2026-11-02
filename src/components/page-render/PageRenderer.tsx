@@ -1,11 +1,10 @@
 "use client"
-import type { CSSProperties, ReactNode } from 'react';
+import { lazy, memo, Suspense, type CSSProperties, type ReactNode } from 'react';
 import { GroupNode, PageDocument, PageNode } from '@/lib/page-engine/schemas';
 import { renderSection } from './sections/AllSections';
 import { isGroup } from '@/lib/page-engine/operations';
-import { ReactLenis } from 'lenis/react';
-import Image from 'next/image';
-import { ChatbotWidget } from '../knowchat/ChatbotWidget';
+
+const ChatbotWidget = lazy(() => import('../knowchat/ChatbotWidget').then((module) => ({ default: module.ChatbotWidget })));
 
 type PageRendererProps = {
   document: PageDocument;
@@ -14,11 +13,11 @@ type PageRendererProps = {
   botId?: string;
 };
 
-export function PageRenderer({ document, isPreview, pageId, botId }: PageRendererProps) {
+export const PageRenderer = memo(function PageRenderer({ document, isPreview, pageId, botId }: PageRendererProps) {
   const { sections, theme, settings } = document;
 
   const content = (
-    <div id="top" className={`@container min-h-screen flex flex-col font-sans bg-slate-50 dark:bg-slate-900 transition-colors duration-500`}>
+    <div id="top" className={`@container min-h-screen w-full overflow-x-clip flex flex-col font-sans bg-slate-50 dark:bg-slate-900 ${settings.enableSmoothScrolling ? 'page-smooth-scroll' : ''}`}>
       <main className="flex-1 flex flex-col relative">
         {sections.map(node => renderNode(node, theme, isPreview, pageId))}
       </main>
@@ -29,16 +28,12 @@ export function PageRenderer({ document, isPreview, pageId, botId }: PageRendere
         </footer>
       )}
 
-      {!isPreview && botId && <ChatbotWidget botId={botId} />}
+      {!isPreview && botId && <Suspense fallback={null}><ChatbotWidget botId={botId} /></Suspense>}
     </div>
   );
 
-  if (settings.enableSmoothScrolling && !isPreview) {
-    return <ReactLenis root>{content}</ReactLenis>;
-  }
-
   return content;
-}
+});
 
 function renderNode(node: PageNode, theme: PageDocument['theme'], isPreview?: boolean, pageId?: string, isNested = false): ReactNode {
   if (isGroup(node)) {

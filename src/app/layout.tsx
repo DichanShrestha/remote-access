@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Instrument_Serif } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from 'sonner';
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next"
 
-const geist = Geist({
+const geist = localFont({
+  src: "./fonts/geist-latin.woff2",
   variable: "--font-geist",
-  subsets: ["latin"],
+  weight: "100 900",
+  display: "swap",
 });
 
-const instrument = Instrument_Serif({
+const instrument = localFont({
+  src: "./fonts/instrument-serif-latin.woff2",
   variable: "--font-instrument",
-  subsets: ["latin"],
   weight: "400",
+  display: "swap",
 });
 
 export const metadata: Metadata = {

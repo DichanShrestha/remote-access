@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { z } from 'zod';
 import { HeroSectionSchema, ThemeConfig } from '@/lib/page-engine/schemas';
 import { cn } from '@/lib/utils';
 import { ArrowRight, MapPin, ExternalLink } from 'lucide-react';
+import { PageImage } from '@/components/page-render/PageImage';
 import { BlurFade } from '@/components/ui/blur-fade';
 import { motion, useScroll, useTransform } from 'motion/react';
 
@@ -195,14 +196,15 @@ function HeroCTA({ content, theme, colors, className }: SubProps & { colors: Ret
   );
 }
 
-function HeroAvatar({ src, size = 'md', className }: { src?: string; size?: 'sm' | 'md' | 'lg' | 'xl'; className?: string }) {
+function HeroAvatar({ src, size = 'md', className, priority }: { src?: string; size?: 'sm' | 'md' | 'lg' | 'xl'; className?: string; priority?: boolean }) {
   if (!src) return null;
   const sizeMap = { sm: 'w-14 h-14', md: 'w-20 h-20', lg: 'w-28 h-28', xl: 'w-36 h-36' };
   return (
     <div className={cn('relative flex-shrink-0', className)}>
-      <img
+      <PageImage
         src={src}
         alt=""
+        fetchPriority={priority ? 'high' : 'auto'}
         className={cn(
           'rounded-full object-cover ring-2 ring-white shadow-lg',
           sizeMap[size]
@@ -289,10 +291,10 @@ function EditorialCenter({ content, theme, textContrast = 'auto' }: SubProps) {
           <BlurFade delay={0.30} inView>
             <div className="mt-14">
               {content.avatarUrl ? (
-                <HeroAvatar src={content.avatarUrl} size="xl" />
+                <HeroAvatar src={content.avatarUrl} size="xl" priority />
               ) : (
                 <div className="overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-900/5">
-                  <img src={content.imageUrl} alt="" className="w-full max-w-md h-auto object-cover" />
+                  <PageImage src={content.imageUrl} alt="" fetchPriority="high" sizes="(max-width: 768px) 92vw, 448px" className="w-full max-w-md h-auto object-cover" />
                 </div>
               )}
             </div>
@@ -347,7 +349,7 @@ function ImmersiveHero({ content, theme, textContrast = 'auto' }: SubProps) {
       {/* Background image */}
       {bgImage && (
         <div className="absolute inset-0">
-          <img
+          <PageImage
             src={bgImage}
             alt=""
             fetchPriority="high"
@@ -559,7 +561,7 @@ function SplitHero({ content, theme, textContrast = 'auto', wide = false }: SubP
                 className={cn('absolute inset-0 left-3 top-3 @lg:left-4 @lg:top-4 rounded-2xl opacity-[0.1]', wide && 'hidden')}
                 style={{ backgroundColor: theme.primaryColor }}
               />
-              <img
+              <PageImage
                 src={imageSrc}
                 alt=""
                 fetchPriority="high"
@@ -599,9 +601,9 @@ function FashionEditorialHero({ content }: SubProps) {
     <section className="w-full bg-white px-6 py-10 text-[#171717] sm:px-10 md:px-[7%] md:py-16">
       <div className="mx-auto grid max-w-6xl items-center gap-10 md:min-h-[500px] md:grid-cols-[1.15fr_0.85fr] md:gap-12">
         <div className="relative mx-auto w-full max-w-[620px] pb-7 pr-7 md:pb-9 md:pr-9">
-          {content.imageUrl && <img src={content.imageUrl} alt={content.title ? `${content.title} — style portrait` : 'Style portrait'} className="ml-auto aspect-[0.92/1] w-[72%] object-cover" />}
-          {content.avatarUrl && <img src={content.avatarUrl} alt="A detail from the latest style story" className="absolute bottom-0 left-0 aspect-[1.3/1] w-[52%] border-[6px] border-white object-cover md:border-[10px]" />}
-          {content.secondaryImageUrl && <img src={content.secondaryImageUrl} alt="Another look from the latest style story" className="absolute right-0 top-0 z-10 aspect-[1.25/1] w-[32%] border-[6px] border-white object-cover md:border-[10px]" />}
+          {content.imageUrl && <PageImage src={content.imageUrl} alt={content.title ? `${content.title} — style portrait` : 'Style portrait'} fetchPriority="high" className="ml-auto aspect-[0.92/1] w-[72%] object-cover" />}
+          {content.avatarUrl && <PageImage src={content.avatarUrl} alt="A detail from the latest style story" className="absolute bottom-0 left-0 aspect-[1.3/1] w-[52%] border-[6px] border-white object-cover md:border-[10px]" />}
+          {content.secondaryImageUrl && <PageImage src={content.secondaryImageUrl} alt="Another look from the latest style story" className="absolute right-0 top-0 z-10 aspect-[1.25/1] w-[32%] border-[6px] border-white object-cover md:border-[10px]" />}
         </div>
         <div className="max-w-md md:pl-2">
           {content.eyebrow && <p className="mb-5 text-[9px] font-medium uppercase tracking-[0.24em] text-neutral-500">{content.eyebrow}</p>}
@@ -618,7 +620,7 @@ function SpeakerEditorialHero({ content }: SubProps) {
   return (
     <section className="relative isolate w-full overflow-hidden bg-[#ff735e] text-[#171717] md:min-h-[540px]">
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_75%_15%,#ffd5ca_0%,transparent_42%),linear-gradient(135deg,#ffe9df_0%,#ff8b72_55%,#ff604f_100%)]" />
-      {content.imageUrl && <img src={content.imageUrl} alt={content.title ? `Portrait of ${content.title}` : 'Speaker portrait'} className="absolute inset-y-0 left-0 -z-0 h-full w-full object-cover object-top opacity-25 md:w-[53%] md:opacity-100 md:[mask-image:linear-gradient(to_right,black_65%,transparent_100%)]" />}
+      {content.imageUrl && <PageImage src={content.imageUrl} alt={content.title ? `Portrait of ${content.title}` : 'Speaker portrait'} fetchPriority="high" className="absolute inset-y-0 left-0 -z-0 h-full w-full object-cover object-top opacity-25 md:w-[53%] md:opacity-100 md:[mask-image:linear-gradient(to_right,black_65%,transparent_100%)]" />}
       <div className="relative z-10 mx-auto grid min-h-[440px] max-w-6xl items-center px-6 py-16 sm:px-10 md:min-h-[540px] md:grid-cols-[1.05fr_0.95fr] md:px-12">
         <div className="hidden md:block" aria-hidden="true" />
         <div className="max-w-lg rounded-sm bg-white/70 p-6 backdrop-blur-[2px] md:bg-transparent md:p-0 md:backdrop-blur-0">
@@ -643,7 +645,7 @@ function TattooCoverHero({ content, backgroundColor, textColor }: SubProps) {
       {(content.headline || content.subtitle) && <p className="mt-4 max-w-lg text-[10px] leading-relaxed text-white/65 sm:mt-5 sm:text-sm">{content.headline}{content.headline && content.subtitle ? <br /> : null}{content.subtitle}</p>}
       {photos.length > 0 && <div className="relative mt-8 h-[23vw] min-h-[110px] max-h-[260px] w-[calc(100%+2rem)] overflow-hidden sm:mt-9 sm:h-[22vw] sm:min-h-[180px]">
         <div className="absolute inset-0 flex items-center justify-center gap-1 sm:gap-3">
-          {photos.map((photo: any, i: number) => <figure key={photo.id || i} className="relative h-[86%] w-[18vw] min-w-[18vw] rotate-[var(--tilt)] overflow-hidden rounded-xl border border-white/15 shadow-2xl sm:w-[14vw] sm:min-w-[14vw] sm:rounded-2xl" style={{ '--tilt': `${[-4, 2, -2, 3, -3, 2, -4, 3][i % 8]}deg` } as React.CSSProperties}><img src={photo.url} alt={photo.caption || ''} className="h-full w-full object-cover" />{photo.caption && <figcaption className="sr-only">{photo.caption}</figcaption>}</figure>)}
+          {photos.map((photo: any, i: number) => <figure key={photo.id || i} className="relative h-[86%] w-[18vw] min-w-[18vw] rotate-[var(--tilt)] overflow-hidden rounded-xl border border-white/15 shadow-2xl sm:w-[14vw] sm:min-w-[14vw] sm:rounded-2xl" style={{ '--tilt': `${[-4, 2, -2, 3, -3, 2, -4, 3][i % 8]}deg` } as React.CSSProperties}><PageImage src={photo.url} alt={photo.caption || ''} className="h-full w-full object-cover" />{photo.caption && <figcaption className="sr-only">{photo.caption}</figcaption>}</figure>)}
         </div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#0c0d0c] to-transparent" />
       </div>}
@@ -657,9 +659,12 @@ function TattooCoverHero({ content, backgroundColor, textColor }: SubProps) {
 
 function RestaurantCoverHero({ content }: SubProps) {
   return <section className="relative flex min-h-[54svh] w-full items-end justify-center overflow-hidden bg-neutral-900 text-white md:min-h-[620px]">
-    {content.imageUrl && <img src={content.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />}
-    <div className="absolute inset-0 bg-black/35" />
-    <div className="relative z-10 px-6 pb-5 text-center"><a href={content.buttonUrl || '#menu'} className="border-b border-white/70 pb-1 text-[9px] font-medium uppercase tracking-wide text-white">{content.buttonText || 'Scopri il menu'} ↓</a></div>
+    {content.imageUrl && <PageImage src={content.imageUrl} alt="" fetchPriority="high" sizes="100vw" className="absolute inset-0 h-full w-full object-cover" />}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/15" />
+    <div className="relative z-10 w-full px-6 pb-10 text-center sm:pb-14">
+      {content.title && <h1 className="mx-auto max-w-4xl font-serif text-4xl leading-[0.95] tracking-tight drop-shadow sm:text-6xl md:text-7xl">{content.title}</h1>}
+      <a href={content.buttonUrl || '#menu'} className="mt-5 inline-flex min-h-10 items-center border-b border-white/70 pb-1 text-xs font-medium uppercase tracking-[0.16em] text-white">{content.buttonText || 'Scopri il menu'} <span aria-hidden="true" className="ml-2">↓</span></a>
+    </div>
   </section>;
 }
 
@@ -788,13 +793,13 @@ function AsymmetricHero({ content, theme, textContrast = 'auto' }: SubProps) {
                   style={{ backgroundColor: theme.primaryColor }}
                 />
                 {content.avatarUrl && !content.imageUrl ? (
-                  <img
+                  <PageImage
                     src={content.avatarUrl}
                     alt=""
                     className="relative w-48 h-48 @sm:w-64 @sm:h-64 rounded-2xl object-cover shadow-2xl ring-1 ring-slate-900/5"
                   />
                 ) : (
-                  <img
+                  <PageImage
                     src={content.imageUrl}
                     alt=""
                     className="relative w-full aspect-[3/4] @sm:max-w-xs @lg:max-w-sm rounded-[1.5rem_0.5rem_1.5rem_0.5rem] object-cover shadow-2xl ring-1 ring-slate-900/5"
@@ -810,10 +815,8 @@ function AsymmetricHero({ content, theme, textContrast = 'auto' }: SubProps) {
 }
 
 
-function ZoomRevealPortal({ zoomWord, theme, isPreview }: {
+function ZoomRevealPortal({ zoomWord }: {
   zoomWord: string;
-  theme: ThemeConfig;
-  isPreview?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -869,7 +872,7 @@ function ZoomRevealPortal({ zoomWord, theme, isPreview }: {
     </div>
   );
 }
-function SalonArchHero({ content, theme }: SubProps) {
+function SalonArchHero({ content }: SubProps) {
   const imageSrc = content.imageUrl || content.avatarUrl || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=1000';
 
   return (
@@ -985,7 +988,7 @@ function SalonArchHero({ content, theme }: SubProps) {
 
             {/* Arched image */}
             <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-full rounded-b-2xl bg-[#eee7de] shadow-2xl ring-1 ring-black/5">
-              <img
+              <PageImage
                 src={imageSrc}
                 alt={content.title}
                 fetchPriority="high"
@@ -1023,7 +1026,7 @@ const VARIANT_MAP: Record<string, React.ComponentType<SubProps>> = {
   'asymmetric': AsymmetricHero,
 };
 
-export function HeroSection({ section, theme, isPreview }: HeroProps & { isPreview?: boolean }) {
+export function HeroSection({ section, theme }: HeroProps & { isPreview?: boolean }) {
   const { content, variant = 'default' } = section;
   const Layout = VARIANT_MAP[variant] || EditorialCenter;
   const textContrast = (section as any).textContrast || 'auto';
@@ -1036,7 +1039,7 @@ export function HeroSection({ section, theme, isPreview }: HeroProps & { isPrevi
     <>
       {heroContent}
       {zoomReveal && (
-        <ZoomRevealPortal zoomWord={zoomWord} theme={theme} isPreview={isPreview} />
+        <ZoomRevealPortal zoomWord={zoomWord} />
       )}
     </>
   );

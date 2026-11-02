@@ -3,7 +3,7 @@
 import { authService } from '@/services/auth';
 import db from '@/lib/prisma';
 import { getTemplateDetails, getAvailableTemplates } from '@/lib/page-engine/template-catalog';
-import { PageDocument, PageSection, GroupNode, PageNode } from '@/lib/page-engine/schemas';
+import { PageDocument, PageSection, PageNode } from '@/lib/page-engine/schemas';
 import { isGroup } from '@/lib/page-engine/operations';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -15,6 +15,7 @@ import {
   toPageContentDocument,
 } from '@/lib/page-engine/site-config';
 import { findHomePage, getWebsiteConfig } from '@/lib/page-engine/site-store';
+import { ensureTemplateStarterPages } from '@/lib/page-engine/template-page-store';
 
 export async function getAvailableTemplatesForClient() {
   const templates = getAvailableTemplates();
@@ -86,6 +87,7 @@ export async function applyTemplateToPage(templateId: string) {
       where: { id: page.id },
       data: { draftConfig: toPageContentDocument(mergedDoc) as unknown as Prisma.InputJsonValue },
     });
+    await ensureTemplateStarterPages(tx, user.profile!.id, templateId, mergedDoc);
     await tx.website.upsert({
       where: { profileId: user.profile!.id },
       create: {

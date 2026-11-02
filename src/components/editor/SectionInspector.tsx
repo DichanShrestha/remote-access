@@ -5,6 +5,7 @@ import { isGroup } from '@/lib/page-engine/operations';
 import { LayoutGroupInspector } from './LayoutGroupInspector';
 import { Plus, Trash, ChevronDown, ChevronUp, Image as ImageIcon, X, Link2, Type, Layout, MousePointerClick, Eye, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { uploadPageMedia } from '@/app/editor/actions';
+import { PageImage } from '@/components/page-render/PageImage';
 
 // ── Field definition system ────────────────────────────────────
 type FieldType = 'text' | 'textarea' | 'url' | 'image' | 'select' | 'color' | 'email' | 'number' | 'toggle' | 'datetime' | 'segmented-control';
@@ -594,7 +595,7 @@ function MediaPicker({ label, value, onChange }: { label: string; value: string;
         </div>
       ) : hasImage ? (
         <div className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
-          <img src={value} alt="" className="w-full h-28 object-cover" />
+          <PageImage src={value} alt="" sizes="100vw" className="w-full h-28 object-cover" />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -1021,7 +1022,12 @@ export function SectionInspector({ section, onChange }: { section: PageNode; onC
           <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Layout Variant</label>
           <div className="grid grid-cols-2 gap-3">
             {variants.map(v => {
-              const isActive = (section.variant || 'default') === v.id;
+              const isActive = (section.variant || 'default') === v.id
+                || (section.type === 'feature-split' && v.id === 'arch' && section.variant === 'salon-arch')
+                || (section.type === 'services' && v.id === 'staggered' && section.variant === 'salon-staggered')
+                || (section.type === 'stats' && v.id === 'minimal-row' && section.variant === 'salon-minimal')
+                || (section.type === 'testimonials' && v.id === 'editorial-quotes' && section.variant === 'salon-editorial')
+                || (section.type === 'contact' && v.id === 'contact-cards' && section.variant === 'salon-cards');
               return (
                 <button 
                   key={v.id}

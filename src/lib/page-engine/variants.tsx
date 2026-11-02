@@ -23,14 +23,16 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'minimal', label: 'Minimal', previewNode: <PlaceholderSVG /> },
     { id: 'pill', label: 'Pill Navigation', previewNode: <PlaceholderSVG /> },
     { id: 'overlay', label: 'Overlay', previewNode: <PlaceholderSVG /> },
+    { id: 'restaurant-overlay', label: 'Overlay Menu', previewNode: <PlaceholderSVG /> },
     { id: 'transparent-overlay', label: 'Transparent Overlay', previewNode: <PlaceholderSVG /> },
-    { id: 'floating-clean', label: 'Floating Clean', previewNode: <PlaceholderSVG /> },
+    { id: 'floating-clean', label: 'Floating Minimal', previewNode: <PlaceholderSVG /> },
   ],
   'site-footer': [
     { id: 'columns', label: 'Link Columns', previewNode: <PlaceholderSVG /> },
     { id: 'compact', label: 'Compact', previewNode: <PlaceholderSVG /> },
     { id: 'classic-serif', label: 'Classic Serif', previewNode: <PlaceholderSVG /> },
     { id: 'giant-wordmark', label: 'Giant Wordmark', previewNode: <PlaceholderSVG /> },
+    { id: 'restaurant', label: 'Branded Columns', previewNode: <PlaceholderSVG /> },
   ],
   // Hero uses its own built-in variant picker in HeroInspector
   'rich-text': [
@@ -56,7 +58,9 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'portfolio-about', label: 'Portfolio About', previewNode: <PlaceholderSVG /> },
     { id: 'story-split', label: 'Story Split', previewNode: <PlaceholderSVG /> },
     { id: 'arch', label: 'Arched Frame', previewNode: <PlaceholderSVG /> },
+    { id: 'restaurant-story', label: 'Layered Editorial', previewNode: <PlaceholderSVG /> },
     { id: 'bio-spotlight', label: 'Bio Spotlight', previewNode: <PlaceholderSVG /> },
+    { id: 'salon-editorial', label: 'Editorial Split', previewNode: <PlaceholderSVG /> },
   ],
   carousel: [
     { 
@@ -75,6 +79,8 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'circular', label: 'Circular Ring', previewNode: <PlaceholderSVG /> },
     { id: 'depth', label: '3D Depth', previewNode: <PlaceholderSVG /> },
     { id: 'featured-focus', label: 'Featured Focus', previewNode: <PlaceholderSVG /> },
+    { id: 'restaurant-featured', label: 'Featured Slider', previewNode: <PlaceholderSVG /> },
+    { id: 'fashion-strip', label: 'Image Strip', previewNode: <PlaceholderSVG /> },
   ],
   gallery: [
     { id: 'default', label: 'Grid', previewNode: <PlaceholderSVG /> },
@@ -86,16 +92,16 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
   ],
   services: [
     { id: 'portfolio-band', label: 'Portfolio Band', previewNode: <PlaceholderSVG /> },
-    { id: 'architecture-accordion', label: 'Architecture Accordion', previewNode: <PlaceholderSVG /> },
+    { id: 'architecture-accordion', label: 'Expandable List', previewNode: <PlaceholderSVG /> },
     { id: 'minimal-border', label: 'Minimal Border', previewNode: <PlaceholderSVG /> },
-    { id: 'glass-dark', label: 'Glass Dark', previewNode: <PlaceholderSVG /> },
+    { id: 'glass-dark', label: 'Dark Feature Panel', previewNode: <PlaceholderSVG /> },
     { id: 'asymmetric-bento', label: 'Asymmetric Bento', previewNode: <PlaceholderSVG /> },
-    { id: 'staggered', label: 'Staggered Showcase', previewNode: <PlaceholderSVG /> },
+    { id: 'staggered', label: 'Offset Showcase', previewNode: <PlaceholderSVG /> },
   ],
   products: [
     { id: 'default', label: 'Standard Grid', previewNode: <PlaceholderSVG /> },
     { id: 'glare', label: 'Glare Hover', previewNode: <PlaceholderSVG /> },
-    { id: 'categorized-menu', label: 'Categorized Menu', previewNode: <PlaceholderSVG /> },
+    { id: 'restaurant-menu', label: 'Structured List', previewNode: <PlaceholderSVG /> },
   ],
   image: [
     { id: 'default', label: 'Standard Image', previewNode: <PlaceholderSVG /> },
@@ -128,7 +134,7 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'split-layout', label: 'Split Layout', previewNode: <PlaceholderSVG /> },
     { id: 'editorial-panel', label: 'Editorial Panel', previewNode: <PlaceholderSVG /> },
     { id: 'minimal-footer', label: 'Minimal Footer', previewNode: <PlaceholderSVG /> },
-    { id: 'contact-cards', label: 'Contact Cards', previewNode: <PlaceholderSVG /> },
+    { id: 'contact-cards', label: 'Contact Details Grid', previewNode: <PlaceholderSVG /> },
   ],
   'lead-form': [
     { id: 'card-centered', label: 'Card Centered', previewNode: <PlaceholderSVG /> },
