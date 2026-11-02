@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { redirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import db from '@/lib/prisma';
 import { getSmartPageEntitlement } from '@/lib/tier-limits';
 import { PageDocument } from '@/lib/page-engine/schemas';
@@ -33,6 +33,7 @@ export type PublicPageData = {
     user: {
       createdAt: Date;
       trialGrantedAt: Date | null;
+      suspendedAt: Date | null;
       subscriptions: Array<{
         planId: string;
         tier: string;
@@ -52,6 +53,7 @@ export type PublicPageData = {
   };
   document: PageDocument;
   unavailable: boolean;
+  websitePublished: boolean;
   homeBotId?: string;
 };
 
@@ -62,7 +64,7 @@ export type PublicPageLookup =
 
 export const getPublishedPage = cache(async (rawUsername: string, rawSlug?: string): Promise<PublicPageLookup> => {
   const username = rawUsername.toLowerCase();
-  const slug = rawSlug ?? '';
+  const slug = (rawSlug ?? '').toLowerCase();
 
   const profile = await db.profile.findUnique({
     where: { username },
@@ -83,9 +85,14 @@ export const getPublishedPage = cache(async (rawUsername: string, rawSlug?: stri
   if (!profile) return { status: 'not-found' };
 
   const homeMetadata = profile.pages.find((page) => page.pageType === 'HOME' || page.slug === '');
-  let target = slug
+  const target = slug
     ? profile.pages.find((page) => page.slug === slug)
     : homeMetadata;
+
+  if (target && slug && rawSlug !== target.slug) {
+    // Case or formatting variants permanently resolve to the canonical URL.
+    permanentRedirect(buildPagePath(profile.username, target.slug));
+  }
 
   if (!target && slug) {
     const oldSlug = await db.pageSlugRedirect.findUnique({
@@ -94,8 +101,10 @@ export const getPublishedPage = cache(async (rawUsername: string, rawSlug?: stri
     });
     if (oldSlug) {
       const redirectTarget = profile.pages.find((page) => page.id === oldSlug.pageId);
-      if (redirectTarget?.isPublished) {
-        redirect(buildPagePath(profile.username, redirectTarget.slug));
+      // Tenant-scoped lookup plus the slug comparison prevents redirect loops
+      // and guarantees the destination belongs to this business.
+      if (redirectTarget?.isPublished && redirectTarget.slug !== slug) {
+        permanentRedirect(buildPagePath(profile.username, redirectTarget.slug));
       }
     }
   }
@@ -204,6 +213,7 @@ export const getPublishedPage = cache(async (rawUsername: string, rawSlug?: stri
       },
       document: renderedDocument,
       unavailable: entitlement.trialExpired && new Date() > entitlement.publicGraceEndsAt,
+      websitePublished: Boolean(homeMetadata?.isPublished) && !profile.user.suspendedAt,
       homeBotId: homeMetadata?.botId || page.botId || undefined,
     },
   };

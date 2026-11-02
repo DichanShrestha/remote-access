@@ -4,6 +4,8 @@ import { z } from 'zod';
 import db from '@/lib/prisma';
 import { requireAffiliateAdmin } from '@/services/affiliates';
 import { buildComplimentaryGrant } from '@/lib/admin-access';
+import { PageDocumentSchema } from '@/lib/page-engine/schemas';
+import { getSeoPublishSnapshot } from '@/lib/seo';
 
 const userIdSchema = z.string().uuid();
 const reasonSchema = z.string().trim().min(5, 'Enter a reason of at least 5 characters.').max(1000, 'Reason must be 1,000 characters or fewer.');
@@ -97,7 +99,16 @@ export async function resolvePlanAccessRequest(requestId: string, decision: 'app
       });
       const home = profile?.pages[0];
       if (home && Object.keys(home.draftConfig as object).length) {
-        await tx.page.update({ where: { id: home.id }, data: { publishedConfig: home.draftConfig as never, isPublished: true } });
+        const draftDocument = PageDocumentSchema.safeParse(home.draftConfig);
+        await tx.page.update({
+          where: { id: home.id },
+          data: {
+            publishedConfig: home.draftConfig as never,
+            isPublished: true,
+            publishedAt: new Date(),
+            ...(draftDocument.success ? getSeoPublishSnapshot(draftDocument.data.settings) : {}),
+          },
+        });
       }
       if (profile?.website) {
         await tx.website.update({ where: { id: profile.website.id }, data: { publishedConfig: profile.website.draftConfig as never } });

@@ -19,6 +19,8 @@ import type { LanguageModel } from "ai";
 
 export const OPENROUTER_BASE_URL = process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1";
 export const DEFAULT_CHAT_MODEL = process.env.AI_CHAT_MODEL || "anthropic/claude-haiku-5.5";
+/** Long-form blog generation/editing model. */
+export const BLOG_WRITING_MODEL = process.env.BLOG_AI_MODEL || "openai/gpt-6-luna";
 
 // Backward compatibility alias for existing route usages
 export const GEMINI_DEFAULT_MODEL = DEFAULT_CHAT_MODEL;
@@ -45,6 +47,11 @@ export function getDefaultChatModel(modelId?: string, apiKey?: string): Language
     const provider = getOpenRouterProvider(apiKey);
     const targetModel = modelId || process.env.AI_CHAT_MODEL || DEFAULT_CHAT_MODEL;
     return provider(targetModel);
+}
+
+/** GPT-6 Luna via the existing OpenRouter provider. */
+export function getBlogWritingModel(modelId?: string, apiKey?: string): LanguageModel {
+    return getDefaultChatModel(modelId || BLOG_WRITING_MODEL, apiKey);
 }
 
 /**

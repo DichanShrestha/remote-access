@@ -12,6 +12,7 @@ import {
   toPageContentDocument,
 } from '@/lib/page-engine/site-config';
 import { findHomePage, publishWebsiteDraft } from '@/lib/page-engine/site-store';
+import { getSeoPublishSnapshot } from '@/lib/seo';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
@@ -249,13 +250,20 @@ export async function saveOnboardingUsername(value: string) {
   });
   const entitlement = account ? getSmartPageEntitlement(account) : null;
   const alreadyActivated = Boolean(entitlement?.paidActive || entitlement?.onTrial);
+  const draftDocument = PageDocumentSchema.safeParse(page.draftConfig);
+  const seoSnapshot = draftDocument.success ? getSeoPublishSnapshot(draftDocument.data.settings) : {};
   try {
     await db.$transaction(async (tx) => {
       await tx.profile.update({ where: { id: user.profile!.id }, data: { username } });
       if (alreadyActivated) {
         await tx.page.update({
           where: { id: page.id },
-          data: { publishedConfig: page.draftConfig as Prisma.InputJsonValue, isPublished: true },
+          data: {
+            publishedConfig: page.draftConfig as Prisma.InputJsonValue,
+            isPublished: true,
+            publishedAt: new Date(),
+            ...seoSnapshot,
+          },
         });
       }
     });

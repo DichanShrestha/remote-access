@@ -448,6 +448,109 @@ export function EditorShell({
                 </div>
               </div>
 
+              {/* SEO Settings */}
+              <div className="flex flex-col gap-4 border-t border-slate-200 dark:border-slate-800 pt-5">
+                <div>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">SEO settings</h3>
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+                    Leave a field empty to use an automatic default based on your page title, content and business details.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">SEO title</label>
+                  <input
+                    value={doc.settings.seoTitle || ''}
+                    onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, seoTitle: e.target.value } }))}
+                    maxLength={70}
+                    placeholder="Automatic from page title and business name"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                  />
+                  <span className="mt-1 block text-right text-[10px] text-slate-400">{(doc.settings.seoTitle || '').length}/70</span>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Meta description</label>
+                  <textarea
+                    value={doc.settings.seoDescription || ''}
+                    onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, seoDescription: e.target.value } }))}
+                    maxLength={160}
+                    rows={3}
+                    placeholder="Automatic summary of this page"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 resize-y"
+                  />
+                  <span className="mt-1 block text-right text-[10px] text-slate-400">{(doc.settings.seoDescription || '').length}/160</span>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Canonical URL</label>
+                  <input
+                    type="url"
+                    value={doc.settings.canonicalUrl || ''}
+                    onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, canonicalUrl: e.target.value } }))}
+                    placeholder="Automatic: this page's address"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                  />
+                  <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
+                    Must stay on this business&rsquo;s own address. Invalid or cross-business URLs are ignored.
+                  </p>
+                </div>
+
+                <label className="flex items-start gap-3 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!doc.settings.noindex}
+                    onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, noindex: !e.target.checked } }))}
+                    className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>
+                    <span className="block text-sm font-medium text-slate-600 dark:text-slate-300">Allow search engines to index this page</span>
+                    <span className="mt-0.5 block text-[11px] text-slate-400">Uncheck to add a noindex directive and remove the page from the sitemap.</span>
+                  </span>
+                </label>
+
+                <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Social sharing</h4>
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">Used by Open Graph previews on social platforms and messaging apps.</p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Open Graph title</label>
+                  <input
+                    value={doc.settings.ogTitle || ''}
+                    onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, ogTitle: e.target.value } }))}
+                    maxLength={70}
+                    placeholder="Defaults to the SEO title"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Open Graph description</label>
+                  <textarea
+                    value={doc.settings.ogDescription || ''}
+                    onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, ogDescription: e.target.value } }))}
+                    maxLength={200}
+                    rows={2}
+                    placeholder="Defaults to the meta description"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 resize-y"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-slate-500 mb-1.5 block">Social sharing image</label>
+                  <input
+                    value={doc.settings.ogImage || ''}
+                    onChange={e => updateDoc(prev => ({ ...prev, settings: { ...prev.settings, ogImage: e.target.value } }))}
+                    placeholder="/logo.png or an uploaded image URL"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                  />
+                  <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
+                    Absolute and relative image URLs are supported. The page&apos;s first image is used when empty.
+                  </p>
+                </div>
+              </div>
+
               <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-sm text-slate-400 text-center">
                 Select a section to edit its content.
               </div>

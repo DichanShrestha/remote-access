@@ -25,6 +25,7 @@ import {
   getWebsiteConfig,
   parsePageDocument,
 } from '@/lib/page-engine/site-store';
+import { getSeoPublishSnapshot } from '@/lib/seo';
 
 const createPageSchema = z.object({
   pageType: z.string(),
@@ -245,6 +246,7 @@ export async function publishWebsitePage(pageId: string) {
   });
   const config = parseWebsiteConfig(website?.draftConfig) || extractWebsiteConfig(document);
   const pageContent = toPageContentDocument(document);
+  const seoSnapshot = getSeoPublishSnapshot(document.settings);
 
   try {
     await db.$transaction(async (tx) => {
@@ -253,6 +255,8 @@ export async function publishWebsitePage(pageId: string) {
         data: {
           publishedConfig: pageContent as unknown as Prisma.InputJsonValue,
           isPublished: true,
+          publishedAt: new Date(),
+          ...seoSnapshot,
         },
       });
       await tx.website.upsert({

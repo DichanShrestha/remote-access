@@ -23,37 +23,43 @@ enum PageType {
   CUSTOM
 }
 
+enum BlogStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+
 model User {
-  id        String  @id @default(uuid()) @db.Uuid // Matches Supabase auth.users UUID
-  email     String? @unique
-  name      String?
-  avatarUrl String?
-  trialGrantedAt DateTime?
-  promoCodeUsedAt DateTime?
-  suspendedAt DateTime?
-  suspensionReason String? @db.Text
+  id               String    @id @default(uuid()) @db.Uuid // Matches Supabase auth.users UUID
+  email            String?   @unique
+  name             String?
+  avatarUrl        String?
+  trialGrantedAt   DateTime?
+  promoCodeUsedAt  DateTime?
+  suspendedAt      DateTime?
+  suspensionReason String?   @db.Text
 
   profile       Profile?
   subscriptions Subscription[]
   usage         Usage?
 
   // Knowchat relations
-  bots         Bot[]
-  dataSources  DataSource[]
-  chunks       DocumentChunk[]
-  qaPairs      QAPair[]
-  apiKeys      UserApiKey[]
-  catalogItems CatalogItem[]
-  pageMedia    PageMediaAsset[]
-  aiRequestUsage AIRequestUsage[]
+  bots                 Bot[]
+  dataSources          DataSource[]
+  chunks               DocumentChunk[]
+  qaPairs              QAPair[]
+  apiKeys              UserApiKey[]
+  catalogItems         CatalogItem[]
+  pageMedia            PageMediaAsset[]
+  aiRequestUsage       AIRequestUsage[]
   affiliateApplication AffiliateApplication?
-  affiliateCodes AffiliateCode[] @relation("AffiliateCodes")
-  attributedReferral CustomerReferral? @relation("ReferredCustomer")
-  commissions Commission[] @relation("CommissionAffiliate")
-  referralsMade CustomerReferral[] @relation("ReferralAffiliate")
-  affiliatePurchases AffiliatePurchase[] @relation("CustomerPurchases")
-  affiliatePayouts AffiliatePayout[] @relation("AffiliatePayouts")
-  planAccessRequests PlanAccessRequest[]
+  affiliateCodes       AffiliateCode[]       @relation("AffiliateCodes")
+  attributedReferral   CustomerReferral?     @relation("ReferredCustomer")
+  commissions          Commission[]          @relation("CommissionAffiliate")
+  referralsMade        CustomerReferral[]    @relation("ReferralAffiliate")
+  affiliatePurchases   AffiliatePurchase[]   @relation("CustomerPurchases")
+  affiliatePayouts     AffiliatePayout[]     @relation("AffiliatePayouts")
+  planAccessRequests   PlanAccessRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -69,9 +75,11 @@ model Profile {
   bio         String?
   avatarUrl   String?
 
-  pages         Page[]
-  website       Website?
-  slugRedirects PageSlugRedirect[]
+  pages             Page[]
+  website           Website?
+  slugRedirects     PageSlugRedirect[]
+  blogArticles      BlogArticle[]
+  blogSlugRedirects BlogArticleSlugRedirect[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -84,7 +92,7 @@ model Website {
   profileId String  @unique
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-  draftConfig     Json    @default("{}")
+  draftConfig     Json  @default("{}")
   publishedConfig Json?
 
   createdAt DateTime @default(now())
@@ -106,6 +114,12 @@ model Page {
   publishedConfig Json?
   isPublished     Boolean @default(false)
 
+  /// Published SEO snapshot used by the sitemap. The editable values live in
+  /// the page document settings so draft changes never leak into live metadata.
+  canonicalUrl String?
+  noindex      Boolean   @default(false)
+  publishedAt  DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -118,16 +132,17 @@ model Page {
   @@unique([profileId, slug])
   @@index([profileId, pageType])
   @@index([profileId, isPublished, showInNavigation, navOrder])
+  @@index([isPublished, noindex, updatedAt])
 }
 
 /// Tenant-scoped redirects so changing a page slug never breaks old links and
 /// can never resolve to another business's page.
 model PageSlugRedirect {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   profileId String
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   pageId    String
-  page      Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
   slug      String
   createdAt DateTime @default(now())
 
@@ -135,29 +150,98 @@ model PageSlugRedirect {
   @@index([pageId])
 }
 
+/// Long-form editorial content for a business or creator.
+///
+/// The editable fields are the draft. When an article is published, a
+/// serialisable snapshot is written to `publishedSnapshot` and the public slug,
+/// canonical and noindex values are mirrored into queryable columns. Autosave
+/// therefore never changes a live article until the owner explicitly publishes
+/// or updates it.
+model BlogArticle {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  title            String   @default("")
+  slug             String
+  excerpt          String   @default("") @db.Text
+  bodyHtml         String   @default("") @db.Text
+  featuredImageUrl String?
+  featuredImageAlt String?
+  categories       String[] @default([])
+  tags             String[] @default([])
+  authorName       String   @default("")
+  authorAvatarUrl  String?
+
+  status       BlogStatus @default(DRAFT)
+  scheduledFor DateTime?
+  publishedAt  DateTime?
+
+  /// Stable slug used by the published URL. Kept separate from the editable
+  /// draft slug so a slug change does not break a live article until republish.
+  publicSlug String?
+
+  seoTitle       String?
+  seoDescription String?
+  canonicalUrl   String?
+  ogImage        String?
+  noindex        Boolean @default(false)
+
+  publishedSnapshot     Json?
+  publishedNoindex      Boolean @default(false)
+  publishedCanonicalUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  slugRedirects BlogArticleSlugRedirect[]
+
+  @@unique([profileId, slug])
+  @@unique([profileId, publicSlug])
+  @@index([profileId, status, updatedAt])
+  @@index([profileId, status, publishedAt])
+  @@index([status, scheduledFor])
+  @@index([status, publicSlug])
+}
+
+/// Tenant-scoped redirects for article URL changes. A redirect can never point
+/// at another tenant's article.
+model BlogArticleSlugRedirect {
+  id        String      @id @default(cuid())
+  profileId String
+  profile   Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  articleId String
+  article   BlogArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  slug      String
+  createdAt DateTime    @default(now())
+
+  @@unique([profileId, slug])
+  @@index([articleId])
+}
+
 model Subscription {
-  id                 String    @id @default(cuid())
-  userId             String    @db.Uuid
-  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  planId             String
-  status             String    // trialing, active, past_due, canceled, expired
-  billingMethod      String    @default("none") // none, dodo, manual
-  
-  currentPeriodEnd   DateTime?
-  currentPeriodStart DateTime?
-  trialEverGranted   Boolean   @default(false)
-  aiRepliesUsed      Int       @default(0)
-  aiRepliesReserved  Int       @default(0)
+  id            String @id @default(cuid())
+  userId        String @db.Uuid
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId        String
+  status        String // trialing, active, past_due, canceled, expired
+  billingMethod String @default("none") // none, dodo, manual
+
+  currentPeriodEnd     DateTime?
+  currentPeriodStart   DateTime?
+  trialEverGranted     Boolean   @default(false)
+  aiRepliesUsed        Int       @default(0)
+  aiRepliesReserved    Int       @default(0)
   aiRepliesPeriodStart DateTime?
-  lastProviderEventAt DateTime?
-  aiAccessEndedAt    DateTime?
-  aiKnowledgePurgedAt DateTime?
-  trialStart         DateTime?
-  trialEnd           DateTime?
-  cancelAtPeriodEnd  Boolean   @default(false)
-  
+  lastProviderEventAt  DateTime?
+  aiAccessEndedAt      DateTime?
+  aiKnowledgePurgedAt  DateTime?
+  trialStart           DateTime?
+  trialEnd             DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+
   dodoCustomerId     String?
-  dodoSubscriptionId String?   @unique
+  dodoSubscriptionId String? @unique
 
   // Knowchat fields
   tier             String   @default("free") // free, starter, pro, business
@@ -165,196 +249,206 @@ model Subscription {
   monthlyResetDate DateTime @default(now()) @map("monthly_reset_date") @db.Timestamptz(6)
 
   affiliatePurchases AffiliatePurchase[]
-  commissions Commission[]
+  commissions        Commission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model PlanAccessRequest {
-  id               String   @id @default(cuid())
-  userId           String   @db.Uuid
-  user             User     @relation(fields: [userId], references: [id], onDelete: Restrict)
-  requestType      String
-  planId           String
-  currency         String
-  quotedAmount     Decimal  @db.Decimal(12, 2)
-  discountPercent  Decimal  @default(0) @db.Decimal(5, 2)
-  discountAmount   Decimal  @default(0) @db.Decimal(12, 2)
-  referralCode     String?
-  affiliateId      String?  @db.Uuid
-  status           String   @default("pending")
-  requestedAt      DateTime @default(now())
-  reviewedAt       DateTime?
-  reviewedBy       String?  @db.Uuid
-  reviewReason     String?  @db.Text
+  id              String    @id @default(cuid())
+  userId          String    @db.Uuid
+  user            User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  requestType     String
+  planId          String
+  currency        String
+  quotedAmount    Decimal   @db.Decimal(12, 2)
+  discountPercent Decimal   @default(0) @db.Decimal(5, 2)
+  discountAmount  Decimal   @default(0) @db.Decimal(12, 2)
+  referralCode    String?
+  affiliateId     String?   @db.Uuid
+  status          String    @default("pending")
+  requestedAt     DateTime  @default(now())
+  reviewedAt      DateTime?
+  reviewedBy      String?   @db.Uuid
+  reviewReason    String?   @db.Text
+
   @@index([status, requestedAt])
   @@index([userId, requestedAt])
   @@map("plan_access_requests")
 }
 
 model AffiliateApplication {
-  id          String   @id @default(cuid())
-  userId      String   @unique @db.Uuid
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status      String   @default("pending")
-  basedInNepal Boolean @default(false)
-  details     String?  @db.Text
-  reviewedBy  String?  @db.Uuid
-  reviewedAt  DateTime?
-  reviewNote  String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  code        AffiliateCode?
+  id           String         @id @default(cuid())
+  userId       String         @unique @db.Uuid
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status       String         @default("pending")
+  basedInNepal Boolean        @default(false)
+  details      String?        @db.Text
+  reviewedBy   String?        @db.Uuid
+  reviewedAt   DateTime?
+  reviewNote   String?        @db.Text
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  code         AffiliateCode?
+
   @@index([status, createdAt])
   @@map("affiliate_applications")
 }
 
 model AffiliateCode {
-  id          String   @id @default(cuid())
-  affiliateId String   @db.Uuid
-  affiliate   User     @relation("AffiliateCodes", fields: [affiliateId], references: [id], onDelete: Restrict)
-  code        String   @unique
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  referrals   CustomerReferral[]
-  applicationId String? @unique
-  application AffiliateApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  id            String                @id @default(cuid())
+  affiliateId   String                @db.Uuid
+  affiliate     User                  @relation("AffiliateCodes", fields: [affiliateId], references: [id], onDelete: Restrict)
+  code          String                @unique
+  active        Boolean               @default(true)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  referrals     CustomerReferral[]
+  applicationId String?               @unique
+  application   AffiliateApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
   @@index([affiliateId, active])
   @@map("affiliate_codes")
 }
 
 model CustomerReferral {
-  id                String   @id @default(cuid())
-  affiliateId       String   @db.Uuid
-  affiliate         User     @relation("ReferralAffiliate", fields: [affiliateId], references: [id], onDelete: Restrict)
-  customerId        String   @unique @db.Uuid
-  customer          User     @relation("ReferredCustomer", fields: [customerId], references: [id], onDelete: Restrict)
-  codeId            String
-  code              AffiliateCode @relation(fields: [codeId], references: [id], onDelete: Restrict)
-  referredAt        DateTime @default(now())
-  firstPaidAt       DateTime?
-  discountUsed      Boolean  @default(false)
-  purchases         AffiliatePurchase[]
-  commissions       Commission[]
+  id           String              @id @default(cuid())
+  affiliateId  String              @db.Uuid
+  affiliate    User                @relation("ReferralAffiliate", fields: [affiliateId], references: [id], onDelete: Restrict)
+  customerId   String              @unique @db.Uuid
+  customer     User                @relation("ReferredCustomer", fields: [customerId], references: [id], onDelete: Restrict)
+  codeId       String
+  code         AffiliateCode       @relation(fields: [codeId], references: [id], onDelete: Restrict)
+  referredAt   DateTime            @default(now())
+  firstPaidAt  DateTime?
+  discountUsed Boolean             @default(false)
+  purchases    AffiliatePurchase[]
+  commissions  Commission[]
+
   @@index([affiliateId, referredAt])
   @@map("customer_referrals")
 }
 
 model AffiliatePurchase {
-  id                   String   @id @default(cuid())
-  customerId           String   @db.Uuid
-  customer             User     @relation("CustomerPurchases", fields: [customerId], references: [id], onDelete: Restrict)
-  referralId           String?
-  referral             CustomerReferral? @relation(fields: [referralId], references: [id], onDelete: Restrict)
-  subscriptionId       String?
-  subscription         Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
-  planId               String
-  paymentProvider      String   @default("manual")
-  currency             String
-  originalAmount       Decimal  @db.Decimal(12, 2)
-  discountPercent      Decimal  @default(0) @db.Decimal(5, 2)
-  discountAmount       Decimal  @default(0) @db.Decimal(12, 2)
-  expectedAmount       Decimal  @db.Decimal(12, 2)
-  paymentReference     String?  @unique
-  proofUrl             String?
-  status               String   @default("pending")
-  verifiedAmount       Decimal? @db.Decimal(12, 2)
-  verifiedAt           DateTime?
-  verifiedBy           String?  @db.Uuid
-  customerConfirmedAt  DateTime?
-  resolutionNote       String?  @db.Text
-  paymentDate          DateTime?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  commission           Commission?
+  id                  String            @id @default(cuid())
+  customerId          String            @db.Uuid
+  customer            User              @relation("CustomerPurchases", fields: [customerId], references: [id], onDelete: Restrict)
+  referralId          String?
+  referral            CustomerReferral? @relation(fields: [referralId], references: [id], onDelete: Restrict)
+  subscriptionId      String?
+  subscription        Subscription?     @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  planId              String
+  paymentProvider     String            @default("manual")
+  currency            String
+  originalAmount      Decimal           @db.Decimal(12, 2)
+  discountPercent     Decimal           @default(0) @db.Decimal(5, 2)
+  discountAmount      Decimal           @default(0) @db.Decimal(12, 2)
+  expectedAmount      Decimal           @db.Decimal(12, 2)
+  paymentReference    String?           @unique
+  proofUrl            String?
+  status              String            @default("pending")
+  verifiedAmount      Decimal?          @db.Decimal(12, 2)
+  verifiedAt          DateTime?
+  verifiedBy          String?           @db.Uuid
+  customerConfirmedAt DateTime?
+  resolutionNote      String?           @db.Text
+  paymentDate         DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  commission          Commission?
+
   @@index([customerId, createdAt])
   @@index([status, createdAt])
   @@map("affiliate_purchases")
 }
 
 model Commission {
-  id                   String   @id @default(cuid())
-  affiliateId          String   @db.Uuid
-  affiliate            User     @relation("CommissionAffiliate", fields: [affiliateId], references: [id], onDelete: Restrict)
-  referralId           String
-  referral             CustomerReferral @relation(fields: [referralId], references: [id], onDelete: Restrict)
-  purchaseId           String   @unique
-  purchase             AffiliatePurchase @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
-  subscriptionId       String?
-  subscription         Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
-  currency             String
-  eligibleRevenue      Decimal  @db.Decimal(12, 2)
-  commissionPercent    Decimal  @db.Decimal(5, 2)
-  amount               Decimal  @db.Decimal(12, 2)
-  earnedAt             DateTime
-  eligibilityEndsAt    DateTime
-  eligibilityStatus    String   @default("payable")
-  payoutStatus         String   @default("unpaid")
-  reversalReference    String?
-  reversedAt           DateTime?
-  payoutId             String?
-  payout               AffiliatePayout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
-  reversals            CommissionReversal[]
-  createdAt            DateTime @default(now())
+  id                String               @id @default(cuid())
+  affiliateId       String               @db.Uuid
+  affiliate         User                 @relation("CommissionAffiliate", fields: [affiliateId], references: [id], onDelete: Restrict)
+  referralId        String
+  referral          CustomerReferral     @relation(fields: [referralId], references: [id], onDelete: Restrict)
+  purchaseId        String               @unique
+  purchase          AffiliatePurchase    @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
+  subscriptionId    String?
+  subscription      Subscription?        @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  currency          String
+  eligibleRevenue   Decimal              @db.Decimal(12, 2)
+  commissionPercent Decimal              @db.Decimal(5, 2)
+  amount            Decimal              @db.Decimal(12, 2)
+  earnedAt          DateTime
+  eligibilityEndsAt DateTime
+  eligibilityStatus String               @default("payable")
+  payoutStatus      String               @default("unpaid")
+  reversalReference String?
+  reversedAt        DateTime?
+  payoutId          String?
+  payout            AffiliatePayout?     @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+  reversals         CommissionReversal[]
+  createdAt         DateTime             @default(now())
+
   @@index([affiliateId, currency, payoutStatus])
   @@index([referralId, earnedAt])
   @@map("commissions")
 }
 
 model CommissionReversal {
-  id                String   @id @default(cuid())
-  commissionId      String
-  commission        Commission @relation(fields: [commissionId], references: [id], onDelete: Restrict)
-  refundReference   String   @unique
-  refundAmount      Decimal  @db.Decimal(12, 2)
-  commissionAmount  Decimal  @db.Decimal(12, 2)
-  refundCurrency    String
+  id                 String     @id @default(cuid())
+  commissionId       String
+  commission         Commission @relation(fields: [commissionId], references: [id], onDelete: Restrict)
+  refundReference    String     @unique
+  refundAmount       Decimal    @db.Decimal(12, 2)
+  commissionAmount   Decimal    @db.Decimal(12, 2)
+  refundCurrency     String
   commissionCurrency String
-  createdAt         DateTime @default(now())
+  createdAt          DateTime   @default(now())
+
   @@index([commissionId, createdAt])
   @@map("commission_reversals")
 }
 
 model AffiliatePayout {
-  id             String   @id @default(cuid())
-  affiliateId    String   @db.Uuid
-  affiliate      User     @relation("AffiliatePayouts", fields: [affiliateId], references: [id], onDelete: Restrict)
+  id             String       @id @default(cuid())
+  affiliateId    String       @db.Uuid
+  affiliate      User         @relation("AffiliatePayouts", fields: [affiliateId], references: [id], onDelete: Restrict)
   currency       String
-  amount         Decimal  @db.Decimal(12, 2)
-  payoutAmount   Decimal? @db.Decimal(12, 2)
+  amount         Decimal      @db.Decimal(12, 2)
+  payoutAmount   Decimal?     @db.Decimal(12, 2)
   payoutCurrency String?
-  exchangeRate   Decimal? @db.Decimal(18, 8)
+  exchangeRate   Decimal?     @db.Decimal(18, 8)
   method         String
   reference      String
-  status         String   @default("paid")
+  status         String       @default("paid")
   paidAt         DateTime
-  createdBy      String   @db.Uuid
-  createdAt      DateTime @default(now())
+  createdBy      String       @db.Uuid
+  createdAt      DateTime     @default(now())
   commissions    Commission[]
+
   @@index([affiliateId, paidAt])
   @@map("affiliate_payouts")
 }
 
 model AffiliateConfig {
-  id                         Int      @id @default(1)
-  customerDiscountPercent    Decimal  @default(10) @db.Decimal(5, 2)
-  commissionPercent          Decimal  @default(15) @db.Decimal(5, 2)
-  eligibilityMonths          Int      @default(12)
-  updatedBy                  String?  @db.Uuid
-  updatedAt                  DateTime @updatedAt
+  id                      Int      @id @default(1)
+  customerDiscountPercent Decimal  @default(10) @db.Decimal(5, 2)
+  commissionPercent       Decimal  @default(15) @db.Decimal(5, 2)
+  eligibilityMonths       Int      @default(12)
+  updatedBy               String?  @db.Uuid
+  updatedAt               DateTime @updatedAt
+
   @@map("affiliate_config")
 }
 
 model AffiliateAuditEvent {
-  id          String   @id @default(cuid())
-  actorId     String?  @db.Uuid
-  action      String
-  entityType  String
-  entityId    String
-  details     Json?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  actorId    String?  @db.Uuid
+  action     String
+  entityType String
+  entityId   String
+  details    Json?
+  createdAt  DateTime @default(now())
+
   @@index([entityType, entityId, createdAt])
   @@map("affiliate_audit_events")
 }
@@ -368,7 +462,7 @@ model Usage {
   chatMessages    Int    @default(0)
 
   // Knowchat fields
-  monthlyMessages  Int @default(0) @map("monthly_messages")
+  monthlyMessages  Int    @default(0) @map("monthly_messages")
   storageUsedBytes Int    @default(0) @map("storage_used_bytes")
   pageMediaBytes   BigInt @default(0)
   knowledgeBytes   BigInt @default(0)
@@ -388,20 +482,21 @@ model WebhookEvent {
 }
 
 model AIRequestUsage {
-  id          String   @id @default(cuid())
-  requestId   String   @unique
-  userId      String   @db.Uuid
-  botId       String   @db.Uuid
-  modelId     String
-  inputTokens Int      @default(0)
-  outputTokens Int     @default(0)
-  costUsd     Decimal  @default(0) @db.Decimal(12, 8)
-  status      String
-  error       String?
-  retryCount  Int      @default(0)
-  createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bot         Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  requestId    String   @unique
+  userId       String   @db.Uuid
+  botId        String   @db.Uuid
+  modelId      String
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  costUsd      Decimal  @default(0) @db.Decimal(12, 8)
+  status       String
+  error        String?
+  retryCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bot          Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
   @@map("ai_request_usage")
 }
@@ -415,6 +510,7 @@ model PageMediaAsset {
   sizeBytes   BigInt
   contentType String
   createdAt   DateTime @default(now())
+
   @@unique([bucket, objectKey])
   @@index([userId])
   @@map("page_media_assets")
@@ -446,31 +542,31 @@ model Lead {
 }
 
 model Bot {
-  id                String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  userId            String          @map("user_id") @db.Uuid
+  id                String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId            String           @map("user_id") @db.Uuid
   name              String
   description       String?
-  systemPrompt      String          @default("") @map("system_prompt")
-  welcomeMessage    String          @default("Hi! How can I help you today?") @map("welcome_message")
-  welcomeMessages   String[]        @default([]) @map("welcome_messages")
-  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  avatarEmoji       String          @default("bot") @map("avatar_emoji")
-  collectLeads      Boolean         @default(false) @map("collect_leads")
-  colorTheme        String          @default("#6366f1") @map("color_theme")
-  purpose           String          @default("general")
-  removeWatermark   Boolean         @default(false) @map("remove_watermark")
-  status            String          @default("draft")
-  tone              String          @default("friendly")
-  avatarUrl         String?         @map("avatar_url")
-  bookingLink       String?         @map("booking_link")
-  leadGenConfig     Json?           @map("lead_gen_config")
-  leadCaptureConfig Json?           @map("lead_capture_config")
-  rateLimitMessage  String          @default("Too many messages in a row") @map("rate_limit_message")
-  rateLimitMessages Int             @default(20) @map("rate_limit_messages")
-  rateLimitWindow   Int             @default(240) @map("rate_limit_window")
-  temperature       Float           @default(0.7) @map("temperature")
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  systemPrompt      String           @default("") @map("system_prompt")
+  welcomeMessage    String           @default("Hi! How can I help you today?") @map("welcome_message")
+  welcomeMessages   String[]         @default([]) @map("welcome_messages")
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  avatarEmoji       String           @default("bot") @map("avatar_emoji")
+  collectLeads      Boolean          @default(false) @map("collect_leads")
+  colorTheme        String           @default("#6366f1") @map("color_theme")
+  purpose           String           @default("general")
+  removeWatermark   Boolean          @default(false) @map("remove_watermark")
+  status            String           @default("draft")
+  tone              String           @default("friendly")
+  avatarUrl         String?          @map("avatar_url")
+  bookingLink       String?          @map("booking_link")
+  leadGenConfig     Json?            @map("lead_gen_config")
+  leadCaptureConfig Json?            @map("lead_capture_config")
+  rateLimitMessage  String           @default("Too many messages in a row") @map("rate_limit_message")
+  rateLimitMessages Int              @default(20) @map("rate_limit_messages")
+  rateLimitWindow   Int              @default(240) @map("rate_limit_window")
+  temperature       Float            @default(0.7) @map("temperature")
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   chatMessages      ChatMessage[]
   dataSources       DataSource[]
   chunks            DocumentChunk[]

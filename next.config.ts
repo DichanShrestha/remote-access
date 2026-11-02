@@ -23,6 +23,7 @@ const securityHeaders = [
 
 const nextConfig = {
   /* config options here */
+  trailingSlash: false,
   serverExternalPackages: ['pdfjs-dist'],
   reactCompiler: true,
   experimental: {

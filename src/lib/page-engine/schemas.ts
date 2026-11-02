@@ -24,6 +24,10 @@ export type ThemeConfig = z.infer<typeof ThemeConfigSchema>;
 export const PageSettingsSchema = z.object({
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
+  canonicalUrl: z.string().optional(),
+  noindex: z.boolean().optional(),
+  ogTitle: z.string().optional(),
+  ogDescription: z.string().optional(),
   ogImage: z.string().optional(),
   showFooterBranding: z.boolean().default(true),
   enableSmoothScrolling: z.boolean().default(false),

@@ -1,12 +1,8 @@
 import type { MetadataRoute } from 'next';
+import { buildRobotsConfig } from '@/lib/seo';
+
+export const dynamic = 'force-dynamic';
 
 export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/dashboard', '/onboarding', '/editor', '/editor-preview', '/template-preview', '/api'],
-    },
-    sitemap: 'https://pageory.app/sitemap.xml',
-  };
+  return buildRobotsConfig();
 }

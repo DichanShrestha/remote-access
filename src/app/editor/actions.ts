@@ -10,12 +10,13 @@ import {
   extractWebsiteConfig,
   toPageContentDocument,
 } from '@/lib/page-engine/site-config';
+import { getSeoPublishSnapshot } from '@/lib/seo';
 import { randomUUID } from 'crypto';
 import { storageService } from '@/lib/storage/service';
 import { getUserEntitlement, requirePageAccess } from '@/lib/billing/entitlements';
 
-async function removeUnusedPageMedia(userId: string, profileId: string) {
-  const [pages, website] = await Promise.all([
+export async function removeUnusedPageMedia(userId: string, profileId: string) {
+  const [pages, website, articles] = await Promise.all([
     db.page.findMany({
       where: { profileId },
       select: { draftConfig: true, publishedConfig: true },
@@ -23,6 +24,17 @@ async function removeUnusedPageMedia(userId: string, profileId: string) {
     db.website.findUnique({
       where: { profileId },
       select: { draftConfig: true, publishedConfig: true },
+    }),
+    db.blogArticle.findMany({
+      where: { profileId },
+      select: {
+        bodyHtml: true,
+        featuredImageUrl: true,
+        featuredImageAlt: true,
+        authorAvatarUrl: true,
+        ogImage: true,
+        publishedSnapshot: true,
+      },
     }),
   ]);
 
@@ -41,6 +53,7 @@ async function removeUnusedPageMedia(userId: string, profileId: string) {
     collect(website.draftConfig);
     collect(website.publishedConfig);
   }
+  for (const article of articles) collect(article);
 
   const assets = await db.pageMediaAsset.findMany({ where: { userId } });
   const unused = assets.filter((asset) => !used.has(asset.id));
@@ -58,6 +71,7 @@ function revalidatePublicPage(username: string, slug: string) {
   revalidatePath(`/${username}`);
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/pages');
+  revalidatePath('/sitemap.xml');
 }
 
 export async function uploadPageMedia(formData: FormData) {
@@ -153,6 +167,7 @@ export async function publishDraftConfig(pageId: string, rawConfig: unknown) {
 
   const pageContent = toPageContentDocument(parsed.data);
   const siteConfig = extractWebsiteConfig(parsed.data);
+  const seoSnapshot = getSeoPublishSnapshot(parsed.data.settings);
   const isHome = page.pageType === 'HOME' || page.slug === '';
 
   const saveDrafts = async () => {
@@ -188,6 +203,8 @@ export async function publishDraftConfig(pageId: string, rawConfig: unknown) {
           draftConfig: pageContent as unknown as Prisma.InputJsonValue,
           publishedConfig: pageContent as unknown as Prisma.InputJsonValue,
           isPublished: true,
+          publishedAt: new Date(),
+          ...seoSnapshot,
         },
       });
       await tx.website.upsert({
