@@ -88,8 +88,20 @@ export async function resolvePlanAccessRequest(requestId: string, decision: 'app
       if (active?.billingMethod === 'admin_comp') await tx.subscription.update({ where: { id: active.id }, data });
       else await tx.subscription.create({ data: { userId: request.userId, ...data } });
       if (isTrial) await tx.user.update({ where: { id: request.userId }, data: { trialGrantedAt: now } });
-      const profile = await tx.profile.findUnique({ where: { userId: request.userId }, include: { page: true } });
-      if (profile?.page && Object.keys(profile.page.draftConfig as object).length) await tx.page.update({ where: { id: profile.page.id }, data: { publishedConfig: profile.page.draftConfig as never, isPublished: true } });
+      const profile = await tx.profile.findUnique({
+        where: { userId: request.userId },
+        include: {
+          pages: { where: { OR: [{ pageType: 'HOME' }, { slug: '' }] }, orderBy: { createdAt: 'asc' }, take: 1 },
+          website: true,
+        },
+      });
+      const home = profile?.pages[0];
+      if (home && Object.keys(home.draftConfig as object).length) {
+        await tx.page.update({ where: { id: home.id }, data: { publishedConfig: home.draftConfig as never, isPublished: true } });
+      }
+      if (profile?.website) {
+        await tx.website.update({ where: { id: profile.website.id }, data: { publishedConfig: profile.website.draftConfig as never } });
+      }
     }
     await tx.planAccessRequest.update({ where: { id }, data: { status: decision, reviewedAt: now, reviewedBy: admin.id, reviewReason: reason } });
     await tx.affiliateAuditEvent.create({ data: { actorId: admin.id, action: `plan_access_request_${decision}`, entityType: 'plan_access_request', entityId: id, details: { userId: request.userId, requestType: request.requestType, planId: request.planId, days: decision === 'approved' ? duration : undefined, reason } } });

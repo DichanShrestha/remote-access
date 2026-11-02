@@ -40,7 +40,7 @@ export async function checkUsernameAvailability(username: string): Promise<{ sta
 export async function exportAccountData() {
   const user = await authService.requireUser();
   const data = await db.user.findUnique({ where: { id: user.id }, include: {
-    profile: { include: { page: { include: { leads: true } } } },
+    profile: { include: { pages: { include: { leads: true } }, website: true } },
     subscriptions: { select: { planId: true, status: true, trialStart: true, trialEnd: true, currentPeriodStart: true, currentPeriodEnd: true, cancelAtPeriodEnd: true, aiRepliesUsed: true } },
     usage: { select: { pageMediaBytes: true, knowledgeBytes: true, indexedTokens: true } },
     bots: { include: { dataSources: { select: { id: true, type: true, source: true, status: true, metadata: true, filePath: true, createdAt: true } }, chunks: { select: { content: true, metadata: true } }, qaPairs: true, chatMessages: true, leads: true } },
@@ -120,12 +120,8 @@ export async function deleteUserPage(): Promise<{ success?: boolean; error?: str
       return { error: "No profile found for this account." };
     }
 
-    // Server-side authorization check: verify ownership of page
-    const page = await db.page.findUnique({
-      where: { profileId: user.profile.id },
-    });
-
-    if (!page) {
+    const pageCount = await db.page.count({ where: { profileId: user.profile.id } });
+    if (!pageCount) {
       return { error: "No page found to delete." };
     }
 
@@ -134,12 +130,15 @@ export async function deleteUserPage(): Promise<{ success?: boolean; error?: str
     await db.pageMediaAsset.deleteMany({ where: { userId: user.id } });
     await db.usage.updateMany({ where: { userId: user.id }, data: { pageMediaBytes: 0 } });
 
-    await db.page.delete({
-      where: { id: page.id },
-    });
+    await db.$transaction([
+      db.page.deleteMany({ where: { profileId: user.profile.id } }),
+      db.website.deleteMany({ where: { profileId: user.profile.id } }),
+    ]);
 
     revalidatePath("/dashboard");
+    revalidatePath("/dashboard/pages");
     revalidatePath("/dashboard/settings");
+    revalidatePath(`/${user.profile.username}`);
     return { success: true };
   } catch (err: any) {
     return { error: err?.message || "Failed to delete page." };

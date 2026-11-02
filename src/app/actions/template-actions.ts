@@ -8,6 +8,13 @@ import { isGroup } from '@/lib/page-engine/operations';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requirePageAccess } from '@/lib/billing/entitlements';
+import type { Prisma } from '@prisma/client';
+import {
+  applyWebsiteConfig,
+  extractWebsiteConfig,
+  toPageContentDocument,
+} from '@/lib/page-engine/site-config';
+import { findHomePage, getWebsiteConfig } from '@/lib/page-engine/site-store';
 
 export async function getAvailableTemplatesForClient() {
   const templates = getAvailableTemplates();
@@ -66,14 +73,29 @@ export async function applyTemplateToPage(templateId: string) {
   await requirePageAccess(user.id);
   if (!user.profile) throw new Error('Profile not found');
 
-  const page = await db.page.findUnique({ where: { profileId: user.profile.id } });
+  const page = await findHomePage(user.profile.id);
   if (!page || !page.draftConfig) throw new Error('Page not found');
 
-  const mergedDoc = await mergeTemplateContent(page.draftConfig as unknown as PageDocument, templateId);
+  const { config: currentSite } = await getWebsiteConfig(user.profile.id, 'draft');
+  const currentDocument = applyWebsiteConfig(page.draftConfig as unknown as PageDocument, currentSite);
+  const mergedDoc = await mergeTemplateContent(currentDocument, templateId);
+  const siteConfig = extractWebsiteConfig(mergedDoc);
 
-  await db.page.update({
-    where: { id: page.id },
-    data: { draftConfig: mergedDoc as any }
+  await db.$transaction(async (tx) => {
+    await tx.page.update({
+      where: { id: page.id },
+      data: { draftConfig: toPageContentDocument(mergedDoc) as unknown as Prisma.InputJsonValue },
+    });
+    await tx.website.upsert({
+      where: { profileId: user.profile!.id },
+      create: {
+        profileId: user.profile!.id,
+        draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
+      },
+      update: {
+        draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
+      },
+    });
   });
 
   revalidatePath('/dashboard');

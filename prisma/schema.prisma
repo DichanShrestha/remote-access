@@ -11,6 +11,18 @@ enum ProfileType {
   BUSINESS
 }
 
+enum PageType {
+  HOME
+  ABOUT
+  SERVICES
+  PRODUCTS
+  CONTACT
+  FAQ
+  GALLERY
+  BLOG
+  CUSTOM
+}
+
 model User {
   id        String  @id @default(uuid()) @db.Uuid // Matches Supabase auth.users UUID
   email     String? @unique
@@ -57,7 +69,23 @@ model Profile {
   bio         String?
   avatarUrl   String?
 
-  page Page?
+  pages         Page[]
+  website       Website?
+  slugRedirects PageSlugRedirect[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Shared website design for a business. This is the single source of truth for
+/// the theme, header, footer, and global settings used by every page.
+model Website {
+  id        String  @id @default(cuid())
+  profileId String  @unique
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  draftConfig     Json    @default("{}")
+  publishedConfig Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -65,8 +93,14 @@ model Profile {
 
 model Page {
   id        String  @id @default(cuid())
-  profileId String  @unique
+  profileId String
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  title            String   @default("")
+  slug             String   @default("")
+  pageType         PageType @default(CUSTOM)
+  showInNavigation Boolean  @default(true)
+  navOrder         Int      @default(0)
 
   draftConfig     Json    @default("{}")
   publishedConfig Json?
@@ -75,10 +109,30 @@ model Page {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  leads Lead[]
+  leads         Lead[]
+  slugRedirects PageSlugRedirect[]
 
   botId String? @unique @db.Uuid
   bot   Bot?    @relation(fields: [botId], references: [id])
+
+  @@unique([profileId, slug])
+  @@index([profileId, pageType])
+  @@index([profileId, isPublished, showInNavigation, navOrder])
+}
+
+/// Tenant-scoped redirects so changing a page slug never breaks old links and
+/// can never resolve to another business's page.
+model PageSlugRedirect {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  pageId    String
+  page      Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  slug      String
+  createdAt DateTime @default(now())
+
+  @@unique([profileId, slug])
+  @@index([pageId])
 }
 
 model Subscription {

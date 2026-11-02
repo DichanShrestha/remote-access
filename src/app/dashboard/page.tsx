@@ -8,8 +8,12 @@ import Link from 'next/link';
 
 export default async function DashboardPage() {
   const user = await authService.requireUser();
-  const profile = await db.profile.findUnique({ where: { userId: user.id }, include: { page: true } });
-  if (!profile?.page || !Object.keys(profile.page.draftConfig as object).length) {
+  const profile = await db.profile.findUnique({
+    where: { userId: user.id },
+    include: { pages: { orderBy: [{ navOrder: 'asc' }, { createdAt: 'asc' }] } },
+  });
+  const home = profile?.pages.find((page) => page.pageType === 'HOME' || page.slug === '');
+  if (!profile || !home || !Object.keys(home.draftConfig as object).length) {
     const application = await db.affiliateApplication.findUnique({ where: { userId: user.id }, select: { status: true } });
     if (application?.status === 'approved' && !profile) {
       const [referralCount, activeReferrals, unpaid, paid] = await Promise.all([
@@ -23,13 +27,14 @@ export default async function DashboardPage() {
     if (application?.status === 'pending') redirect('/affiliate/apply');
     redirect('/onboarding');
   }
-  if (!profile.page.isPublished) redirect('/onboarding/claim');
+  if (!home.isPublished) redirect('/onboarding/claim');
 
+  const pageIds = profile.pages.map((page) => page.id);
   const [bot, subscription, pageLeads, pageLeadCount] = await Promise.all([
     db.bot.findFirst({ where: { userId: user.id }, orderBy: { updatedAt: 'desc' }, include: { dataSources: { select: { status: true } }, qaPairs: { select: { id: true } } } }),
     db.subscription.findFirst({ where: { userId: user.id }, orderBy: { updatedAt: 'desc' } }),
-    db.lead.findMany({ where: { pageId: profile.page.id }, orderBy: { createdAt: 'desc' }, take: 4 }),
-    db.lead.count({ where: { pageId: profile.page.id } }),
+    db.lead.findMany({ where: { pageId: { in: pageIds } }, orderBy: { createdAt: 'desc' }, take: 4 }),
+    db.lead.count({ where: { pageId: { in: pageIds } } }),
   ]);
   const [conversationGroups, recentMessages, botLeads, botLeadCount, bookingClicks] = bot ? await Promise.all([
     db.chatMessage.groupBy({ by: ['sessionId'], where: { botId: bot.id } }),
@@ -52,7 +57,7 @@ export default async function DashboardPage() {
 
   return <DashboardHome data={{
     name: profile.displayName || user.name || 'there', username: profile.username, bio: profile.bio,
-    published: profile.page.isPublished, origin: `${protocol}://${host}`, tier,
+    published: home.isPublished, origin: `${protocol}://${host}`, tier,
     visitors: null, leads: pageLeadCount + botLeadCount, conversations: conversationGroups.length,
     bookingClicks, trained, hasBot: Boolean(bot), profileComplete: Boolean(profile.displayName && profile.bio),
     recent, conversationCount: conversationGroups.length,

@@ -1,8 +1,8 @@
+import { beforeEach, describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import { addSection, removeSection, moveSection, updateSection, insertNode, isGroup, moveNode, findNode } from './operations';
 import { GroupNode, PageDocument, PageDocumentSchema, PageSection } from './schemas';
 import { TEMPLATES_MAP } from './templates';
-
-// Note: Ensure your testing framework (Vitest/Jest) is configured to run this.
 
 describe('Page Engine Operations', () => {
   let doc: PageDocument;
@@ -21,26 +21,26 @@ describe('Page Engine Operations', () => {
   it('adds a section at the end', () => {
     const newSec: PageSection = { id: 'sec-2', type: 'rich-text', isHidden: false, content: { text: 'New Text' } };
     const result = addSection(doc, newSec);
-    expect(result.sections).toHaveLength(2);
-    expect(result.sections[1].id).toBe('sec-2');
+    assert.equal(result.sections.length, 2);
+    assert.equal(result.sections[1].id, 'sec-2');
   });
 
   it('removes a section', () => {
     const result = removeSection(doc, 'sec-1');
-    expect(result.sections).toHaveLength(0);
+    assert.equal(result.sections.length, 0);
   });
 
   it('moves a section', () => {
     const docWithTwo = addSection(doc, { id: 'sec-2', type: 'rich-text', isHidden: false, content: { text: 'New Text' } });
     const result = moveSection(docWithTwo, 0, 1);
-    expect(result.sections[0].id).toBe('sec-2');
-    expect(result.sections[1].id).toBe('sec-1');
+    assert.equal(result.sections[0].id, 'sec-2');
+    assert.equal(result.sections[1].id, 'sec-1');
   });
 
   it('updates a section', () => {
     const result = updateSection(doc, 'sec-1', { isHidden: true });
-    expect(isGroup(result.sections[0])).toBe(false);
-    if (!isGroup(result.sections[0])) expect(result.sections[0].isHidden).toBe(true);
+    assert.equal(isGroup(result.sections[0]), false);
+    if (!isGroup(result.sections[0])) assert.equal(result.sections[0].isHidden, true);
   });
 
   it('moves components into and out of nested layout groups', () => {
@@ -51,14 +51,16 @@ describe('Page Engine Operations', () => {
     };
     const withGroup = insertNode(doc, group);
     const movedIn = moveNode(withGroup, 'sec-1', 'group-1', 0);
-    expect(isGroup(movedIn.sections[0])).toBe(true);
-    expect(findNode(movedIn.sections, 'sec-1')).toBeDefined();
+    assert.equal(isGroup(movedIn.sections[0]), true);
+    assert.notEqual(findNode(movedIn.sections, 'sec-1'), undefined);
     const withSecondChild = insertNode(movedIn, { id: 'sec-2', type: 'rich-text', isHidden: false, content: { text: 'More' } }, 'group-1');
     const groupWithMultipleChildren = findNode(withSecondChild.sections, 'group-1');
-    expect(isGroup(groupWithMultipleChildren!)).toBe(true);
-    if (groupWithMultipleChildren && isGroup(groupWithMultipleChildren)) expect(groupWithMultipleChildren.children).toHaveLength(2);
+    assert.ok(groupWithMultipleChildren && isGroup(groupWithMultipleChildren));
+    if (groupWithMultipleChildren && isGroup(groupWithMultipleChildren)) {
+      assert.equal(groupWithMultipleChildren.children.length, 2);
+    }
     const movedOut = moveNode(withSecondChild, 'sec-1', undefined, 1);
-    expect(movedOut.sections.map(node => node.id)).toEqual(['group-1', 'sec-1']);
+    assert.deepEqual(movedOut.sections.map(node => node.id), ['group-1', 'sec-1']);
   });
 
   it('rejects group nesting deeper than four levels', () => {
@@ -70,12 +72,12 @@ describe('Page Engine Operations', () => {
     const docAtLimit = insertNode({ ...doc, sections: [nested] }, {
       ...makeGroup('g5'),
     }, 'g4');
-    expect(findNode(docAtLimit.sections, 'g5')).toBeUndefined();
+    assert.equal(findNode(docAtLimit.sections, 'g5'), undefined);
   });
 
   it('preserves existing templates and parses grouped content and colors', () => {
     Object.values(TEMPLATES_MAP).forEach(template => {
-      expect(PageDocumentSchema.safeParse(template).success).toBe(true);
+      assert.equal(PageDocumentSchema.safeParse(template).success, true);
     });
     const parsed = PageDocumentSchema.safeParse({
       sections: [{
@@ -83,10 +85,10 @@ describe('Page Engine Operations', () => {
         children: [{ id: 'group-child', type: 'rich-text', isHidden: false, content: { text: 'Content' } }],
       }],
     });
-    expect(parsed.success).toBe(true);
+    assert.equal(parsed.success, true);
     if (parsed.success && isGroup(parsed.data.sections[0])) {
-      expect(parsed.data.sections[0].backgroundColor).toBe('#112233');
-      expect(parsed.data.sections[0].children).toHaveLength(1);
+      assert.equal(parsed.data.sections[0].backgroundColor, '#112233');
+      assert.equal(parsed.data.sections[0].children.length, 1);
     }
   });
 });

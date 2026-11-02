@@ -7,7 +7,7 @@ export default async function AnalyticsPage() {
   const user = await authService.requireUser();
   const profile = await db.profile.findUnique({
     where: { userId: user.id },
-    include: { page: true }
+    include: { pages: { select: { id: true } } }
   });
 
   const bot = await db.bot.findFirst({
@@ -15,7 +15,7 @@ export default async function AnalyticsPage() {
   });
 
   const botId = bot?.id;
-  const pageId = profile?.page?.id;
+  const pageIds = profile?.pages.map((page) => page.id) ?? [];
 
   let conversations: any[] = [];
   let allMessages: any[] = [];
@@ -70,9 +70,9 @@ export default async function AnalyticsPage() {
     });
   }
 
-  if (pageId) {
+  if (pageIds.length) {
     leads = await db.lead.findMany({
-      where: { pageId },
+      where: { pageId: { in: pageIds } },
       orderBy: { createdAt: "desc" },
       take: 50
     });

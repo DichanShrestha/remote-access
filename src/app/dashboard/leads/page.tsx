@@ -16,7 +16,7 @@ export default async function LeadsPage({
 
   const profile = await db.profile.findUnique({
     where: { userId: user.id },
-    include: { page: true },
+    include: { pages: { select: { id: true } } },
   });
 
   const bot = await db.bot.findFirst({
@@ -24,7 +24,7 @@ export default async function LeadsPage({
     orderBy: { updatedAt: 'desc' },
   });
 
-  const pageId = profile?.page?.id;
+  const pageIds = profile?.pages.map((page) => page.id) ?? [];
   const botId = bot?.id || null;
 
   // Fetch bot leads (from AI chat)
@@ -45,15 +45,15 @@ export default async function LeadsPage({
 
   // Fetch page leads (from forms)
   let pageLeads: any[] = [];
-  if (pageId) {
+  if (pageIds.length) {
     pageLeads = await db.lead.findMany({
-      where: { pageId },
+      where: { pageId: { in: pageIds } },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   const hasBot = !!bot;
-  const hasPage = !!pageId;
+  const hasPage = pageIds.length > 0;
 
   if (!hasBot && !hasPage) {
     return (

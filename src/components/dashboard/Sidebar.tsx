@@ -18,7 +18,8 @@ import {
   X,
   PanelLeftClose,
   PanelLeftOpen,
-  LogOut
+  LogOut,
+  Files
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -35,6 +36,7 @@ const CREATOR_NAV_GROUPS = [
     label: 'BUILD & STYLE',
     items: [
       { name: 'Page Editor', href: '/editor', icon: PenTool },
+      { name: 'Pages', href: '/dashboard/pages', icon: Files },
       { name: 'Templates', href: '/dashboard/templates', icon: Globe },
     ]
   },

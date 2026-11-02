@@ -1,2 +1,1 @@
--- DropIndex
-DROP INDEX "affiliate_purchases_customerConfirmedAt_idx";
+-- (index drop removed: affiliate_purchases_customerConfirmedAt_idx is created in a later migration)

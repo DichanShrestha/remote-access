@@ -6,10 +6,14 @@ export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const profiles = await db.profile.findMany({
-    where: { page: { is: { isPublished: true } } },
+    where: { pages: { some: { isPublished: true } } },
     select: {
       username: true,
-      page: { select: { updatedAt: true } },
+      pages: {
+        where: { isPublished: true },
+        orderBy: [{ navOrder: 'asc' }, { createdAt: 'asc' }],
+        select: { slug: true, pageType: true, updatedAt: true },
+      },
       user: {
         select: {
           createdAt: true,
@@ -35,11 +39,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: 'https://pageory.app/terms', changeFrequency: 'monthly', priority: 0.3 },
     ...indexableProfiles
       .filter(({ username }) => username.toLowerCase() !== 'demo')
-      .map(({ username, page }) => ({
-        url: `https://pageory.app/${encodeURIComponent(username)}`,
-        lastModified: page?.updatedAt,
-        changeFrequency: 'weekly' as const,
-        priority: 0.7,
-      })),
+      .flatMap(({ username, pages }) =>
+        pages.map((page) => {
+          const base = `https://pageory.app/${encodeURIComponent(username)}`;
+          const isHome = page.pageType === 'HOME' || page.slug === '';
+          return {
+            url: isHome ? base : `${base}/${encodeURIComponent(page.slug)}`,
+            lastModified: page.updatedAt,
+            changeFrequency: 'weekly' as const,
+            priority: isHome ? 0.7 : 0.6,
+          };
+        }),
+      ),
   ];
 }

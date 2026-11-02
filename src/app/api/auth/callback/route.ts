@@ -60,6 +60,10 @@ export async function GET(request: Request) {
         await prisma.page.create({
           data: {
             profileId: profile.id,
+            title: profile.displayName,
+            slug: '',
+            pageType: 'HOME',
+            navOrder: 0,
             draftConfig: {},
           }
         })

@@ -5,6 +5,11 @@ import db from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import { getAvailableTemplates, getTemplateDetails, type TemplateCategory } from '@/lib/page-engine/template-catalog';
 import { PageDocumentSchema } from '@/lib/page-engine/schemas';
+import {
+  extractWebsiteConfig,
+  toPageContentDocument,
+} from '@/lib/page-engine/site-config';
+import { findHomePage, publishWebsiteDraft } from '@/lib/page-engine/site-store';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
@@ -26,21 +31,45 @@ export async function chooseOnboardingTemplate(templateId: string) {
   if (!user.profile) throw new Error('Your profile is not ready yet.');
   const template = getTemplateDetails(templateId);
   if (!template) throw new Error('Choose an available template.');
+  const home = await findHomePage(user.profile.id);
+  const siteConfig = extractWebsiteConfig(template.document);
 
-  // Pre-seed the page with the chosen template right away
+  // Pre-seed the homepage with the chosen template right away. The shared
+  // website design is stored once and reused by every future page.
   await db.$transaction(async (tx) => {
     await tx.profile.update({
       where: { id: user.profile!.id },
       data: { type: template.category },
     });
-    await tx.page.upsert({
+    if (home) {
+      await tx.page.update({
+        where: { id: home.id },
+        data: {
+          draftConfig: toPageContentDocument(template.document) as unknown as Prisma.InputJsonValue,
+          pageType: 'HOME',
+          slug: '',
+        },
+      });
+    } else {
+      await tx.page.create({
+        data: {
+          profileId: user.profile!.id,
+          title: user.profile!.displayName,
+          slug: '',
+          pageType: 'HOME',
+          navOrder: 0,
+          draftConfig: toPageContentDocument(template.document) as unknown as Prisma.InputJsonValue,
+        },
+      });
+    }
+    await tx.website.upsert({
       where: { profileId: user.profile!.id },
       create: {
         profileId: user.profile!.id,
-        draftConfig: template.document as unknown as Prisma.InputJsonValue,
+        draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
       },
       update: {
-        draftConfig: template.document as unknown as Prisma.InputJsonValue,
+        draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
       },
     });
   });
@@ -55,20 +84,43 @@ export async function selectOnboardingTemplateDirect(templateId: string) {
   if (!user.profile) throw new Error('Your profile is not ready yet.');
   const template = getTemplateDetails(templateId);
   if (!template) throw new Error('Choose an available template.');
+  const home = await findHomePage(user.profile.id);
+  const siteConfig = extractWebsiteConfig(template.document);
 
   await db.$transaction(async (tx) => {
     await tx.profile.update({
       where: { id: user.profile!.id },
       data: { type: template.category },
     });
-    await tx.page.upsert({
+    if (home) {
+      await tx.page.update({
+        where: { id: home.id },
+        data: {
+          draftConfig: toPageContentDocument(template.document) as unknown as Prisma.InputJsonValue,
+          pageType: 'HOME',
+          slug: '',
+        },
+      });
+    } else {
+      await tx.page.create({
+        data: {
+          profileId: user.profile!.id,
+          title: user.profile!.displayName,
+          slug: '',
+          pageType: 'HOME',
+          navOrder: 0,
+          draftConfig: toPageContentDocument(template.document) as unknown as Prisma.InputJsonValue,
+        },
+      });
+    }
+    await tx.website.upsert({
       where: { profileId: user.profile!.id },
       create: {
         profileId: user.profile!.id,
-        draftConfig: template.document as unknown as Prisma.InputJsonValue,
+        draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
       },
       update: {
-        draftConfig: template.document as unknown as Prisma.InputJsonValue,
+        draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
       },
     });
   });
@@ -115,15 +167,44 @@ export async function saveOnboardingPersonalization(input: unknown) {
   const validated = PageDocumentSchema.safeParse(doc);
   if (!validated.success) return { error: 'We could not prepare this template. Please choose another.' };
 
+  const home = await findHomePage(user.profile.id);
+  const pageContent = toPageContentDocument(validated.data);
+  const siteConfig = extractWebsiteConfig(validated.data);
+
   await db.$transaction(async (tx) => {
     await tx.profile.update({
       where: { id: user.profile!.id },
       data: { displayName, type: template.category, username: username.toLowerCase() },
     });
-    await tx.page.upsert({
+    if (home) {
+      await tx.page.update({
+        where: { id: home.id },
+        data: {
+          title: displayName,
+          draftConfig: pageContent as unknown as Prisma.InputJsonValue,
+        },
+      });
+    } else {
+      await tx.page.create({
+        data: {
+          profileId: user.profile!.id,
+          title: displayName,
+          slug: '',
+          pageType: 'HOME',
+          navOrder: 0,
+          draftConfig: pageContent as unknown as Prisma.InputJsonValue,
+        },
+      });
+    }
+    await tx.website.upsert({
       where: { profileId: user.profile!.id },
-      create: { profileId: user.profile!.id, draftConfig: validated.data as unknown as Prisma.InputJsonValue },
-      update: { draftConfig: validated.data as unknown as Prisma.InputJsonValue },
+      create: {
+        profileId: user.profile!.id,
+        draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
+      },
+      update: {
+        draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
+      },
     });
   });
   revalidatePath('/dashboard');
@@ -150,7 +231,7 @@ export async function saveOnboardingUsername(value: string) {
   if (username !== user.profile.username && !(await authService.isUsernameAvailable(username))) {
     return { error: 'That username is already taken. Try another.' };
   }
-  const page = await db.page.findUnique({ where: { profileId: user.profile.id } });
+  const page = await findHomePage(user.profile.id);
   if (!page || !page.draftConfig || !Object.keys(page.draftConfig as object).length) {
     return { error: 'Your page draft is missing. Please return to the editor and try again.' };
   }
@@ -173,6 +254,7 @@ export async function saveOnboardingUsername(value: string) {
   } catch {
     return { error: 'That username was just claimed. Try another.' };
   }
+  if (alreadyActivated) await publishWebsiteDraft(user.profile.id);
   revalidatePath('/dashboard');
   revalidatePath(`/${username}`);
   if (alreadyActivated) redirect('/dashboard');
@@ -224,7 +306,7 @@ export async function requestPlanAccess(planId: 'smart_page' | 'smart_page_ai', 
   const user = await authService.requireUser();
   if (!user.profile) return { error: 'Your Pageory profile is not ready yet.' };
   if ((planId !== 'smart_page' && planId !== 'smart_page_ai') || !['trial', 'plan'].includes(requestType)) return { error: 'Choose a valid plan request.' };
-  const page = await db.page.findUnique({ where: { profileId: user.profile.id } });
+  const page = await findHomePage(user.profile.id);
   if (!page || !Object.keys(page.draftConfig as object).length) return { error: 'Finish preparing your Pageory page before requesting access.' };
   if (requestType === 'trial' && !(await checkTrialEligibility()).eligible) return { error: 'This account is not eligible for another free trial.' };
   const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);

@@ -90,10 +90,15 @@ export const authService = {
         },
       });
 
-      // Auto-create their first page
+      // Auto-create their homepage. Additional pages are created from the
+      // dashboard once the business is ready.
       await tx.page.create({
         data: {
           profileId: profile.id,
+          title: data.displayName,
+          slug: '',
+          pageType: 'HOME',
+          navOrder: 0,
           draftConfig: {},
         },
       });

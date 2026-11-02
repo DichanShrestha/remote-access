@@ -37,7 +37,7 @@ export default async function SettingsPage({
 
   const profile = await db.profile.findUnique({
     where: { userId: user.id },
-    include: { page: true },
+    include: { pages: { select: { id: true } } },
   });
 
   const account = await db.user.findUnique({
@@ -170,7 +170,7 @@ export default async function SettingsPage({
         displayName: profile?.displayName || null,
         username: profile?.username || null,
       }}
-      hasPage={Boolean(profile?.page)}
+      hasPage={Boolean(profile?.pages.length)}
       subscription={capabilities.creator ? formattedSubscription : null}
       usageMetrics={capabilities.creator ? usageMetrics : emptyUsageMetrics}
     />

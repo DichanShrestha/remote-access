@@ -1289,15 +1289,15 @@ function formatBytes(bytes: number): string {
             </div>
 
             <div className="space-y-4">
-              {/* Delete Page */}
+              {/* Delete website */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-white border border-[#FADCDC] rounded-xl">
                 <div>
                   <h3 className="text-sm font-semibold text-[#171717]">
-                    Delete Page
+                    Delete Website
                   </h3>
                   <p className="text-xs text-[#737373] mt-0.5 max-w-md">
-                    Permanently unpublish and remove your Pageory. Your
-                    account and login remain active.
+                    Permanently unpublish and remove your website and all its
+                    pages. Your account and login remain active.
                   </p>
                 </div>
 
@@ -1306,7 +1306,7 @@ function formatBytes(bytes: number): string {
                   disabled={!hasPage}
                   className="px-4 py-2 bg-[#FDF3F3] hover:bg-[#FADCDC] text-[#D14F4F] border border-[#FADCDC] text-xs font-semibold rounded-xl transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  {hasPage ? "Delete Page" : "No Page to Delete"}
+                  {hasPage ? "Delete Website" : "No Website to Delete"}
                 </button>
               </div>
 
@@ -1348,11 +1348,11 @@ function formatBytes(bytes: number): string {
             </div>
 
             <h3 className="text-lg font-bold text-[#171717] mb-2">
-              Delete Your Page?
+              Delete Your Website?
             </h3>
             <p className="text-xs text-[#737373] leading-relaxed mb-6">
-              This will permanently delete your custom Pageory configuration
-              and unpublish your site. This action cannot be undone.
+              This will permanently delete every page on your website and
+              unpublish your site. This action cannot be undone.
             </p>
 
             {deletePageError && (
@@ -1381,7 +1381,7 @@ function formatBytes(bytes: number): string {
                 ) : (
                   <Trash2 size={14} />
                 )}
-                Confirm Delete Page
+                Confirm Delete Website
               </button>
             </div>
           </div>

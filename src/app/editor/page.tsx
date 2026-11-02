@@ -3,10 +3,12 @@ import db from '@/lib/prisma';
 import { EditorShell } from '@/components/editor/EditorShell';
 import { PageDocumentSchema } from '@/lib/page-engine/schemas';
 import { TEMPLATE_CREATOR_PROFILE, TEMPLATES_MAP } from '@/lib/page-engine/templates';
+import { applyWebsiteConfig } from '@/lib/page-engine/site-config';
+import { getWebsiteConfig } from '@/lib/page-engine/site-store';
 
 const DEFAULT_DEMO = TEMPLATE_CREATOR_PROFILE;
 
-export default async function EditorPage({ searchParams }: { searchParams: Promise<{ demo?: string }> }) {
+export default async function EditorPage({ searchParams }: { searchParams: Promise<{ demo?: string; page?: string }> }) {
   const params = await searchParams;
   let user;
   try {
@@ -23,26 +25,35 @@ export default async function EditorPage({ searchParams }: { searchParams: Promi
 
   const profile = await db.profile.findUnique({
     where: { userId: user.id },
-    include: { page: true }
+    include: {
+      pages: { orderBy: [{ navOrder: 'asc' }, { createdAt: 'asc' }] },
+    },
   });
 
   if (!profile) {
     return <EditorShell initialDocument={DEFAULT_DEMO} pageId="demo-id" />;
   }
 
-  if (!profile.page) {
+  const home = profile.pages.find((page) => page.pageType === 'HOME' || page.slug === '');
+  const target = params.page ? profile.pages.find((page) => page.id === params.page) : home;
+
+  if (!target) {
     return <div>No page found for this profile.</div>;
   }
 
-  let doc = PageDocumentSchema.safeParse(profile.page.draftConfig);
+  let doc = PageDocumentSchema.safeParse(target.draftConfig);
   if (!doc.success) {
     doc = PageDocumentSchema.safeParse(DEFAULT_DEMO);
   }
 
+  const pageDocument = doc.success ? doc.data : DEFAULT_DEMO;
+  const { config } = await getWebsiteConfig(profile.id, 'draft', pageDocument);
+
   return (
     <EditorShell
-      initialDocument={doc.success ? doc.data : DEFAULT_DEMO}
-      pageId={profile.page.id}
+      key={target.id}
+      initialDocument={applyWebsiteConfig(pageDocument, config)}
+      pageId={target.id}
     />
   );
 }

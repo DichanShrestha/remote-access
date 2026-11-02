@@ -5,18 +5,43 @@ import type { Prisma } from '@prisma/client';
 import { PageDocumentSchema } from '@/lib/page-engine/schemas';
 import { authService } from '@/services/auth';
 import { revalidatePath } from 'next/cache';
+import { buildPagePath } from '@/lib/page-engine/page-types';
+import {
+  extractWebsiteConfig,
+  toPageContentDocument,
+} from '@/lib/page-engine/site-config';
 import { randomUUID } from 'crypto';
 import { storageService } from '@/lib/storage/service';
 import { getUserEntitlement, requirePageAccess } from '@/lib/billing/entitlements';
 
-async function removeUnusedPageMedia(userId: string, configs: unknown[]) {
+async function removeUnusedPageMedia(userId: string, profileId: string) {
+  const [pages, website] = await Promise.all([
+    db.page.findMany({
+      where: { profileId },
+      select: { draftConfig: true, publishedConfig: true },
+    }),
+    db.website.findUnique({
+      where: { profileId },
+      select: { draftConfig: true, publishedConfig: true },
+    }),
+  ]);
+
   const used = new Set<string>();
   const collect = (value: unknown) => {
     if (typeof value === 'string') for (const match of value.matchAll(/\/api\/media\/([A-Za-z0-9_-]+)/g)) used.add(match[1]);
     else if (Array.isArray(value)) value.forEach(collect);
     else if (value && typeof value === 'object') Object.values(value).forEach(collect);
   };
-  configs.forEach(collect);
+
+  for (const page of pages) {
+    collect(page.draftConfig);
+    collect(page.publishedConfig);
+  }
+  if (website) {
+    collect(website.draftConfig);
+    collect(website.publishedConfig);
+  }
+
   const assets = await db.pageMediaAsset.findMany({ where: { userId } });
   const unused = assets.filter((asset) => !used.has(asset.id));
   if (!unused.length) return;
@@ -26,6 +51,13 @@ async function removeUnusedPageMedia(userId: string, configs: unknown[]) {
     db.usage.updateMany({ where: { userId }, data: { pageMediaBytes: { decrement: unused.reduce((sum, asset) => sum + asset.sizeBytes, BigInt(0)) } } }),
   ]);
   revalidatePath('/dashboard/settings');
+}
+
+function revalidatePublicPage(username: string, slug: string) {
+  revalidatePath(buildPagePath(username, slug));
+  revalidatePath(`/${username}`);
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/pages');
 }
 
 export async function uploadPageMedia(formData: FormData) {
@@ -81,13 +113,28 @@ export async function saveDraftConfig(pageId: string, rawConfig: unknown) {
     throw new Error('Unauthorized');
   }
 
-  await db.page.update({
-    where: { id: pageId },
-    data: {
-      draftConfig: parsed.data as unknown as Prisma.InputJsonValue,
-    }
+  const pageContent = toPageContentDocument(parsed.data);
+  const siteConfig = extractWebsiteConfig(parsed.data);
+
+  await db.$transaction(async (tx) => {
+    await tx.page.update({
+      where: { id: pageId },
+      data: {
+        draftConfig: pageContent as unknown as Prisma.InputJsonValue,
+      }
+    });
+    await tx.website.upsert({
+      where: { profileId: page.profileId },
+      create: {
+        profileId: page.profileId,
+        draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
+      },
+      update: {
+        draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
+      },
+    });
   });
-  await removeUnusedPageMedia(user.id, [parsed.data, page.publishedConfig]);
+  await removeUnusedPageMedia(user.id, page.profileId);
 
   return { success: true };
 }
@@ -104,30 +151,63 @@ export async function publishDraftConfig(pageId: string, rawConfig: unknown) {
   });
   if (!page || page.profile.userId !== user.id) throw new Error('Unauthorized');
 
+  const pageContent = toPageContentDocument(parsed.data);
+  const siteConfig = extractWebsiteConfig(parsed.data);
+  const isHome = page.pageType === 'HOME' || page.slug === '';
+
+  const saveDrafts = async () => {
+    await db.$transaction(async (tx) => {
+      await tx.page.update({
+        where: { id: page.id },
+        data: { draftConfig: pageContent as unknown as Prisma.InputJsonValue },
+      });
+      await tx.website.upsert({
+        where: { profileId: page.profileId },
+        create: {
+          profileId: page.profileId,
+          draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
+        },
+        update: {
+          draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
+        },
+      });
+    });
+  };
+
   if (entitlement.trialExpired) {
-    await db.page.update({ where: { id: page.id }, data: { draftConfig: parsed.data as unknown as Prisma.InputJsonValue } });
+    await saveDrafts();
     return { redirectTo: '/dashboard/billing' };
   }
   const onboardingComplete = entitlement.onTrial || entitlement.paidActive;
 
   if (onboardingComplete) {
-    await db.page.update({
-      where: { id: page.id },
-      data: {
-        draftConfig: parsed.data as unknown as Prisma.InputJsonValue,
-        publishedConfig: parsed.data as unknown as Prisma.InputJsonValue,
-        isPublished: true,
-      },
+    await db.$transaction(async (tx) => {
+      await tx.page.update({
+        where: { id: page.id },
+        data: {
+          draftConfig: pageContent as unknown as Prisma.InputJsonValue,
+          publishedConfig: pageContent as unknown as Prisma.InputJsonValue,
+          isPublished: true,
+        },
+      });
+      await tx.website.upsert({
+        where: { profileId: page.profileId },
+        create: {
+          profileId: page.profileId,
+          draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
+          publishedConfig: siteConfig as unknown as Prisma.InputJsonValue,
+        },
+        update: {
+          draftConfig: siteConfig as unknown as Prisma.InputJsonValue,
+          publishedConfig: siteConfig as unknown as Prisma.InputJsonValue,
+        },
+      });
     });
-    await removeUnusedPageMedia(user.id, [parsed.data]);
-    revalidatePath('/dashboard');
-    revalidatePath(`/${page.profile.username}`);
-    return { redirectTo: '/dashboard' };
+    await removeUnusedPageMedia(user.id, page.profileId);
+    revalidatePublicPage(page.profile.username, page.slug);
+    return { redirectTo: isHome ? '/dashboard' : '/dashboard/pages' };
   }
 
-  await db.page.update({
-    where: { id: page.id },
-    data: { draftConfig: parsed.data as unknown as Prisma.InputJsonValue },
-  });
+  await saveDrafts();
   return { redirectTo: '/onboarding/plan' };
 }

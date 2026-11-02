@@ -7,18 +7,21 @@ import { getPublicOrigin } from '@/lib/public-origin';
 import { cookies, headers } from 'next/headers';
 import { getInitialPricingMode, PRICING_MODE_COOKIE } from '@/lib/pricing';
 import { getSmartPageEntitlement } from '@/lib/tier-limits';
+import { findHomePage } from '@/lib/page-engine/site-store';
 
 export default async function OnboardingPlanPage() {
   const user = await authService.requireUser();
-  const profile = await db.profile.findUnique({ where: { userId: user.id }, include: { page: true } });
-  if (!profile?.page || !Object.keys(profile.page.draftConfig as object).length) redirect('/onboarding');
+  const profile = await db.profile.findUnique({ where: { userId: user.id } });
+  if (!profile) redirect('/onboarding');
+  const home = await findHomePage(profile.id);
+  if (!home || !Object.keys(home.draftConfig as object).length) redirect('/onboarding');
   const account = await db.user.findUnique({
     where: { id: user.id },
     include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } },
   });
   const entitlement = account ? getSmartPageEntitlement(account) : null;
   if (entitlement?.paidActive || entitlement?.onTrial) {
-    redirect(profile.page.isPublished ? '/dashboard' : '/onboarding/claim');
+    redirect(home.isPublished ? '/dashboard' : '/onboarding/claim');
   }
   const pendingManualPurchase = await db.affiliatePurchase.findFirst({
     where: { customerId: user.id, paymentProvider: 'manual', status: 'pending' },

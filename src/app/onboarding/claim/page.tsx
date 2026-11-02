@@ -4,13 +4,16 @@ import { redirect } from 'next/navigation';
 import { ClaimUsername } from '@/components/onboarding/ClaimUsername';
 import { getPublicOrigin } from '@/lib/public-origin';
 import { getSmartPageEntitlement } from '@/lib/tier-limits';
+import { findHomePage } from '@/lib/page-engine/site-store';
 
 export default async function ClaimUsernamePage() {
   const user = await authService.requireUser();
-  const profile = await db.profile.findUnique({ where: { userId: user.id }, include: { page: true } });
-  if (!profile?.page) redirect('/onboarding');
-  if (profile.page.isPublished) redirect('/dashboard');
-  if (!profile.page.draftConfig || !Object.keys(profile.page.draftConfig as object).length) redirect('/onboarding');
+  const profile = await db.profile.findUnique({ where: { userId: user.id } });
+  if (!profile) redirect('/onboarding');
+  const home = await findHomePage(profile.id);
+  if (!home) redirect('/onboarding');
+  if (home.isPublished) redirect('/dashboard');
+  if (!home.draftConfig || !Object.keys(home.draftConfig as object).length) redirect('/onboarding');
   const account = await db.user.findUnique({
     where: { id: user.id },
     include: { subscriptions: { orderBy: { updatedAt: 'desc' }, take: 1 } },
