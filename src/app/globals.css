@@ -131,6 +131,215 @@ body {
 }
 
 
+/* ── Editorial article typography ─────────────────────────────────────────
+   Shared by the blog editor, the studio preview and public article pages so
+   the writing surface matches what readers actually see. */
+.article-prose {
+  color: #2d2e28;
+  font-family: var(--font-geist), Arial, Helvetica, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  letter-spacing: -0.003em;
+  overflow-wrap: anywhere;
+}
+
+.article-prose > * + * {
+  margin-top: 1.35em;
+}
+
+.article-prose h2,
+.article-prose h3 {
+  color: #1b1c17;
+  font-family: var(--font-instrument), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+
+.article-prose h2 {
+  margin-top: 2.3em;
+  font-size: clamp(1.8rem, 3.2vw, 2.35rem);
+}
+
+.article-prose h3 {
+  margin-top: 1.9em;
+  font-size: clamp(1.35rem, 2.2vw, 1.6rem);
+}
+
+.article-prose h2:first-child,
+.article-prose h3:first-child {
+  margin-top: 0;
+}
+
+.article-prose p {
+  margin-bottom: 0;
+}
+
+.article-prose a {
+  color: #1b1c17;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: #b9b4a6;
+  transition: text-decoration-color 160ms ease;
+}
+
+.article-prose a:hover {
+  text-decoration-color: #1b1c17;
+}
+
+.article-prose strong {
+  font-weight: 650;
+  color: #1f201b;
+}
+
+.article-prose em {
+  font-style: italic;
+}
+
+.article-prose blockquote {
+  margin: 2.1em 0;
+  padding: 0.1em 0 0.1em 1.35rem;
+  border-left: 2px solid #c9c3b4;
+  color: #4b4c44;
+  font-family: var(--font-instrument), Georgia, serif;
+  font-size: clamp(1.35rem, 2.3vw, 1.6rem);
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+}
+
+.article-prose blockquote p {
+  margin: 0;
+}
+
+.article-prose ul,
+.article-prose ol {
+  padding-left: 1.35em;
+}
+
+.article-prose ul {
+  list-style: disc;
+}
+
+.article-prose ol {
+  list-style: decimal;
+}
+
+.article-prose li {
+  padding-left: 0.15em;
+}
+
+.article-prose li + li {
+  margin-top: 0.45em;
+}
+
+.article-prose li > p {
+  margin: 0;
+}
+
+.article-prose hr {
+  margin: 3em auto;
+  width: 4.5rem;
+  border: 0;
+  border-top: 1px solid #d8d3c8;
+}
+
+.article-prose code {
+  border-radius: 4px;
+  background: #f1efe8;
+  padding: 0.12em 0.36em;
+  font-size: 0.88em;
+}
+
+.article-prose pre {
+  overflow-x: auto;
+  border-radius: 6px;
+  background: #20211c;
+  padding: 1.15rem 1.25rem;
+  color: #f5f3ec;
+  font-size: 0.84em;
+  line-height: 1.7;
+}
+
+.article-prose pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: 1em;
+}
+
+.article-prose img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.article-prose figure {
+  margin: 2.1em 0;
+}
+
+.article-prose figcaption {
+  margin-top: 0.65em;
+  color: #7f8077;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.article-prose mark {
+  border-radius: 2px;
+  background: #f1e4c6;
+  padding: 0 0.14em;
+  color: inherit;
+}
+
+.article-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+
+.article-prose th,
+.article-prose td {
+  border: 1px solid #e2dfd6;
+  padding: 0.55em 0.7em;
+  text-align: left;
+}
+
+.article-prose th {
+  background: #f7f5ee;
+  font-weight: 600;
+}
+
+/* Tiptap writing surface */
+.tiptap {
+  min-height: 42vh;
+  outline: none;
+}
+
+.tiptap:focus {
+  outline: none;
+}
+
+.tiptap p.is-editor-empty:first-child::before,
+.tiptap h2.is-empty::before,
+.tiptap h3.is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: #aaa79c;
+  pointer-events: none;
+}
+
+.tiptap .ProseMirror-selectednode {
+  outline: 2px solid #292a25;
+  outline-offset: 3px;
+}
+
+.tiptap .ProseMirror-gapcursor::after {
+  border-top-color: #292a25;
+}
+
 .page-component-frame[data-section-padding] > :is(section, footer, header, div, nav) {
   padding: var(--section-padding) !important;
 }

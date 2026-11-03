@@ -117,7 +117,7 @@ export function isBlogArticleDue(article: {
 /* -------------------------------------------------------------------------- */
 
 const ALLOWED_TAGS = [
-  'p', 'br', 'h2', 'h3', 'h4', 'strong', 'b', 'em', 'i', 'u', 's', 'a',
+  'p', 'br', 'h2', 'h3', 'h4', 'strong', 'b', 'em', 'i', 'u', 's', 'mark', 'a',
   'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'hr', 'img', 'figure',
   'figcaption', 'iframe', 'video', 'source',
 ];
@@ -218,7 +218,7 @@ export function sanitizeBlogInlineHtml(value: string | null | undefined): string
   if (!value) return '';
   ensureSanitizerHooks();
   const clean = DOMPurify.sanitize(value, {
-    ALLOWED_TAGS: ['strong', 'b', 'em', 'i', 'u', 's', 'a', 'br', 'code'],
+    ALLOWED_TAGS: ['strong', 'b', 'em', 'i', 'u', 's', 'mark', 'a', 'br', 'code'],
     ALLOWED_ATTR: ['href', 'target', 'rel'],
     ALLOW_ARIA_ATTR: false,
     ALLOW_DATA_ATTR: false,

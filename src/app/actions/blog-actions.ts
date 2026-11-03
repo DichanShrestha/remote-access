@@ -16,6 +16,10 @@ import {
   unpublishBlogArticle as unpublishBlogArticleRecord,
 } from '@/lib/blog-service';
 import { removeUnusedPageMedia } from '@/app/editor/actions';
+import { parseDocument, parseTXT } from '@/lib/documents/parser';
+
+const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
+const MAX_IMPORT_CHARS = 120_000;
 
 const saveArticleSchema = z.object({
   articleId: z.string().min(1),
@@ -57,14 +61,93 @@ export async function createBlogArticleAction() {
     const result = await createBlogArticleRecord(user.profile.id);
     if (!result.ok) return { error: result.error, code: result.code };
     revalidatePath('/dashboard/blog');
+    const article = result.article;
     return {
       success: true,
-      articleId: result.article.id,
-      slug: result.article.slug,
+      articleId: article.id,
+      slug: article.slug,
+      article: {
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        publicSlug: article.publicSlug,
+        excerpt: article.excerpt,
+        bodyHtml: article.bodyHtml,
+        featuredImageUrl: article.featuredImageUrl,
+        featuredImageAlt: article.featuredImageAlt,
+        categories: article.categories,
+        tags: article.tags,
+        authorName: article.authorName,
+        authorAvatarUrl: article.authorAvatarUrl,
+        seoTitle: article.seoTitle,
+        seoDescription: article.seoDescription,
+        canonicalUrl: article.canonicalUrl,
+        ogImage: article.ogImage,
+        noindex: article.noindex,
+        status: article.status,
+        publishedAt: article.publishedAt?.toISOString() || null,
+        scheduledFor: article.scheduledFor?.toISOString() || null,
+        updatedAt: article.updatedAt.toISOString(),
+      },
     };
   } catch (error) {
     console.error('Create blog article error:', error);
     return { error: 'The article could not be created. Please try again.' };
+  }
+}
+
+/**
+ * Extract plain text from an imported draft (.pdf, .docx, .txt, .md).
+ *
+ * The client converts the returned text into editable paragraphs; this action
+ * never writes to the article on its own.
+ */
+type ImportBlogDraftResult =
+  | { success: true; text: string; fileName: string }
+  | { success: false; error: string };
+
+export async function importBlogDraftAction(formData: FormData): Promise<ImportBlogDraftResult> {
+  const user = await authService.requireCreator();
+  await requirePageAccess(user.id);
+  if (!user.profile) return { success: false, error: 'Your profile is not ready yet.' };
+
+  const file = formData.get('file');
+  if (!(file instanceof File)) return { success: false, error: 'Choose a file to import.' };
+  if (file.size === 0) return { success: false, error: 'That file is empty.' };
+  if (file.size > MAX_IMPORT_BYTES) return { success: false, error: 'Import a file smaller than 10 MB.' };
+
+  const extension = file.name.split('.').pop()?.toLowerCase() || '';
+  if (!['pdf', 'docx', 'txt', 'md'].includes(extension)) {
+    return { success: false, error: 'Import a PDF, DOCX, TXT or Markdown file.' };
+  }
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const text = extension === 'md'
+      ? parseTXT(buffer)
+      : await parseDocument(buffer, file.name);
+
+    const trimmed = text.replace(/\u0000/g, '').replace(/\r\n/g, '\n').trim();
+    if (trimmed.length < 40) {
+      return {
+        success: false,
+        error: 'We could not find enough text in that file. Try pasting the draft instead.',
+      };
+    }
+
+    return {
+      success: true,
+      text: trimmed.slice(0, MAX_IMPORT_CHARS),
+      fileName: file.name,
+    };
+  } catch (error) {
+    console.error('Import blog draft error:', error);
+    return {
+      success: false,
+      error: error instanceof Error && error.message.startsWith('Unsupported')
+        ? error.message
+        : 'That file could not be read. Try a different file or paste the draft instead.',
+    };
   }
 }
 

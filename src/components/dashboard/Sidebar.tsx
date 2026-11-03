@@ -20,6 +20,7 @@ import {
   PanelLeftOpen,
   LogOut,
   Files
+  ,FileText
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -37,6 +38,7 @@ const CREATOR_NAV_GROUPS = [
     items: [
       { name: 'Page Editor', href: '/editor', icon: PenTool },
       { name: 'Pages', href: '/dashboard/pages', icon: Files },
+      { name: 'Blog', href: '/dashboard/blog', icon: FileText },
       { name: 'Templates', href: '/dashboard/templates', icon: Globe },
     ]
   },
@@ -75,7 +77,9 @@ export function Sidebar({ isAdmin = false, isCreator = true, isAffiliate = false
     router.refresh();
   };
 
-  const isEditor = pathname?.startsWith('/editor');
+  // Focus workspaces (the page editor and the blog studio) keep the sidebar
+  // compact by default and reveal the full navigation only on hover.
+  const isEditor = pathname?.startsWith('/editor') || pathname?.startsWith('/dashboard/blog');
 
   const navGroups = isCreator
     ? CREATOR_NAV_GROUPS.map((group) => group.label === 'ACCOUNT' ? {

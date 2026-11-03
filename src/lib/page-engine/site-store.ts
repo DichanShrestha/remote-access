@@ -5,7 +5,9 @@ import {
   WebsiteConfig,
   extractWebsiteConfig,
   parseWebsiteConfig,
+  toPageContentDocument,
 } from './site-config';
+import { buildPageDocument } from './page-layouts';
 
 export async function findHomePage(profileId: string) {
   return db.page.findFirst({
@@ -83,5 +85,56 @@ export async function publishWebsiteDraft(profileId: string) {
   return db.website.update({
     where: { id: website.id },
     data: { publishedConfig: website.draftConfig as Prisma.InputJsonValue },
+  });
+}
+
+export async function findBlogPage(profileId: string) {
+  return db.page.findFirst({
+    where: {
+      profileId,
+      OR: [{ pageType: 'BLOG' }, { slug: 'blog' }],
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+}
+
+export async function ensureBlogIndexPage(profileId: string) {
+  const existing = await findBlogPage(profileId);
+  if (existing) return existing;
+
+  const profile = await db.profile.findUnique({
+    where: { id: profileId },
+    select: { id: true, displayName: true, username: true, bio: true },
+  });
+  if (!profile) return null;
+
+  const home = await findHomePage(profileId);
+  const homeDocument = parsePageDocument(home?.draftConfig);
+  const { config: siteConfig } = await getWebsiteConfig(profileId, 'draft', homeDocument);
+
+  const document = buildPageDocument({
+    type: 'BLOG',
+    layoutId: 'list',
+    pageTitle: 'Blog',
+    businessName: profile.displayName || profile.username || 'Our Site',
+    bio: profile.bio,
+    siteConfig,
+  });
+
+  const maxOrder = await db.page.aggregate({
+    where: { profileId },
+    _max: { navOrder: true },
+  });
+
+  return db.page.create({
+    data: {
+      profileId,
+      title: 'Blog',
+      slug: 'blog',
+      pageType: 'BLOG',
+      showInNavigation: true,
+      navOrder: (maxOrder._max.navOrder ?? 0) + 1,
+      draftConfig: toPageContentDocument(document) as unknown as Prisma.InputJsonValue,
+    },
   });
 }
