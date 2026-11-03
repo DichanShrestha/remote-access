@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ExternalLink, Maximize2 } from "lucide-react";
+import { Check, ExternalLink, Maximize2 } from "lucide-react";
 
 interface MarkdownMessageProps {
   content: string;
@@ -11,33 +11,52 @@ interface MarkdownMessageProps {
   onBookingClick?: (url: string) => void;
 }
 
-/**
- * Parses and renders inline markdown tokens:
- * - **bold** or __bold__
- * - *italic* or _italic_
- * - `code`
- * - [label](url)
- * - bare URLs (https://...)
- */
-function renderInline(
-  text: string, 
-  isUser = false, 
-  bookingLink?: string | null, 
-  onBookingClick?: (url: string) => void
-): React.ReactNode {
-  // Regex pattern matching:
-  // 1. `code`
-  // 2. **bold** or __bold__
-  // 3. [link](url)
-  // 4. bare url: (https?:\/\/[^\s<)]+)
-  // 5. *italic* or _italic_
-  const tokenRegex = /(`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s<)]+|\*[^*]+\*|_[^_]+_)/g;
+type InlineContext = {
+  isUser: boolean;
+  bookingLink?: string | null;
+  onBookingClick?: (url: string) => void;
+};
 
-  const parts = text.split(tokenRegex);
+type ListItemNode = {
+  text: string;
+  ordered: boolean;
+  checked?: boolean;
+  children: ListItemNode[];
+};
+
+type Alignment = "left" | "center" | "right";
+
+type Block =
+  | { type: "paragraph"; lines: string[] }
+  | { type: "heading"; level: number; text: string }
+  | { type: "code"; language: string; code: string }
+  | { type: "quote"; lines: string[] }
+  | { type: "list"; items: ListItemNode[] }
+  | { type: "table"; header: string[]; alignments: Alignment[]; rows: string[][] }
+  | { type: "hr" };
+
+/* -------------------------------------------------------------------------- */
+/* Inline formatting                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Parses inline markdown tokens:
+ * - `code`
+ * - ***bold italic***, **bold**, __bold__
+ * - *italic*, _italic_
+ * - ~~strikethrough~~
+ * - [label](url)
+ * - bare https:// URLs (with trailing punctuation preserved)
+ */
+function renderInline(text: string, context: InlineContext): React.ReactNode {
+  const { isUser, bookingLink, onBookingClick } = context;
 
   const isBookingUrl = (testUrl: string) => {
     if (!testUrl) return false;
-    if (bookingLink && (testUrl === bookingLink || testUrl.startsWith(bookingLink) || bookingLink.startsWith(testUrl))) {
+    if (
+      bookingLink &&
+      (testUrl === bookingLink || testUrl.startsWith(bookingLink) || bookingLink.startsWith(testUrl))
+    ) {
       return true;
     }
     return false;
@@ -49,16 +68,27 @@ function renderInline(
     }
   };
 
+  const tokenRegex =
+    /(`[^`]+`|\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|__[^_]+__|~~[^~]+~~|\[[^\]]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s<)]+|\*[^*\s][^*]*\*|_[^_\s][^_]*_)/g;
+
+  const parts = text.split(tokenRegex);
+
+  const linkClass = isUser
+    ? "font-medium text-inherit underline decoration-white/40 underline-offset-2 transition hover:decoration-white"
+    : "font-medium text-inherit underline decoration-current/30 underline-offset-2 transition hover:decoration-current";
+
   return parts.map((part, index) => {
     if (!part) return null;
 
-    // Inline code: `code`
+    // Inline code
     if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
       return (
         <code
           key={index}
-          className={`px-1.5 py-0.5 rounded font-mono text-[0.88em] ${
-            isUser ? "bg-white/20 text-white" : "bg-black/10 dark:bg-white/10 text-inherit"
+          className={`rounded-md px-1.5 py-0.5 font-mono text-[0.88em] ${
+            isUser
+              ? "bg-white/20 text-white"
+              : "bg-black/[0.06] text-slate-800 dark:bg-white/10 dark:text-slate-100"
           }`}
         >
           {part.slice(1, -1)}
@@ -66,23 +96,40 @@ function renderInline(
       );
     }
 
-    // Bold: **text** or __text__
+    // Bold italic
+    if (part.startsWith("***") && part.endsWith("***") && part.length > 6) {
+      return (
+        <strong key={index} className="font-semibold">
+          <em>{renderInline(part.slice(3, -3), context)}</em>
+        </strong>
+      );
+    }
+
+    // Bold
     if (
       (part.startsWith("**") && part.endsWith("**") && part.length >= 4) ||
       (part.startsWith("__") && part.endsWith("__") && part.length >= 4)
     ) {
       return (
         <strong key={index} className="font-semibold text-inherit">
-          {part.slice(2, -2)}
+          {renderInline(part.slice(2, -2), context)}
         </strong>
       );
     }
 
-    // Link: [text](url)
+    // Strikethrough
+    if (part.startsWith("~~") && part.endsWith("~~") && part.length >= 4) {
+      return (
+        <span key={index} className="line-through opacity-75">
+          {renderInline(part.slice(2, -2), context)}
+        </span>
+      );
+    }
+
+    // [label](url)
     const linkMatch = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
     if (linkMatch) {
       const [, label, url] = linkMatch;
-      const isBooking = isBookingUrl(url);
       return (
         <a
           key={index}
@@ -90,50 +137,465 @@ function renderInline(
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => handleLinkClick(url)}
-          className={`underline font-medium hover:opacity-80 transition-opacity break-all text-inherit ${
-            isBooking ? "font-semibold underline decoration-2 underline-offset-2" : ""
-          }`}
+          className={`${linkClass} break-words ${isBookingUrl(url) ? "font-semibold underline-offset-[3px]" : ""}`}
         >
-          {label}
+          {renderInline(label, context)}
         </a>
       );
     }
 
-    // Bare URL: https://...
+    // Bare URL, keeping trailing punctuation outside the link
     if (/^https?:\/\/[^\s<)]+$/.test(part)) {
-      const isBooking = isBookingUrl(part);
+      const trailingMatch = part.match(/[.,;:!?]+$/);
+      const trailing = trailingMatch ? trailingMatch[0] : "";
+      const url = trailing ? part.slice(0, -trailing.length) : part;
       return (
-        <a
-          key={index}
-          href={part}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => handleLinkClick(part)}
-          className={`underline font-medium hover:opacity-80 transition-opacity break-all text-inherit ${
-            isBooking ? "font-semibold underline decoration-2 underline-offset-2" : ""
-          }`}
-        >
-          {part}
-        </a>
+        <React.Fragment key={index}>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => handleLinkClick(url)}
+            className={`${linkClass} break-all`}
+          >
+            {url}
+          </a>
+          {trailing}
+        </React.Fragment>
       );
     }
 
-    // Italic: *text* or _text_
+    // Italic
     if (
-      (part.startsWith("*") && part.endsWith("*") && part.length >= 2) ||
-      (part.startsWith("_") && part.endsWith("_") && part.length >= 2)
+      (part.startsWith("*") && part.endsWith("*") && part.length >= 3) ||
+      (part.startsWith("_") && part.endsWith("_") && part.length >= 3)
     ) {
       return (
         <em key={index} className="italic text-inherit">
-          {part.slice(1, -1)}
+          {renderInline(part.slice(1, -1), context)}
         </em>
       );
     }
 
-    // Regular plain text
     return <span key={index}>{part}</span>;
   });
 }
+
+/* -------------------------------------------------------------------------- */
+/* Block parsing                                                              */
+/* -------------------------------------------------------------------------- */
+
+function matchListItem(line: string): { indent: number; ordered: boolean; content: string } | null {
+  const match = line.match(/^(\s*)([-*+•]|\d{1,3}[.)])\s+(.*)$/);
+  if (!match) return null;
+  return {
+    indent: match[1].replace(/\t/g, "    ").length,
+    ordered: /^\d/.test(match[2]),
+    content: match[3].trimEnd(),
+  };
+}
+
+function splitTableRow(line: string): string[] {
+  let value = line.trim();
+  if (value.startsWith("|")) value = value.slice(1);
+  if (value.endsWith("|")) value = value.slice(0, -1);
+  return value.split("|").map((cell) => cell.trim());
+}
+
+function isTableSeparator(line: string): boolean {
+  const cells = splitTableRow(line);
+  return cells.length > 0 && cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+}
+
+function isBlockStart(lines: string[], index: number): boolean {
+  const line = lines[index];
+  if (!line.trim()) return true;
+  if (/^\s*```/.test(line)) return true;
+  if (/^#{1,6}\s+/.test(line)) return true;
+  if (/^\s*>/.test(line)) return true;
+  if (matchListItem(line)) return true;
+  if (/^\s*(?:[-*_]\s*){3,}$/.test(line)) return true;
+  if (index + 1 < lines.length && line.includes("|") && isTableSeparator(lines[index + 1])) return true;
+  return false;
+}
+
+function parseList(lines: string[], start: number): { items: ListItemNode[]; next: number } {
+  const first = matchListItem(lines[start]);
+  const items: ListItemNode[] = [];
+  const stack: Array<{ indent: number; items: ListItemNode[] }> = [
+    { indent: first ? first.indent : 0, items },
+  ];
+  let index = start;
+
+  while (index < lines.length) {
+    const line = lines[index];
+
+    if (!line.trim()) {
+      // A single blank line between list items should not split the list.
+      if (index + 1 < lines.length && matchListItem(lines[index + 1])) {
+        index += 1;
+        continue;
+      }
+      break;
+    }
+
+    const item = matchListItem(line);
+    if (!item) {
+      if (isBlockStart(lines, index)) break;
+      // Wrapped continuation of the previous item.
+      const level = stack[stack.length - 1];
+      const last = level.items[level.items.length - 1];
+      if (!last) break;
+      last.text = `${last.text} ${line.trim()}`;
+      index += 1;
+      continue;
+    }
+
+    while (stack.length > 1 && item.indent < stack[stack.length - 1].indent) {
+      stack.pop();
+    }
+
+    let level = stack[stack.length - 1];
+    if (item.indent > level.indent) {
+      const parent = level.items[level.items.length - 1];
+      if (parent) {
+        stack.push({ indent: item.indent, items: parent.children });
+        level = stack[stack.length - 1];
+      } else {
+        level.indent = item.indent;
+      }
+    }
+
+    const task = item.content.match(/^\[([ xX])\]\s+(.*)$/);
+    level.items.push({
+      text: task ? task[2] : item.content,
+      ordered: item.ordered,
+      checked: task ? task[1].toLowerCase() === "x" : undefined,
+      children: [],
+    });
+    index += 1;
+  }
+
+  return { items, next: index };
+}
+
+function parseBlocks(source: string): Block[] {
+  const lines = source.replace(/\r\n/g, "\n").split("\n");
+  const blocks: Block[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+
+    if (!line.trim()) {
+      index += 1;
+      continue;
+    }
+
+    // Fenced code block
+    const fence = line.match(/^\s*```\s*([A-Za-z0-9_+-]*)\s*$/);
+    if (fence) {
+      const codeLines: string[] = [];
+      index += 1;
+      while (index < lines.length && !/^\s*```\s*$/.test(lines[index])) {
+        codeLines.push(lines[index]);
+        index += 1;
+      }
+      if (index < lines.length) index += 1;
+      blocks.push({ type: "code", language: fence[1] || "", code: codeLines.join("\n") });
+      continue;
+    }
+
+    // Table
+    if (index + 1 < lines.length && line.includes("|") && isTableSeparator(lines[index + 1])) {
+      const header = splitTableRow(line);
+      const alignments: Alignment[] = splitTableRow(lines[index + 1]).map((cell) => {
+        const left = cell.startsWith(":");
+        const right = cell.endsWith(":");
+        if (left && right) return "center";
+        if (right) return "right";
+        return "left";
+      });
+      const rows: string[][] = [];
+      index += 2;
+      while (
+        index < lines.length &&
+        lines[index].trim() &&
+        lines[index].includes("|") &&
+        !isTableSeparator(lines[index])
+      ) {
+        rows.push(splitTableRow(lines[index]));
+        index += 1;
+      }
+      blocks.push({ type: "table", header, alignments, rows });
+      continue;
+    }
+
+    // Heading
+    const heading = line.match(/^(#{1,6})\s+(.*)$/);
+    if (heading) {
+      blocks.push({ type: "heading", level: heading[1].length, text: heading[2].trim() });
+      index += 1;
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^\s*(?:[-*_]\s*){3,}$/.test(line)) {
+      blocks.push({ type: "hr" });
+      index += 1;
+      continue;
+    }
+
+    // Blockquote
+    if (/^\s*>/.test(line)) {
+      const quoteLines: string[] = [];
+      while (index < lines.length && /^\s*>/.test(lines[index])) {
+        quoteLines.push(lines[index].replace(/^\s*>\s?/, ""));
+        index += 1;
+      }
+      blocks.push({ type: "quote", lines: quoteLines });
+      continue;
+    }
+
+    // List
+    if (matchListItem(line)) {
+      const { items, next } = parseList(lines, index);
+      if (items.length > 0) {
+        blocks.push({ type: "list", items });
+        index = next;
+        continue;
+      }
+    }
+
+    // Paragraph
+    const paragraph: string[] = [];
+    while (index < lines.length && lines[index].trim() && !isBlockStart(lines, index)) {
+      paragraph.push(lines[index]);
+      index += 1;
+    }
+    if (paragraph.length > 0) {
+      blocks.push({ type: "paragraph", lines: paragraph });
+    }
+  }
+
+  return blocks;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Block rendering                                                            */
+/* -------------------------------------------------------------------------- */
+
+function alignmentClass(alignment: Alignment | undefined): string {
+  if (alignment === "center") return "text-center";
+  if (alignment === "right") return "text-right";
+  return "text-left";
+}
+
+function renderList(
+  items: ListItemNode[],
+  context: InlineContext,
+  key: React.Key,
+  depth = 0,
+): React.ReactNode {
+  const hasTasks = items.some((item) => item.checked !== undefined);
+  const ordered = items.some((item) => item.ordered);
+  const listClass = `my-1 space-y-1.5 ${hasTasks ? "list-none pl-0" : `pl-4 ${ordered ? "list-decimal" : "list-disc"} ${
+    context.isUser
+      ? "marker:text-white/55"
+      : "marker:text-slate-400 dark:marker:text-slate-500"
+  }`}`;
+
+  const children = items.map((item, index) => (
+    <li key={index} className="break-words pl-0.5 leading-relaxed">
+      {item.checked !== undefined ? (
+        <span className="flex items-start gap-2">
+          <span
+            className={`mt-[3px] grid h-3.5 w-3.5 flex-none place-items-center rounded-[4px] border ${
+              context.isUser
+                ? item.checked
+                  ? "border-white/70 bg-white/20 text-white"
+                  : "border-white/40 text-transparent"
+                : item.checked
+                  ? "border-emerald-500 bg-emerald-500 text-white"
+                  : "border-slate-300 text-transparent dark:border-slate-600"
+            }`}
+          >
+            {item.checked && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+          </span>
+          <span className="min-w-0">{renderInline(item.text, context)}</span>
+        </span>
+      ) : (
+        renderInline(item.text, context)
+      )}
+      {item.children.length > 0 && renderList(item.children, context, `nested-${index}`, depth + 1)}
+    </li>
+  ));
+
+  return ordered ? (
+    <ol key={key} className={listClass}>
+      {children}
+    </ol>
+  ) : (
+    <ul key={key} className={listClass}>
+      {children}
+    </ul>
+  );
+}
+
+function renderBlock(block: Block, context: InlineContext, key: React.Key): React.ReactNode {
+  const { isUser } = context;
+
+  switch (block.type) {
+    case "paragraph":
+      return (
+        <p key={key} className="whitespace-pre-wrap leading-relaxed">
+          {block.lines.map((line, lineIndex) => (
+            <React.Fragment key={lineIndex}>
+              {lineIndex > 0 && <br />}
+              {renderInline(line, context)}
+            </React.Fragment>
+          ))}
+        </p>
+      );
+
+    case "heading": {
+      const headingClass = `font-semibold tracking-[-0.01em] ${
+        isUser ? "text-white" : "text-slate-900 dark:text-white"
+      }`;
+      const sizeClass =
+        block.level <= 2
+          ? "text-[14px] leading-5"
+          : block.level === 3
+            ? "text-[13.5px] leading-5"
+            : "text-[13px] leading-5";
+
+      if (block.level <= 2) {
+        return (
+          <h3 key={key} className={`${headingClass} ${sizeClass}`}>
+            {renderInline(block.text, context)}
+          </h3>
+        );
+      }
+      if (block.level === 3) {
+        return (
+          <h4 key={key} className={`${headingClass} ${sizeClass}`}>
+            {renderInline(block.text, context)}
+          </h4>
+        );
+      }
+      return (
+        <h5 key={key} className={`${headingClass} ${sizeClass}`}>
+          {renderInline(block.text, context)}
+        </h5>
+      );
+    }
+
+    case "code":
+      return (
+        <div key={key} className="my-1.5">
+          {block.language && (
+            <div
+              className={`mb-1 text-[9px] font-semibold uppercase tracking-[0.12em] ${
+                isUser ? "text-white/60" : "text-slate-400 dark:text-slate-500"
+              }`}
+            >
+              {block.language}
+            </div>
+          )}
+          <pre
+            className={`bot-scroll overflow-x-auto rounded-xl p-3 font-mono text-[11px] leading-5 ${
+              isUser
+                ? "bg-black/20 text-white"
+                : "bg-black/[0.045] text-slate-800 dark:bg-white/[0.06] dark:text-slate-100"
+            }`}
+          >
+            <code>{block.code}</code>
+          </pre>
+        </div>
+      );
+
+    case "quote":
+      return (
+        <blockquote
+          key={key}
+          className={`my-1 border-l-2 pl-3 ${
+            isUser
+              ? "border-white/30 text-white/85"
+              : "border-black/10 text-slate-600 dark:border-white/15 dark:text-slate-300"
+          }`}
+        >
+          <div className="space-y-2">
+            {parseBlocks(block.lines.join("\n")).map((child, index) =>
+              renderBlock(child, context, index),
+            )}
+          </div>
+        </blockquote>
+      );
+
+    case "list":
+      return renderList(block.items, context, key);
+
+    case "table": {
+      const borderClass = isUser ? "border-white/20" : "border-black/[0.08] dark:border-white/10";
+      const headClass = isUser ? "text-white/90" : "text-slate-700 dark:text-slate-200";
+      const cellClass = isUser ? "text-white/85" : "text-slate-600 dark:text-slate-300";
+
+      return (
+        <div key={key} className="bot-scroll my-1.5 w-full overflow-x-auto">
+          <table className="w-full min-w-[220px] border-collapse text-left text-[11.5px]">
+            <thead>
+              <tr>
+                {block.header.map((cell, cellIndex) => (
+                  <th
+                    key={cellIndex}
+                    className={`border-b ${borderClass} px-2 py-1.5 font-semibold ${headClass} ${alignmentClass(
+                      block.alignments[cellIndex],
+                    )}`}
+                  >
+                    {renderInline(cell, context)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {block.rows.map((row, rowIndex) => (
+                <tr
+                  key={rowIndex}
+                  className={isUser ? "" : "even:bg-black/[0.015] dark:even:bg-white/[0.02]"}
+                >
+                  {block.header.map((_, cellIndex) => (
+                    <td
+                      key={cellIndex}
+                      className={`border-b ${borderClass} px-2 py-1.5 align-top ${cellClass} ${alignmentClass(
+                        block.alignments[cellIndex],
+                      )}`}
+                    >
+                      {renderInline(row[cellIndex] ?? "", context)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+
+    case "hr":
+      return (
+        <hr
+          key={key}
+          className={`my-3 border-0 border-t ${
+            isUser ? "border-white/25" : "border-black/[0.08] dark:border-white/10"
+          }`}
+        />
+      );
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Visual sets (product / image cards)                                        */
+/* -------------------------------------------------------------------------- */
 
 /**
  * Extracts any <visualset> tags from the end of assistant messages
@@ -195,6 +657,10 @@ function extractVisualSets(rawText: string) {
   return { cleanText, visualSets };
 }
 
+/* -------------------------------------------------------------------------- */
+/* Message                                                                    */
+/* -------------------------------------------------------------------------- */
+
 export function MarkdownMessage({
   content,
   className = "",
@@ -210,103 +676,42 @@ export function MarkdownMessage({
 
   if (!content) return null;
 
-  // Extract visualset blocks if assistant response
-  const { cleanText, visualSets } = isUser ? { cleanText: content, visualSets: [] } : extractVisualSets(content);
-
-  // Split into paragraphs / blocks by double newlines
-  const blocks = cleanText.split(/\n\n+/);
+  const context: InlineContext = { isUser, bookingLink, onBookingClick };
+  const { cleanText, visualSets } = isUser
+    ? { cleanText: content, visualSets: [] }
+    : extractVisualSets(content);
+  const blocks = parseBlocks(cleanText);
 
   return (
     <div className={`space-y-2.5 break-words ${className}`}>
-      {blocks.map((block, blockIndex) => {
-        const lines = block.split(/\n/);
-
-        // Check if block is a code block ```
-        if (block.startsWith("```") && block.endsWith("```") && block.length >= 6) {
-          const codeContent = block.replace(/^```[a-zA-Z0-9_-]*\n?/, "").replace(/\n?```$/, "");
-          return (
-            <pre
-              key={blockIndex}
-              className="p-3 my-2 rounded-xl bg-black/10 dark:bg-black/40 overflow-x-auto max-w-full font-mono text-xs"
-            >
-              <code>{codeContent}</code>
-            </pre>
-          );
-        }
-
-        // Check if all or most lines are bullet list items (- or * or •)
-        const isBulletList = lines.length > 0 && lines.every((line) => /^(\s*[-*•]\s+)/.test(line.trim()));
-        if (isBulletList) {
-          return (
-            <ul key={blockIndex} className="list-disc list-inside space-y-1 my-1">
-              {lines.map((line, lineIndex) => {
-                const itemText = line.replace(/^\s*[-*•]\s+/, "");
-                return (
-                  <li key={lineIndex} className="leading-relaxed">
-                    {renderInline(itemText, isUser, bookingLink, onBookingClick)}
-                  </li>
-                );
-              })}
-            </ul>
-          );
-        }
-
-        // Check if all lines are numbered list items (1. 2. 3.)
-        const isNumberedList = lines.length > 0 && lines.every((line) => /^\s*\d+\.\s+/.test(line.trim()));
-        if (isNumberedList) {
-          return (
-            <ol key={blockIndex} className="list-decimal list-inside space-y-1 my-1">
-              {lines.map((line, lineIndex) => {
-                const itemText = line.replace(/^\s*\d+\.\s+/, "");
-                return (
-                  <li key={lineIndex} className="leading-relaxed">
-                    {renderInline(itemText, isUser, bookingLink, onBookingClick)}
-                  </li>
-                );
-              })}
-            </ol>
-          );
-        }
-
-        // Standard paragraph with line breaks
-        return (
-          <p key={blockIndex} className="leading-relaxed whitespace-pre-wrap">
-            {lines.map((line, lineIndex) => (
-              <React.Fragment key={lineIndex}>
-                {lineIndex > 0 && <br />}
-                {renderInline(line, isUser, bookingLink, onBookingClick)}
-              </React.Fragment>
-            ))}
-          </p>
-        );
-      })}
+      {blocks.map((block, blockIndex) => renderBlock(block, context, blockIndex))}
 
       {/* Render Visual Sets if provided */}
       {visualSets.length > 0 && (
-        <div className="pt-2 flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 pt-2">
           {visualSets.map((set, idx) => (
             <div
               key={idx}
-              className="p-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xs flex flex-col gap-2.5"
+              className="flex flex-col gap-2.5 rounded-2xl border border-black/[0.07] bg-[#fbfaf6] p-3 dark:border-white/10 dark:bg-white/[0.04]"
             >
               {set.images.length > 0 && (
                 <div className="relative">
-                  <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-slate-200">
+                  <div className="bot-scroll flex gap-2 overflow-x-auto pb-1.5">
                     {set.images.map((img, imgIdx) => (
                       <button
                         key={imgIdx}
                         type="button"
                         onClick={() => setLightbox({ images: set.images, title: set.title, index: imgIdx })}
-                        className="relative flex-shrink-0 group/img cursor-pointer rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700 hover:ring-2 hover:ring-slate-400/50 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+                        className="group/img relative flex-shrink-0 cursor-pointer overflow-hidden rounded-xl border border-black/[0.06] transition-all hover:ring-2 hover:ring-slate-400/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 dark:border-white/10"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={img.src}
                           alt={img.caption || `${set.title} view ${imgIdx + 1}`}
-                          className="w-24 h-24 sm:w-28 sm:h-28 object-cover group-hover/img:brightness-95 transition-all"
+                          className="h-24 w-24 object-cover transition-all group-hover/img:brightness-95 sm:h-28 sm:w-28"
                         />
                         {set.images.length > 1 && (
-                          <span className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-xs text-white text-[9px] font-medium px-1.5 py-0.5 rounded-md">
+                          <span className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[9px] font-medium text-white backdrop-blur-xs">
                             {imgIdx + 1}/{set.images.length}
                           </span>
                         )}
@@ -315,25 +720,25 @@ export function MarkdownMessage({
                   </div>
                 </div>
               )}
-              <div className="flex items-center justify-between text-xs pt-0.5">
-                <span className="font-semibold text-slate-800 dark:text-slate-100 truncate mr-2">
+              <div className="flex items-center justify-between pt-0.5 text-xs">
+                <span className="mr-2 truncate font-semibold text-slate-800 dark:text-slate-100">
                   {set.title}
                 </span>
                 {set.price && (
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/50 rounded-lg">
+                  <span className="flex-shrink-0 rounded-lg bg-emerald-50 px-2 py-0.5 font-bold text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
                     {set.currency || "$"}
                     {set.price}
                   </span>
                 )}
               </div>
-              <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-700/60 text-[11px] font-medium gap-2">
+              <div className="flex items-center justify-between gap-2 border-t border-black/[0.06] pt-1.5 text-[11px] font-medium dark:border-white/10">
                 {set.images.length > 0 && (
                   <button
                     type="button"
                     onClick={() => setLightbox({ images: set.images, title: set.title, index: 0 })}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-black/[0.05] px-2.5 py-1 text-slate-700 transition-colors hover:bg-black/[0.08] dark:bg-white/[0.07] dark:text-slate-200 dark:hover:bg-white/[0.11]"
                   >
-                    <Maximize2 className="w-3 h-3" />
+                    <Maximize2 className="h-3 w-3" />
                     <span>View fullscreen</span>
                   </button>
                 )}
@@ -342,10 +747,10 @@ export function MarkdownMessage({
                     href={set.redirectUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors ml-auto no-underline cursor-pointer group/link"
+                    className="group/link ml-auto inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1 text-blue-600 no-underline transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40"
                   >
                     <span>Visit link</span>
-                    <ExternalLink className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
+                    <ExternalLink className="h-3 w-3 transition-transform group-hover/link:translate-x-0.5" />
                   </a>
                 )}
               </div>
@@ -357,15 +762,14 @@ export function MarkdownMessage({
       {/* Fullscreen Image Lightbox */}
       {lightbox && (
         <div
-          className="fixed inset-0 z-[9999] bg-black/90 flex flex-col items-center justify-center animate-in fade-in duration-150"
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/90"
           onClick={() => setLightbox(null)}
         >
-          {/* Header */}
-          <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-10">
-            <div className="text-white text-sm font-medium flex items-center gap-2">
+          <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-white">
               <span>{lightbox.title}</span>
               {lightbox.images.length > 1 && (
-                <span className="text-white/60 text-xs">
+                <span className="text-xs text-white/60">
                   {lightbox.index + 1} of {lightbox.images.length}
                 </span>
               )}
@@ -373,54 +777,62 @@ export function MarkdownMessage({
             <button
               type="button"
               onClick={() => setLightbox(null)}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
               aria-label="Close"
             >
               ✕
             </button>
           </div>
 
-          {/* Image */}
           <div
-            className="flex-1 flex items-center justify-center w-full px-14 py-16"
-            onClick={(e) => e.stopPropagation()}
+            className="flex w-full flex-1 items-center justify-center px-14 py-16"
+            onClick={(event) => event.stopPropagation()}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={lightbox.images[lightbox.index].src}
               alt={lightbox.images[lightbox.index].caption || `${lightbox.title} view ${lightbox.index + 1}`}
-              className="max-w-full max-h-full object-contain rounded-lg select-none"
+              className="max-h-full max-w-full select-none rounded-lg object-contain"
               draggable={false}
             />
           </div>
 
-          {/* Navigation arrows */}
           {lightbox.images.length > 1 && (
             <>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightbox(prev => prev ? {
-                    ...prev,
-                    index: prev.index === 0 ? prev.images.length - 1 : prev.index - 1,
-                  } : null);
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setLightbox((previous) =>
+                    previous
+                      ? {
+                          ...previous,
+                          index:
+                            previous.index === 0 ? previous.images.length - 1 : previous.index - 1,
+                        }
+                      : null,
+                  );
                 }}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer text-lg"
+                className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/10 text-lg text-white transition-colors hover:bg-white/20"
                 aria-label="Previous image"
               >
                 ‹
               </button>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightbox(prev => prev ? {
-                    ...prev,
-                    index: prev.index === prev.images.length - 1 ? 0 : prev.index + 1,
-                  } : null);
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setLightbox((previous) =>
+                    previous
+                      ? {
+                          ...previous,
+                          index:
+                            previous.index === previous.images.length - 1 ? 0 : previous.index + 1,
+                        }
+                      : null,
+                  );
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer text-lg"
+                className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/10 text-lg text-white transition-colors hover:bg-white/20"
                 aria-label="Next image"
               >
                 ›
@@ -428,9 +840,8 @@ export function MarkdownMessage({
             </>
           )}
 
-          {/* Caption */}
           {lightbox.images[lightbox.index].caption && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/80 text-xs bg-black/40 px-3 py-1.5 rounded-lg backdrop-blur-sm max-w-[80%] text-center">
+            <div className="absolute bottom-4 left-1/2 max-w-[80%] -translate-x-1/2 rounded-lg bg-black/40 px-3 py-1.5 text-center text-xs text-white/80 backdrop-blur-sm">
               {lightbox.images[lightbox.index].caption}
             </div>
           )}

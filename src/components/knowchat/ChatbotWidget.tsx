@@ -5,7 +5,7 @@ import {
     MessageSquare,
     X,
     ArrowUp,
-    ArrowRight,
+    ArrowUpRight,
     ArrowLeft,
     Ellipsis,
     SquarePen,
@@ -18,7 +18,10 @@ import {
     RotateCcw,
     Calendar,
     CalendarCheck,
-    ExternalLink
+    ExternalLink,
+    Sparkles,
+    ShieldCheck,
+    AlertTriangle,
 } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { TextStreamChatTransport } from "ai";
@@ -64,6 +67,10 @@ interface MessageLike {
     parts?: MessagePart[];
 }
 
+type LeadFormState = { name: string; email: string; phone: string };
+
+const DEFAULT_ACCENT = "#0f172a";
+
 /**
  * Calculates WCAG-compliant high-contrast foreground color (dark or light)
  * based on the luminance of the provided hex color.
@@ -89,6 +96,29 @@ function getContrastColor(hexColor: string | null | undefined): string {
     return yiq >= 148 ? "#0f172a" : "#ffffff";
 }
 
+function normalizeHex(value: string | null | undefined): string {
+    if (!value || typeof value !== "string") return DEFAULT_ACCENT;
+    const clean = value.trim();
+    if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(clean)) return DEFAULT_ACCENT;
+    return clean.length === 4
+        ? `#${clean[1]}${clean[1]}${clean[2]}${clean[2]}${clean[3]}${clean[3]}`
+        : clean;
+}
+
+function mixHex(base: string, target: string, ratio: number): string {
+    const parse = (hex: string) => [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16));
+    const [r1, g1, b1] = parse(base);
+    const [r2, g2, b2] = parse(target);
+    const channel = (a: number, b: number) =>
+        Math.round(a + (b - a) * ratio).toString(16).padStart(2, "0");
+    return `#${channel(r1, r2)}${channel(g1, g2)}${channel(b1, b2)}`;
+}
+
+function withAlpha(hex: string, alpha: number): string {
+    const [r, g, b] = [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16));
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 function formatSessionTime(dateString: string): string {
     try {
         const date = new Date(dateString);
@@ -108,6 +138,161 @@ function formatSessionTime(dateString: string): string {
         return "Recent";
     }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Presentational pieces                                                      */
+/* -------------------------------------------------------------------------- */
+
+function BotAvatar({
+    config,
+    size = 36,
+    showStatus = false,
+    statusClassName = "",
+}: {
+    config: BotPublicConfig;
+    size?: number;
+    showStatus?: boolean;
+    statusClassName?: string;
+}) {
+    const avatarEmoji = config.avatarEmoji?.trim();
+    const hasCustomEmoji = Boolean(avatarEmoji && avatarEmoji.toLowerCase() !== "bot");
+
+    return (
+        <div className="relative flex-none">
+            <div
+                className="grid overflow-hidden rounded-full bg-white text-slate-700 ring-1 ring-black/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] dark:bg-white/10 dark:text-slate-200 dark:ring-white/10"
+                style={{ width: size, height: size }}
+            >
+                {config.avatarUrl ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={config.avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : hasCustomEmoji ? (
+                    <span style={{ fontSize: Math.round(size * 0.46) }}>{avatarEmoji}</span>
+                ) : (
+                    <Bot style={{ width: Math.round(size * 0.44), height: Math.round(size * 0.44) }} strokeWidth={1.7} />
+                )}
+            </div>
+            {showStatus && (
+                <span
+                    className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#fdfcf8] bg-emerald-500 shadow-sm dark:border-[#171816] ${statusClassName}`}
+                />
+            )}
+        </div>
+    );
+}
+
+function TypingDots() {
+    return (
+        <span className="flex items-center gap-1" aria-hidden="true">
+            {[0, 1, 2].map((index) => (
+                <span
+                    key={index}
+                    className="bot-typing-dot h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-500"
+                    style={{ animationDelay: `${index * 140}ms` }}
+                />
+            ))}
+        </span>
+    );
+}
+
+const inputClass =
+    "h-10 w-full rounded-xl border border-black/[0.08] bg-white px-3 text-[12.5px] text-slate-800 placeholder:text-slate-400 outline-none transition focus:border-slate-300 focus:ring-4 focus:ring-slate-900/[0.04] disabled:opacity-60 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:focus:border-white/20 dark:focus:ring-white/[0.06]";
+
+function LeadCaptureForm({
+    settings,
+    form,
+    onChange,
+    onSubmit,
+    submitting,
+    error,
+    submitLabel,
+}: {
+    settings: LeadCaptureSettings;
+    form: LeadFormState;
+    onChange: (patch: Partial<LeadFormState>) => void;
+    onSubmit: (event: React.FormEvent) => void;
+    submitting: boolean;
+    error: string | null;
+    submitLabel: string;
+}) {
+    return (
+        <form onSubmit={onSubmit} className="flex flex-col gap-2.5">
+            {error && (
+                <div
+                    role="alert"
+                    className="flex items-start gap-1.5 rounded-xl border border-rose-200/80 bg-rose-50 px-2.5 py-2 text-[11px] leading-4 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
+                >
+                    <AlertTriangle className="mt-px h-3 w-3 flex-none" />
+                    {error}
+                </div>
+            )}
+
+            {settings.askName !== false && (
+                <label className="block">
+                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                        Name
+                    </span>
+                    <input
+                        type="text"
+                        name="name"
+                        autoComplete="name"
+                        placeholder="Your name"
+                        value={form.name}
+                        onChange={(event) => onChange({ name: event.target.value })}
+                        className={inputClass}
+                    />
+                </label>
+            )}
+
+            {settings.askEmail !== false && (
+                <label className="block">
+                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                        Email
+                    </span>
+                    <input
+                        type="email"
+                        name="email"
+                        autoComplete="email"
+                        placeholder="you@company.com"
+                        value={form.email}
+                        onChange={(event) => onChange({ email: event.target.value })}
+                        className={inputClass}
+                    />
+                </label>
+            )}
+
+            {settings.askPhone && (
+                <label className="block">
+                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                        Phone
+                    </span>
+                    <input
+                        type="tel"
+                        name="phone"
+                        autoComplete="tel"
+                        placeholder="+1 555 000 0000"
+                        value={form.phone}
+                        onChange={(event) => onChange({ phone: event.target.value })}
+                        className={inputClass}
+                    />
+                </label>
+            )}
+
+            <button
+                type="submit"
+                disabled={submitting}
+                className="mt-0.5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[var(--bot-accent)] text-[12.5px] font-semibold text-[var(--bot-on-accent)] shadow-[0_10px_24px_-14px_rgba(15,23,42,0.8)] transition hover:opacity-90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+                {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                {submitLabel}
+            </button>
+        </form>
+    );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Widget                                                                     */
+/* -------------------------------------------------------------------------- */
 
 export function ChatbotWidget({ botId }: { botId: string }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -130,7 +315,7 @@ export function ChatbotWidget({ botId }: { botId: string }) {
     const [leadCaptured, setLeadCaptured] = useState(false);
     const [leadDismissed, setLeadDismissed] = useState(false);
     const [inChatPromptTriggered, setInChatPromptTriggered] = useState(false);
-    const [leadForm, setLeadForm] = useState({ name: "", email: "", phone: "" });
+    const [leadForm, setLeadForm] = useState<LeadFormState>({ name: "", email: "", phone: "" });
     const [leadSubmitting, setLeadSubmitting] = useState(false);
     const [leadError, setLeadError] = useState<string | null>(null);
     const [leadSuccessMessage, setLeadSuccessMessage] = useState<string | null>(null);
@@ -139,7 +324,7 @@ export function ChatbotWidget({ botId }: { botId: string }) {
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -154,12 +339,30 @@ export function ChatbotWidget({ botId }: { botId: string }) {
         }
     }, [isMenuOpen]);
 
+    // Close the panel with Escape
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setIsOpen(false);
+        };
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen]);
+
     // Focus composer when opening chat
     useEffect(() => {
         if (isOpen && viewMode === "chat") {
             setTimeout(() => inputRef.current?.focus(), 150);
         }
     }, [isOpen, viewMode]);
+
+    // Keep the composer compact until the visitor writes more
+    useEffect(() => {
+        const element = inputRef.current;
+        if (!element) return;
+        element.style.height = "auto";
+        element.style.height = `${Math.min(element.scrollHeight, 112)}px`;
+    }, [inputValue, isOpen, viewMode]);
 
     // Fetch bot configuration
     useEffect(() => {
@@ -487,8 +690,8 @@ export function ChatbotWidget({ botId }: { botId: string }) {
         }
     };
 
-    const handleSend = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSend = (e?: React.FormEvent) => {
+        e?.preventDefault();
         if (!inputValue.trim() || isLoading) return;
 
         // Automatically resume the conversation if it was previously ended!
@@ -501,6 +704,16 @@ export function ChatbotWidget({ botId }: { botId: string }) {
 
         sendMessage({ text: textToSend });
         setInputValue("");
+        if (inputRef.current) {
+            inputRef.current.style.height = "auto";
+        }
+    };
+
+    const handleComposerKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            handleSend();
+        }
     };
 
     const handleSelectSuggestion = (suggestion: string) => {
@@ -514,11 +727,28 @@ export function ChatbotWidget({ botId }: { botId: string }) {
 
     if (!config) return null;
 
-    const brandAccent = config.colorTheme || "#0f172a";
+    const brandAccent = normalizeHex(config.colorTheme);
     const contrastOnBrand = getContrastColor(brandAccent);
+    const accentDeep = mixHex(brandAccent, "#000000", 0.24);
+    const accentSoft = mixHex(brandAccent, "#ffffff", 0.9);
+    const accentMist = mixHex(brandAccent, "#ffffff", 0.96);
+
+    const themeVars = {
+        "--bot-accent": brandAccent,
+        "--bot-accent-deep": accentDeep,
+        "--bot-accent-soft": accentSoft,
+        "--bot-on-accent": contrastOnBrand,
+    } as React.CSSProperties;
 
     // Gated first-mode check
     const isChatBlocked = isLeadCaptureActive && mode === "first" && !leadCaptured;
+    const assistantName = config.name || "Assistant";
+    const canSend = Boolean(inputValue.trim()) && !isLoading;
+    const showComposer =
+        viewMode === "chat" && !isChatBlocked && config.aiEnabled !== false && config.aiRepliesRemaining !== 0;
+
+    const iconButtonClass =
+        "grid h-8 w-8 place-items-center rounded-full text-slate-500 transition hover:bg-black/[0.05] hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 dark:text-slate-400 dark:hover:bg-white/[0.07] dark:hover:text-slate-100 dark:focus-visible:ring-white/20";
 
     return (
         <div
@@ -528,131 +758,161 @@ export function ChatbotWidget({ botId }: { botId: string }) {
                 right: "max(1.25rem, env(safe-area-inset-right, 1.25rem))",
             }}
         >
-            {/* 1. Chat Launcher (DocsBot minimal circular button) */}
+            {/* Launcher */}
             {!isOpen && (
-                <button
-                    type="button"
-                    onClick={() => setIsOpen(true)}
-                    style={{
-                        backgroundColor: brandAccent,
-                        color: contrastOnBrand,
-                    }}
-                    className="w-13 h-13 rounded-full flex items-center justify-center shadow-lg shadow-black/15 hover:opacity-95 hover:scale-[1.03] active:scale-95 transition-all duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900"
-                    aria-label="Open chat assistant"
-                    aria-expanded={false}
-                >
-                    <MessageSquare className="w-5 h-5" />
-                </button>
+                <div className="bot-launcher-in group relative">
+                    <div className="pointer-events-none absolute bottom-full right-0 mb-3 hidden translate-y-1 whitespace-nowrap rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-medium text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 sm:block">
+                        Chat with {assistantName}
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(true)}
+                        className="relative grid h-14 w-14 cursor-pointer place-items-center rounded-full text-white shadow-[0_18px_40px_-12px_rgba(15,23,42,0.45),0_4px_12px_-4px_rgba(15,23,42,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_48px_-12px_rgba(15,23,42,0.5)] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 focus-visible:ring-offset-2 active:translate-y-0 active:scale-95"
+                        style={{
+                            backgroundImage: `linear-gradient(145deg, ${mixHex(brandAccent, "#ffffff", 0.12)}, ${accentDeep})`,
+                            color: contrastOnBrand,
+                        }}
+                        aria-label={`Open chat with ${assistantName}`}
+                        aria-expanded={false}
+                    >
+                        <span
+                            className="pointer-events-none absolute inset-0 rounded-full opacity-60"
+                            style={{ boxShadow: `inset 0 1px 0 ${withAlpha("#ffffff", 0.28)}` }}
+                        />
+                        <MessageSquare className="h-5 w-5" strokeWidth={1.9} />
+                        {!isChatEnded && config.aiEnabled !== false && (
+                            <span className="absolute right-0 top-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 shadow-sm dark:border-[#171816]" />
+                        )}
+                    </button>
+                </div>
             )}
 
-            {/* 2. Chat Window Panel */}
+            {/* Panel */}
             {isOpen && (
                 <div
-                    className="bg-white dark:bg-slate-900 w-[380px] max-w-[calc(100vw-2rem)] h-[580px] max-h-[min(620px,calc(100vh-2.5rem))] rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xl shadow-slate-900/10 flex flex-col min-h-0 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-sm:fixed max-sm:inset-0 max-sm:w-full max-sm:max-w-none max-sm:h-full max-sm:max-h-full max-sm:rounded-none max-sm:border-0"
+                    className="bot-panel-in flex h-[620px] max-h-[min(700px,calc(100dvh-2.5rem))] w-[392px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[26px] border border-black/[0.06] bg-[#fbfaf6] shadow-[0_32px_80px_-24px_rgba(15,23,42,0.35),0_12px_32px_-16px_rgba(15,23,42,0.18)] dark:border-white/[0.08] dark:bg-[#121312] max-sm:fixed max-sm:inset-0 max-sm:h-full max-sm:max-h-full max-sm:w-full max-sm:max-w-none max-sm:rounded-none max-sm:border-0"
+                    style={themeVars}
                     role="dialog"
                     aria-modal="true"
-                    aria-label={config.name || "Chat Assistant"}
+                    aria-label={assistantName}
                     data-lenis-prevent
                 >
-                    {/* Header (DocsBot / Capacity inspired: compact, clean surface, subtle divider) */}
-                    <div className="px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between select-none flex-shrink-0">
+                    {/* Header */}
+                    <div className="relative flex flex-shrink-0 items-center justify-between gap-3 border-b border-black/[0.055] bg-[#fdfcf8] px-3.5 py-3 dark:border-white/[0.07] dark:bg-[#171816] max-sm:pt-[max(0.75rem,env(safe-area-inset-top))]">
+                        <div
+                            className="pointer-events-none absolute inset-0"
+                            style={{ backgroundImage: `linear-gradient(120deg, ${withAlpha(brandAccent, 0.1)}, transparent 64%)` }}
+                        />
+
                         {viewMode === "recent_chats" ? (
-                            <div className="flex items-center gap-2.5">
+                            <div className="relative flex min-w-0 items-center gap-2.5">
                                 <button
                                     type="button"
                                     onClick={() => setViewMode("chat")}
-                                    className="p-1 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg transition-colors cursor-pointer"
+                                    className={iconButtonClass}
                                     title="Back to conversation"
                                     aria-label="Back to conversation"
                                 >
-                                    <ArrowLeft className="w-4 h-4" />
+                                    <ArrowLeft className="h-4 w-4" />
                                 </button>
-                                <div>
-                                    <h2 className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-tight">
-                                        Recent Chats
+                                <div className="min-w-0">
+                                    <h2 className="truncate text-[13.5px] font-semibold leading-tight tracking-[-0.01em] text-slate-900 dark:text-slate-100">
+                                        Recent chats
                                     </h2>
-                                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                                    <p className="mt-0.5 truncate text-[11px] text-slate-500 dark:text-slate-400">
                                         {recentChats.length} saved conversation{recentChats.length === 1 ? "" : "s"}
                                     </p>
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2.5 min-w-0">
-                                {/* Avatar */}
-                                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 text-slate-700 dark:text-slate-200 text-xs font-medium overflow-hidden border border-slate-200/60 dark:border-slate-700/60">
-                                    {config.avatarUrl ? (
-                                        /* eslint-disable-next-line @next/next/no-img-element */
-                                        <img src={config.avatarUrl} alt="" className="w-full h-full object-cover" />
-                                    ) : config.avatarEmoji ? (
-                                        <span>{config.avatarEmoji}</span>
-                                    ) : (
-                                        <Bot className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
-                                    )}
-                                </div>
+                            <div className="relative flex min-w-0 items-center gap-2.5">
+                                <BotAvatar config={config} size={36} showStatus={!isChatEnded && config.aiEnabled !== false} />
                                 <div className="min-w-0">
-                                    <h2 className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate leading-tight">
-                                        {config.name || "Assistant"}
+                                    <h2 className="truncate text-[13.5px] font-semibold leading-tight tracking-[-0.01em] text-slate-900 dark:text-slate-100">
+                                        {assistantName}
                                     </h2>
-                                    {isChatEnded ? (
-                                        <p className="text-[10px] text-slate-400">Chat ended</p>
-                                    ) : null}
+                                    <p className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] text-slate-500 dark:text-slate-400">
+                                        {isChatEnded ? (
+                                            "Conversation ended"
+                                        ) : config.aiEnabled === false ? (
+                                            "Temporarily unavailable"
+                                        ) : (
+                                            <>
+                                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                                Online now
+                                            </>
+                                        )}
+                                    </p>
                                 </div>
                             </div>
                         )}
 
-                        {/* Controls (3-Dot Options + Minimize/Close) */}
-                        <div className="flex items-center gap-0.5">
+                        <div className="relative flex flex-none items-center gap-0.5">
+                            {viewMode === "recent_chats" && (
+                                <button
+                                    type="button"
+                                    onClick={handleStartNewChat}
+                                    className={iconButtonClass}
+                                    title="New chat"
+                                    aria-label="Start a new chat"
+                                >
+                                    <SquarePen className="h-4 w-4" />
+                                </button>
+                            )}
+
                             <div className="relative" ref={menuRef}>
                                 <button
                                     type="button"
                                     onClick={() => setIsMenuOpen(prev => !prev)}
-                                    className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400"
+                                    className={iconButtonClass}
                                     title="Options"
                                     aria-label="Options"
                                     aria-expanded={isMenuOpen}
                                 >
-                                    <Ellipsis className="w-4 h-4" />
+                                    <Ellipsis className="h-4 w-4" />
                                 </button>
 
-                                {/* Dropdown Card */}
                                 {isMenuOpen && (
-                                    <div className="absolute right-0 top-full mt-1.5 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200/80 dark:border-slate-700 py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                                    <div className="bot-pop-in absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-black/[0.07] bg-white p-1.5 shadow-[0_18px_40px_-16px_rgba(15,23,42,0.28)] dark:border-white/10 dark:bg-[#1c1d1b]">
                                         <button
                                             type="button"
                                             onClick={handleStartNewChat}
-                                            className="w-full px-3.5 py-2 text-left text-xs flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors cursor-pointer"
+                                            className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] font-medium text-slate-600 transition hover:bg-black/[0.04] hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/[0.06] dark:hover:text-white"
                                         >
-                                            <SquarePen className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                            <span>Start a new chat</span>
+                                            <SquarePen className="h-3.5 w-3.5 flex-none text-slate-400" />
+                                            Start a new chat
                                         </button>
 
                                         {isChatEnded ? (
                                             <button
                                                 type="button"
                                                 onClick={handleResumeChat}
-                                                className="w-full px-3.5 py-2 text-left text-xs flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors cursor-pointer"
+                                                className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] font-medium text-slate-600 transition hover:bg-black/[0.04] hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/[0.06] dark:hover:text-white"
                                             >
-                                                <RotateCcw className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                                <span>Continue this chat</span>
+                                                <RotateCcw className="h-3.5 w-3.5 flex-none text-slate-400" />
+                                                Continue this chat
                                             </button>
                                         ) : (
                                             <button
                                                 type="button"
                                                 onClick={handleEndChat}
-                                                className="w-full px-3.5 py-2 text-left text-xs flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors cursor-pointer"
+                                                className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] font-medium text-slate-600 transition hover:bg-black/[0.04] hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/[0.06] dark:hover:text-white"
                                             >
-                                                <X className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                                <span>End chat</span>
+                                                <X className="h-3.5 w-3.5 flex-none text-slate-400" />
+                                                End chat
                                             </button>
                                         )}
+
+                                        <div className="my-1 h-px bg-black/[0.055] dark:bg-white/[0.07]" />
 
                                         <button
                                             type="button"
                                             onClick={handleViewRecentChats}
-                                            className="w-full px-3.5 py-2 text-left text-xs flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors cursor-pointer"
+                                            className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12px] font-medium text-slate-600 transition hover:bg-black/[0.04] hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/[0.06] dark:hover:text-white"
                                         >
-                                            <History className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                                            <span>View recent chats</span>
+                                            <History className="h-3.5 w-3.5 flex-none text-slate-400" />
+                                            View recent chats
                                         </button>
                                     </div>
                                 )}
@@ -661,50 +921,39 @@ export function ChatbotWidget({ botId }: { botId: string }) {
                             <button
                                 type="button"
                                 onClick={() => setIsOpen(false)}
-                                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400"
+                                className={iconButtonClass}
                                 title="Close"
                                 aria-label="Close chat"
                             >
-                                <X className="w-4 h-4" />
+                                <X className="h-4 w-4" />
                             </button>
                         </div>
                     </div>
 
-                    {/* View A: Recent Chats Screen */}
+                    {/* Recent chats */}
                     {viewMode === "recent_chats" ? (
-                        <div className="flex-1 min-h-0 overflow-y-auto p-4 flex flex-col gap-2.5 bg-slate-50/50 dark:bg-slate-950/40 overscroll-contain">
-                            <div className="flex items-center justify-between pb-1">
-                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                                    History
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={handleStartNewChat}
-                                    className="text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:white flex items-center gap-1 cursor-pointer transition-colors"
-                                >
-                                    <SquarePen className="w-3 h-3" />
-                                    New chat
-                                </button>
-                            </div>
-
+                        <div className="bot-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain bg-[#fbfaf6] p-3.5 dark:bg-[#101110]">
                             {recentChats.length === 0 ? (
-                                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center my-auto">
-                                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-2.5 text-slate-400">
-                                        <History className="w-5 h-5" />
+                                <div className="m-auto flex flex-col items-center px-6 text-center">
+                                    <div
+                                        className="mb-3 grid h-12 w-12 place-items-center rounded-2xl"
+                                        style={{ backgroundColor: accentSoft, color: brandAccent }}
+                                    >
+                                        <History className="h-5 w-5" strokeWidth={1.8} />
                                     </div>
-                                    <p className="font-medium text-xs text-slate-700 dark:text-slate-300">
+                                    <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200">
                                         No recent chats yet
                                     </p>
-                                    <p className="text-[11px] text-slate-400 max-w-[200px] mt-0.5 mb-3">
-                                        Your previous conversations will be listed here.
+                                    <p className="mt-1 max-w-[210px] text-[11.5px] leading-5 text-slate-500 dark:text-slate-400">
+                                        Your previous conversations will be saved here on this device.
                                     </p>
                                     <button
                                         type="button"
                                         onClick={handleStartNewChat}
+                                        className="mt-4 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12px] font-semibold shadow-sm transition hover:opacity-90"
                                         style={{ backgroundColor: brandAccent, color: contrastOnBrand }}
-                                        className="px-3 py-1.5 text-xs font-medium rounded-lg hover:opacity-95 transition-opacity cursor-pointer flex items-center gap-1.5"
                                     >
-                                        <SquarePen className="w-3 h-3" />
+                                        <SquarePen className="h-3.5 w-3.5" />
                                         Start a chat
                                     </button>
                                 </div>
@@ -712,411 +961,430 @@ export function ChatbotWidget({ botId }: { botId: string }) {
                                 recentChats.map(session => (
                                     <div
                                         key={session.id}
+                                        role="button"
+                                        tabIndex={0}
                                         onClick={() => handleSelectSession(session)}
-                                        className={`p-3 rounded-xl border transition-all cursor-pointer relative group text-left ${
+                                        onKeyDown={(event) => {
+                                            if (event.target !== event.currentTarget) return;
+                                            if (event.key === "Enter" || event.key === " ") {
+                                                event.preventDefault();
+                                                handleSelectSession(session);
+                                            }
+                                        }}
+                                        className={`group relative w-full cursor-pointer rounded-2xl border p-3.5 text-left transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 ${
                                             session.id === sessionId
-                                                ? "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 shadow-2xs"
-                                                : "bg-white dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                                                ? "border-black/[0.1] bg-white shadow-[0_6px_18px_-12px_rgba(15,23,42,0.3)] dark:border-white/15 dark:bg-white/[0.06]"
+                                                : "border-black/[0.055] bg-white hover:-translate-y-px hover:border-black/[0.1] hover:shadow-[0_8px_20px_-14px_rgba(15,23,42,0.28)] dark:border-white/[0.07] dark:bg-white/[0.03] dark:hover:bg-white/[0.05]"
                                         }`}
                                     >
-                                        <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-                                            <span className="flex items-center gap-1">
-                                                <Clock className="w-3 h-3" />
-                                                {formatSessionTime(session.updatedAt)}
+                                        <div className="flex items-center gap-2">
+                                            <span
+                                                className="grid h-7 w-7 flex-none place-items-center rounded-lg"
+                                                style={{ backgroundColor: accentMist, color: brandAccent }}
+                                            >
+                                                <MessageSquare className="h-3.5 w-3.5" strokeWidth={1.9} />
                                             </span>
-                                            <div className="flex items-center gap-1.5">
-                                                {session.ended && (
-                                                    <span className="px-1.5 py-0.2 rounded text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500">
-                                                        Ended
-                                                    </span>
-                                                )}
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => handleDeleteSession(e, session.id)}
-                                                    className="opacity-0 group-hover:opacity-100 p-0.5 hover:text-rose-500 transition-opacity rounded cursor-pointer"
-                                                    title="Delete this chat"
-                                                >
-                                                    <Trash2 className="w-3 h-3" />
-                                                </button>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                                                    <Clock className="h-2.5 w-2.5" />
+                                                    {formatSessionTime(session.updatedAt)}
+                                                    <span className="text-slate-300 dark:text-slate-600">·</span>
+                                                    {session.messageCount} message{session.messageCount === 1 ? "" : "s"}
+                                                    {session.ended && (
+                                                        <span className="ml-auto rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-medium text-slate-500 dark:bg-white/10 dark:text-slate-400">
+                                                            Ended
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="mt-0.5 line-clamp-2 text-[12px] font-medium leading-5 text-slate-700 dark:text-slate-200">
+                                                    {session.lastMessage || "Conversation"}
+                                                </p>
                                             </div>
                                         </div>
-                                        <p className="text-xs text-slate-800 dark:text-slate-200 font-medium line-clamp-2 leading-relaxed">
-                                            {session.lastMessage || "Conversation"}
-                                        </p>
-                                        <div className="mt-1.5 text-[10px] text-slate-400">
-                                            {session.messageCount} message{session.messageCount === 1 ? "" : "s"}
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={(event) => handleDeleteSession(event, session.id)}
+                                            className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full text-slate-300 opacity-0 transition hover:bg-rose-50 hover:text-rose-500 focus:opacity-100 group-hover:opacity-100 dark:text-slate-500 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                                            title="Delete this chat"
+                                            aria-label="Delete this chat"
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                        </button>
                                     </div>
                                 ))
                             )}
                         </div>
                     ) : (
-                        /* View B: Conversation Flow */
-                        <div
-                            ref={messagesContainerRef}
-                            className="flex-1 min-h-0 overflow-y-auto px-4 py-4 flex flex-col gap-3.5 bg-slate-50/50 dark:bg-slate-950/40 overscroll-contain"
-                        >
-                            {/* 3. Welcome State (Greeting bubble + Capacity-inspired suggested question chips) */}
-                            <div className="flex flex-col gap-2.5 items-start">
-                                <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-xs px-3.5 py-2.5 text-[13px] leading-relaxed max-w-[88%] shadow-2xs">
-                                    <MarkdownMessage content={config.welcomeMessage || "Hi! How can I help you today?"} />
-                                </div>
-
-                                {/* Suggested questions (shown only before conversation messages start and when not blocked) */}
-                                {messages.length === 0 && !isChatBlocked && suggestedQuestions.length > 0 && (
-                                    <div className="w-full flex flex-col gap-1.5 pt-1 animate-in fade-in slide-in-from-bottom-1 duration-200">
-                                        <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 px-1">
-                                            Suggested questions
-                                        </span>
-                                        <div className="flex flex-col gap-1.5">
-                                            {suggestedQuestions.map((q, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    type="button"
-                                                    onClick={() => handleSelectSuggestion(q)}
-                                                    className="w-full text-left px-3.5 py-2 rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-800/90 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-medium transition-all flex items-center justify-between group shadow-2xs cursor-pointer"
-                                                >
-                                                    <span className="truncate">{q}</span>
-                                                    <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-transform flex-shrink-0 ml-2" />
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Service Status Warnings if applicable */}
-                            {config.aiEnabled === false && (
-                                <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-900/60 p-3 text-xs text-amber-900 dark:text-amber-200">
-                                    This assistant is temporarily unavailable. Please check back later.
-                                </div>
-                            )}
-
-                            {config.aiEnabled &&
-                                typeof config.aiRepliesRemaining === "number" &&
-                                config.aiRepliesRemaining <= 0 && (
-                                    <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-900/60 p-3 text-xs text-amber-900 dark:text-amber-200">
-                                        This assistant has used its current reply allowance.
-                                    </div>
-                                )}
-
-                            {/* 6. Contextual Lead Capture — Mode 1 (First of Chat gated form) */}
-                            {isChatBlocked && (
-                                <div className="rounded-2xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-800/95 p-4 shadow-sm animate-in fade-in duration-200">
-                                    <h3 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                                        {leadSettings.title || "Where can our team reach you?"}
-                                    </h3>
-                                    {leadSettings.subtitle && (
-                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 mb-3">
-                                            {leadSettings.subtitle}
-                                        </p>
-                                    )}
-
-                                    {leadError && (
-                                        <div className="text-[11px] text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 rounded-lg p-2 mb-2.5">
-                                            {leadError}
-                                        </div>
-                                    )}
-
-                                    <form onSubmit={handleLeadSubmit} className="flex flex-col gap-2">
-                                        {leadSettings.askName !== false && (
-                                            <div>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Your name"
-                                                    value={leadForm.name}
-                                                    onChange={e => setLeadForm(prev => ({ ...prev, name: e.target.value }))}
-                                                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-slate-400"
-                                                />
-                                            </div>
-                                        )}
-                                        {leadSettings.askEmail !== false && (
-                                            <div>
-                                                <input
-                                                    type="email"
-                                                    placeholder="Email address"
-                                                    required
-                                                    value={leadForm.email}
-                                                    onChange={e => setLeadForm(prev => ({ ...prev, email: e.target.value }))}
-                                                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-slate-400"
-                                                />
-                                            </div>
-                                        )}
-                                        {leadSettings.askPhone && (
-                                            <div>
-                                                <input
-                                                    type="tel"
-                                                    placeholder="Phone number"
-                                                    value={leadForm.phone}
-                                                    onChange={e => setLeadForm(prev => ({ ...prev, phone: e.target.value }))}
-                                                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-slate-400"
-                                                />
-                                            </div>
-                                        )}
-                                        <button
-                                            type="submit"
-                                            disabled={leadSubmitting}
-                                            style={{ backgroundColor: brandAccent, color: contrastOnBrand }}
-                                            className="mt-1 w-full py-2 text-xs font-medium rounded-lg shadow-2xs hover:opacity-95 transition-opacity cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
-                                        >
-                                            {leadSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                                            Start Chat
-                                        </button>
-                                    </form>
-                                </div>
-                            )}
-
-                            {/* 4. Conversation Messages (Left-aligned assistant, right-aligned visitor) */}
-                            {(!isChatBlocked || leadCaptured) &&
-                                messages.map(m => {
-                                    const text = getMessageText(m as MessageLike);
-                                    if (!text) return null;
-                                    const isUser = m.role === "user";
-                                    const containsBooking = !isUser && Boolean(
-                                        config.bookingLink && text.includes(config.bookingLink)
-                                    );
-
-                                    return (
-                                        <div
-                                            key={m.id}
-                                            className={`flex ${isUser ? "justify-end" : "justify-start"} animate-in fade-in duration-150 min-w-0`}
-                                        >
+                        /* Conversation */
+                        <div className="relative flex min-h-0 flex-1 flex-col">
+                            <div
+                                className="pointer-events-none absolute inset-x-0 top-0 z-0 h-44"
+                                style={{ background: `radial-gradient(90% 100% at 50% 0%, ${withAlpha(brandAccent, 0.06)}, transparent 72%)` }}
+                            />
+                            <div
+                                ref={messagesContainerRef}
+                                role="log"
+                                aria-live="polite"
+                                aria-label="Conversation"
+                                className="bot-scroll relative z-10 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-4 py-4"
+                            >
+                                {/* Welcome state */}
+                                {messages.length === 0 && (
+                                    <div className="bot-msg-in my-auto flex flex-col items-center px-1 pb-1 pt-2 text-center">
+                                        <div className="relative">
                                             <div
-                                                className={`p-3 text-[13px] max-w-[85%] min-w-0 break-words leading-relaxed ${
-                                                    isUser
-                                                        ? "rounded-2xl rounded-tr-xs shadow-2xs"
-                                                        : "bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-xs shadow-2xs"
-                                                }`}
-                                                style={
-                                                    isUser
-                                                        ? {
-                                                              backgroundColor: brandAccent,
-                                                              color: contrastOnBrand,
-                                                          }
-                                                        : {}
-                                                }
+                                                className="pointer-events-none absolute inset-0 rounded-full blur-xl"
+                                                style={{ backgroundColor: withAlpha(brandAccent, 0.18) }}
+                                            />
+                                            <div
+                                                className="relative rounded-full p-[2px]"
+                                                style={{
+                                                    backgroundImage: `linear-gradient(145deg, ${withAlpha(brandAccent, 0.55)}, ${withAlpha(brandAccent, 0.08)})`,
+                                                }}
                                             >
-                                                <MarkdownMessage
-                                                    content={text}
-                                                    isUser={isUser}
-                                                    bookingLink={config.bookingLink}
-                                                    onBookingClick={() => trackBookingEvent("booking_link_clicked")}
-                                                />
+                                                <BotAvatar config={config} size={52} />
+                                            </div>
+                                        </div>
+                                        <p className="mt-3 text-[14.5px] font-semibold tracking-[-0.01em] text-slate-900 dark:text-slate-100">
+                                            {assistantName}
+                                        </p>
+                                        <div className="mt-1.5 max-w-[300px] text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+                                            <MarkdownMessage content={config.welcomeMessage || "Hi! How can I help you today?"} />
+                                        </div>
 
-                                                {containsBooking && config.bookingLink && (
-                                                    <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-700/70 flex flex-col gap-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
-                                                                <Calendar className="w-4 h-4" />
-                                                            </div>
-                                                            <div className="min-w-0 flex-1">
-                                                                <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                                                                    Schedule an Appointment
-                                                                </div>
-                                                                <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                                                                    Choose a convenient date and time
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <a
-                                                            href={config.bookingLink}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            onClick={() => trackBookingEvent("booking_link_clicked")}
-                                                            style={{ backgroundColor: brandAccent, color: contrastOnBrand }}
-                                                            className="w-full py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs hover:opacity-95 transition-opacity"
+                                        {!isChatBlocked && suggestedQuestions.length > 0 && (
+                                            <div className="mt-5 w-full">
+                                                <p className="mb-2 text-left text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                                                    Suggested questions
+                                                </p>
+                                                <div className="flex flex-col gap-1.5">
+                                                    {suggestedQuestions.map((question, index) => (
+                                                        <button
+                                                            key={index}
+                                                            type="button"
+                                                            onClick={() => handleSelectSuggestion(question)}
+                                                            className="group flex w-full items-center gap-2.5 rounded-2xl border border-black/[0.055] bg-white px-3 py-2.5 text-left shadow-[0_1px_2px_rgba(16,24,40,0.03)] transition-all duration-150 hover:-translate-y-px hover:border-black/[0.1] hover:shadow-[0_8px_20px_-14px_rgba(15,23,42,0.3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 dark:border-white/[0.07] dark:bg-white/[0.04] dark:hover:border-white/15 dark:hover:bg-white/[0.06]"
                                                         >
-                                                            <CalendarCheck className="w-3.5 h-3.5" />
-                                                            <span>Open Booking Calendar</span>
-                                                            <ExternalLink className="w-3 h-3 opacity-80 ml-0.5" />
-                                                        </a>
-                                                    </div>
+                                                            <span
+                                                                className="grid h-7 w-7 flex-none place-items-center rounded-lg"
+                                                                style={{ backgroundColor: accentMist, color: brandAccent }}
+                                                            >
+                                                                <Sparkles className="h-3.5 w-3.5" strokeWidth={1.9} />
+                                                            </span>
+                                                            <span className="flex-1 text-[12px] font-medium leading-snug text-slate-700 dark:text-slate-200">
+                                                                {question}
+                                                            </span>
+                                                            <ArrowUpRight className="h-3.5 w-3.5 flex-none text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-500 dark:text-slate-500" />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Service warnings */}
+                                {config.aiEnabled === false && (
+                                    <div className="flex items-start gap-2 rounded-2xl border border-amber-200/80 bg-amber-50 px-3.5 py-3 text-[11.5px] leading-5 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+                                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-none" />
+                                        This assistant is temporarily unavailable. Please check back later.
+                                    </div>
+                                )}
+
+                                {config.aiEnabled &&
+                                    typeof config.aiRepliesRemaining === "number" &&
+                                    config.aiRepliesRemaining <= 0 && (
+                                        <div className="flex items-start gap-2 rounded-2xl border border-amber-200/80 bg-amber-50 px-3.5 py-3 text-[11.5px] leading-5 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+                                            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-none" />
+                                            This assistant has used its current reply allowance.
+                                        </div>
+                                    )}
+
+                                {/* Lead gate */}
+                                {isChatBlocked && (
+                                    <div className="bot-msg-in rounded-[20px] border border-black/[0.06] bg-white p-4 shadow-[0_12px_32px_-20px_rgba(15,23,42,0.35)] dark:border-white/[0.08] dark:bg-white/[0.04]">
+                                        <div className="mb-3 flex items-start gap-2.5">
+                                            <span
+                                                className="grid h-8 w-8 flex-none place-items-center rounded-xl"
+                                                style={{ backgroundColor: accentSoft, color: brandAccent }}
+                                            >
+                                                <ShieldCheck className="h-4 w-4" strokeWidth={1.8} />
+                                            </span>
+                                            <div>
+                                                <h3 className="text-[12.5px] font-semibold leading-5 text-slate-900 dark:text-slate-100">
+                                                    {leadSettings.title || "Where can our team reach you?"}
+                                                </h3>
+                                                {leadSettings.subtitle && (
+                                                    <p className="mt-0.5 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
+                                                        {leadSettings.subtitle}
+                                                    </p>
                                                 )}
                                             </div>
                                         </div>
-                                    );
-                                })}
-
-                            {/* 6. Contextual Lead Capture — Mode 2 & 3 Inline Form */}
-                            {!isChatBlocked && inChatPromptTriggered && !leadCaptured && !leadDismissed && (
-                                <div className="rounded-2xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-800/95 p-3.5 shadow-sm animate-in fade-in duration-200">
-                                    <div className="flex items-start justify-between gap-2 mb-2">
-                                        <div>
-                                            <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                                                {leadSettings.title || "Where can our team reach you?"}
-                                            </h4>
-                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                                                {leadSettings.subtitle || "Leave your contact details so our team can follow up."}
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setLeadDismissed(true)}
-                                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 -mr-1 -mt-1 rounded-md transition-colors"
-                                            title="Skip"
-                                            aria-label="Skip lead capture"
-                                        >
-                                            <X className="w-3.5 h-3.5" />
-                                        </button>
+                                        <LeadCaptureForm
+                                            settings={leadSettings}
+                                            form={leadForm}
+                                            onChange={(patch) => setLeadForm(prev => ({ ...prev, ...patch }))}
+                                            onSubmit={handleLeadSubmit}
+                                            submitting={leadSubmitting}
+                                            error={leadError}
+                                            submitLabel="Start chat"
+                                        />
+                                        <p className="mt-2.5 text-center text-[10px] leading-4 text-slate-500 dark:text-slate-400">
+                                            We only use these details to follow up on your question.
+                                        </p>
                                     </div>
+                                )}
 
-                                    {leadError && (
-                                        <div className="text-[11px] text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 rounded-lg p-2 mb-2">
-                                            {leadError}
-                                        </div>
-                                    )}
+                                {/* Messages */}
+                                {(!isChatBlocked || leadCaptured) &&
+                                    messages.map(m => {
+                                        const text = getMessageText(m as MessageLike);
+                                        if (!text) return null;
+                                        const isUser = m.role === "user";
+                                        const containsBooking = !isUser && Boolean(
+                                            config.bookingLink && text.includes(config.bookingLink)
+                                        );
 
-                                    <form onSubmit={handleLeadSubmit} className="flex flex-col gap-2 mt-2">
-                                        {leadSettings.askName !== false && (
-                                            <input
-                                                type="text"
-                                                placeholder="Your name"
-                                                value={leadForm.name}
-                                                onChange={e => setLeadForm(prev => ({ ...prev, name: e.target.value }))}
-                                                className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-slate-400"
-                                            />
-                                        )}
-                                        {leadSettings.askEmail !== false && (
-                                            <input
-                                                type="email"
-                                                placeholder="Email address"
-                                                required
-                                                value={leadForm.email}
-                                                onChange={e => setLeadForm(prev => ({ ...prev, email: e.target.value }))}
-                                                className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-slate-400"
-                                            />
-                                        )}
-                                        {leadSettings.askPhone && (
-                                            <input
-                                                type="tel"
-                                                placeholder="Phone number"
-                                                value={leadForm.phone}
-                                                onChange={e => setLeadForm(prev => ({ ...prev, phone: e.target.value }))}
-                                                className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-slate-400"
-                                            />
-                                        )}
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <button
-                                                type="submit"
-                                                disabled={leadSubmitting}
-                                                style={{ backgroundColor: brandAccent, color: contrastOnBrand }}
-                                                className="flex-1 py-1.5 text-xs font-medium rounded-lg shadow-2xs hover:opacity-95 transition-opacity cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                                        return (
+                                            <div
+                                                key={m.id}
+                                                className={`bot-msg-in flex min-w-0 gap-2 ${isUser ? "justify-end" : "justify-start"}`}
                                             >
-                                                {leadSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                                                Send Details
-                                            </button>
+                                                {!isUser && <BotAvatar config={config} size={26} />}
+                                                <div
+                                                    className={`min-w-0 max-w-[82%] break-words px-3.5 py-2.5 text-[13px] leading-relaxed ${
+                                                        isUser
+                                                            ? "rounded-[18px] rounded-tr-md shadow-[0_8px_20px_-12px_rgba(15,23,42,0.5)]"
+                                                            : "rounded-[18px] rounded-tl-md border border-black/[0.055] bg-white text-slate-700 shadow-[0_2px_8px_-4px_rgba(15,23,42,0.12)] dark:border-white/[0.07] dark:bg-white/[0.05] dark:text-slate-100"
+                                                    }`}
+                                                    style={
+                                                        isUser
+                                                            ? {
+                                                                  backgroundImage: `linear-gradient(145deg, ${mixHex(brandAccent, "#ffffff", 0.08)}, ${brandAccent})`,
+                                                                  color: contrastOnBrand,
+                                                              }
+                                                            : {}
+                                                    }
+                                                >
+                                                    <MarkdownMessage
+                                                        content={text}
+                                                        isUser={isUser}
+                                                        bookingLink={config.bookingLink}
+                                                        onBookingClick={() => trackBookingEvent("booking_link_clicked")}
+                                                    />
+
+                                                    {containsBooking && config.bookingLink && (
+                                                        <div className="mt-3 flex flex-col gap-2 border-t border-black/[0.06] pt-2.5 dark:border-white/10">
+                                                            <div className="flex items-center gap-2">
+                                                                <div
+                                                                    className="grid h-7 w-7 flex-none place-items-center rounded-lg"
+                                                                    style={{ backgroundColor: accentSoft, color: brandAccent }}
+                                                                >
+                                                                    <Calendar className="h-3.5 w-3.5" />
+                                                                </div>
+                                                                <div className="min-w-0 flex-1">
+                                                                    <div className="text-[11.5px] font-semibold text-slate-900 dark:text-slate-100">
+                                                                        Schedule an appointment
+                                                                    </div>
+                                                                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                                                                        Choose a convenient date and time
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <a
+                                                                href={config.bookingLink}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                onClick={() => trackBookingEvent("booking_link_clicked")}
+                                                                className="flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[11.5px] font-semibold shadow-sm transition hover:opacity-90"
+                                                                style={{ backgroundColor: brandAccent, color: contrastOnBrand }}
+                                                            >
+                                                                <CalendarCheck className="h-3.5 w-3.5" />
+                                                                <span>Open booking calendar</span>
+                                                                <ExternalLink className="ml-0.5 h-3 w-3 opacity-80" />
+                                                            </a>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                {/* Inline lead capture */}
+                                {!isChatBlocked && inChatPromptTriggered && !leadCaptured && !leadDismissed && (
+                                    <div className="bot-msg-in rounded-[20px] border border-black/[0.06] bg-white p-3.5 shadow-[0_12px_32px_-20px_rgba(15,23,42,0.35)] dark:border-white/[0.08] dark:bg-white/[0.04]">
+                                        <div className="mb-3 flex items-start justify-between gap-2">
+                                            <div className="flex items-start gap-2.5">
+                                                <span
+                                                    className="grid h-7 w-7 flex-none place-items-center rounded-lg"
+                                                    style={{ backgroundColor: accentSoft, color: brandAccent }}
+                                                >
+                                                    <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.8} />
+                                                </span>
+                                                <div>
+                                                    <h4 className="text-[12px] font-semibold leading-4 text-slate-900 dark:text-slate-100">
+                                                        {leadSettings.title || "Where can our team reach you?"}
+                                                    </h4>
+                                                    <p className="mt-0.5 text-[10.5px] leading-4 text-slate-500 dark:text-slate-400">
+                                                        {leadSettings.subtitle || "Leave your contact details so our team can follow up."}
+                                                    </p>
+                                                </div>
+                                            </div>
                                             <button
                                                 type="button"
                                                 onClick={() => setLeadDismissed(true)}
-                                                className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                                className="grid h-6 w-6 flex-none place-items-center rounded-full text-slate-400 transition hover:bg-black/[0.05] hover:text-slate-600 dark:hover:bg-white/[0.07] dark:hover:text-slate-200"
+                                                title="Skip"
+                                                aria-label="Skip lead capture"
                                             >
-                                                Not now
+                                                <X className="h-3 w-3" />
                                             </button>
                                         </div>
-                                    </form>
-                                </div>
-                            )}
 
-                            {/* Lead Submission Success Confirmation Message */}
-                            {leadSuccessMessage && (
-                                <div className="rounded-xl border border-emerald-200/90 dark:border-emerald-800/80 bg-emerald-50/80 dark:bg-emerald-950/40 p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-2 shadow-2xs animate-in fade-in duration-200">
-                                    <CircleCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                                    <span>{leadSuccessMessage}</span>
-                                </div>
-                            )}
+                                        <LeadCaptureForm
+                                            settings={leadSettings}
+                                            form={leadForm}
+                                            onChange={(patch) => setLeadForm(prev => ({ ...prev, ...patch }))}
+                                            onSubmit={handleLeadSubmit}
+                                            submitting={leadSubmitting}
+                                            error={leadError}
+                                            submitLabel="Send details"
+                                        />
 
-                            {/* Chat Ended Notification Card with Option to Continue or Start New */}
-                            {isChatEnded && (
-                                <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 p-3.5 rounded-2xl text-center space-y-2.5 shadow-2xs animate-in fade-in duration-200">
-                                    <div>
-                                        <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                                        <button
+                                            type="button"
+                                            onClick={() => setLeadDismissed(true)}
+                                            className="mt-1.5 w-full rounded-lg py-1.5 text-[10.5px] font-medium text-slate-400 transition hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                                        >
+                                            Not now
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Success confirmation */}
+                                {leadSuccessMessage && (
+                                    <div className="bot-msg-in flex items-start gap-2 rounded-2xl border border-emerald-200/80 bg-emerald-50/90 px-3.5 py-3 text-[11.5px] leading-5 text-emerald-800 shadow-[0_2px_8px_-4px_rgba(16,185,129,0.2)] dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                        <CircleCheck className="mt-0.5 h-4 w-4 flex-none text-emerald-600 dark:text-emerald-400" />
+                                        <span>{leadSuccessMessage}</span>
+                                    </div>
+                                )}
+
+                                {/* Ended chat */}
+                                {isChatEnded && (
+                                    <div className="bot-msg-in rounded-[20px] border border-black/[0.06] bg-white p-4 text-center shadow-[0_12px_32px_-20px_rgba(15,23,42,0.35)] dark:border-white/[0.08] dark:bg-white/[0.04]">
+                                        <div
+                                            className="mx-auto grid h-9 w-9 place-items-center rounded-full"
+                                            style={{ backgroundColor: accentSoft, color: brandAccent }}
+                                        >
+                                            <RotateCcw className="h-4 w-4" strokeWidth={1.8} />
+                                        </div>
+                                        <p className="mt-2.5 text-[12.5px] font-semibold text-slate-900 dark:text-slate-100">
                                             This conversation was ended
                                         </p>
-                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                        <p className="mx-auto mt-0.5 max-w-[240px] text-[11px] leading-5 text-slate-500 dark:text-slate-400">
                                             You can resume this chat anytime or start a brand new conversation.
                                         </p>
+                                        <div className="mt-3 flex items-center justify-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={handleResumeChat}
+                                                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11.5px] font-semibold shadow-sm transition hover:opacity-90"
+                                                style={{ backgroundColor: brandAccent, color: contrastOnBrand }}
+                                            >
+                                                <RotateCcw className="h-3 w-3" />
+                                                Continue chat
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={handleStartNewChat}
+                                                className="inline-flex items-center gap-1.5 rounded-xl border border-black/[0.08] px-3 py-2 text-[11.5px] font-semibold text-slate-600 transition hover:bg-black/[0.03] dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/[0.05]"
+                                            >
+                                                <SquarePen className="h-3 w-3" />
+                                                New chat
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center justify-center gap-2 pt-1">
-                                        <button
-                                            type="button"
-                                            onClick={handleResumeChat}
-                                            style={{ backgroundColor: brandAccent, color: contrastOnBrand }}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg shadow-2xs hover:opacity-95 cursor-pointer transition-opacity"
-                                        >
-                                            <RotateCcw className="w-3 h-3" />
-                                            Continue this chat
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={handleStartNewChat}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
-                                        >
-                                            <SquarePen className="w-3 h-3" />
-                                            New chat
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                                )}
 
-                            {/* Error Alert */}
-                            {error && (
-                                <div
-                                    role="alert"
-                                    className="rounded-xl border border-rose-200 bg-rose-50 dark:bg-rose-950/40 dark:border-rose-900/60 p-3 text-xs text-rose-800 dark:text-rose-200"
-                                >
-                                    {error.message || "Unable to complete response. Please try again."}
-                                </div>
-                            )}
-
-                            {/* Typing / Loading indicator (DocsBot subtle dots) */}
-                            {isLoading && (
-                                <div className="flex justify-start">
-                                    <div className="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 px-3.5 py-2.5 rounded-2xl rounded-tl-xs flex gap-1.5 items-center shadow-2xs">
-                                        <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
-                                        <div
-                                            className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"
-                                            style={{ animationDelay: "0.15s" }}
-                                        />
-                                        <div
-                                            className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"
-                                            style={{ animationDelay: "0.3s" }}
-                                        />
+                                {/* Error */}
+                                {error && (
+                                    <div
+                                        role="alert"
+                                        className="flex items-start gap-2 rounded-2xl border border-rose-200/80 bg-rose-50 px-3.5 py-3 text-[11.5px] leading-5 text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200"
+                                    >
+                                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-none" />
+                                        {error.message || "Unable to complete response. Please try again."}
                                     </div>
-                                </div>
-                            )}
-                            <div ref={messagesEndRef} />
+                                )}
+
+                                {/* Typing */}
+                                {isLoading && (
+                                    <div className="bot-msg-in flex items-end gap-2">
+                                        <BotAvatar config={config} size={26} />
+                                        <div className="flex items-center gap-2 rounded-[18px] rounded-tl-md border border-black/[0.055] bg-white px-3.5 py-3 shadow-[0_2px_8px_-4px_rgba(15,23,42,0.12)] dark:border-white/[0.07] dark:bg-white/[0.05]">
+                                            <TypingDots />
+                                            <span className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                                                {assistantName} is typing
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                                <div ref={messagesEndRef} />
+                            </div>
                         </div>
                     )}
 
-                    {/* 5. Fixed Message Composer at Bottom (Always available to type or continue chat) */}
-                    {viewMode === "chat" && !isChatBlocked && config.aiEnabled !== false && config.aiRepliesRemaining !== 0 && (
-                        <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex-shrink-0">
-                            <form onSubmit={handleSend} className="relative flex items-center gap-2">
-                                <input
-                                    ref={inputRef}
-                                    value={inputValue}
-                                    onChange={e => setInputValue(e.target.value)}
-                                    placeholder={isChatEnded ? "Type a message to continue this chat..." : "Type your message..."}
-                                    disabled={isLoading}
-                                    className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/70 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 text-xs focus:outline-none focus:ring-1 focus:ring-slate-400/40 focus:border-slate-400 dark:focus:border-slate-500 transition-all disabled:opacity-50"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={!inputValue.trim() || isLoading}
-                                    style={{
-                                        backgroundColor: inputValue.trim() ? brandAccent : undefined,
-                                        color: inputValue.trim() ? contrastOnBrand : undefined,
-                                    }}
-                                    className={`absolute right-1.5 w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
-                                        !inputValue.trim()
-                                            ? "text-slate-400 bg-transparent"
-                                            : "shadow-2xs hover:opacity-90 active:scale-95"
-                                    }`}
-                                    aria-label="Send message"
-                                >
-                                    <ArrowUp className="w-4 h-4" />
-                                </button>
+                    {/* Composer */}
+                    {showComposer && (
+                        <div className="flex-shrink-0 border-t border-black/[0.055] bg-[#fdfcf8] px-3 pb-3 pt-3 dark:border-white/[0.07] dark:bg-[#171816] max-sm:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                            <form onSubmit={handleSend}>
+                                <div className="flex items-end gap-2 rounded-[20px] border border-black/[0.08] bg-white p-1.5 pl-3.5 shadow-[0_2px_8px_-4px_rgba(15,23,42,0.12)] transition focus-within:border-slate-300 focus-within:shadow-[0_0_0_4px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/[0.04] dark:focus-within:border-white/20">
+                                    <textarea
+                                        ref={inputRef}
+                                        value={inputValue}
+                                        onChange={e => setInputValue(e.target.value)}
+                                        onKeyDown={handleComposerKeyDown}
+                                        rows={1}
+                                        placeholder={isChatEnded ? "Type a message to continue…" : "Ask me anything…"}
+                                        disabled={isLoading}
+                                        aria-label="Message"
+                                        className="bot-scroll max-h-28 min-h-6 w-full resize-none bg-transparent py-1.5 text-[13px] leading-5 text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:opacity-50 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={!canSend}
+                                        style={
+                                            canSend
+                                                ? {
+                                                      backgroundImage: `linear-gradient(145deg, ${mixHex(brandAccent, "#ffffff", 0.1)}, ${brandAccent})`,
+                                                      color: contrastOnBrand,
+                                                  }
+                                                : undefined
+                                        }
+                                        className={`grid h-8 w-8 flex-none place-items-center rounded-xl transition-all duration-150 ${
+                                            canSend
+                                                ? "shadow-[0_6px_14px_-8px_rgba(15,23,42,0.6)] hover:opacity-90 active:scale-95"
+                                                : "cursor-not-allowed bg-slate-100 text-slate-400 dark:bg-white/[0.06] dark:text-slate-500"
+                                        }`}
+                                        aria-label="Send message"
+                                    >
+                                        {isLoading ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <ArrowUp className="h-4 w-4" strokeWidth={2.2} />
+                                        )}
+                                    </button>
+                                </div>
                             </form>
+                            <div className="mt-2 flex items-center justify-between px-1 text-[10px] text-slate-500 dark:text-slate-400">
+                                <span className="hidden sm:inline">Enter to send · Shift + Enter for a new line</span>
+                                <span className="sm:hidden">AI assistant</span>
+                                <span className="inline-flex items-center gap-1">
+                                    <Sparkles className="h-2.5 w-2.5" />
+                                    Powered by <span className="font-semibold text-slate-500 dark:text-slate-400">Pageory</span>
+                                </span>
+                            </div>
                         </div>
                     )}
                 </div>
