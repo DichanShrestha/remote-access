@@ -24,7 +24,7 @@ const securityHeaders = [
 const nextConfig = {
   /* config options here */
   trailingSlash: false,
-  serverExternalPackages: ['pdfjs-dist'],
+  serverExternalPackages: ['pdfjs-dist', 'jsdom', 'html-encoding-sniffer', '@exodus/bytes', 'isomorphic-dompurify'],
   reactCompiler: true,
   experimental: {
     serverActions: { bodySizeLimit: '12mb' },
