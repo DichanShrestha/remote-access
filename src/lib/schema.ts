@@ -1,6 +1,6 @@
 import type { BlogArticleSnapshot } from './blog';
 import { buildPagePath } from './page-engine/page-types';
-import { resolveSiteUrl, toAbsoluteUrl, type ResolvedPageSeo } from './seo';
+import { findFirstImageUrl, resolveSiteUrl, toAbsoluteUrl, type ResolvedPageSeo } from './seo';
 
 type JsonObject = Record<string, unknown>;
 type SchemaProfile = { username: string; displayName: string; type?: 'CREATOR' | 'BUSINESS' | string; bio?: string | null; avatarUrl?: string | null };
@@ -80,6 +80,7 @@ export function buildPageSchema(input: { profile: SchemaProfile; page: SchemaPag
   const siteUrl = resolveSiteUrl(input.siteUrl); const ids = buildSchemaIds(siteUrl, input.profile.username);
   const type = input.page.pageType === 'ABOUT' ? 'AboutPage' : input.page.pageType === 'CONTACT' ? 'ContactPage' : ['GALLERY', 'PRODUCTS', 'SERVICES', 'FAQ'].includes(input.page.pageType) ? 'CollectionPage' : 'WebPage';
   const sections = Array.isArray(input.sections) ? input.sections.map(object).filter((x): x is JsonObject => Boolean(x) && !hidden(x!)) : [];
+  const pageImage = findFirstImageUrl(sections);
   const serviceSections = sections.filter((s) => s.type === 'services').flatMap((s) => {
     const items = object(s.content)?.items;
     return Array.isArray(items) ? items.map(object).filter((item): item is JsonObject => Boolean(item) && Boolean(clean(item!.title)) && Boolean(clean(item!.description))) : [];
@@ -89,7 +90,7 @@ export function buildPageSchema(input: { profile: SchemaProfile; page: SchemaPag
     '@type': type, '@id': `${input.seo.canonicalUrl}#webpage`, name: input.seo.title,
     description: input.seo.description, url: input.seo.canonicalUrl,
     isPartOf: { '@id': ids.website }, about: { '@id': ids.publisher },
-    ...(input.seo.openGraph.images[0]?.url ? { primaryImageOfPage: input.seo.openGraph.images[0].url } : {}),
+    ...(pageImage ? { primaryImageOfPage: toAbsoluteUrl(pageImage, siteUrl) } : {}),
     ...(input.page.updatedAt ? { dateModified: new Date(input.page.updatedAt).toISOString() } : {}),
     ...(serviceEntities.length ? { mainEntity: serviceEntities } : {}),
     ...(buildBreadcrumbSchema({ siteUrl, username: input.profile.username, page: input.page }) ? { breadcrumb: buildBreadcrumbSchema({ siteUrl, username: input.profile.username, page: input.page }) } : {}),
