@@ -80,7 +80,7 @@ export async function POST(req: Request) {
         } else {
           // Immediate cancellation (e.g. from Dodo dashboard) or expired subscription
           status = type === 'subscription.expired' ? 'expired' : 'canceled';
-          cancelAtPeriodEnd = false;
+          cancelAtPeriodEnd = type === 'subscription.expired' && Boolean(sub?.cancelAtPeriodEnd);
           effectivePeriodEnd = data.cancelled_at ? new Date(data.cancelled_at) : eventAt;
           aiAccessEndedAt = effectivePeriodEnd;
         }

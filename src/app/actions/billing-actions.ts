@@ -99,3 +99,22 @@ export async function createCustomerPortalSession() {
         return { url: session.link };
     } catch (e: any) { console.error("Dodo Customer Portal error:", e.message); throw new Error("Could not open the billing portal. Please try again later."); }
 }
+
+export async function scheduleStarterDowngrade() {
+    const user = await authService.requireUser();
+    const sub = await db.subscription.findFirst({ where: { userId: user.id, status: 'active' }, orderBy: { updatedAt: 'desc' } });
+    const starterProduct = process.env.DODO_PRODUCT_SMART_PAGE || process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE;
+    if (!sub || sub.billingMethod !== 'dodo' || !sub.dodoSubscriptionId) throw new Error('This subscription must be changed through its existing billing method.');
+    if (!['smart_page_ai', 'growth'].includes((sub.planId || sub.tier).toLowerCase())) throw new Error('Your subscription is already on Starter.');
+    if (!dodo || !starterProduct) throw new Error('Starter plan changes are temporarily unavailable.');
+    await dodo.subscriptions.changePlan(sub.dodoSubscriptionId, {
+        product_id: starterProduct,
+        quantity: 1,
+        proration_billing_mode: 'do_not_bill',
+        effective_at: 'next_billing_date',
+        on_payment_failure: 'prevent_change',
+    });
+    revalidatePath('/dashboard/settings');
+    revalidatePath('/dashboard/billing');
+    return { success: true };
+}

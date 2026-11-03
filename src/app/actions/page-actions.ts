@@ -64,7 +64,7 @@ async function uniqueSlug(tx: Prisma.TransactionClient, profileId: string, base:
 
 export async function createWebsitePage(input: unknown) {
   const user = await authService.requireCreator();
-  await requirePageAccess(user.id);
+  const entitlement = await requirePageAccess(user.id);
   if (!user.profile) return { error: 'Your profile is not ready yet.' };
 
   const parsedInput = createPageSchema.safeParse(input);
@@ -100,6 +100,9 @@ export async function createWebsitePage(input: unknown) {
 
   try {
     const result = await db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${user.id}::uuid FOR UPDATE`;
+      const pageCount = await tx.page.count({ where: { profile: { userId: user.id } } });
+      if (pageCount >= entitlement.limits.pages) throw new PageLimitReachedError(entitlement.limits.pages);
       const maxOrder = await tx.page.aggregate({
         where: { profileId: profile.id },
         _max: { navOrder: true },
@@ -122,7 +125,7 @@ export async function createWebsitePage(input: unknown) {
         where: { profileId: profile.id, slug: finalSlug },
       });
 
-      return tx.page.create({
+      const created = await tx.page.create({
         data: {
           profileId: profile.id,
           title: pageTitle,
@@ -133,17 +136,30 @@ export async function createWebsitePage(input: unknown) {
           draftConfig: toPageContentDocument(validated.data) as unknown as Prisma.InputJsonValue,
         },
       });
+      const countAfterCreate = pageCount + 1;
+      const pageThresholdNotices = ([80, 100] as const).filter((threshold) => countAfterCreate === Math.ceil(entitlement.limits.pages * threshold / 100) && (threshold === 100 || countAfterCreate < entitlement.limits.pages)).map((threshold) => ({
+        userId: user.id,
+        key: `static-pages-${threshold}`,
+        message: threshold === 100 ? `You have reached your ${entitlement.limits.pages} static page limit.` : `You have used 80% of your static page allowance (${countAfterCreate}/${entitlement.limits.pages}).`,
+      }));
+      if (pageThresholdNotices.length) await tx.usageNotice.createMany({ data: pageThresholdNotices, skipDuplicates: true });
+      return created;
     });
 
     revalidatePath('/dashboard/pages');
     revalidatePath('/dashboard');
     return { success: true, pageId: result.id, slug: result.slug, title: result.title };
   } catch (error) {
+    if (error instanceof PageLimitReachedError) return { error: error.message };
     if (error instanceof PageSlugTakenError) return { error: 'That page URL is already in use. Choose another one.' };
     if (isUniqueConstraintError(error)) return { error: 'That page URL is already in use. Choose another one.' };
     console.error('Create page error:', error);
     return { error: 'The page could not be created. Please try again.' };
   }
+}
+
+class PageLimitReachedError extends Error {
+  constructor(limit: number) { super(`Your plan includes ${limit} static page${limit === 1 ? '' : 's'}. Delete a page or upgrade to add another.`); }
 }
 
 export async function updateWebsitePage(input: unknown) {

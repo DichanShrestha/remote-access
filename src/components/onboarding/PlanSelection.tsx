@@ -29,6 +29,9 @@ const BASE_FEATURES = [
 ];
 
 const AI_FEATURES = [
+  'Up to 10 static pages and 20 blog posts',
+  '20 AI article generations each billing month',
+  '40 AI writing credits each billing month',
   'AI conversational chatbot',
   'Automated lead capture & inbox',
   'AI visual product responses',

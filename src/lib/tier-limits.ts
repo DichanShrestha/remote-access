@@ -1,7 +1,7 @@
 export const SMART_PAGE_LIMITS = {
   trial: { pages: 1, pageMediaBytes: 250 * 1024 * 1024, imageBytes: 10 * 1024 * 1024, aiReplies: 100, knowledgeSources: 5, knowledgeBytes: 10 * 1024 * 1024, knowledgeFileBytes: 5 * 1024 * 1024, faqEntries: 50, indexedTokens: 100_000, aiImages: 10, aiImageFileBytes: 5 * 1024 * 1024 },
   smart_page: { pages: 1, pageMediaBytes: 250 * 1024 * 1024, imageBytes: 10 * 1024 * 1024, aiReplies: 0, knowledgeSources: 0, knowledgeBytes: 0, knowledgeFileBytes: 0, faqEntries: 0, indexedTokens: 0, aiImages: 0, aiImageFileBytes: 0 },
-  smart_page_ai: { pages: 1, pageMediaBytes: 250 * 1024 * 1024, imageBytes: 10 * 1024 * 1024, aiReplies: 800, knowledgeSources: 20, knowledgeBytes: 50 * 1024 * 1024, knowledgeFileBytes: 10 * 1024 * 1024, faqEntries: 200, indexedTokens: 500_000, aiImages: 50, aiImageFileBytes: 10 * 1024 * 1024 },
+  smart_page_ai: { pages: 10, blogPosts: 20, articleGenerations: 20, writingCredits: 40, pageMediaBytes: 250 * 1024 * 1024, imageBytes: 10 * 1024 * 1024, aiReplies: 800, knowledgeSources: 20, knowledgeBytes: 50 * 1024 * 1024, knowledgeFileBytes: 10 * 1024 * 1024, faqEntries: 200, indexedTokens: 500_000, aiImages: 50, aiImageFileBytes: 10 * 1024 * 1024 },
 } as const;
 
 // Legacy KnowChat limits remain for existing resource-manager callers.
@@ -25,26 +25,42 @@ export function normalizePlan(plan?: string | null) {
   return 'smart_page' as const;
 }
 
-export function getSmartPageEntitlement(user: { createdAt: Date; trialGrantedAt?: Date | null; subscriptions?: Array<{ tier?: string; planId?: string; status?: string; trialStart?: Date | null; trialEnd?: Date | null; currentPeriodEnd?: Date | null }> | null }, now = new Date()) {
+export function getSmartPageEntitlement(user: { createdAt: Date; trialGrantedAt?: Date | null; subscriptions?: Array<{ tier?: string; planId?: string; status?: string; trialStart?: Date | null; trialEnd?: Date | null; currentPeriodEnd?: Date | null; cancelAtPeriodEnd?: boolean }> | null }, now = new Date()) {
   const sub = user.subscriptions?.[0];
   const trialStart = sub?.trialStart ?? user.trialGrantedAt ?? user.createdAt;
   const trialEnd = sub?.trialEnd ?? new Date(trialStart.getTime() + TRIAL_MS);
-  const paidActive = !!sub && ['active', 'past_due'].includes(sub.status || '') && (!sub.currentPeriodEnd || sub.currentPeriodEnd > now);
+  const periodCurrent = !!sub && ['active', 'past_due'].includes(sub.status || '') && (!sub.currentPeriodEnd || sub.currentPeriodEnd > now);
+  const periodEnd = sub?.currentPeriodEnd ?? trialEnd;
+  const isPaymentFailure = sub?.status === 'past_due'
+    || (['expired', 'active'].includes(sub?.status || '') && !sub?.cancelAtPeriodEnd && !!sub?.currentPeriodEnd && sub.currentPeriodEnd <= now);
+  const paymentOverdue = isPaymentFailure;
+  const publicGraceEndsAt = isPaymentFailure
+    ? new Date(periodEnd.getTime() + 7 * 24 * 60 * 60 * 1000)
+    : sub && sub.status !== 'trialing'
+      ? periodEnd
+      : new Date(trialEnd.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const paymentGraceActive = isPaymentFailure && now <= publicGraceEndsAt;
+  const paidActive = periodCurrent && !paymentOverdue;
   const onTrial = sub?.status === 'trialing' && trialEnd > now;
-  const plan = paidActive ? normalizePlan(sub?.planId || sub?.tier) : onTrial ? 'trial' : 'smart_page';
-  const effectivePeriodEnd = sub?.currentPeriodEnd && sub.currentPeriodEnd > trialEnd ? sub.currentPeriodEnd : trialEnd;
-  const publicGraceEndsAt = new Date(effectivePeriodEnd.getTime() + 3 * 24 * 60 * 60 * 1000);
-  const isPaidExpired = !!sub && !paidActive && sub.status !== 'trialing';
+  const plan = (paidActive || paymentGraceActive) ? normalizePlan(sub?.planId || sub?.tier) : onTrial ? 'trial' : 'smart_page';
+  const isPaidExpired = !!sub && !periodCurrent && sub.status !== 'trialing';
+  const trialExpired = sub?.status === 'trialing'
+    ? now >= trialEnd
+    : !!sub
+      ? !periodCurrent && !paymentGraceActive && now >= publicGraceEndsAt
+      : !!user.trialGrantedAt && now >= trialEnd;
 
   return {
     plan,
     limits: SMART_PAGE_LIMITS[plan],
-    aiEnabled: plan !== 'smart_page',
+    aiEnabled: (plan !== 'smart_page' || onTrial) && !paymentOverdue,
     trialStart,
     trialEnd,
-    trialExpired: !!(sub || user.trialGrantedAt) && !paidActive && !onTrial && now >= trialEnd,
+    trialExpired,
     publicGraceEndsAt,
     paidActive,
+    paymentOverdue,
+    paymentGraceActive,
     onTrial,
     isPaidExpired,
   };

@@ -127,6 +127,7 @@ export function WritingAssistant({
   const [searchUsage, setSearchUsage] = useState<AiUsageSummary | null>(null);
   const [primaryKeyword, setPrimaryKeyword] = useState('');
   const [usage, setUsage] = useState<AiUsageSummary>(EMPTY_USAGE);
+  const [quotaNotice, setQuotaNotice] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [editMode, setEditMode] = useState<EditMode>('rewrite');
   const [editTone, setEditTone] = useState('');
@@ -172,9 +173,18 @@ export function WritingAssistant({
     }
   };
 
-  const recordUsage = (summary: AiUsageSummary | undefined | null) => {
+  const recordUsage = (summary: AiUsageSummary | undefined | null, quota?: { used: number; limit: number; renewsAt: string; warning?: 'low' | 'limit' }) => {
     if (!summary) return;
     setUsage((current) => addAiUsage(current, summary));
+    if (quota) {
+      const remaining = Math.max(0, quota.limit - quota.used);
+      const renewal = new Date(quota.renewsAt).toLocaleDateString();
+      setQuotaNotice(quota.warning === 'limit'
+        ? `Allowance used. It renews ${renewal}.`
+        : quota.warning === 'low'
+          ? `Allowance is running low: ${remaining} remaining. Renews ${renewal}.`
+          : `${remaining} remaining this billing cycle. Renews ${renewal}.`);
+    }
   };
 
   const updateBrief = (patch: Partial<WritingBrief>) => {
@@ -204,7 +214,7 @@ export function WritingAssistant({
         usage: result.usage,
       });
       setPendingArticle({ title: result.data.title, excerpt: result.data.excerpt });
-      recordUsage(result.usage);
+      recordUsage(result.usage, result.quota);
       notify('success', 'Draft generated. Review it before applying.');
     });
 
@@ -224,7 +234,7 @@ export function WritingAssistant({
       }
       setSearch(result.data);
       setSearchUsage(result.usage);
-      recordUsage(result.usage);
+      recordUsage(result.usage, result.quota);
       notify('success', 'Search suggestions ready. Choose what fits.');
     });
 
@@ -298,7 +308,7 @@ export function WritingAssistant({
         selectionText: selectedText || undefined,
         usage: result.usage,
       });
-      recordUsage(result.usage);
+      recordUsage(result.usage, result.quota);
       setEditInstruction('');
       notify('success', 'Changes ready. Review them before applying.');
     });
@@ -341,7 +351,7 @@ export function WritingAssistant({
         ...current,
         excerpt: { text: result.data.excerpt, usage: result.usage },
       }));
-      recordUsage(result.usage);
+      recordUsage(result.usage, result.quota);
     });
 
   const generateFaqs = () =>
@@ -359,7 +369,7 @@ export function WritingAssistant({
           usage: result.usage,
         },
       }));
-      recordUsage(result.usage);
+      recordUsage(result.usage, result.quota);
     });
 
   const generateSeo = () =>
@@ -378,7 +388,7 @@ export function WritingAssistant({
         ...current,
         seo: { seo: result.data, usage: result.usage },
       }));
-      recordUsage(result.usage);
+      recordUsage(result.usage, result.quota);
     });
 
   const suggestLinks = () =>
@@ -401,7 +411,7 @@ export function WritingAssistant({
           usage: result.usage,
         },
       }));
-      recordUsage(result.usage);
+      recordUsage(result.usage, result.quota);
     });
 
   const applySeo = (seo: SeoSuggestion) => {
@@ -797,6 +807,7 @@ export function WritingAssistant({
         </div>
       )}
 
+      {quotaNotice && <p role="status" className="rounded-lg border border-[#e6e2d8] bg-[#fffefb] px-3 py-2 text-xs text-[#77786f]">{quotaNotice}</p>}
       <UsageTotal usage={usage} />
     </div>
   );

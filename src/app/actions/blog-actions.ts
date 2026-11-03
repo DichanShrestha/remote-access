@@ -64,6 +64,8 @@ export async function createBlogArticleAction() {
     const article = result.article;
     return {
       success: true,
+      articleCount: result.articleCount,
+      ...(result.articleCount >= 16 ? { warning: `You have ${result.articleCount} of 20 Growth blog posts. Delete a post to free a slot.` } : {}),
       articleId: article.id,
       slug: article.slug,
       article: {

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import db from '@/lib/prisma';
 import { authService } from '@/services/auth';
 import { requireAIEntitlement } from '@/lib/billing/entitlements';
+import { GrowthQuotaError, reserveGrowthAI } from '@/lib/billing/growth-quotas';
 import { rateLimit } from '@/lib/rate-limit';
 import { getBlogWritingModel } from '@/lib/ai/providers';
 import { readAiUsage, type AiUsageSummary } from '@/lib/ai/usage';
@@ -64,7 +65,7 @@ const editModeSchema = z.enum([
 type BlogBrief = z.infer<typeof blogBriefSchema>;
 type EditMode = z.infer<typeof editModeSchema>;
 
-type AiSuccess<T> = { ok: true; data: T; usage: AiUsageSummary };
+type AiSuccess<T> = { ok: true; data: T; usage: AiUsageSummary; quota?: { used: number; limit: number; renewsAt: string; warning?: 'low' | 'limit' } };
 type AiFailure = { ok: false; error: string };
 type AiResult<T> = AiSuccess<T> | AiFailure;
 type AiHandlerResult<T> = { data: T; usage: AiUsageSummary };
@@ -162,6 +163,7 @@ function cleanArticleHtml(value: string): string {
 }
 
 function errorMessage(error: unknown): string {
+  if (error instanceof GrowthQuotaError) return error.message;
   if (error instanceof BlogAiNotice) return error.message;
   if (error instanceof Error && error.message.includes('AI features require')) return error.message;
   if (error instanceof Error && error.message.includes('trial has ended')) return error.message;
@@ -187,15 +189,24 @@ async function runBlogAi<T>(
     return { ok: false, error: 'The writing assistant is taking a short break. Try again in a few minutes.' };
   }
 
+  let quotaReservation;
+  try {
+    quotaReservation = await reserveGrowthAI(user.id, task === 'article' ? 'article' : task);
+  } catch (error) {
+    return { ok: false, error: errorMessage(error) };
+  }
+
   try {
     const { data, usage } = await handler(user.id, user.profile.id);
+    const quota = await quotaReservation?.finish(true, usage);
     await db.usage.upsert({
       where: { userId: user.id },
       create: { userId: user.id, aiEdits: 1 },
       update: { aiEdits: { increment: 1 } },
     });
-    return { ok: true, data, usage };
+    return { ok: true, data, usage, ...(quota ? { quota: { ...quota, renewsAt: quota.renewsAt.toISOString() } } : {}) };
   } catch (error) {
+    await quotaReservation?.finish(false).catch((releaseError) => console.error('Could not release blog AI quota reservation:', releaseError));
     console.error(`Blog AI ${task} error:`, error);
     return { ok: false, error: errorMessage(error) };
   }

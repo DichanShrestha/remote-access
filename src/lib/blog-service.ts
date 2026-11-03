@@ -80,7 +80,7 @@ export async function createBlogArticle(
 ) {
   const profile = await db.profile.findUnique({
     where: { id: profileId },
-    select: { displayName: true, avatarUrl: true },
+    select: { displayName: true, avatarUrl: true, userId: true },
   });
   if (!profile) throw new Error('Profile not found');
 
@@ -93,7 +93,12 @@ export async function createBlogArticle(
   }
 
   try {
-    const article = await db.$transaction(async (tx) => {
+    const created = await db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${profile.userId}::uuid FOR UPDATE`;
+      const subscription = await tx.subscription.findFirst({ where: { userId: profile.userId }, orderBy: { updatedAt: 'desc' }, select: { planId: true, tier: true, status: true } });
+      const isGrowth = ['active', 'past_due', 'expired'].includes(subscription?.status || '') && ['smart_page_ai', 'growth'].includes((subscription?.planId || subscription?.tier || '').toLowerCase());
+      const articleCount = isGrowth ? await tx.blogArticle.count({ where: { profile: { userId: profile.userId } } }) : 0;
+      if (isGrowth && articleCount >= 20) throw new BlogCapacityReachedError();
       const slug = requestedSlug
         ? normalizeBlogSlug(requestedSlug)
         : await uniqueBlogSlug(tx, profileId, slugifyBlogTitle(title));
@@ -108,7 +113,7 @@ export async function createBlogArticle(
 
       await tx.blogArticleSlugRedirect.deleteMany({ where: { profileId, slug } });
 
-      return tx.blogArticle.create({
+      const article = await tx.blogArticle.create({
         data: {
           profileId,
           title,
@@ -118,16 +123,27 @@ export async function createBlogArticle(
           status: BlogStatus.DRAFT,
         },
       });
+      const countAfterCreate = articleCount + 1;
+      const thresholdNotices = ([16, 20] as const).filter((threshold) => isGrowth && countAfterCreate === threshold).map((threshold) => ({
+        userId: profile.userId,
+        key: `growth-blog-posts-${threshold}`,
+        message: threshold === 20 ? 'You have reached the 20 Growth blog post limit.' : 'You have used 16 of 20 Growth blog post slots. Delete a post to free a slot.',
+      }));
+      if (thresholdNotices.length) await tx.usageNotice.createMany({ data: thresholdNotices, skipDuplicates: true });
+      return { article, articleCount: articleCount + 1 };
     });
 
-    return { ok: true as const, article };
+    return { ok: true as const, article: created.article, articleCount: created.articleCount };
   } catch (error) {
+    if (error instanceof BlogCapacityReachedError) return { ok: false as const, error: 'Growth includes up to 20 blog posts across your workspace. Delete a post or change plans to add another.', code: 'CAPACITY' as const };
     if (error instanceof BlogSlugTakenError || isUniqueConstraintError(error)) {
       return { ok: false as const, error: 'That article URL is already in use. Choose another one.', code: 'SLUG_TAKEN' as const };
     }
     throw error;
   }
 }
+
+class BlogCapacityReachedError extends Error {}
 
 export async function saveBlogArticle(
   profileId: string,

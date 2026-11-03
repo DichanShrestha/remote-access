@@ -38,7 +38,8 @@ import {
   createCheckoutSession,
   createCustomerPortalSession,
   cancelManualSubscription,
-  startFreeTrial
+  startFreeTrial,
+  scheduleStarterDowngrade,
 } from "@/app/actions/billing-actions";
 import { createInternationalAffiliateCheckout, createManualAffiliatePurchase, validateAffiliateCode } from "@/app/actions/affiliate-actions";
 import { createClient } from "@/lib/supabase/client";
@@ -87,6 +88,12 @@ export interface UsageMetrics {
     limit: number;
     included: boolean;
   };
+  staticPages: { used: number; limit: number; included: boolean };
+  blogPosts: { used: number; limit: number; included: boolean };
+  articleGenerations: { used: number; limit: number; included: boolean };
+  writingCredits: { used: number; limit: number; included: boolean };
+  billingNotices: Array<{ message: string; createdAt: string }>;
+  billingAlert: string | null;
 }
 
 interface SettingsClientProps {
@@ -155,6 +162,7 @@ export function SettingsClient({
   // Billing State
   const [isBillingPending, startBillingTransition] = useTransition();
   const [billingError, setBillingError] = useState<string | null>(null);
+  const [showDowngradeConfirm, setShowDowngradeConfirm] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoResult, setPromoResult] = useState<{ valid: boolean; discountAvailable?: boolean; discountPercent?: number; message: string } | null>(null);
   const [checkingPromo, setCheckingPromo] = useState(false);
@@ -339,6 +347,32 @@ export function SettingsClient({
     });
   };
 
+  const handleScheduleDowngrade = () => {
+    setBillingError(null);
+    startBillingTransition(async () => {
+      try {
+        await scheduleStarterDowngrade();
+        setShowDowngradeConfirm(false);
+        router.refresh();
+      } catch (err: any) {
+        setBillingError(err.message || 'Could not schedule the plan change.');
+      }
+    });
+  };
+
+  const confirmStarterSwitch = () => {
+    if (subscription?.billingMethod === 'dodo') {
+      handleScheduleDowngrade();
+      return;
+    }
+    if (pricingMode !== 'nepal') {
+      setBillingError('Manual subscriptions use Nepal billing. Change the billing location to Nepal to continue.');
+      return;
+    }
+    setShowDowngradeConfirm(false);
+    handleNepalPurchase('smart_page');
+  };
+
   // Delete Page Handler
   const handleConfirmDeletePage = () => {
     setDeletePageError(null);
@@ -516,7 +550,14 @@ function formatBytes(bytes: number): string {
         )
       : 0;
 
+  const quotaPercent = (used: number, limit: number, included: boolean) => included && limit > 0 ? Math.min(100, Math.round(used / limit * 100)) : 0;
+  const staticPagesPercent = quotaPercent(usageMetrics.staticPages.used, usageMetrics.staticPages.limit, usageMetrics.staticPages.included);
+  const blogPostsPercent = quotaPercent(usageMetrics.blogPosts.used, usageMetrics.blogPosts.limit, usageMetrics.blogPosts.included);
+  const articleGenerationsPercent = quotaPercent(usageMetrics.articleGenerations.used, usageMetrics.articleGenerations.limit, usageMetrics.articleGenerations.included);
+  const writingCreditsPercent = quotaPercent(usageMetrics.writingCredits.used, usageMetrics.writingCredits.limit, usageMetrics.writingCredits.included);
+
   const isNearAnyLimit =
+    staticPagesPercent >= 80 || blogPostsPercent >= 80 || articleGenerationsPercent >= 80 || writingCreditsPercent >= 80 ||
     (usageMetrics.aiReplies.included && aiRepliesPercent >= 80) ||
     (usageMetrics.knowledgeSources.included && knowledgeSourcesPercent >= 80) ||
     (usageMetrics.faqEntries.included && faqEntriesPercent >= 80) ||
@@ -578,6 +619,8 @@ function formatBytes(bytes: number): string {
       {!accountOnly && activeTab === "billing" && (
         <div className="space-y-6">
           {/* Warning Banner if Near Limit */}
+          {usageMetrics.billingAlert && <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-950">{usageMetrics.billingAlert}</div>}
+          {usageMetrics.billingNotices.length > 0 && <section aria-label="Subscription notifications" className="rounded-2xl border border-[#E8E5DF] bg-white p-4"><h2 className="text-sm font-semibold text-[#171717]">Subscription updates</h2><ul className="mt-2 space-y-2">{usageMetrics.billingNotices.map((notice) => <li key={`${notice.createdAt}-${notice.message}`} className="text-xs text-[#565850]">{notice.message} <time className="ml-1 text-[#8C8D85]">{new Date(notice.createdAt).toLocaleDateString()}</time></li>)}</ul></section>}
           {isNearAnyLimit && (
             <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-900">
               <AlertCircle size={18} className="text-amber-600 shrink-0 mt-0.5" />
@@ -585,11 +628,7 @@ function formatBytes(bytes: number): string {
                 <span className="font-semibold block mb-0.5">
                   Approaching Plan Limit (80%+)
                 </span>
-                <span>
-                  You have used 80% or more of your allocated quotas. Consider
-                  upgrading to Growth to ensure visitor chat and storage
-                  are never interrupted.
-                </span>
+                <span>You have used at least 80% of one or more plan limits. Remaining use and renewal dates are shown below.</span>
               </div>
             </div>
           )}
@@ -623,6 +662,27 @@ function formatBytes(bytes: number): string {
                     : "Active Tier Quotas"}
                 </span>
               </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {([
+                ['Static pages', usageMetrics.staticPages, staticPagesPercent, 'pages'],
+                ['Blog posts', usageMetrics.blogPosts, blogPostsPercent, 'posts'],
+                ['AI article generations', usageMetrics.articleGenerations, articleGenerationsPercent, 'generations'],
+                ['AI writing assistance', usageMetrics.writingCredits, writingCreditsPercent, 'credits'],
+              ] as const).map(([label, item, percent, unit]) => (
+                <div key={label} className="rounded-xl border border-[#E8E5DF] bg-[#FBF9F5] p-4">
+                  <p className="text-xs font-semibold text-[#565850]">{label}</p>
+                  {item.included ? <>
+                    <p className="mt-2 text-lg font-bold text-[#171717]">{item.used} / {item.limit} <span className="text-xs font-medium text-[#8C8D85]">{unit}</span></p>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#E8E5DF]"><div className={cn('h-full rounded-full', percent >= 100 ? 'bg-red-600' : percent >= 80 ? 'bg-amber-500' : 'bg-[#171717]')} style={{ width: `${Math.max(percent, 2)}%` }} /></div>
+                    <p className={cn('mt-2 text-[11px]', percent >= 100 ? 'text-red-700' : percent >= 80 ? 'text-amber-800' : 'text-[#8C8D85]')}>
+                      {percent >= 100 ? 'Limit reached.' : `${Math.max(0, item.limit - item.used)} remaining.`}
+                      {label !== 'Static pages' && usageMetrics.currentPeriodEnd ? ` Renews ${new Date(usageMetrics.currentPeriodEnd).toLocaleDateString()}.` : ''}
+                    </p>
+                  </> : <p className="mt-2 text-xs text-[#8C8D85]">Growth plan allowance.</p>}
+                </div>
+              ))}
             </div>
 
             {/* Spotlight AI Replies Card */}
@@ -975,17 +1035,22 @@ function formatBytes(bytes: number): string {
                 </div>
 
                 <button
-                  onClick={() => pricingMode === "nepal" ? handleNepalPurchase("smart_page") :
-                    handleCheckoutPlan(process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE || "", "smart_page")}
+                  onClick={() => usageMetrics.plan === 'smart_page_ai' && usageMetrics.isPaidActive
+                    ? setShowDowngradeConfirm(true)
+                    : pricingMode === "nepal" ? handleNepalPurchase("smart_page") :
+                      handleCheckoutPlan(process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE || "", "smart_page")}
                   disabled={
                     isBillingPending ||
-                    (pricingMode !== "nepal" && usageMetrics.plan === "smart_page" && !usageMetrics.isTrial && usageMetrics.isPaidActive)
+                    (usageMetrics.plan === "smart_page" && !usageMetrics.isTrial && usageMetrics.isPaidActive)
                   }
                   className="w-full py-2.5 px-4 rounded-xl border border-[#E8E5DF] bg-white hover:bg-[#F2EFE9] text-[#171717] text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {pricingMode === "nepal" ? isBillingPending ? "Preparing payment…" : "Continue to Nepal payment" : usageMetrics.plan === "smart_page" && !usageMetrics.isTrial && usageMetrics.isPaidActive
+                  {usageMetrics.plan === "smart_page" && !usageMetrics.isTrial && usageMetrics.isPaidActive
                     ? "Current Active Plan"
-                    : `Switch to Starter (${getPlanPrice("smart_page", pricingMode).display}/month)`}
+                    : pricingMode === "nepal" ? isBillingPending ? "Preparing payment…" : "Continue to Nepal payment"
+                      : usageMetrics.plan === 'smart_page_ai' && usageMetrics.isPaidActive
+                        ? 'Switch Growth to Starter'
+                        : `Switch to Starter (${getPlanPrice("smart_page", pricingMode).display}/month)`}
                 </button>
               </div>
 
@@ -1010,6 +1075,9 @@ function formatBytes(bytes: number): string {
                   </div>
 
                   <ul className="space-y-2.5 my-6 text-xs text-[#E8E5DF]">
+                    <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400 shrink-0" />10 static pages and 20 blog posts</li>
+                    <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400 shrink-0" />20 AI article generations each billing month</li>
+                    <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400 shrink-0" />40 AI writing assistance credits each billing month</li>
                     <li className="flex items-center gap-2">
                       <Zap size={14} className="text-amber-400 shrink-0" />
                       <strong>800 AI Chatbot replies</strong> every month
@@ -1038,16 +1106,26 @@ function formatBytes(bytes: number): string {
                     handleCheckoutPlan(process.env.NEXT_PUBLIC_DODO_PRODUCT_SMART_PAGE_AI || "", "smart_page_ai")}
                   disabled={
                     isBillingPending ||
-                    (pricingMode !== "nepal" && usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial && usageMetrics.isPaidActive)
+                    (usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial && usageMetrics.isPaidActive)
                   }
                   className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#F2EFE9] text-[#171717] text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer shadow-xs"
                 >
-                  {pricingMode === "nepal" ? isBillingPending ? "Preparing payment…" : "Continue to Nepal payment" : usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial && usageMetrics.isPaidActive
+                  {usageMetrics.plan === "smart_page_ai" && !usageMetrics.isTrial && usageMetrics.isPaidActive
                     ? "Current Active Plan"
-                    : `Upgrade to Growth (${getPlanPrice("smart_page_ai", pricingMode).display}/month)`}
+                    : pricingMode === "nepal" ? isBillingPending ? "Preparing payment…" : "Continue to Nepal payment"
+                      : `Upgrade to Growth (${getPlanPrice("smart_page_ai", pricingMode).display}/month)`}
                 </button>
               </div>
             </div>
+            {['dodo', 'manual'].includes(subscription?.billingMethod || '') && usageMetrics.plan === 'smart_page_ai' && <div className="mt-6 flex flex-col items-start gap-3 rounded-xl border border-[#E8E5DF] bg-[#FBF9F5] p-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-[#565850]">{subscription?.billingMethod === 'dodo' ? 'Schedule a switch to Starter for your next billing date.' : 'Request a switch to Starter through the existing manual billing flow.'}</p>
+              <button type="button" onClick={() => setShowDowngradeConfirm(true)} disabled={isBillingPending || (subscription?.billingMethod === 'dodo' && subscription.cancelAtPeriodEnd)} className="rounded-lg border border-[#D8D5CD] bg-white px-3 py-2 text-xs font-semibold text-[#171717] disabled:opacity-50">Switch to Starter</button>
+            </div>}
+            {showDowngradeConfirm && <div role="dialog" aria-modal="true" aria-labelledby="downgrade-title" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-5">
+              <h3 id="downgrade-title" className="text-sm font-bold text-amber-950">Confirm switch to Starter</h3>
+              <p className="mt-2 text-xs leading-5 text-amber-950">{subscription?.billingMethod === 'dodo' ? 'The change takes effect on your next billing date.' : 'For manual Nepal billing, the change takes effect after Pageory verifies the Starter payment.'} Starter allows 1 static page and does not include AI writing, article generation, or Growth chatbot features. Your existing pages, posts, media, and settings stay saved; content is not deleted. You may need to reduce active use before adding more pages or using Growth features again.</p>
+              <div className="mt-4 flex gap-2"><button type="button" onClick={confirmStarterSwitch} disabled={isBillingPending} className="rounded-lg bg-[#171717] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{isBillingPending ? 'Processing…' : subscription?.billingMethod === 'dodo' ? 'Confirm at next renewal' : 'Continue to Starter payment'}</button><button type="button" onClick={() => setShowDowngradeConfirm(false)} className="rounded-lg border border-[#D8D5CD] bg-white px-3 py-2 text-xs font-semibold">Keep Growth</button></div>
+            </div>}
           </section>
         </div>
       )}

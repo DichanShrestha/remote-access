@@ -44,12 +44,17 @@ type SaveState = 'saved' | 'unsaved' | 'saving' | 'error';
 export function BlogStudio({
   initialArticles,
   username,
+  isGrowth,
+  growthPostCount,
 }: {
   initialArticles: BlogArticleDraft[];
   username: string;
+  isGrowth: boolean;
+  growthPostCount: number;
 }) {
   const router = useRouter();
   const [articles, setArticles] = useState<BlogArticleDraft[]>(initialArticles);
+  const [workspacePostCount, setWorkspacePostCount] = useState(growthPostCount);
   const [selectedId, setSelectedId] = useState<string | null>(initialArticles[0]?.id ?? null);
   const [draft, setDraft] = useState<BlogArticleDraft | null>(initialArticles[0] ?? null);
   const [saveState, setSaveState] = useState<SaveState>('saved');
@@ -238,10 +243,12 @@ export function BlogStudio({
     setBusy('create');
     try {
       const result = await createBlogArticleAction();
-      if (!result.success || !result.article) {
+      if ('error' in result || !result.article) {
         toast.error(result.error || 'The article could not be created.');
         return;
       }
+      if (result.warning) toast.warning(result.warning);
+      if (typeof result.articleCount === 'number') setWorkspacePostCount(result.articleCount);
       const article = result.article as BlogArticleDraft;
       articlesRef.current = [article, ...articlesRef.current];
       setArticles(articlesRef.current);
@@ -407,6 +414,7 @@ export function BlogStudio({
 
   return (
     <div className="flex h-[calc(100dvh-5rem)] min-h-[620px] flex-col lg:h-[calc(100dvh-7rem)]">
+      {isGrowth && workspacePostCount >= 16 && <div role="status" className="mx-4 mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 lg:mx-0">{workspacePostCount >= 20 ? 'You have reached the 20 post limit. Delete a post to create another.' : `You have ${workspacePostCount} of 20 Growth blog posts. Delete a post to free a slot.`}</div>}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#a0a196]">

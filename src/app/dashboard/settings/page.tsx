@@ -5,6 +5,7 @@ import { getSmartPageEntitlement, SMART_PAGE_LIMITS } from "@/lib/tier-limits";
 import { cookies, headers } from "next/headers";
 import { getInitialPricingMode, PRICING_MODE_COOKIE } from "@/lib/pricing";
 import { getAccountCapabilities } from '@/services/capabilities';
+import { getGrowthQuotaSummary, GROWTH_LIMITS } from '@/lib/billing/growth-quotas';
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -18,6 +19,12 @@ const emptyUsageMetrics: UsageMetrics = {
   knowledgeStorage: { usedBytes: 0, limitBytes: 0, included: false },
   pageMediaStorage: { usedBytes: 0, limitBytes: 0, included: false },
   indexedTokens: { used: 0, limit: 0, included: false },
+  staticPages: { used: 0, limit: 0, included: false },
+  blogPosts: { used: 0, limit: 0, included: false },
+  articleGenerations: { used: 0, limit: 0, included: false },
+  writingCredits: { used: 0, limit: 0, included: false },
+  billingNotices: [],
+  billingAlert: null,
 };
 
 export default async function SettingsPage({
@@ -54,6 +61,14 @@ export default async function SettingsPage({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
     }));
+
+  const [quotaSummary, staticPageCount, blogPostCount, billingNotices, usageNotices] = await Promise.all([
+    getGrowthQuotaSummary(user.id),
+    db.page.count({ where: { profile: { userId: user.id } } }),
+    db.blogArticle.count({ where: { profile: { userId: user.id } } }),
+    db.billingNotice.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' }, take: 8, select: { message: true, createdAt: true } }),
+    db.usageNotice.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' }, take: 8, select: { message: true, createdAt: true } }),
+  ]);
 
   const entitlement = account ? getSmartPageEntitlement(account) : null;
   const plan: "trial" | "smart_page" | "smart_page_ai" =
@@ -155,6 +170,16 @@ export default async function SettingsPage({
       limit: limits.indexedTokens,
       included: plan !== "smart_page",
     },
+    staticPages: { used: staticPageCount, limit: limits.pages, included: true },
+    blogPosts: { used: blogPostCount, limit: plan === 'smart_page_ai' ? GROWTH_LIMITS.blogPosts : 0, included: plan === 'smart_page_ai' },
+    articleGenerations: { used: quotaSummary.articleGenerations + quotaSummary.articleGenerationsReserved, limit: plan === 'smart_page_ai' ? GROWTH_LIMITS.articleGenerations : 0, included: plan === 'smart_page_ai' },
+    writingCredits: { used: quotaSummary.writingCredits + quotaSummary.writingCreditsReserved, limit: plan === 'smart_page_ai' ? GROWTH_LIMITS.writingCredits : 0, included: plan === 'smart_page_ai' },
+    billingNotices: [...billingNotices, ...usageNotices].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 8).map((notice) => ({ ...notice, createdAt: notice.createdAt.toISOString() })),
+    billingAlert: entitlement?.paymentOverdue
+      ? 'Payment is overdue. AI and other paid operations are paused. Public hosting stays available for 7 days after the billing period ends.'
+      : entitlement?.paymentGraceActive
+        ? `Your public website is in its payment grace period until ${entitlement.publicGraceEndsAt.toLocaleDateString()}. Update billing to keep it online.`
+        : null,
   };
 
   return (

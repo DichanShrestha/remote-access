@@ -84,6 +84,7 @@ export async function loadSitemapEntries(options: {
                   trialStart: true,
                   trialEnd: true,
                   currentPeriodEnd: true,
+                  cancelAtPeriodEnd: true,
                 },
               },
             },

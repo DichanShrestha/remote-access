@@ -82,6 +82,7 @@ const profileSelect = {
           trialStart: true,
           trialEnd: true,
           currentPeriodEnd: true,
+          cancelAtPeriodEnd: true,
         },
       },
     },
