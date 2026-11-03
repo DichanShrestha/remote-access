@@ -6,13 +6,10 @@ import {
   PublicBlogChrome,
   PublicBlogUnavailable,
 } from '@/components/blog/PublicBlogChrome';
-import {
-  blogArticlePath,
-  formatBlogDate,
-  resolveBlogArticleSeo,
-} from '@/lib/blog';
+import { formatBlogDate, resolveBlogArticleSeo } from '@/lib/blog';
 import { getPublicBlogArticle } from '@/lib/public-blog';
-import { resolveSiteUrl, toAbsoluteUrl } from '@/lib/seo';
+import { resolveSiteUrl } from '@/lib/seo';
+import { buildBlogPostingGraph, serializeJsonLd } from '@/lib/schema';
 
 interface PublicBlogArticleProps {
   params: Promise<{ username: string; slug: string }>;
@@ -57,10 +54,8 @@ export default async function PublicBlogArticle({
   const { profile, article } = lookup.data;
   const snapshot = article.snapshot;
   const siteUrl = resolveSiteUrl();
-  const canonical = new URL(
-    blogArticlePath(profile.username, article.publicSlug),
-    siteUrl,
-  ).toString();
+  const seo = resolveBlogArticleSeo({ siteUrl, username: profile.username, displayName: profile.displayName, article: { ...snapshot, slug: article.publicSlug }, indexable: profile.websitePublished && !profile.unavailable });
+  const jsonLd = buildBlogPostingGraph({ profile, article, canonicalUrl: seo.canonicalUrl, siteUrl });
   const authorName = snapshot.authorName.trim() || profile.displayName;
   const authorInitials =
     authorName
@@ -69,33 +64,6 @@ export default async function PublicBlogArticle({
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
       .join('') || 'P';
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: snapshot.title,
-    description: snapshot.excerpt,
-    image: toAbsoluteUrl(
-      snapshot.ogImage || snapshot.featuredImageUrl || '/logo.png',
-      siteUrl,
-    ),
-    datePublished: snapshot.publishedAt,
-    dateModified: snapshot.updatedAt,
-    author: {
-      '@type': 'Person',
-      name: authorName,
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: profile.displayName,
-    },
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': canonical,
-    },
-    ...(snapshot.categories[0] ? { articleSection: snapshot.categories[0] } : {}),
-    ...(snapshot.tags.length ? { keywords: snapshot.tags.join(', ') } : {}),
-  };
 
   return (
     <PublicBlogChrome
@@ -107,12 +75,7 @@ export default async function PublicBlogArticle({
         <PublicBlogUnavailable displayName={profile.displayName} />
       ) : (
         <main>
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
-            }}
-          />
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
 
           <div className="mx-auto w-full max-w-3xl px-5 pb-16 pt-8 sm:px-8 sm:pt-10">
             <Link

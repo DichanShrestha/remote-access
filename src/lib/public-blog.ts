@@ -23,7 +23,9 @@ type BlogProfile = {
   id: string;
   username: string;
   displayName: string;
+  type: string;
   bio: string | null;
+  avatarUrl: string | null;
   homePublished: boolean;
   unavailable: boolean;
   websitePublished: boolean;
@@ -57,7 +59,9 @@ const profileSelect = {
   id: true,
   username: true,
   displayName: true,
+  type: true,
   bio: true,
+  avatarUrl: true,
   pages: {
     where: { OR: [{ pageType: 'HOME' as const }, { slug: '' }] },
     select: { isPublished: true },
@@ -103,7 +107,9 @@ const getBlogProfile = cache(async (rawUsername: string): Promise<BlogProfile | 
     id: profile.id,
     username: profile.username,
     displayName: profile.displayName,
+    type: profile.type,
     bio: profile.bio,
+    avatarUrl: profile.avatarUrl,
     homePublished,
     unavailable,
     websitePublished: homePublished && !profile.user.suspendedAt,

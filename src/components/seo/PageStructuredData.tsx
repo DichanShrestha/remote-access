@@ -1,4 +1,5 @@
-import { resolveSiteUrl, type ResolvedPageSeo } from '@/lib/seo';
+import { buildWebsitePageGraph, serializeJsonLd } from '@/lib/schema';
+import type { ResolvedPageSeo } from '@/lib/seo';
 
 /**
  * Server-rendered structured data. Search and AI crawlers receive this in the
@@ -8,39 +9,37 @@ export function PageStructuredData({
   seo,
   username,
   updatedAt,
+  displayName,
+  profileType,
+  bio,
+  avatarUrl,
+  sections,
+  pageSlug,
+  pageType,
 }: {
   seo: ResolvedPageSeo;
   username: string;
   updatedAt: Date;
+  displayName: string;
+  profileType: string;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  sections: unknown;
+  pageSlug: string;
+  pageType: string;
 }) {
-  const siteUrl = resolveSiteUrl();
-  const businessUrl = `${siteUrl}/${encodeURIComponent(username)}`;
-
-  const data = {
-    '@context': 'https://schema.org',
-    '@type': seo.isHome ? 'WebSite' : 'WebPage',
-    name: seo.title,
-    description: seo.description,
-    url: seo.canonicalUrl,
-    inLanguage: 'en',
-    isPartOf: {
-      '@type': 'WebSite',
-      name: seo.openGraph.siteName,
-      url: businessUrl,
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: seo.openGraph.siteName,
-      url: businessUrl,
-    },
-    dateModified: updatedAt.toISOString(),
-  };
+  const data = buildWebsitePageGraph({
+    profile: { username, displayName, type: profileType, bio, avatarUrl },
+    page: { title: seo.title, slug: pageSlug, pageType, updatedAt },
+    seo,
+    sections,
+  });
 
   return (
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(data).replace(/</g, '\\u003c'),
+        __html: serializeJsonLd(data),
       }}
     />
   );

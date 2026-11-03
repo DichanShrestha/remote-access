@@ -9,6 +9,7 @@ import {
   ArrowUp,
   Briefcase,
   Check,
+  ChevronRight,
   ExternalLink,
   Eye,
   EyeOff,
@@ -76,17 +77,29 @@ function isError(result: { error?: string }): result is { error: string } {
   return typeof result.error === 'string' && result.error.length > 0;
 }
 
+export type ArticleSummary = {
+  id: string;
+  title: string;
+  slug: string;
+  status: 'DRAFT' | 'SCHEDULED' | 'PUBLISHED';
+  updatedAt: string;
+};
+
 export function PagesClient({
   username,
   pages: initialPages,
+  articles: initialArticles = [],
   homePageId,
 }: {
   username: string;
   pages: PageRow[];
+  articles?: ArticleSummary[];
   homePageId: string | null;
 }) {
   const router = useRouter();
   const [pages, setPages] = useState(initialPages);
+  const [articles, setArticles] = useState<ArticleSummary[]>(initialArticles);
+  const [blogExpanded, setBlogExpanded] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [settingsPageId, setSettingsPageId] = useState<string | null>(null);
   const [deletePageId, setDeletePageId] = useState<string | null>(null);
@@ -95,6 +108,45 @@ export function PagesClient({
   useEffect(() => {
     setPages(initialPages);
   }, [initialPages]);
+
+  useEffect(() => {
+    setArticles(initialArticles);
+  }, [initialArticles]);
+
+  // Real-time synchronization with Blog Studio
+  useEffect(() => {
+    const handleBlogSync = (event: Event) => {
+      const custom = event as CustomEvent<{
+        action: 'create' | 'delete' | 'rename' | 'status';
+        article?: ArticleSummary;
+        id?: string;
+        title?: string;
+        status?: 'DRAFT' | 'SCHEDULED' | 'PUBLISHED';
+      }>;
+      if (!custom.detail) return;
+      const { action, article, id, title, status } = custom.detail;
+
+      setArticles((prev) => {
+        if (action === 'create' && article) {
+          if (prev.some((a) => a.id === article.id)) return prev;
+          return [article, ...prev];
+        }
+        if (action === 'delete' && id) {
+          return prev.filter((a) => a.id !== id);
+        }
+        if (action === 'rename' && id && title !== undefined) {
+          return prev.map((a) => (a.id === id ? { ...a, title } : a));
+        }
+        if (action === 'status' && id && status) {
+          return prev.map((a) => (a.id === id ? { ...a, status } : a));
+        }
+        return prev;
+      });
+    };
+
+    window.addEventListener('pageory:blog-sync', handleBlogSync);
+    return () => window.removeEventListener('pageory:blog-sync', handleBlogSync);
+  }, []);
 
   const settingsPage = useMemo(
     () => pages.find((page) => page.id === settingsPageId) || null,
@@ -230,121 +282,236 @@ export function PagesClient({
             {pages.map((page, index) => {
               const Icon = TYPE_ICONS[page.pageType] || FileText;
               const isHome = page.id === homePageId;
+              const isBlog = page.pageType === 'BLOG' || page.slug === 'blog';
               return (
-                <li key={page.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center">
-                  <div className="flex min-w-0 flex-1 items-start gap-3.5">
-                    <span className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#F2EFE9] text-[#565850]">
-                      <Icon size={16} />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-sm font-semibold text-[#292A25]">{isHome ? 'Homepage' : page.title}</p>
-                        <span className={cn(
-                          'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                          page.isPublished ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700',
-                        )}>
-                          {page.isPublished ? 'Published' : 'Draft'}
+                <li key={page.id} className="flex flex-col">
+                  <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center">
+                    <div className="flex min-w-0 flex-1 items-start gap-3.5">
+                      {isBlog ? (
+                        <button
+                          type="button"
+                          onClick={() => setBlogExpanded((prev) => !prev)}
+                          className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#F2EFE9] text-[#565850] hover:bg-[#E8E5DF] transition-colors relative"
+                          title={blogExpanded ? 'Collapse blog posts' : 'Expand blog posts'}
+                        >
+                          <Icon size={16} />
+                          <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white border border-[#E8E5DF] text-[#777970] shadow-2xs">
+                            <ChevronRight size={10} className={cn('transition-transform duration-200', blogExpanded && 'rotate-90')} />
+                          </span>
+                        </button>
+                      ) : (
+                        <span className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#F2EFE9] text-[#565850]">
+                          <Icon size={16} />
                         </span>
-                        {isHome && (
-                          <span className="rounded-full bg-[#F2EFE9] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#777970]">
-                            Homepage
+                      )}
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-[#292A25]">{isHome ? 'Homepage' : page.title}</p>
+                          <span className={cn(
+                            'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                            page.isPublished ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700',
+                          )}>
+                            {page.isPublished ? 'Published' : 'Draft'}
                           </span>
-                        )}
-                        {!page.showInNavigation && !isHome && (
-                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-[#8C8D85]">
-                            <EyeOff size={11} /> Hidden
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 truncate text-xs text-[#777970]">
-                        {page.path}
-                        <span className="mx-1.5 text-[#C9C5BC]">·</span>
-                        {PAGE_TYPE_META[page.pageType].label}
-                        <span className="mx-1.5 text-[#C9C5BC]">·</span>
-                        Updated {formatDistanceToNow(new Date(page.updatedAt), { addSuffix: true })}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
-                    <div className="mr-1 flex items-center rounded-lg border border-[#E8E5DF]">
-                      <button
-                        onClick={() => movePage(index, -1)}
-                        disabled={pending || isHome || index === 0 || index - 1 === homeIndex}
-                        className="p-1.5 text-[#777970] hover:bg-[#F6F4EE] disabled:opacity-30"
-                        title="Move up"
-                      >
-                        <ArrowUp size={13} />
-                      </button>
-                      <button
-                        onClick={() => movePage(index, 1)}
-                        disabled={pending || isHome || index === pages.length - 1}
-                        className="p-1.5 text-[#777970] hover:bg-[#F6F4EE] disabled:opacity-30"
-                        title="Move down"
-                      >
-                        <ArrowDown size={13} />
-                      </button>
-                    </div>
-
-                    {!isHome && (
-                      <button
-                        onClick={() => toggleNavigation(page)}
-                        disabled={pending}
-                        className="rounded-lg border border-[#E8E5DF] p-2 text-[#777970] hover:bg-[#F6F4EE] disabled:opacity-40"
-                        title={page.showInNavigation ? 'Hide from navigation' : 'Show in navigation'}
-                      >
-                        {page.showInNavigation ? <Eye size={14} /> : <EyeOff size={14} />}
-                      </button>
-                    )}
-
-                    <Link
-                      href={`/editor?page=${page.id}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#E8E5DF] px-3 py-2 text-xs font-medium text-[#565850] hover:bg-[#F6F4EE]"
-                    >
-                      <Pencil size={13} /> Edit
-                    </Link>
-
-                    <a
-                      href={page.path}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-lg border border-[#E8E5DF] p-2 text-[#777970] hover:bg-[#F6F4EE]"
-                      title="View page"
-                    >
-                      <ExternalLink size={14} />
-                    </a>
-
-                    {!isHome && (
-                      <>
-                        <button
-                          onClick={() => togglePublished(page)}
-                          disabled={pending}
-                          className={cn(
-                            'rounded-lg border px-3 py-2 text-xs font-medium disabled:opacity-40',
-                            page.isPublished
-                              ? 'border-[#E8E5DF] text-[#565850] hover:bg-[#F6F4EE]'
-                              : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100',
+                          {isHome && (
+                            <span className="rounded-full bg-[#F2EFE9] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#777970]">
+                              Homepage
+                            </span>
                           )}
+                          {isBlog && (
+                            <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-700 border border-purple-200/60">
+                              Blog Index
+                            </span>
+                          )}
+                          {!page.showInNavigation && !isHome && (
+                            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-[#8C8D85]">
+                              <EyeOff size={11} /> Hidden
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 truncate text-xs text-[#777970]">
+                          {page.path}
+                          <span className="mx-1.5 text-[#C9C5BC]">·</span>
+                          {PAGE_TYPE_META[page.pageType].label}
+                          <span className="mx-1.5 text-[#C9C5BC]">·</span>
+                          Updated {formatDistanceToNow(new Date(page.updatedAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
+                      <div className="mr-1 flex items-center rounded-lg border border-[#E8E5DF]">
+                        <button
+                          onClick={() => movePage(index, -1)}
+                          disabled={pending || isHome || index === 0 || index - 1 === homeIndex}
+                          className="p-1.5 text-[#777970] hover:bg-[#F6F4EE] disabled:opacity-30"
+                          title="Move up"
                         >
-                          {page.isPublished ? 'Unpublish' : 'Publish'}
+                          <ArrowUp size={13} />
                         </button>
                         <button
-                          onClick={() => setSettingsPageId(page.id)}
-                          className="rounded-lg border border-[#E8E5DF] p-2 text-[#777970] hover:bg-[#F6F4EE]"
-                          title="Page settings"
+                          onClick={() => movePage(index, 1)}
+                          disabled={pending || isHome || index === pages.length - 1}
+                          className="p-1.5 text-[#777970] hover:bg-[#F6F4EE] disabled:opacity-30"
+                          title="Move down"
                         >
-                          <Settings2 size={14} />
+                          <ArrowDown size={13} />
                         </button>
+                      </div>
+
+                      {!isHome && (
                         <button
-                          onClick={() => setDeletePageId(page.id)}
-                          className="rounded-lg border border-[#E8E5DF] p-2 text-[#A25A5A] hover:bg-[#FDF3F3]"
-                          title="Delete page"
+                          onClick={() => toggleNavigation(page)}
+                          disabled={pending}
+                          className="rounded-lg border border-[#E8E5DF] p-2 text-[#777970] hover:bg-[#F6F4EE] disabled:opacity-40"
+                          title={page.showInNavigation ? 'Hide from navigation' : 'Show in navigation'}
                         >
-                          <Trash2 size={14} />
+                          {page.showInNavigation ? <Eye size={14} /> : <EyeOff size={14} />}
                         </button>
-                      </>
-                    )}
+                      )}
+
+                      <Link
+                        href={`/editor?page=${page.id}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#E8E5DF] px-3 py-2 text-xs font-medium text-[#565850] hover:bg-[#F6F4EE]"
+                      >
+                        <Pencil size={13} /> Edit
+                      </Link>
+
+                      <a
+                        href={page.path}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg border border-[#E8E5DF] p-2 text-[#777970] hover:bg-[#F6F4EE]"
+                        title="View page"
+                      >
+                        <ExternalLink size={14} />
+                      </a>
+
+                      {!isHome && (
+                        <>
+                          <button
+                            onClick={() => togglePublished(page)}
+                            disabled={pending}
+                            className={cn(
+                              'rounded-lg border px-3 py-2 text-xs font-medium disabled:opacity-40',
+                              page.isPublished
+                                ? 'border-[#E8E5DF] text-[#565850] hover:bg-[#F6F4EE]'
+                                : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100',
+                            )}
+                          >
+                            {page.isPublished ? 'Unpublish' : 'Publish'}
+                          </button>
+                          <button
+                            onClick={() => setSettingsPageId(page.id)}
+                            className="rounded-lg border border-[#E8E5DF] p-2 text-[#777970] hover:bg-[#F6F4EE]"
+                            title="Page settings"
+                          >
+                            <Settings2 size={14} />
+                          </button>
+                          {!isBlog && (
+                            <button
+                              onClick={() => setDeletePageId(page.id)}
+                              className="rounded-lg border border-[#E8E5DF] p-2 text-[#A25A5A] hover:bg-[#FDF3F3]"
+                              title="Delete page"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Nested Blog Posts under Blog */}
+                  {isBlog && blogExpanded && (
+                    <div className="bg-[#FAF8F5] border-t border-[#EFECE5] px-5 sm:px-8 py-4 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileText size={14} className="text-[#8C8D85]" />
+                          <h4 className="text-[11px] font-semibold text-[#565850] uppercase tracking-wider">
+                            Blog Posts ({articles.length})
+                          </h4>
+                        </div>
+                        <Link
+                          href="/dashboard/blog"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#E8E5DF] bg-white px-2.5 py-1 text-xs font-medium text-[#565850] hover:bg-[#F6F4EE] transition shadow-2xs"
+                        >
+                          <Plus size={12} /> New post
+                        </Link>
+                      </div>
+
+                      {articles.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-[#E8E5DF] p-6 text-center bg-white/70">
+                          <p className="text-xs text-[#777970]">No blog posts yet.</p>
+                          <Link
+                            href="/dashboard/blog"
+                            className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-[#171717] underline hover:no-underline"
+                          >
+                            Write your first post in Blog Studio
+                          </Link>
+                        </div>
+                      ) : (
+                        <ul className="divide-y divide-[#EFECE5] rounded-xl border border-[#E8E5DF] bg-white overflow-hidden shadow-2xs">
+                          {articles.map((article) => {
+                            const isPub = article.status === 'PUBLISHED';
+                            const isDraft = article.status === 'DRAFT';
+                            return (
+                              <li
+                                key={article.id}
+                                className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between hover:bg-[#FAF9F6] transition"
+                              >
+                                <div className="flex min-w-0 flex-1 items-center gap-3">
+                                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-[#F2EFE9] text-[#777970]">
+                                    <FileText size={13} />
+                                  </span>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <p className="truncate text-xs font-medium text-[#292A25]" title={article.title || 'Untitled article'}>
+                                        {article.title?.trim() || 'Untitled article'}
+                                      </p>
+                                      <span
+                                        className={cn(
+                                          'rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide leading-none',
+                                          isPub ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                                        )}
+                                      >
+                                        {isPub ? 'Published' : isDraft ? 'Draft' : 'Scheduled'}
+                                      </span>
+                                    </div>
+                                    <p className="mt-0.5 text-[11px] text-[#8C8D85] truncate">
+                                      /{username}/blog/{article.slug}
+                                      <span className="mx-1 text-[#C9C5BC]">·</span>
+                                      Updated {formatDistanceToNow(new Date(article.updatedAt), { addSuffix: true })}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 sm:justify-end flex-shrink-0">
+                                  <Link
+                                    href={`/dashboard/blog?articleId=${article.id}`}
+                                    className="inline-flex items-center gap-1 rounded-md border border-[#E8E5DF] px-2.5 py-1 text-xs font-medium text-[#565850] hover:bg-[#F6F4EE]"
+                                  >
+                                    <Pencil size={11} /> Edit in Studio
+                                  </Link>
+                                  {isPub && (
+                                    <a
+                                      href={`/${username}/blog/${article.slug}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="rounded-md border border-[#E8E5DF] p-1 text-[#777970] hover:bg-[#F6F4EE]"
+                                      title="View live post"
+                                    >
+                                      <ExternalLink size={12} />
+                                    </a>
+                                  )}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+                  )}
                 </li>
               );
             })}

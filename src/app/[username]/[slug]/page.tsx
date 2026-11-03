@@ -73,7 +73,7 @@ export default async function PublicSubPage({ params }: PublicSubPageProps) {
 
   return (
     <>
-      <PageStructuredData seo={seo} username={data.profile.username} updatedAt={data.page.updatedAt} />
+      <PageStructuredData seo={seo} username={data.profile.username} displayName={data.profile.displayName} profileType={data.profile.type} bio={data.profile.bio} avatarUrl={data.profile.avatarUrl} updatedAt={data.page.updatedAt} sections={data.document.sections} pageSlug={data.page.slug} pageType={data.page.pageType} />
       <PageRenderer document={data.document} pageId={data.page.id} botId={data.homeBotId} />
     </>
   );

@@ -29,7 +29,9 @@ export type PublicPageData = {
     id: string;
     username: string;
     displayName: string;
+    type: string;
     bio: string | null;
+    avatarUrl: string | null;
     user: {
       createdAt: Date;
       trialGrantedAt: Date | null;
@@ -201,7 +203,9 @@ export const getPublishedPage = cache(async (rawUsername: string, rawSlug?: stri
         id: profile.id,
         username: profile.username,
         displayName: profile.displayName,
+        type: profile.type,
         bio: profile.bio,
+        avatarUrl: profile.avatarUrl,
         user: profile.user,
       },
       page: {

@@ -13,6 +13,7 @@ import {
 } from '@/lib/blog';
 import { getPublicBlogListing } from '@/lib/public-blog';
 import { resolveSiteUrl } from '@/lib/seo';
+import { buildBlogIndexGraph, serializeJsonLd } from '@/lib/schema';
 
 interface PublicBlogIndexProps {
   params: Promise<{ username: string }>;
@@ -81,6 +82,7 @@ export default async function PublicBlogIndex({
       displayName={profile.displayName}
       active="writing"
     >
+      {!profile.unavailable && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildBlogIndexGraph({ profile, articles, siteUrl: resolveSiteUrl() })) }} />}
       {profile.unavailable ? (
         <PublicBlogUnavailable displayName={profile.displayName} />
       ) : (

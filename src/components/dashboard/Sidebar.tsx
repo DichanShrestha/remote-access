@@ -1,7 +1,8 @@
 "use client";
+
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -19,11 +20,10 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
-  Files
-  ,FileText
+  Files,
+  FileText,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 const CREATOR_NAV_GROUPS = [
@@ -31,7 +31,7 @@ const CREATOR_NAV_GROUPS = [
     label: 'OVERVIEW',
     items: [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    ]
+    ],
   },
   {
     label: 'BUILD & STYLE',
@@ -40,7 +40,7 @@ const CREATOR_NAV_GROUPS = [
       { name: 'Pages', href: '/dashboard/pages', icon: Files },
       { name: 'Blog', href: '/dashboard/blog', icon: FileText },
       { name: 'Templates', href: '/dashboard/templates', icon: Globe },
-    ]
+    ],
   },
   {
     label: 'AI & INBOX',
@@ -48,23 +48,35 @@ const CREATOR_NAV_GROUPS = [
       { name: 'Conversations', href: '/dashboard/conversations', icon: MessageSquare },
       { name: 'Leads & Triggers', href: '/dashboard/leads', icon: Users },
       { name: 'Knowledge Base', href: '/dashboard/knowledge', icon: Brain },
-    ]
+    ],
   },
   {
     label: 'INSIGHTS',
     items: [
       { name: 'Analytics', href: '/dashboard/analytics', icon: LineChart },
-    ]
+    ],
   },
   {
     label: 'ACCOUNT',
     items: [
       { name: 'Settings & Billing', href: '/dashboard/settings', icon: Settings },
-    ]
-  }
+    ],
+  },
 ];
 
-export function Sidebar({ isAdmin = false, isCreator = true, isAffiliate = false, showBecomeAffiliate = false }: { isAdmin?: boolean; isCreator?: boolean; isAffiliate?: boolean; showBecomeAffiliate?: boolean }) {
+export function Sidebar({
+  isAdmin = false,
+  isCreator = true,
+  isAffiliate = false,
+  showBecomeAffiliate = false,
+}: {
+  isAdmin?: boolean;
+  isCreator?: boolean;
+  isAffiliate?: boolean;
+  showBecomeAffiliate?: boolean;
+  initialPages?: any[];
+  initialArticles?: any[];
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -77,31 +89,34 @@ export function Sidebar({ isAdmin = false, isCreator = true, isAffiliate = false
     router.refresh();
   };
 
-  // Focus workspaces (the page editor and the blog studio) keep the sidebar
-  // compact by default and reveal the full navigation only on hover.
   const isEditor = pathname?.startsWith('/editor') || pathname?.startsWith('/dashboard/blog');
+  const visuallyCollapsed = isEditor ? true : isCollapsed;
 
   const navGroups = isCreator
-    ? CREATOR_NAV_GROUPS.map((group) => group.label === 'ACCOUNT' ? {
-        ...group,
-        items: [
-          ...group.items,
-          ...(showBecomeAffiliate ? [{ name: 'Become an Affiliate', href: '/affiliate/apply', icon: HandCoins }] : []),
-          ...(isAffiliate ? [{ name: 'Affiliate Program', href: '/dashboard/affiliate', icon: HandCoins }] : []),
-          ...(isAdmin ? [{ name: 'Admin Dashboard', href: '/admin', icon: ShieldCheck }] : []),
-        ],
-      } : group)
+    ? CREATOR_NAV_GROUPS.map((group) =>
+        group.label === 'ACCOUNT'
+          ? {
+              ...group,
+              items: [
+                ...group.items,
+                ...(showBecomeAffiliate ? [{ name: 'Become an Affiliate', href: '/affiliate/apply', icon: HandCoins }] : []),
+                ...(isAffiliate ? [{ name: 'Affiliate Program', href: '/dashboard/affiliate', icon: HandCoins }] : []),
+                ...(isAdmin ? [{ name: 'Admin Dashboard', href: '/admin', icon: ShieldCheck }] : []),
+              ],
+            }
+          : group,
+      )
     : [
         { label: 'OVERVIEW', items: [{ name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard }] },
         ...(isAffiliate ? [{ label: 'AFFILIATE', items: [{ name: 'Affiliate Program', href: '/dashboard/affiliate', icon: HandCoins }] }] : []),
-        { label: 'ACCOUNT', items: [
-          { name: 'Account Settings', href: '/dashboard/settings', icon: Settings },
-          ...(isAdmin ? [{ name: 'Admin Dashboard', href: '/admin', icon: ShieldCheck }] : []),
-        ] },
+        {
+          label: 'ACCOUNT',
+          items: [
+            { name: 'Account Settings', href: '/dashboard/settings', icon: Settings },
+            ...(isAdmin ? [{ name: 'Admin Dashboard', href: '/admin', icon: ShieldCheck }] : []),
+          ],
+        },
       ];
-
-  // Determine actual visual state
-  const visuallyCollapsed = isEditor ? true : isCollapsed;
 
   return (
     <>
@@ -213,8 +228,6 @@ export function Sidebar({ isAdmin = false, isCreator = true, isAffiliate = false
               {isCollapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
             </button>
           )}
-
-
 
           <button
             onClick={handleSignOut}
