@@ -24,6 +24,7 @@ import {
   findHomePage,
   getWebsiteConfig,
   parsePageDocument,
+  publishTemplateStarterPages,
 } from '@/lib/page-engine/site-store';
 import { getSeoPublishSnapshot } from '@/lib/seo';
 
@@ -245,6 +246,7 @@ export async function publishWebsitePage(pageId: string) {
     select: {
       id: true,
       slug: true,
+      pageType: true,
       draftConfig: true,
       profile: { select: { id: true, username: true } },
     },
@@ -265,6 +267,7 @@ export async function publishWebsitePage(pageId: string) {
   const seoSnapshot = getSeoPublishSnapshot(document.settings);
 
   try {
+    let publishedStarterSlugs: string[] = [];
     await db.$transaction(async (tx) => {
       await tx.page.update({
         where: { id: page.id },
@@ -286,9 +289,15 @@ export async function publishWebsitePage(pageId: string) {
           publishedConfig: config as unknown as Prisma.InputJsonValue,
         },
       });
+      if (page.pageType === 'HOME' || page.slug === '') {
+        publishedStarterSlugs = await publishTemplateStarterPages(tx, page.profile.id);
+      }
     });
 
     revalidatePublicPage(page.profile.username, page.slug);
+    for (const starterSlug of publishedStarterSlugs) {
+      revalidatePublicPage(page.profile.username, starterSlug);
+    }
     return { success: true };
   } catch (error) {
     console.error('Publish page error:', error);

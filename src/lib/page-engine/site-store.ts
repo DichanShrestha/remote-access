@@ -8,6 +8,7 @@ import {
   toPageContentDocument,
 } from './site-config';
 import { buildPageDocument } from './page-layouts';
+import { getSeoPublishSnapshot } from '@/lib/seo';
 
 export async function findHomePage(profileId: string) {
   return db.page.findFirst({
@@ -23,6 +24,34 @@ export function parsePageDocument(value: unknown): PageDocument | null {
   if (!value || typeof value !== 'object') return null;
   const parsed = PageDocumentSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
+}
+
+/** Publish template-generated child pages with their homepage so template navigation never points at drafts. */
+export async function publishTemplateStarterPages(tx: Prisma.TransactionClient, profileId: string) {
+  const candidates = await tx.page.findMany({
+    where: { profileId, isPublished: false, pageType: { not: 'HOME' } },
+    select: { id: true, slug: true, draftConfig: true },
+  });
+  const publishedSlugs: string[] = [];
+
+  for (const page of candidates) {
+    const document = parsePageDocument(page.draftConfig);
+    const titleSection = document?.sections[0];
+    if (!titleSection || !('type' in titleSection) || titleSection.id !== `starter-${page.slug}-title`) continue;
+
+    await tx.page.update({
+      where: { id: page.id },
+      data: {
+        publishedConfig: page.draftConfig as Prisma.InputJsonValue,
+        isPublished: true,
+        publishedAt: new Date(),
+        ...getSeoPublishSnapshot(document.settings),
+      },
+    });
+    publishedSlugs.push(page.slug);
+  }
+
+  return publishedSlugs;
 }
 
 export function fallbackDocument(): PageDocument {

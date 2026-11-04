@@ -206,211 +206,6 @@ export const TEMPLATE_CREATOR_NEWSLETTER: PageDocument = {
 };
 
 
-
-// ═══════════════════════════════════════════════════════════════════
-// 5. PRODUCT BRAND
-// ═══════════════════════════════════════════════════════════════════
-export const TEMPLATE_PRODUCT_BRAND: PageDocument = {
-  version: 1,
-  theme: {
-    style: 'bold',
-    primaryColor: '#F59E0B',
-    radius: 'small',
-    density: 'comfortable',
-  },
-  settings: { showFooterBranding: true, enableSmoothScrolling: true },
-  sections: [
-    {
-      id: 'hero-1',
-      type: 'hero',
-      variant: 'immersive',
-      layout: 'center',
-      textContrast: 'light',
-      zoomReveal: true,
-      zoomWord: 'Brew',
-      isHidden: false,
-      content: {
-        title: 'Lumina Coffee',
-        headline: 'Exceptional coffee, roasted to order.',
-        subtitle: 'Single-origin beans ethically sourced from around the world. Roasted in Brooklyn.',
-        buttonText: 'Shop Now',
-        buttonUrl: '#shop',
-        imageUrl: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=1600&q=80',
-      },
-    },
-    {
-      id: 'marquee-1',
-      type: 'marquee',
-      layout: 'left',
-      isHidden: false,
-      content: {
-        text: 'FREE SHIPPING ON ORDERS OVER $50 • ETHICALLY SOURCED • ROASTED DAILY',
-      },
-    },
-    {
-      id: 'products-1',
-      type: 'products',
-      variant: 'blur-fade',
-      isHidden: false,
-      content: {
-        title: 'Featured Roasts',
-        items: [
-          { id: 'p-1', title: 'Ethiopia Yirgacheffe', description: 'Floral, citrus, light roast.', price: '$22', imageUrl: 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=500&q=80', url: '#' },
-          { id: 'p-2', title: 'Colombia Supremo', description: 'Chocolate, caramel, medium roast.', price: '$20', imageUrl: 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=500&q=80', url: '#' },
-          { id: 'p-3', title: 'Sumatra Mandheling', description: 'Earthy, bold, dark roast.', price: '$24', imageUrl: 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=500&q=80', url: '#' },
-        ],
-      },
-    },
-    {
-      id: 'carousel-1',
-      type: 'carousel',
-      variant: 'chroma',
-      isHidden: false,
-      content: {
-        images: [
-          { id: 'c-1', url: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=1000&q=80' },
-          { id: 'c-2', url: 'https://images.unsplash.com/photo-1495474472201-4467008f526b?w=1000&q=80' },
-          { id: 'c-3', url: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1000&q=80' },
-        ],
-      },
-    },
-    {
-      id: 'email-1',
-      type: 'collect-emails',
-      variant: 'split-layout',
-      isHidden: false,
-      content: {
-        title: 'Join the Coffee Club',
-        placeholder: 'Email address',
-        buttonText: 'Get 10% Off',
-        successMessage: 'Check your email for your discount code!',
-      },
-    },
-  ],
-};
-
-
-// ═══════════════════════════════════════════════════════════════════
-// 8. BEAUTY BRAND
-// ═══════════════════════════════════════════════════════════════════
-export const TEMPLATE_BEAUTY_BRAND: PageDocument = {
-  version: 1,
-  theme: {
-    style: 'premium-minimal',
-    primaryColor: '#5C6E4E',
-    radius: 'medium',
-    density: 'spacious',
-  },
-  settings: { showFooterBranding: true, enableSmoothScrolling: true },
-  sections: [
-    { id: 'site-header', type: 'site-navbar', variant: 'corporate', isHidden: false, backgroundColor: '#ffffff', textColor: '#171717', content: { logoText: 'Glowdia', links: [{ id: 'n1', label: 'Home', url: '#top' }, { id: 'n2', label: 'Shop', url: '#products-1' }, { id: 'n3', label: 'Trending', url: '#products-1' }, { id: 'n4', label: 'About', url: '#richtext-1' }, { id: 'n5', label: 'Contact', url: '#email-1' }] } },
-    {
-      id: 'hero-1',
-      type: 'hero',
-      variant: 'split',
-      layout: 'split',
-      isHidden: false,
-      content: {
-        title: 'Glowdia',
-        eyebrow: 'FROM EARTH, WITH CARE',
-        headline: 'Pure ingredients for radiant skin, everyday.',
-        subtitle: 'Discover dermatologist-approved skincare products made with gentle, effective ingredients. Whether you\'re fighting acne, dryness, or dullness — we\'ve got what your skin needs.',
-        buttonText: 'Shop Now',
-        buttonUrl: '#products',
-        secondaryButtonText: 'Our Story',
-        secondaryButtonUrl: '#about',
-        imageUrl: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1000&q=80',
-      },
-    },
-    {
-      id: 'marquee-1',
-      type: 'marquee',
-      layout: 'left',
-      isHidden: false,
-      content: { text: 'CLEAN BEAUTY · CRUELTY FREE · DERMATOLOGIST TESTED · SUSTAINABLE PACKAGING' },
-    },
-    {
-      id: 'products-1',
-      type: 'products',
-      variant: 'blur-fade',
-      isHidden: false,
-      content: {
-        title: 'Daily Essentials Your Skin Will Love',
-        items: [
-          { id: 'p-1', title: 'Hydrating Cleanser', description: 'Gentle foam cleanser with hyaluronic acid.', price: '$28', imageUrl: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=500&q=80', url: '#' },
-          { id: 'p-2', title: 'Vitamin C Serum', description: 'Brightening serum with 15% L-ascorbic acid.', price: '$45', imageUrl: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500&q=80', url: '#' },
-          { id: 'p-3', title: 'Barrier Repair Cream', description: 'Rich moisturizer with ceramides and peptides.', price: '$38', imageUrl: 'https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?w=500&q=80', url: '#' },
-        ],
-      },
-    },
-    {
-      id: 'richtext-1',
-      type: 'rich-text',
-      variant: 'split',
-      isHidden: false,
-      content: {
-        text: '<h2>Why trust us?</h2><p>At Glowdia, we believe skincare should be simple, effective, and kind — to your skin and the planet. Founded with a passion for clean beauty, we offer a curated selection of dermatologist-tested, cruelty-free products made from safe, skin-loving ingredients. Every formula is backed by science, never by hype.</p>',
-      },
-    },
-    {
-      id: 'stats-1',
-      type: 'stats',
-      variant: 'count-up',
-      isHidden: false,
-      content: {
-        title: 'Proven Results',
-        items: [
-          { id: 'st-1', value: '10000', label: 'Happy Customers', suffix: '+' },
-          { id: 'st-2', value: '98', label: 'Would Recommend', suffix: '%' },
-          { id: 'st-3', value: '50', label: 'Less Irritation', suffix: '%' },
-        ],
-      },
-    },
-    {
-      id: 'testimonials-1',
-      type: 'testimonials',
-      variant: 'marquee',
-      isHidden: false,
-      content: {
-        title: 'What our customers say',
-        items: [
-          { id: 't-1', quote: 'My skin has never looked better. The Vitamin C serum is pure magic.', author: 'Emma R.', role: 'Verified Buyer' },
-          { id: 't-2', quote: 'Finally a brand that actually delivers on its promises. No irritation, just glow.', author: 'Priya K.', role: 'Verified Buyer' },
-          { id: 't-3', quote: 'I replaced my entire routine with Glowdia. Simpler, better, cheaper.', author: 'Sophie L.', role: 'Verified Buyer' },
-        ],
-      },
-    },
-    {
-      id: 'faq-1',
-      type: 'faq',
-      isHidden: false,
-      content: {
-        title: 'Frequently Asked Questions',
-        items: [
-          { id: 'f-1', question: 'What is Glowdia?', answer: 'Glowdia is a clean skincare brand focused on simple, effective formulas for all skin types — including dry, oily, sensitive, and combination skin.' },
-          { id: 'f-2', question: 'Are your products cruelty-free?', answer: 'Yes. We are certified cruelty-free and never test on animals. All our ingredients are ethically sourced.' },
-          { id: 'f-3', question: 'How do I track my order?', answer: 'Once your order ships, you will receive an email with a tracking link. You can also check your order status in your account dashboard.' },
-          { id: 'f-4', question: 'What makes Glowdia unique?', answer: 'Every product is formulated with dermatologists, uses clinical-grade ingredients at effective concentrations, and skips the fillers and fragrances.' },
-        ],
-      },
-    },
-    {
-      id: 'email-1',
-      type: 'collect-emails',
-      variant: 'split-layout',
-      isHidden: false,
-      content: {
-        title: 'Get 15% off your first order',
-        placeholder: 'Enter your email',
-        buttonText: 'Subscribe',
-        successMessage: 'Check your email for your discount code!',
-      },
-    },
-  ],
-};
-
-
-
 // ═══════════════════════════════════════════════════════════════════
 // 10. RESTAURANT
 // ═══════════════════════════════════════════════════════════════════
@@ -629,25 +424,25 @@ export const TEMPLATE_LUXURY_SKINCARE: PageDocument = {
 // ═══════════════════════════════════════════════════════════════════
 // 15. POINT+ ARCHITECTURE (reference: ref 6.png)
 // ═══════════════════════════════════════════════════════════════════
-export const TEMPLATE_POINT_ARCHITECTURE: PageDocument = {
-  version: 1,
-  theme: { style: 'premium-minimal', primaryColor: '#0b4039', radius: 'small', density: 'spacious' },
-  settings: { showFooterBranding: false, enableSmoothScrolling: true },
-  sections: [
-    { id: 'site-header', type: 'site-navbar', variant: 'overlay', isHidden: false, textColor: '#ffffff', content: { logoText: 'POINT+', links: [{ id: 'n1', label: 'About us', url: '#about' }, { id: 'n2', label: 'Services', url: '#services' }, { id: 'n3', label: 'Projects', url: '#projects' }, { id: 'n4', label: 'Blog', url: '#blog' }, { id: 'n5', label: 'Contact', url: '#contact' }] } },
-    { id: 'hero', type: 'hero', variant: 'immersive', layout: 'center', textContrast: 'light', isHidden: false, backgroundColor: '#344d5d', content: { title: 'POINT+', headline: 'Spaces for better life', subtitle: 'Architecture shaped around people, place, and possibility.', buttonText: 'See more', buttonUrl: '#about', imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1800&q=85' } },
-    consultingGroup('about-impact', 'About and impact', 'row', [
-      consultingGroup('about-copy', 'About us', 'column', [{ id: 'about', type: 'rich-text', variant: 'architecture-about', isHidden: false, content: { text: '<h2>We are specializing in innovative and sustainable design.</h2><p>We listen closely to your needs, study the nuances of each site, and combine these insights with creative ingenuity to deliver extraordinary results.</p><p>We are dedicated to leaving a meaningful impact on communities and lives. At the heart of what we do is a passion for creating spaces that enrich experiences and stand the test of time.</p>' } }], { width: 'custom', customWidth: 35, padding: 'custom', customPadding: 0 }),
-      consultingGroup('studio-metrics', 'Studio facts', 'column', [{ id: 'stats', type: 'stats', variant: 'default', isHidden: false, content: { items: [{ id: 'st1', value: '160+', label: 'Projects delivered' }, { id: 'st2', value: '10+', label: 'Years of experience' }, { id: 'st3', value: '25+', label: 'Awards won' }, { id: 'st4', value: '11', label: 'Countries reached' }] } }], { width: 'custom', customWidth: 60, padding: 'custom', customPadding: 0 }),
-    ], { backgroundColor: '#ffffff', textColor: '#123b38', direction: 'row', gap: 'large', customGap: 40, padding: 'large', customPadding: 56, mobileDirection: 'column', verticalAlign: 'top' }),
-    { id: 'services', type: 'services', variant: 'architecture-accordion', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Our services', items: [{ id: 's1', title: 'Residential', description: 'Homes shaped around the rituals of everyday life, from concept planning through construction.', imageUrl: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=500&q=80' }, { id: 's2', title: 'Commercial', description: 'From retail stores to office complexes, we design commercial spaces that are both inviting and productive. Our solutions align with branding and operational goals to maximize impact and usability.', imageUrl: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=500&q=80' }, { id: 's3', title: 'Urban planning', description: 'Places and public realms planned for long-term community value and connection.' }, { id: 's4', title: 'Interior', description: 'Material, light, and detail combine to make each interior feel purposeful and lasting.' }] } },
-    { id: 'projects', type: 'case-studies', variant: 'architecture-feature', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Curated works we’re proud of', actionText: 'See more', actionUrl: '#projects', items: [{ id: 'p1', title: 'Metro Plaza', description: 'A commercial hub designed for productivity and style.', client: 'Metro Group', location: 'Tokyo, Japan', imageUrl: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85', url: '#projects' }, { id: 'p2', title: 'Harbor House', description: 'A calm residence connected to its coastal landscape.', client: 'Private client', location: 'Kanagawa, Japan', imageUrl: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=85', url: '#projects' }, { id: 'p3', title: 'Civic Arts Hall', description: 'A welcoming cultural destination for the whole city.', client: 'City Arts Council', location: 'Kyoto, Japan', imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=800&q=85', url: '#projects' }] } },
-    { id: 'testimonials', type: 'testimonials', variant: 'grid', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Words from clients', items: [{ id: 't1', quote: 'The interior design for our office has completely transformed the way our team works. Point+ Agency created a space that is both functional and inspiring.', author: 'David Stone', role: 'Corporate client' }, { id: 't2', quote: 'Our commercial building project was handled with exceptional professionalism by Point+ Agency. They understood our requirements perfectly.', author: 'Hiroshi Yamamoto', role: 'Business owner' }, { id: 't3', quote: 'Point+ Agency brought our dream home to life. They listened carefully to what we wanted and created a design that exceeded expectations.', author: 'Naoko Ishida', role: 'Homeowner' }, { id: 't4', quote: 'Their interior design work elevated our retail store to a whole new level.', author: 'Rika Sato', role: 'Retail business owner' }] } },
-    { id: 'news', type: 'blog-list', variant: 'image-cards', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Latest news and insight', actionText: 'More articles', actionUrl: '#news', items: [{ id: 'b1', category: 'Urban planning', date: 'December 20', title: 'Why Urban Planning Matters', description: 'New perspectives on places designed for thriving communities.', imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=85', url: '#news' }, { id: 'b2', category: 'Architecture', date: 'December 18', title: 'The Art of Blending Elements', description: 'How materials and landscape shape a memorable building.', imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=900&q=85', url: '#news' }, { id: 'b3', category: 'Design', date: 'December 16', title: 'Key Considerations When Designing for Place', description: 'A few questions we return to on every project.', imageUrl: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=900&q=85', url: '#news' }] } },
-    { id: 'contact', type: 'lead-form', variant: 'editorial-panel', isHidden: false, backgroundColor: '#0b4039', textColor: '#ffffff', buttonColor: '#c4d8e9', buttonTextColor: '#123b38', content: { title: 'Get in touch', description: 'Have a project in mind? Tell us what you are imagining.', buttonText: 'Send message', successMessage: 'Thank you. We will be in touch soon.' } },
-    { id: 'footer', type: 'site-footer', variant: 'compact', isHidden: false, backgroundColor: '#0b4039', textColor: '#ffffff', content: { logoText: 'POINT+', description: 'Spaces for better life. Architecture, interiors, and urban planning.', links: [{ id: 'f1', group: 'Explore', label: 'About us', url: '#about' }, { id: 'f2', group: 'Explore', label: 'Services', url: '#services' }, { id: 'f3', group: 'Explore', label: 'Projects', url: '#projects' }, { id: 'f4', group: 'Explore', label: 'Journal', url: '#news' }, { id: 'f5', group: 'Contact', label: 'pointplus@info.com', url: 'mailto:pointplus@info.com' }, { id: 'f6', group: 'Contact', label: '+81 877 8990', url: 'tel:+818778990' }], socialLinks: [{ id: 'social1', label: 'Instagram', url: '#' }, { id: 'social2', label: 'Behance', url: '#' }], legalLinks: [{ id: 'legal1', label: '© 2025 Point+ Agency. All Rights Reserved.', url: '#' }, { id: 'legal2', label: 'Back to top', url: '#top' }] } },
-  ],
-};
+// export const TEMPLATE_POINT_ARCHITECTURE: PageDocument = {
+//   version: 1,
+//   theme: { style: 'premium-minimal', primaryColor: '#0b4039', radius: 'small', density: 'spacious' },
+//   settings: { showFooterBranding: false, enableSmoothScrolling: true },
+//   sections: [
+//     { id: 'site-header', type: 'site-navbar', variant: 'overlay', isHidden: false, textColor: '#ffffff', content: { logoText: 'POINT+', links: [{ id: 'n1', label: 'About us', url: '#about' }, { id: 'n2', label: 'Services', url: '#services' }, { id: 'n3', label: 'Projects', url: '#projects' }, { id: 'n4', label: 'Blog', url: '#blog' }, { id: 'n5', label: 'Contact', url: '#contact' }] } },
+//     { id: 'hero', type: 'hero', variant: 'immersive', layout: 'center', textContrast: 'light', isHidden: false, backgroundColor: '#344d5d', content: { title: 'POINT+', headline: 'Spaces for better life', subtitle: 'Architecture shaped around people, place, and possibility.', buttonText: 'See more', buttonUrl: '#about', imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1800&q=85' } },
+//     consultingGroup('about-impact', 'About and impact', 'row', [
+//       consultingGroup('about-copy', 'About us', 'column', [{ id: 'about', type: 'rich-text', variant: 'architecture-about', isHidden: false, content: { text: '<h2>We are specializing in innovative and sustainable design.</h2><p>We listen closely to your needs, study the nuances of each site, and combine these insights with creative ingenuity to deliver extraordinary results.</p><p>We are dedicated to leaving a meaningful impact on communities and lives. At the heart of what we do is a passion for creating spaces that enrich experiences and stand the test of time.</p>' } }], { width: 'custom', customWidth: 35, padding: 'custom', customPadding: 0 }),
+//       consultingGroup('studio-metrics', 'Studio facts', 'column', [{ id: 'stats', type: 'stats', variant: 'default', isHidden: false, content: { items: [{ id: 'st1', value: '160+', label: 'Projects delivered' }, { id: 'st2', value: '10+', label: 'Years of experience' }, { id: 'st3', value: '25+', label: 'Awards won' }, { id: 'st4', value: '11', label: 'Countries reached' }] } }], { width: 'custom', customWidth: 60, padding: 'custom', customPadding: 0 }),
+//     ], { backgroundColor: '#ffffff', textColor: '#123b38', direction: 'row', gap: 'large', customGap: 40, padding: 'large', customPadding: 56, mobileDirection: 'column', verticalAlign: 'top' }),
+//     { id: 'services', type: 'services', variant: 'architecture-accordion', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Our services', items: [{ id: 's1', title: 'Residential', description: 'Homes shaped around the rituals of everyday life, from concept planning through construction.', imageUrl: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=500&q=80' }, { id: 's2', title: 'Commercial', description: 'From retail stores to office complexes, we design commercial spaces that are both inviting and productive. Our solutions align with branding and operational goals to maximize impact and usability.', imageUrl: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=500&q=80' }, { id: 's3', title: 'Urban planning', description: 'Places and public realms planned for long-term community value and connection.' }, { id: 's4', title: 'Interior', description: 'Material, light, and detail combine to make each interior feel purposeful and lasting.' }] } },
+//     { id: 'projects', type: 'case-studies', variant: 'architecture-feature', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Curated works we’re proud of', actionText: 'See more', actionUrl: '#projects', items: [{ id: 'p1', title: 'Metro Plaza', description: 'A commercial hub designed for productivity and style.', client: 'Metro Group', location: 'Tokyo, Japan', imageUrl: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85', url: '#projects' }, { id: 'p2', title: 'Harbor House', description: 'A calm residence connected to its coastal landscape.', client: 'Private client', location: 'Kanagawa, Japan', imageUrl: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=85', url: '#projects' }, { id: 'p3', title: 'Civic Arts Hall', description: 'A welcoming cultural destination for the whole city.', client: 'City Arts Council', location: 'Kyoto, Japan', imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=800&q=85', url: '#projects' }] } },
+//     { id: 'testimonials', type: 'testimonials', variant: 'grid', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Words from clients', items: [{ id: 't1', quote: 'The interior design for our office has completely transformed the way our team works. Point+ Agency created a space that is both functional and inspiring.', author: 'David Stone', role: 'Corporate client' }, { id: 't2', quote: 'Our commercial building project was handled with exceptional professionalism by Point+ Agency. They understood our requirements perfectly.', author: 'Hiroshi Yamamoto', role: 'Business owner' }, { id: 't3', quote: 'Point+ Agency brought our dream home to life. They listened carefully to what we wanted and created a design that exceeded expectations.', author: 'Naoko Ishida', role: 'Homeowner' }, { id: 't4', quote: 'Their interior design work elevated our retail store to a whole new level.', author: 'Rika Sato', role: 'Retail business owner' }] } },
+//     { id: 'news', type: 'blog-list', variant: 'image-cards', isHidden: false, backgroundColor: '#ffffff', textColor: '#123b38', content: { title: 'Latest news and insight', actionText: 'More articles', actionUrl: '#news', items: [{ id: 'b1', category: 'Urban planning', date: 'December 20', title: 'Why Urban Planning Matters', description: 'New perspectives on places designed for thriving communities.', imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=85', url: '#news' }, { id: 'b2', category: 'Architecture', date: 'December 18', title: 'The Art of Blending Elements', description: 'How materials and landscape shape a memorable building.', imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=900&q=85', url: '#news' }, { id: 'b3', category: 'Design', date: 'December 16', title: 'Key Considerations When Designing for Place', description: 'A few questions we return to on every project.', imageUrl: 'https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=900&q=85', url: '#news' }] } },
+//     { id: 'contact', type: 'lead-form', variant: 'editorial-panel', isHidden: false, backgroundColor: '#0b4039', textColor: '#ffffff', buttonColor: '#c4d8e9', buttonTextColor: '#123b38', content: { title: 'Get in touch', description: 'Have a project in mind? Tell us what you are imagining.', buttonText: 'Send message', successMessage: 'Thank you. We will be in touch soon.' } },
+//     { id: 'footer', type: 'site-footer', variant: 'compact', isHidden: false, backgroundColor: '#0b4039', textColor: '#ffffff', content: { logoText: 'POINT+', description: 'Spaces for better life. Architecture, interiors, and urban planning.', links: [{ id: 'f1', group: 'Explore', label: 'About us', url: '#about' }, { id: 'f2', group: 'Explore', label: 'Services', url: '#services' }, { id: 'f3', group: 'Explore', label: 'Projects', url: '#projects' }, { id: 'f4', group: 'Explore', label: 'Journal', url: '#news' }, { id: 'f5', group: 'Contact', label: 'pointplus@info.com', url: 'mailto:pointplus@info.com' }, { id: 'f6', group: 'Contact', label: '+81 877 8990', url: 'tel:+818778990' }], socialLinks: [{ id: 'social1', label: 'Instagram', url: '#' }, { id: 'social2', label: 'Behance', url: '#' }], legalLinks: [{ id: 'legal1', label: '© 2025 Point+ Agency. All Rights Reserved.', url: '#' }, { id: 'legal2', label: 'Back to top', url: '#top' }] } },
+//   ],
+// };
 
 // ═══════════════════════════════════════════════════════════════════
 // 16. FASHION CREATOR / PERSONAL STYLE JOURNAL
@@ -1025,42 +820,58 @@ export const TEMPLATE_TATTOO_ARTIST: PageDocument = {
   settings: { showFooterBranding: false, enableSmoothScrolling: true },
   sections: [
     { id: 'site-header', type: 'site-navbar', variant: 'floating-clean', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { logoText: 'ROWAN BLACK', links: [{ id: 'nav-about', label: 'About', url: '#artist' }, { id: 'nav-process', label: 'Process', url: '#process' }, { id: 'nav-board', label: 'Flash board', url: '#board' }], primaryLabel: 'Book Appointment', primaryUrl: '#contact' } },
-    { id: 'hero', type: 'hero', variant: 'curved-strip', layout: 'center', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', textContrast: 'light', content: { eyebrow: 'ROWAN BLACK · TORONTO', title: 'The Kind of Tattoo You Won’t Regret.', headline: 'Exclusive blackwork tattoos by appointment only.', subtitle: 'Where clean design meets permanent art.', buttonText: 'Book an Appointment', buttonUrl: '#contact', secondaryButtonText: 'View The Flash Board', secondaryButtonUrl: '#board', galleryImages: [
-      { id: 'hero-1', url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1200&q=80', caption: 'Blackwork tattoo in progress' },
-      { id: 'hero-2', url: 'https://images.unsplash.com/photo-1565058379802-bbe93b2f703a?auto=format&fit=crop&w=1200&q=80', caption: 'Custom linework' },
-      { id: 'hero-3', url: 'https://images.unsplash.com/photo-1611241893603-3c359704e0ee?auto=format&fit=crop&w=1200&q=80', caption: 'Tattoo session' },
-      { id: 'hero-4', url: 'https://images.unsplash.com/photo-1542561943-baca4dd0fc93?auto=format&fit=crop&w=1200&q=80', caption: 'Blackwork detail' },
-      { id: 'hero-5', url: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?auto=format&fit=crop&w=1200&q=80', caption: 'Tattoo work' },
-      { id: 'hero-6', url: 'https://images.unsplash.com/photo-1598971861713-54ad16a7e72e?auto=format&fit=crop&w=1200&q=80', caption: 'Artist portrait' },
-      { id: 'hero-7', url: 'https://images.unsplash.com/photo-1573806439793-82c5bbd4c06e?auto=format&fit=crop&w=1200&q=80', caption: 'Studio session' },
-      { id: 'hero-8', url: 'https://images.unsplash.com/photo-1594736797933-d0301ba2fe65?auto=format&fit=crop&w=1200&q=80', caption: 'Tattoo detail' },
-    ] } },
+    {
+      id: 'hero', type: 'hero', variant: 'curved-strip', layout: 'center', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', textContrast: 'light', content: {
+        eyebrow: 'ROWAN BLACK · TORONTO', title: 'The Kind of Tattoo You Won’t Regret.', headline: 'Exclusive blackwork tattoos by appointment only.', subtitle: 'Where clean design meets permanent art.', buttonText: 'Book an Appointment', buttonUrl: '#contact', secondaryButtonText: 'View The Flash Board', secondaryButtonUrl: '#board', galleryImages: [
+          { id: 'hero-1', url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1200&q=80', caption: 'Blackwork tattoo in progress' },
+          { id: 'hero-2', url: 'https://images.unsplash.com/photo-1565058379802-bbe93b2f703a?auto=format&fit=crop&w=1200&q=80', caption: 'Custom linework' },
+          { id: 'hero-3', url: 'https://images.unsplash.com/photo-1611241893603-3c359704e0ee?auto=format&fit=crop&w=1200&q=80', caption: 'Tattoo session' },
+          { id: 'hero-4', url: 'https://images.unsplash.com/photo-1542561943-baca4dd0fc93?auto=format&fit=crop&w=1200&q=80', caption: 'Blackwork detail' },
+          { id: 'hero-5', url: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?auto=format&fit=crop&w=1200&q=80', caption: 'Tattoo work' },
+          { id: 'hero-6', url: 'https://images.unsplash.com/photo-1598971861713-54ad16a7e72e?auto=format&fit=crop&w=1200&q=80', caption: 'Artist portrait' },
+          { id: 'hero-7', url: 'https://images.unsplash.com/photo-1573806439793-82c5bbd4c06e?auto=format&fit=crop&w=1200&q=80', caption: 'Studio session' },
+          { id: 'hero-8', url: 'https://images.unsplash.com/photo-1594736797933-d0301ba2fe65?auto=format&fit=crop&w=1200&q=80', caption: 'Tattoo detail' },
+        ]
+      }
+    },
     { id: 'artist', type: 'feature-split', variant: 'bio-spotlight', layout: 'image-left', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { eyebrow: 'MEET THE ARTIST', title: 'Meet The Artist', description: 'Rowan Black is a Toronto-based tattoo artist creating thoughtful, lasting blackwork. Each piece starts with a conversation and is drawn for the person who will wear it.', imageUrl: 'https://images.unsplash.com/photo-1531891437562-4301cf35b7e4?auto=format&fit=crop&w=800&q=80', imageAlt: 'Tattoo artist Rowan Black', imageLabel: 'Rowan', secondaryImageUrl: 'https://images.unsplash.com/photo-1603695985975-79e91a882da0?auto=format&fit=crop&w=800&q=80', checkpoints: [{ id: 'artist-note-1', text: 'Custom designs, drawn with you and made for you.' }, { id: 'artist-note-2', text: 'A calm, thoughtful process from first message to healed work.' }, { id: 'artist-note-3', text: 'Specialising in blackwork, fine line, and illustrative tattoos.' }] } },
-    { id: 'board', type: 'gallery', variant: 'pinboard', layout: 'grid', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { title: 'On The Board', description: 'A few recent pieces and works in progress. Every tattoo is designed to be one of one.', images: [
-      { id: 'board-1', url: 'https://images.unsplash.com/photo-1600369671236-e74521d4b6ad?auto=format&fit=crop&w=800&q=80', caption: '09.02.2025' },
-      { id: 'board-2', url: 'https://images.unsplash.com/photo-1590246814883-57c511e86e73?auto=format&fit=crop&w=800&q=80', caption: '20.10.2022', note: 'Let’s get a little more detail on this one' },
-      { id: 'board-3', url: 'https://images.unsplash.com/photo-1598300188904-6287d497d332?auto=format&fit=crop&w=800&q=80', caption: '16.12.2023' },
-      { id: 'board-4', url: 'https://images.unsplash.com/photo-1563721478-a8afbb2acae5?auto=format&fit=crop&w=800&q=80', caption: '01.02.2023' },
-      { id: 'board-5', url: 'https://images.unsplash.com/photo-1611006671145-6e8b3c28e8d3?auto=format&fit=crop&w=800&q=80', caption: '29.06.2023', note: 'Artist’s pick' },
-      { id: 'board-6', url: 'https://images.unsplash.com/photo-1580894914762-fcc9c72bbcf8?auto=format&fit=crop&w=800&q=80', caption: '03.08.2022' },
-      { id: 'board-7', url: 'https://images.unsplash.com/photo-1614177599522-71b7ac1c3df3?auto=format&fit=crop&w=800&q=80', caption: '25.01.2025' },
-      { id: 'board-8', url: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80', caption: '25.10.2022' },
-      { id: 'board-9', url: 'https://images.unsplash.com/photo-1504805572947-34fad45aed93?auto=format&fit=crop&w=800&q=80', caption: '01.08.2022', note: 'Tiny flash, big meaning' },
-    ] } },
-    { id: 'process', type: 'timeline', variant: 'pinned-thread', layout: 'vertical', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { title: 'From Idea To Ink', description: 'Here’s how we bring your tattoo to life, guiding you through every step of the process from start to finish.', items: [
-      { id: 'process-1', label: 'Share Your Idea', description: 'Tell us what you have in mind. We’ll talk through your vision, placement, and style so the design feels personal and right for you.' },
-      { id: 'process-2', label: 'Bring It To Paper', description: 'Once we understand your idea, I create a one-of-a-kind design tailored to you. We’ll refine the composition, placement, and details together.' },
-      { id: 'process-3', label: 'The Tattoo Session', description: 'On the day of your appointment, we confirm placement and work through the process at a comfortable pace, with breaks whenever you need them.' },
-      { id: 'process-4', label: 'Keeping It Sharp', description: 'Your tattoo deserves good aftercare. You’ll leave with clear healing instructions and everything you need to care for your new piece.' },
-    ] } },
-    { id: 'faq', type: 'faq', variant: 'compact-grid', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { title: 'Frequently Asked Questions', subtitle: 'A few things you might want to know before booking.', items: [
-      { id: 'faq-1', question: 'How do I book an appointment?', answer: 'Use the booking form below with a short description of your idea, placement, and approximate size. I’ll reply with next steps.' },
-      { id: 'faq-2', question: 'Do you require a deposit?', answer: 'A deposit is required to reserve your appointment and goes toward the cost of your tattoo.' },
-      { id: 'faq-3', question: 'Can I see your designs before booking?', answer: 'We’ll discuss references and direction first. Custom drawings are shared with booked clients as the appointment approaches.' },
-      { id: 'faq-4', question: 'Can I bring a friend to my session?', answer: 'Please ask when booking. Space is limited, but one quiet guest may be possible.' },
-      { id: 'faq-5', question: 'Do you take walk-ins?', answer: 'All sessions are by appointment so every design gets the time and attention it deserves.' },
-      { id: 'faq-6', question: 'How should I prepare for my appointment?', answer: 'Get a good night of sleep, eat beforehand, stay hydrated, and wear clothing that gives easy access to the tattoo area.' },
-    ] } },
+    {
+      id: 'board', type: 'gallery', variant: 'pinboard', layout: 'grid', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: {
+        title: 'On The Board', description: 'A few recent pieces and works in progress. Every tattoo is designed to be one of one.', images: [
+          { id: 'board-1', url: 'https://images.unsplash.com/photo-1600369671236-e74521d4b6ad?auto=format&fit=crop&w=800&q=80', caption: '09.02.2025' },
+          { id: 'board-2', url: 'https://images.unsplash.com/photo-1590246814883-57c511e86e73?auto=format&fit=crop&w=800&q=80', caption: '20.10.2022', note: 'Let’s get a little more detail on this one' },
+          { id: 'board-3', url: 'https://images.unsplash.com/photo-1598300188904-6287d497d332?auto=format&fit=crop&w=800&q=80', caption: '16.12.2023' },
+          { id: 'board-4', url: 'https://images.unsplash.com/photo-1563721478-a8afbb2acae5?auto=format&fit=crop&w=800&q=80', caption: '01.02.2023' },
+          { id: 'board-5', url: 'https://images.unsplash.com/photo-1611006671145-6e8b3c28e8d3?auto=format&fit=crop&w=800&q=80', caption: '29.06.2023', note: 'Artist’s pick' },
+          { id: 'board-6', url: 'https://images.unsplash.com/photo-1580894914762-fcc9c72bbcf8?auto=format&fit=crop&w=800&q=80', caption: '03.08.2022' },
+          { id: 'board-7', url: 'https://images.unsplash.com/photo-1614177599522-71b7ac1c3df3?auto=format&fit=crop&w=800&q=80', caption: '25.01.2025' },
+          { id: 'board-8', url: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80', caption: '25.10.2022' },
+          { id: 'board-9', url: 'https://images.unsplash.com/photo-1504805572947-34fad45aed93?auto=format&fit=crop&w=800&q=80', caption: '01.08.2022', note: 'Tiny flash, big meaning' },
+        ]
+      }
+    },
+    {
+      id: 'process', type: 'timeline', variant: 'pinned-thread', layout: 'vertical', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: {
+        title: 'From Idea To Ink', description: 'Here’s how we bring your tattoo to life, guiding you through every step of the process from start to finish.', items: [
+          { id: 'process-1', label: 'Share Your Idea', description: 'Tell us what you have in mind. We’ll talk through your vision, placement, and style so the design feels personal and right for you.' },
+          { id: 'process-2', label: 'Bring It To Paper', description: 'Once we understand your idea, I create a one-of-a-kind design tailored to you. We’ll refine the composition, placement, and details together.' },
+          { id: 'process-3', label: 'The Tattoo Session', description: 'On the day of your appointment, we confirm placement and work through the process at a comfortable pace, with breaks whenever you need them.' },
+          { id: 'process-4', label: 'Keeping It Sharp', description: 'Your tattoo deserves good aftercare. You’ll leave with clear healing instructions and everything you need to care for your new piece.' },
+        ]
+      }
+    },
+    {
+      id: 'faq', type: 'faq', variant: 'compact-grid', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: {
+        title: 'Frequently Asked Questions', subtitle: 'A few things you might want to know before booking.', items: [
+          { id: 'faq-1', question: 'How do I book an appointment?', answer: 'Use the booking form below with a short description of your idea, placement, and approximate size. I’ll reply with next steps.' },
+          { id: 'faq-2', question: 'Do you require a deposit?', answer: 'A deposit is required to reserve your appointment and goes toward the cost of your tattoo.' },
+          { id: 'faq-3', question: 'Can I see your designs before booking?', answer: 'We’ll discuss references and direction first. Custom drawings are shared with booked clients as the appointment approaches.' },
+          { id: 'faq-4', question: 'Can I bring a friend to my session?', answer: 'Please ask when booking. Space is limited, but one quiet guest may be possible.' },
+          { id: 'faq-5', question: 'Do you take walk-ins?', answer: 'All sessions are by appointment so every design gets the time and attention it deserves.' },
+          { id: 'faq-6', question: 'How should I prepare for my appointment?', answer: 'Get a good night of sleep, eat beforehand, stay hydrated, and wear clothing that gives easy access to the tattoo area.' },
+        ]
+      }
+    },
     { id: 'quote', type: 'quote', variant: 'editorial-statement', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { text: 'Black ink is timeless — it doesn’t follow trends or fade with fashion. It’s about boldness, permanence, and creating art that stands the test of time.' } },
     { id: 'contact', type: 'lead-form', variant: 'split-inquiry', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { title: 'Let’s Create Something Permanent.', description: 'Custom tattoos are available by appointment only. Share your idea and I’ll create a design made to last a lifetime.', buttonText: 'Submit Information', successMessage: 'Thanks for reaching out. Rowan will be in touch soon.', nameLabel: 'Full Name', namePlaceholder: 'Your name', contactLabel: 'Phone Number', contactPlaceholder: 'Your phone number', messageLabel: 'Tattoo Idea', messagePlaceholder: 'Tell me what you have in mind…', email: 'hello@rowanblack.com', instagram: 'https://instagram.com/rowanblack', location: 'Private Studio · Queen Street West, Toronto, ON' } },
     { id: 'footer', type: 'site-footer', variant: 'giant-wordmark', isHidden: false, backgroundColor: '#0c0d0c', textColor: '#e9e7dc', content: { logoText: 'ROWAN BLACK', description: 'Custom blackwork tattoos by appointment in Toronto.', links: [{ id: 'footer-book', group: 'Studio', label: 'Book an appointment', url: '#contact' }, { id: 'footer-board', group: 'Studio', label: 'Flash board', url: '#board' }], socialLinks: [{ id: 'footer-instagram', label: 'Instagram', url: 'https://instagram.com' }], legalLinks: [{ id: 'footer-copy', label: '© 2026 Rowan Black. All rights reserved.', url: '#top' }, { id: 'footer-privacy', label: 'Privacy Policy', url: '#' }] } },
@@ -1070,13 +881,11 @@ export const TEMPLATE_TATTOO_ARTIST: PageDocument = {
 export const TEMPLATES_MAP: Record<string, PageDocument> = {
   'creator-profile': TEMPLATE_CREATOR_PROFILE,
   'creator-newsletter': TEMPLATE_CREATOR_NEWSLETTER,
-  'product-brand': TEMPLATE_PRODUCT_BRAND,
-  'beauty-brand': TEMPLATE_BEAUTY_BRAND,
   'restaurant': TEMPLATE_RESTAURANT,
   'corporate-consulting': TEMPLATE_CORPORATE_CONSULTING,
   'editorial-portfolio': TEMPLATE_EDITORIAL_PORTFOLIO,
   'luxury-skincare': TEMPLATE_LUXURY_SKINCARE,
-  'point-architecture': TEMPLATE_POINT_ARCHITECTURE,
+  // 'point-architecture': TEMPLATE_POINT_ARCHITECTURE,
   'creator-fashion': TEMPLATE_CREATOR_FASHION,
   'creator-speaker': TEMPLATE_CREATOR_SPEAKER,
   'spa-salon': TEMPLATE_SPA_SALON,

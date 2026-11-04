@@ -11,7 +11,7 @@ import {
   extractWebsiteConfig,
   toPageContentDocument,
 } from '@/lib/page-engine/site-config';
-import { findHomePage, publishWebsiteDraft } from '@/lib/page-engine/site-store';
+import { findHomePage, publishTemplateStarterPages, publishWebsiteDraft } from '@/lib/page-engine/site-store';
 import { getSeoPublishSnapshot } from '@/lib/seo';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -252,6 +252,7 @@ export async function saveOnboardingUsername(value: string) {
   const alreadyActivated = Boolean(entitlement?.paidActive || entitlement?.onTrial);
   const draftDocument = PageDocumentSchema.safeParse(page.draftConfig);
   const seoSnapshot = draftDocument.success ? getSeoPublishSnapshot(draftDocument.data.settings) : {};
+  let publishedStarterSlugs: string[] = [];
   try {
     await db.$transaction(async (tx) => {
       await tx.profile.update({ where: { id: user.profile!.id }, data: { username } });
@@ -265,6 +266,7 @@ export async function saveOnboardingUsername(value: string) {
             ...seoSnapshot,
           },
         });
+        publishedStarterSlugs = await publishTemplateStarterPages(tx, user.profile!.id);
       }
     });
   } catch {
@@ -273,6 +275,7 @@ export async function saveOnboardingUsername(value: string) {
   if (alreadyActivated) await publishWebsiteDraft(user.profile.id);
   revalidatePath('/dashboard');
   revalidatePath(`/${username}`);
+  for (const slug of publishedStarterSlugs) revalidatePath(`/${username}/${slug}`);
   if (alreadyActivated) redirect('/dashboard');
   redirect('/onboarding/plan');
 }
