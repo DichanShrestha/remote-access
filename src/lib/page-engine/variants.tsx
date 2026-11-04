@@ -26,12 +26,14 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'restaurant-overlay', label: 'Overlay Menu', previewNode: <PlaceholderSVG /> },
     { id: 'transparent-overlay', label: 'Transparent Overlay', previewNode: <PlaceholderSVG /> },
     { id: 'floating-clean', label: 'Floating Minimal', previewNode: <PlaceholderSVG /> },
+    { id: 'centered-logo-links', label: 'Centered Logo Links', previewNode: <PlaceholderSVG /> },
   ],
   'site-footer': [
     { id: 'columns', label: 'Link Columns', previewNode: <PlaceholderSVG /> },
     { id: 'compact', label: 'Compact', previewNode: <PlaceholderSVG /> },
     { id: 'classic-serif', label: 'Classic Serif', previewNode: <PlaceholderSVG /> },
     { id: 'giant-wordmark', label: 'Giant Wordmark', previewNode: <PlaceholderSVG /> },
+    { id: 'footer-bar', label: 'Footer Bar', previewNode: <PlaceholderSVG /> },
     { id: 'restaurant', label: 'Branded Columns', previewNode: <PlaceholderSVG /> },
   ],
   // Hero uses its own built-in variant picker in HeroInspector
@@ -61,6 +63,7 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'restaurant-story', label: 'Layered Editorial', previewNode: <PlaceholderSVG /> },
     { id: 'bio-spotlight', label: 'Bio Spotlight', previewNode: <PlaceholderSVG /> },
     { id: 'salon-editorial', label: 'Editorial Split', previewNode: <PlaceholderSVG /> },
+    { id: 'torn-editorial', label: 'Torn Editorial Split', previewNode: <PlaceholderSVG /> },
   ],
   carousel: [
     { 
@@ -92,6 +95,7 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'restaurant-gallery', label: 'Restaurant Editorial Grid', previewNode: <PlaceholderSVG /> },
     { id: 'salon-gallery', label: 'Salon Soft Grid', previewNode: <PlaceholderSVG /> },
     { id: 'tattoo-gallery', label: 'Tattoo Flash Board', previewNode: <PlaceholderSVG /> },
+    { id: 'editorial-masonry', label: 'Editorial Masonry', previewNode: <PlaceholderSVG /> },
   ],
   services: [
     { id: 'portfolio-band', label: 'Portfolio Band', previewNode: <PlaceholderSVG /> },
@@ -122,6 +126,7 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'grid', label: 'Masonry Grid', previewNode: <PlaceholderSVG /> },
     { id: 'marquee', label: 'Infinite Marquee', previewNode: <PlaceholderSVG /> },
     { id: 'editorial-quotes', label: 'Editorial Quotes', previewNode: <PlaceholderSVG /> },
+    { id: 'review-cards', label: 'Review Cards', previewNode: <PlaceholderSVG /> },
   ],
   quote: [{ id: 'default', label: 'Quote', previewNode: <PlaceholderSVG /> }, { id: 'editorial-statement', label: 'Editorial Statement', previewNode: <PlaceholderSVG /> }],
   'case-studies': [
@@ -151,6 +156,7 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'editorial-panel', label: 'Editorial Panel', previewNode: <PlaceholderSVG /> },
     { id: 'split-inquiry', label: 'Split Inquiry', previewNode: <PlaceholderSVG /> },
     { id: 'salon-inquiry', label: 'Salon Inquiry', previewNode: <PlaceholderSVG /> },
+    { id: 'appointment-inquiry', label: 'Appointment Inquiry', previewNode: <PlaceholderSVG /> },
   ],
   'social-links': [
     { id: 'default', label: 'Standard Row', previewNode: <PlaceholderSVG /> },
@@ -168,6 +174,7 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'vertical', label: 'Vertical Timeline', previewNode: <PlaceholderSVG /> },
     { id: 'chronology', label: 'Chronology', previewNode: <PlaceholderSVG /> },
     { id: 'pinned-thread', label: 'Pinned Thread', previewNode: <PlaceholderSVG /> },
+    { id: 'numbered-panel', label: 'Numbered Process Panel', previewNode: <PlaceholderSVG /> },
   ],
   faq: [
     { id: 'default', label: 'Standard Accordion', previewNode: <PlaceholderSVG /> },
@@ -177,5 +184,6 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'corporate-list', label: 'Corporate Split List', previewNode: <PlaceholderSVG /> },
     { id: 'tattoo-list', label: 'Tattoo Dark List', previewNode: <PlaceholderSVG /> },
     { id: 'salon-pill', label: 'Salon Pill Accordion', previewNode: <PlaceholderSVG /> },
+    { id: 'photo-overlay', label: 'Photo Overlay Accordion', previewNode: <PlaceholderSVG /> },
   ],
 };

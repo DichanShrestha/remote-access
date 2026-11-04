@@ -878,6 +878,52 @@ export const TEMPLATE_TATTOO_ARTIST: PageDocument = {
   ],
 };
 
+// A second tattoo studio direction, based on a high-contrast black, white, and
+// teal editorial identity. It is assembled entirely from shared page sections.
+export const TEMPLATE_TATTOO_STUDIO: PageDocument = {
+  version: 1,
+  theme: { style: 'bold', primaryColor: '#00cbb2', radius: 'none', density: 'spacious' },
+  settings: { showFooterBranding: false, enableSmoothScrolling: true },
+  sections: [
+    { id: 'site-header', type: 'site-navbar', variant: 'centered-logo-links', isHidden: false, backgroundColor: '#090a0a', textColor: '#ffffff', buttonColor: '#ffffff', content: { logoText: 'INK 77', links: [{ id: 'nav-home', label: 'Home', url: '#hero' }, { id: 'nav-about', label: 'About', url: '#about' }, { id: 'nav-portfolio', label: 'Portfolio', url: '#portfolio' }, { id: 'nav-process', label: 'Process', url: '#process' }, { id: 'nav-testimonials', label: 'Testimonials', url: '#testimonials' }, { id: 'nav-faq', label: 'FAQ', url: '#faq' }], primaryLabel: 'Book now!', primaryUrl: '#contact' } },
+    { id: 'hero', type: 'hero', variant: 'framed-editorial', layout: 'split', textContrast: 'light', isHidden: false, backgroundColor: '#090a0a', textColor: '#ffffff', content: { eyebrow: 'INK 77 · BARNSLEY', title: 'Ink that tells your story', headline: 'Tattoo Studio', subtitle: 'Timeless tattoo art crafted with creativity, respect, and detail in Barnsley.', buttonText: 'Book an appointment', buttonUrl: '#contact', secondaryButtonText: 'View portfolio', secondaryButtonUrl: '#portfolio', imageUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?auto=format&fit=crop&w=1200&q=85' } },
+    { id: 'about', type: 'feature-split', variant: 'torn-editorial', layout: 'image-left', isHidden: false, backgroundColor: '#ffffff', textColor: '#202020', content: { eyebrow: 'ABOUT INK 77', title: 'About Ink 77 Tattoos Studio', description: 'Ink 77 is owned and led by Flo, a passionate artist dedicated to creating tattoos that tell your story. Alongside Jake, our skilled tattoo artist, we bring creativity, precision, and respect to every design.\n\nFrom realism to fine line and black & grey, each piece is custom-made to reflect you. At Ink 77, your skin is our canvas — and every tattoo is crafted to last a lifetime.', buttonText: 'Book an appointment', buttonUrl: '#contact', imageUrl: 'https://images.unsplash.com/photo-1598373182133-52452f7691ef?auto=format&fit=crop&w=1000&q=85', imageAlt: 'Tattoo artist at work', checkpoints: [] } },
+    { id: 'portfolio', type: 'gallery', variant: 'editorial-masonry', layout: 'grid', isHidden: false, backgroundColor: '#101111', textColor: '#ffffff', content: { eyebrow: 'INK 77 TATTOO STUDIO', title: 'Our recent work', description: '', buttonText: 'See more', buttonUrl: '#contact', images: [
+      { id: 'portfolio-1', url: 'https://images.unsplash.com/photo-1565058379802-bbe93b2f703a?auto=format&fit=crop&w=900&q=85', caption: 'Blackwork portrait' },
+      { id: 'portfolio-2', url: 'https://images.unsplash.com/photo-1590246814883-57c511e86e73?auto=format&fit=crop&w=900&q=85', caption: 'Fine line study' },
+      { id: 'portfolio-3', url: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?auto=format&fit=crop&w=900&q=85', caption: 'Custom piece' },
+      { id: 'portfolio-4', url: 'https://images.unsplash.com/photo-1542561943-baca4dd0fc93?auto=format&fit=crop&w=900&q=85', caption: 'Black and grey detail' },
+      { id: 'portfolio-5', url: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?auto=format&fit=crop&w=900&q=85', caption: 'Illustrative work' },
+      { id: 'portfolio-6', url: 'https://images.unsplash.com/photo-1598971861713-54ad16a7e72e?auto=format&fit=crop&w=900&q=85', caption: 'Studio session' },
+      { id: 'portfolio-7', url: 'https://images.unsplash.com/photo-1600369671236-e74521d4b6ad?auto=format&fit=crop&w=900&q=85', caption: 'Custom blackwork' },
+      { id: 'portfolio-8', url: 'https://images.unsplash.com/photo-1598300188904-6287d497d332?auto=format&fit=crop&w=900&q=85', caption: 'Sleeve detail' },
+      { id: 'portfolio-9', url: 'https://images.unsplash.com/photo-1611006671145-6e8b3c28e8d3?auto=format&fit=crop&w=900&q=85', caption: 'Illustrative ink' },
+      { id: 'portfolio-10', url: 'https://images.unsplash.com/photo-1580894914762-fcc9c72bbcf8?auto=format&fit=crop&w=900&q=85', caption: 'Fine line work' },
+    ] } },
+    { id: 'process', type: 'timeline', variant: 'numbered-panel', layout: 'vertical', isHidden: false, backgroundColor: '#050606', textColor: '#ffffff', content: { title: 'The process', description: 'Here’s how we bring your tattoo to life, guiding you through every step of the process from start to finish.', imageUrl: 'https://images.unsplash.com/photo-1598373182133-52452f7691ef?auto=format&fit=crop&w=1000&q=85', buttonText: 'Book an appointment', buttonUrl: '#contact', items: [
+      { id: 'process-1', label: 'Share your idea', description: 'Tell us the subject, placement, approximate size, and any references through the booking form.' },
+      { id: 'process-2', label: 'Plan your design', description: 'We will talk through the direction, answer questions, and arrange the details before your appointment.' },
+      { id: 'process-3', label: 'Settle in for your session', description: 'We confirm the placement together and work at a comfortable pace, with breaks when you need them.' },
+      { id: 'process-4', label: 'Care for your new tattoo', description: 'You leave with simple aftercare guidance to help your tattoo heal well.' },
+    ] } },
+    { id: 'testimonials', type: 'testimonials', variant: 'review-cards', isHidden: false, backgroundColor: '#ffffff', textColor: '#202020', content: { title: 'Testimonials', items: [
+      { id: 'review-1', quote: 'I had an amazing experience at Ink 77 Tattoo Studio! Flo is super talented, friendly, and professional. The studio is clean and welcoming, and he made sure I was comfortable the whole time.', author: 'Nazanin Esfandiari', role: 'a day ago' },
+      { id: 'review-2', quote: 'Incredible atmosphere, extremely professional and welcoming from both Jake and Flo. I will definitely be recommending them to anyone looking to get a tattoo.', author: 'Danny Hirst', role: '2 weeks ago' },
+      { id: 'review-3', quote: 'An amazing experience here! Jake is an incredible artist, professional, and really made me feel comfortable throughout the whole process. The final result turned out even better than I imagined.', author: 'Nika Shvangiradze', role: '3 weeks ago' },
+    ] } },
+    { id: 'faq', type: 'faq', variant: 'photo-overlay', isHidden: false, backgroundColor: '#090a0a', textColor: '#ffffff', content: { title: 'Frequently asked questions', backgroundImageUrl: 'https://images.unsplash.com/photo-1598373182133-52452f7691ef?auto=format&fit=crop&w=1800&q=85', items: [
+      { id: 'faq-1', question: 'How much do tattoos cost?', answer: 'Pricing depends on size, placement, detail, and session time. Share your idea and we can provide an estimate.' },
+      { id: 'faq-2', question: 'Do you accept walk-ins?', answer: 'Appointments are recommended so there is time to discuss your design. Ask us about current walk-in availability.' },
+      { id: 'faq-3', question: 'How do I book an appointment?', answer: 'Use the form below and include your idea, placement, approximate size, and reference images if you have them.' },
+      { id: 'faq-4', question: 'Can I bring my own design?', answer: 'Yes. Bring your references and we can discuss how to adapt them for a tattoo that suits your placement.' },
+      { id: 'faq-5', question: 'How should I prepare?', answer: 'Get a good night of sleep, eat beforehand, drink water, and wear clothing that makes the area easy to reach.' },
+      { id: 'faq-6', question: 'What about aftercare?', answer: 'Your artist will explain how to care for your new tattoo and what to expect as it heals.' },
+    ] } },
+    { id: 'contact', type: 'lead-form', variant: 'appointment-inquiry', isHidden: false, backgroundColor: '#ffffff', textColor: '#202020', content: { title: 'Book your session', description: 'Please fill out the form below with as much detail as possible. This helps us understand your idea and give you the best result.', buttonText: 'Request appointment', successMessage: 'Thanks for your enquiry. The studio will be in touch soon.', email: 'flotattoos@yahoo.com', phone: '+44 7498 253918', openingHours: 'Tue – Sat: 10:00am – 04:00 pm', location: 'Shambles Street, Barnsley, United Kingdom, S70 2SH', mapQuery: 'Ink 77 Tattoo Studio, Shambles Street, Barnsley, UK' } },
+    { id: 'footer', type: 'site-footer', variant: 'footer-bar', isHidden: false, backgroundColor: '#050606', textColor: '#ffffff', content: { logoText: 'INK 77', description: 'flotattoos@yahoo.com\nShambles Street, Barnsley, United Kingdom, S70 2SH', links: [{ id: 'footer-home', group: 'Studio', label: 'Home', url: '#hero' }, { id: 'footer-about', group: 'Studio', label: 'About', url: '#about' }, { id: 'footer-portfolio', group: 'Studio', label: 'Portfolio', url: '#portfolio' }, { id: 'footer-process', group: 'Studio', label: 'Process', url: '#process' }, { id: 'footer-reviews', group: 'Studio', label: 'Testimonials', url: '#testimonials' }, { id: 'footer-faq', group: 'Studio', label: 'FAQ', url: '#faq' }, { id: 'footer-book', group: 'Studio', label: 'Book Appointment', url: '#contact' }], socialLinks: [{ id: 'footer-instagram', label: 'Instagram', url: 'https://instagram.com' }], legalLinks: [{ id: 'footer-copy', label: '© 2025. All rights reserved.', url: '#hero' }] } },
+  ],
+};
+
 export const TEMPLATES_MAP: Record<string, PageDocument> = {
   'creator-profile': TEMPLATE_CREATOR_PROFILE,
   'creator-newsletter': TEMPLATE_CREATOR_NEWSLETTER,
@@ -890,4 +936,5 @@ export const TEMPLATES_MAP: Record<string, PageDocument> = {
   'creator-speaker': TEMPLATE_CREATOR_SPEAKER,
   'spa-salon': TEMPLATE_SPA_SALON,
   'tattoo-artist': TEMPLATE_TATTOO_ARTIST,
+  'tattoo-studio': TEMPLATE_TATTOO_STUDIO,
 };

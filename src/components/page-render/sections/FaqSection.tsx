@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { FaqSectionSchema, ThemeConfig } from '@/lib/page-engine/schemas';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PageImage } from '@/components/page-render/PageImage';
 
 type FaqProps = {
   section: z.infer<typeof FaqSectionSchema>;
@@ -12,9 +13,27 @@ type FaqProps = {
 
 export function FaqSection({ section, theme }: FaqProps) {
   const { content } = section;
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
   const variant = section.variant || 'default';
+  const [openIndex, setOpenIndex] = useState<number | null>(variant === 'photo-overlay' ? 0 : null);
+
+  if (variant === 'photo-overlay') return <section className="relative isolate w-full overflow-hidden bg-[#060707] px-5 py-16 text-white sm:px-10 md:px-[8%] md:py-20">
+    {content.backgroundImageUrl && <PageImage src={content.backgroundImageUrl} alt="" className="absolute inset-0 -z-20 h-full w-full object-cover opacity-40" />}
+    <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/75" />
+    <div className="relative mx-auto max-w-6xl">
+      <SectionFaqOrnament />
+      <h2 className="mt-1 text-center font-[Impact,'Arial_Narrow',sans-serif] text-[clamp(2.6rem,6vw,4.8rem)] uppercase leading-none tracking-[-0.025em]">{content.title || 'Frequently asked questions'}</h2>
+      <SectionFaqOrnament flipped />
+      <div className="mt-10 grid gap-x-4 gap-y-2 md:grid-cols-2">
+        {content.items.map((item, index) => {
+          const isOpen = openIndex === index;
+          return <div key={item.id} className="min-w-0">
+            <button type="button" aria-expanded={isOpen} onClick={() => setOpenIndex(isOpen ? null : index)} className={`flex min-h-12 w-full items-center gap-3 border px-4 py-3 text-left text-sm font-semibold transition-colors sm:min-h-14 sm:text-base ${isOpen ? 'border-[#00cbb2] bg-[#00cbb2] text-black' : 'border-white/55 bg-black/40 text-white hover:border-white'}`}><span className="font-[Impact,'Arial_Narrow',sans-serif]">{index + 1}.</span><span className="flex-1">{item.question}</span><span aria-hidden="true" className="text-xl font-light">{isOpen ? '⌃' : '⌄'}</span></button>
+            {isOpen && <p className="border border-t-0 border-white/55 bg-[#171818]/90 px-4 py-4 text-sm leading-relaxed text-white/80">{item.answer}</p>}
+          </div>;
+        })}
+      </div>
+    </div>
+  </section>;
 
   if (variant === 'corporate-list') {
     return <section className="w-full bg-white px-6 py-16 text-[#171717] sm:px-10 md:px-[8%] md:py-24">
@@ -207,4 +226,8 @@ export function FaqSection({ section, theme }: FaqProps) {
       </div>
     </section>
   );
+}
+
+function SectionFaqOrnament({ flipped = false }: { flipped?: boolean }) {
+  return <svg aria-hidden="true" className={`mx-auto h-7 w-56 ${flipped ? 'rotate-180' : ''}`} viewBox="0 0 260 34" fill="none"><path d="M4 23 C50 23 66 9 112 12 C124 13 127 17 130 25 C133 17 136 13 148 12 C194 9 210 23 256 23" stroke="white" strokeWidth="2"/><path d="M28 20h17m170 0h17M130 4v27m-6-22 6-5 6 5" stroke="white" strokeWidth="2"/><circle cx="62" cy="18" r="2" fill="white"/><circle cx="82" cy="15" r="2" fill="white"/><circle cx="102" cy="13" r="2" fill="white"/><circle cx="158" cy="13" r="2" fill="white"/><circle cx="178" cy="15" r="2" fill="white"/><circle cx="198" cy="18" r="2" fill="white"/></svg>;
 }

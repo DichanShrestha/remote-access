@@ -19,8 +19,19 @@ export function SiteNavbar({ section, theme }: { section: NavbarSection; theme: 
   const pill = section.variant === 'pill';
   const overlay = section.variant === 'overlay';
   const restaurant = section.variant === 'restaurant-overlay';
+  const centeredLogoLinks = section.variant === 'centered-logo-links';
   const floatingFill = section.buttonColor || section.textColor || '#e9e7dc';
   const floatingText = readableTextColor(floatingFill);
+
+  if (centeredLogoLinks) return <header className="absolute left-0 top-0 z-30 w-full px-5 py-4 text-white sm:px-8 md:px-10">
+    <div className="mx-auto grid max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-4">
+      <nav aria-label="Main navigation" className="hidden items-center justify-end gap-5 @lg:flex @xl:gap-8">{content.links.slice(0, Math.ceil(content.links.length / 2)).map(link => <PageLink key={link.id} href={link.url} className="whitespace-nowrap font-[Impact,'Arial_Narrow',sans-serif] text-sm uppercase tracking-wide text-white/90 transition-colors hover:text-white">{link.label}</PageLink>)}</nav>
+      <a href="#top" aria-label={content.logoText} className="relative z-10 flex h-20 min-w-28 flex-col items-center justify-center text-center font-[Impact,'Arial_Narrow',sans-serif] text-2xl font-black uppercase leading-[0.8] tracking-[-0.06em] sm:h-24 sm:min-w-32 sm:text-3xl">{content.logoUrl ? <PageImage src={content.logoUrl} alt={content.logoText} className="h-16 w-16 object-contain" /> : <><svg aria-hidden="true" className="absolute inset-0 h-full w-full text-white/90" viewBox="0 0 128 96" fill="none"><path d="M8 27 Q64 -5 120 27 M16 68 Q64 100 112 68 M16 27 L16 68 M112 27 L112 68 M8 27 L22 31 M120 27 L106 31 M16 68 L28 64 M112 68 L100 64" stroke="currentColor" strokeWidth="1.7"/><path d="M64 10 L68 19 L78 20 L70 27 L72 37 L64 32 L56 37 L58 27 L50 20 L60 19 Z M64 59 L72 70 L64 85 L56 70 Z" stroke="currentColor" strokeWidth="1.6"/></svg><span className="relative mt-1">{content.logoText}</span><span aria-hidden="true" className="relative mt-1 font-serif text-[9px] font-normal tracking-[0.25em]">✦ ✦ ✦</span></>}</a>
+      <nav aria-label="More navigation" className="hidden items-center justify-start gap-5 @lg:flex @xl:gap-8">{content.links.slice(Math.ceil(content.links.length / 2)).map(link => <PageLink key={link.id} href={link.url} className="whitespace-nowrap font-[Impact,'Arial_Narrow',sans-serif] text-sm uppercase tracking-wide text-white/90 transition-colors hover:text-white">{link.label}</PageLink>)}{content.primaryLabel && <PageLink href={content.primaryUrl || '#contact'} data-page-button className="ml-2 inline-flex min-h-[100px] min-w-[210px] items-center justify-center bg-white px-7 font-[Impact,'Arial_Narrow',sans-serif] text-xl uppercase text-black">{content.primaryLabel}</PageLink>}</nav>
+      <button type="button" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menuOpen} aria-controls="pageory-centered-navigation" className="col-start-3 row-start-1 ml-auto grid h-10 w-10 place-items-center border border-white/35 lg:hidden">{menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
+    </div>
+    {menuOpen && <nav id="pageory-centered-navigation" aria-label="Main navigation" className="absolute left-5 right-5 top-full mt-2 grid gap-1 border border-white/20 bg-black/95 p-3 text-sm shadow-2xl backdrop-blur md:left-8 md:right-8 lg:hidden">{content.links.map(link => <PageLink key={link.id} href={link.url} onClick={() => setMenuOpen(false)} className="px-3 py-3 font-[Impact,'Arial_Narrow',sans-serif] uppercase tracking-wide hover:bg-white/10">{link.label}</PageLink>)}{content.primaryLabel && <PageLink href={content.primaryUrl || '#contact'} data-page-button className="mt-2 bg-white px-4 py-3 text-center font-[Impact,'Arial_Narrow',sans-serif] uppercase text-black">{content.primaryLabel}</PageLink>}</nav>}
+  </header>;
 
   if (restaurant) return <header className="absolute left-0 top-0 z-20 w-full px-5 py-4 text-white sm:px-8 md:px-12">
     <div className="mx-auto flex max-w-6xl items-center justify-between">
@@ -93,6 +104,15 @@ export function SiteFooter({ section }: { section: FooterSection }) {
     groups.set(link.group, group);
     return groups;
   }, new Map());
+
+  if (section.variant === 'footer-bar') return <footer className="relative w-full overflow-hidden bg-[#050606] px-6 pb-10 pt-16 text-white sm:px-10 md:px-[8%] md:pb-12 md:pt-20">
+    <div aria-hidden="true" className="absolute inset-x-0 top-0 h-12 bg-white" style={{ clipPath: 'polygon(0 0,100% 0,100% 42%,97% 24%,94% 60%,90% 31%,87% 56%,83% 20%,79% 55%,75% 26%,70% 62%,66% 24%,61% 54%,56% 26%,52% 64%,47% 30%,42% 57%,38% 22%,34% 61%,30% 32%,25% 58%,20% 21%,16% 55%,12% 28%,8% 60%,4% 32%,0 58%)' }} />
+    <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-8 border-t border-white/15 pt-8 md:grid-cols-[0.7fr_1.8fr_1fr]">
+      <div><a href="#top" className="font-[Impact,'Arial_Narrow',sans-serif] text-3xl font-black uppercase tracking-[-0.05em]">{content.logoText}</a><p className="mt-4 text-xs text-white/60">{content.legalLinks[0]?.label || '© 2026. All rights reserved.'}</p></div>
+      <nav aria-label="Footer navigation" className="flex flex-wrap justify-center gap-x-7 gap-y-3">{content.links.map(link => <PageLink key={link.id} href={link.url} className="font-[Impact,'Arial_Narrow',sans-serif] text-sm uppercase text-white/85 hover:text-white">{link.label}</PageLink>)}</nav>
+      <div className="text-right">{content.description && <p className="text-sm font-semibold">{content.description}</p>}{content.socialLinks.map(link => <PageLink key={link.id} href={link.url} aria-label={link.label} className="mt-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-xs">◎</PageLink>)}</div>
+    </div>
+  </footer>;
 
   if (section.variant === 'giant-wordmark') return <footer className="w-full px-6 pb-8 pt-12 text-current sm:px-10 md:px-[7%]">
     <div className="mx-auto max-w-6xl border-t border-current/15 pt-6">

@@ -291,6 +291,7 @@ export const FaqSectionSchema = BaseSectionSchema.extend({
     title: z.string().optional(),
     subtitle: z.string().optional(),
     description: z.string().optional(),
+    backgroundImageUrl: z.string().optional(),
     items: z.array(z.object({ id: z.string(), question: z.string(), answer: z.string() })),
   }),
 });
@@ -320,6 +321,9 @@ export const LeadFormSectionSchema = BaseSectionSchema.extend({
     email: z.string().optional(),
     instagram: z.string().optional(),
     location: z.string().optional(),
+    phone: z.string().optional(),
+    openingHours: z.string().optional(),
+    mapQuery: z.string().optional(),
   }),
 });
 
@@ -447,6 +451,9 @@ export const TimelineSectionSchema = BaseSectionSchema.extend({
   content: z.object({
     title: z.string().optional(),
     description: z.string().optional(),
+    imageUrl: z.string().optional(),
+    buttonText: z.string().optional(),
+    buttonUrl: z.string().optional(),
     items: z.array(z.object({
       id: z.string(),
       label: z.string(),

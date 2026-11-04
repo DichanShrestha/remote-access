@@ -659,6 +659,38 @@ function TattooCoverHero({ content, backgroundColor, textColor }: SubProps) {
   </section>;
 }
 
+function FramedEditorialHero({ content, theme, backgroundColor, textColor }: SubProps) {
+  const hasImage = Boolean(content.imageUrl || content.avatarUrl);
+  return <section className={cn('relative overflow-hidden bg-[#090a0a] px-5 pb-16 pt-28 text-white sm:px-8 sm:pt-32 lg:px-12 lg:pb-20 lg:pt-24', hasImage ? 'min-h-[760px] lg:min-h-[min(920px,100svh)]' : 'min-h-[390px] lg:min-h-[460px]')} style={{ backgroundColor: backgroundColor || '#090a0a', color: textColor || '#fff' }}>
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'radial-gradient(ellipse at 22% 42%, rgba(255,255,255,.09), transparent 34%), radial-gradient(ellipse at 75% 58%, rgba(0,203,178,.1), transparent 28%), repeating-linear-gradient(112deg, transparent 0 13px, rgba(255,255,255,.018) 14px 15px, transparent 17px 30px)' }} />
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black to-transparent" />
+    <div className={cn('relative z-10 mx-auto grid max-w-6xl items-center gap-10', hasImage ? 'min-h-[590px] lg:min-h-[680px] lg:grid-cols-[0.92fr_1.08fr] lg:gap-4' : 'min-h-[220px]')}>
+      <div className={cn('relative z-10 flex flex-col items-center text-center lg:items-center', hasImage ? 'lg:pr-6' : '')}>
+        <p className="mb-3 font-serif text-2xl italic leading-none text-white sm:text-3xl">{content.headline || 'Tattoo Studio'}</p>
+        <OrnamentalRule color="#ffffff" />
+        <h1 className="mt-4 max-w-[11ch] font-[Impact,'Arial_Narrow',sans-serif] text-[clamp(3.3rem,8.5vw,7.6rem)] font-black uppercase leading-[0.78] tracking-[-0.035em] [text-wrap:balance]">{content.title}</h1>
+        <OrnamentalRule color="#ffffff" flipped className="mt-5" />
+        {content.subtitle && <p className="mt-7 max-w-md text-sm leading-relaxed text-white/75 sm:text-base">{content.subtitle}</p>}
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          {content.buttonText && <PageLink href={content.buttonUrl || '#contact'} data-page-button className="inline-flex min-h-12 items-center justify-center bg-[#00cbb2] px-7 font-[Impact,'Arial_Narrow',sans-serif] text-sm uppercase tracking-wide text-black transition-colors hover:bg-[#2cdec8]">{content.buttonText}</PageLink>}
+          {content.secondaryButtonText && <PageLink href={content.secondaryButtonUrl || '#portfolio'} className="inline-flex min-h-12 items-center justify-center border border-white/50 bg-black/20 px-7 font-[Impact,'Arial_Narrow',sans-serif] text-sm uppercase tracking-wide text-white">{content.secondaryButtonText}</PageLink>}
+        </div>
+      </div>
+      {hasImage && <div className="relative mx-auto flex w-full max-w-[610px] items-center justify-center px-7 py-8 sm:px-10 lg:py-0">
+        <div aria-hidden="true" className="absolute inset-[3%_5%] rotate-[-8deg] bg-[#00cbb2]" style={{ clipPath: 'polygon(8% 0, 96% 3%, 100% 7%, 97% 91%, 100% 96%, 89% 100%, 5% 96%, 0 92%, 4% 8%, 0 4%)' }} />
+        <div className="relative aspect-[0.83/1] w-full rotate-[-7deg] overflow-hidden border-[8px] border-[#00cbb2] bg-neutral-900 shadow-[0_22px_65px_#000a] sm:border-[10px]" style={{ clipPath: 'polygon(5% 1%, 96% 0, 99% 4%, 100% 94%, 96% 99%, 4% 100%, 0 96%, 2% 7%)' }}>
+          <PageImage src={content.imageUrl || content.avatarUrl} alt={content.title || 'Tattoo artist at work'} fetchPriority="high" sizes="(max-width: 1024px) 90vw, 48vw" className="h-full w-full object-cover" />
+        </div>
+        <svg aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 640 640" fill="none" preserveAspectRatio="none"><path d="M44 108 L24 98 L129 74 M520 57 L607 45 L582 78 M572 529 L618 544 L506 564 M84 570 L27 590 L91 582" stroke={theme.primaryColor} strokeWidth="9" strokeLinecap="square"/><path d="M49 102 L126 70 M524 59 L598 41 M86 577 L24 592 M569 528 L625 541" stroke={theme.primaryColor} strokeWidth="3" strokeLinecap="square"/></svg>
+      </div>}
+    </div>
+  </section>;
+}
+
+function OrnamentalRule({ color, flipped = false, className }: { color: string; flipped?: boolean; className?: string }) {
+  return <svg aria-hidden="true" className={cn('h-8 w-52 sm:w-64', flipped && 'rotate-180', className)} viewBox="0 0 260 34" fill="none"><path d="M4 23 C50 23 66 9 112 12 C124 13 127 17 130 25 C133 17 136 13 148 12 C194 9 210 23 256 23" stroke={color} strokeWidth="2"/><path d="M28 20 L45 20 M215 20 L232 20 M130 4 L130 31 M124 9 L130 4 L136 9" stroke={color} strokeWidth="2"/><circle cx="62" cy="18" r="2" fill={color}/><circle cx="78" cy="15" r="2" fill={color}/><circle cx="96" cy="13" r="2" fill={color}/><circle cx="164" cy="13" r="2" fill={color}/><circle cx="182" cy="15" r="2" fill={color}/><circle cx="198" cy="18" r="2" fill={color}/></svg>;
+}
+
 function RestaurantCoverHero({ content }: SubProps) {
   return <section className="relative flex min-h-[54svh] w-full items-end justify-center overflow-hidden bg-neutral-900 text-white md:min-h-[620px]">
     {content.imageUrl && <PageImage src={content.imageUrl} alt="" fetchPriority="high" sizes="100vw" className="absolute inset-0 h-full w-full object-cover" />}
@@ -1020,6 +1052,7 @@ const VARIANT_MAP: Record<string, React.ComponentType<SubProps>> = {
   'speaker-editorial': SpeakerEditorialHero,
   'curved-strip': TattooCoverHero,
   'tattoo-cover': TattooCoverHero, // backward compat
+  'framed-editorial': FramedEditorialHero,
   'cover-story': RestaurantCoverHero,
   'restaurant-cover': RestaurantCoverHero,
   'split-wide': (props) => <SplitHero {...props} wide />,

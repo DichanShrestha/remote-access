@@ -56,6 +56,16 @@ const PAGE_HASH_ALIASES: Record<string, Record<string, string>> = {
     contact: 'contact',
     faq: 'faq',
   },
+  'tattoo-studio': {
+    about: 'about',
+    portfolio: 'portfolio',
+    process: 'process',
+    testimonials: 'testimonials',
+    faq: 'faq',
+    contact: 'contact',
+    book: 'contact',
+    booking: 'contact',
+  },
 };
 
 function normalizeLabel(value: string): string {

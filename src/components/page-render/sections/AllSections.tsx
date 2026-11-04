@@ -29,6 +29,10 @@ import { NumberTicker } from '@/components/ui/number-ticker';
 import { PageImage } from '@/components/page-render/PageImage';
 import { PageLink } from '@/components/page-render/PageLink';
 
+function SectionOrnament({ color, flipped = false, className = '' }: { color: string; flipped?: boolean; className?: string }) {
+  return <svg aria-hidden="true" className={`mx-auto h-7 w-52 ${flipped ? 'rotate-180' : ''} ${className}`} viewBox="0 0 260 34" fill="none"><path d="M4 23 C50 23 66 9 112 12 C124 13 127 17 130 25 C133 17 136 13 148 12 C194 9 210 23 256 23" stroke={color} strokeWidth="2"/><path d="M28 20h17m170 0h17M130 4v27m-6-22 6-5 6 5" stroke={color} strokeWidth="2"/><circle cx="62" cy="18" r="2" fill={color}/><circle cx="82" cy="15" r="2" fill={color}/><circle cx="102" cy="13" r="2" fill={color}/><circle cx="158" cy="13" r="2" fill={color}/><circle cx="178" cy="15" r="2" fill={color}/><circle cx="198" cy="18" r="2" fill={color}/></svg>;
+}
+
 // ── URL Button ─────────────────────────────────────────────────
 export function UrlButtonSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { label, url, description } = section.content;
@@ -287,6 +291,30 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
           {section.content.buttonText && <PageLink href={section.content.buttonUrl || '#contact'} data-page-button className="inline-flex min-h-11 items-center rounded-full bg-[#1f1a18] px-7 text-xs font-semibold uppercase tracking-[0.14em] text-white">{section.content.buttonText}</PageLink>}
           {section.content.secondaryButtonText && <PageLink href={section.content.secondaryButtonUrl || '#contact'} className="inline-flex min-h-11 items-center rounded-full border border-[#1f1a18]/20 px-7 text-xs font-medium uppercase tracking-[0.14em]">{section.content.secondaryButtonText}</PageLink>}
         </div>}
+      </div>
+    </section>;
+  }
+
+  if (variant === 'editorial-masonry') {
+    const ink = section.backgroundColor || '#101111';
+    const paper = section.textColor || '#ffffff';
+    return <section className="relative w-full overflow-hidden px-5 py-16 sm:px-10 md:px-[9%] md:py-24" style={{ backgroundColor: ink, color: paper }}>
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-40" style={{ backgroundImage: 'radial-gradient(ellipse at 20% 15%, rgba(255,255,255,.08), transparent 35%), repeating-linear-gradient(0deg, transparent 0 5px, rgba(255,255,255,.018) 6px 7px)' }} />
+      <div className="relative mx-auto max-w-6xl">
+        <div className="mb-10 text-center md:mb-14">
+          <SectionOrnament color="#ffffff" />
+          {section.content.eyebrow && <p className="mt-2 font-[Impact,'Arial_Narrow',sans-serif] text-xs uppercase tracking-[0.2em] text-white/70">{section.content.eyebrow}</p>}
+          {section.content.title && <h2 className="mt-2 font-[Impact,'Arial_Narrow',sans-serif] text-[clamp(2.5rem,6vw,4.8rem)] uppercase leading-none tracking-[-0.025em]">{section.content.title}</h2>}
+          {section.content.description && <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-current/70">{section.content.description}</p>}
+          <SectionOrnament color="#ffffff" flipped className="mt-2" />
+        </div>
+        <div className="grid grid-cols-2 items-start gap-2 sm:gap-3 lg:grid-cols-5 lg:gap-3">
+          {images.map((img: any, index: number) => <figure key={img.id || index} className={cn('group relative overflow-hidden bg-black', index % 5 === 1 || index % 5 === 3 ? 'mt-7 lg:mt-10' : '')}>
+            <PageImage src={img.url} alt={img.caption || ''} className={cn('w-full object-cover grayscale-[10%] transition-transform duration-700 group-hover:scale-[1.04] group-hover:grayscale-0', index % 3 === 0 ? 'aspect-[0.72/1]' : 'aspect-[0.82/1]')} />
+            {img.caption && <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-2 pt-8 text-[8px] uppercase tracking-[0.14em] text-white/85 sm:px-3 sm:pb-3 sm:text-[9px]">{img.caption}</figcaption>}
+          </figure>)}
+        </div>
+        {(section.content.buttonText || section.content.secondaryButtonText) && <div className="mt-8 flex justify-center gap-5"><PageLink href={section.content.buttonUrl || '#contact'} className="border-b border-white/70 pb-1 text-xs uppercase text-white">{section.content.buttonText || 'See more'} <span aria-hidden="true">⌄</span></PageLink>{section.content.secondaryButtonText && <PageLink href={section.content.secondaryButtonUrl || '#contact'} className="border-b border-white/40 pb-1 text-xs uppercase text-white/75">{section.content.secondaryButtonText}</PageLink>}</div>}
       </div>
     </section>;
   }
@@ -1122,6 +1150,22 @@ export function TestimonialsSection({ section, theme }: { section: any; theme: T
   const { title, items } = section.content;
   const variant = section.variant || 'grid';
 
+  if (variant === 'review-cards') return <section className="w-full px-5 py-16 sm:px-10 md:px-[10%] md:py-20" style={{ backgroundColor: section.backgroundColor || '#ffffff', color: section.textColor || '#202020' }}>
+    <div className="mx-auto max-w-6xl">
+      <SectionOrnament color="#111111" />
+      <h2 className="mt-1 text-center font-[Impact,'Arial_Narrow',sans-serif] text-[clamp(2.6rem,5.8vw,4.5rem)] uppercase leading-none tracking-[-0.03em]">{title || 'Testimonials'}</h2>
+      <SectionOrnament color="#111111" flipped className="mt-1" />
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-sm"><span className="font-bold">G</span><span>Google Rating 5.0</span><span aria-label="5 out of 5 stars" className="tracking-[0.12em] text-[#f4a900]">★★★★★</span><span className="underline underline-offset-2">See all our reviews</span></div>
+      <div className="mt-8 grid gap-5 md:grid-cols-3 md:gap-6">
+        {items.slice(0, 3).map((item: any, index: number) => <article key={item.id} className="relative flex min-h-[260px] flex-col border-2 border-[#171717] bg-white p-5 shadow-[0_4px_0_rgba(0,0,0,.07)] sm:p-6" style={{ clipPath: 'polygon(1% 0,100% 2%,98% 99%,0 97%)' }}>
+          <div className="flex items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#00bfa8] font-semibold text-white">{item.author?.slice(0, 1) || 'I'}</span><div className="min-w-0"><h3 className="truncate font-[Impact,'Arial_Narrow',sans-serif] text-lg">{item.author}</h3><p className="text-xs text-neutral-500">{item.role || `${index + 1} weeks ago`}</p></div><span aria-hidden="true" className="ml-auto font-bold text-[#4285f4]">G</span></div>
+          <p aria-label="5 out of 5 stars" className="mt-4 text-sm tracking-[0.08em] text-[#00bfa8]">★★★★★</p>
+          <p className="mt-3 text-sm leading-relaxed text-neutral-700">{item.quote}</p>
+        </article>)}
+      </div>
+    </div>
+  </section>;
+
   if (variant === 'salon-editorial' || variant === 'editorial-quotes') {
     return (
       <section className="py-20 md:py-28 px-6 max-w-6xl mx-auto text-current">
@@ -1226,6 +1270,7 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId, variant = '', co
   const [success, setSuccess] = useState(false);
   const tattooInquiry = variant === 'split-inquiry';
   const salonInquiry = variant === 'salon-inquiry';
+  const appointmentInquiry = variant === 'appointment-inquiry';
   const fieldClass = tattooInquiry
     ? 'w-full rounded-xl border border-white/15 bg-transparent px-3 py-2.5 text-[8px] text-[#e9e7dc] placeholder:text-white/25 focus:border-white/35 focus:outline-none sm:px-4 sm:py-3 sm:text-xs'
     : salonInquiry
@@ -1251,8 +1296,14 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId, variant = '', co
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name') as string;
     const email = tattooInquiry ? '' : formData.get('email') as string;
-    const phone = tattooInquiry ? formData.get('phone') as string : undefined;
+    const phone = tattooInquiry || appointmentInquiry ? formData.get('phone') as string : undefined;
     const message = formData.get('message') as string;
+    const customData = appointmentInquiry ? {
+      placement: formData.get('placement'), size: formData.get('size'),
+      style: formData.get('style'), preferredDate: formData.get('preferredDate'),
+      budget: formData.get('budget'), artist: formData.get('artist'),
+      referenceImage: (formData.get('referenceImage') as File | null)?.name || '',
+    } : { services: activeChips };
 
     await submitLead({
       pageId,
@@ -1262,7 +1313,7 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId, variant = '', co
       email,
       phone,
       message,
-      customData: { services: activeChips },
+      customData,
     });
 
     setSuccess(true);
@@ -1279,6 +1330,25 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId, variant = '', co
         <p className="text-neutral-600 dark:text-neutral-400 text-sm">{content.successMessage || "We'll get back to you as soon as possible."}</p>
       </div>
     );
+  }
+
+  if (appointmentInquiry) {
+    const field = 'w-full min-h-11 border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-[#00bfa8] focus:outline-none';
+    const label = 'mb-1.5 block font-[Impact,"Arial_Narrow",sans-serif] text-sm';
+    return <form className="grid w-full grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2" onSubmit={handleSubmit}>
+      <div><label className={label}>Full Name</label><input name="name" required placeholder="Enter your full name" className={field} /></div>
+      <div><label className={label}>Email Address</label><input name="email" type="email" required placeholder="your@email.com" className={field} /></div>
+      <div><label className={label}>Phone / WhatsApp</label><input name="phone" type="tel" required placeholder="Enter your phone no" className={field} /></div>
+      <div><label className={label}>Placement on Body</label><select name="placement" defaultValue="" className={field}><option value="" disabled>Select placement</option>{['Arm', 'Forearm', 'Shoulder', 'Chest', 'Back', 'Leg', 'Other'].map(value => <option key={value}>{value}</option>)}</select></div>
+      <div><label className={label}>Size</label><select name="size" defaultValue="" className={field}><option value="" disabled>Select size</option>{['Small', 'Medium', 'Large', 'Full sleeve / large piece'].map(value => <option key={value}>{value}</option>)}</select></div>
+      <div><label className={label}>Style Preference</label><select name="style" defaultValue="" className={field}><option value="" disabled>Select style</option>{['Black & grey', 'Realism', 'Fine line', 'Traditional', 'Illustrative', 'Other'].map(value => <option key={value}>{value}</option>)}</select></div>
+      <div><label className={label}>Preferred Date & Time</label><input name="preferredDate" type="datetime-local" className={field} /></div>
+      <div><label className={label}>Budget Range</label><select name="budget" defaultValue="" className={field}><option value="" disabled>Select budget range</option>{['Under £100', '£100–£250', '£250–£500', '£500+'].map(value => <option key={value}>{value}</option>)}</select></div>
+      <div className="sm:col-span-2"><label className={label}>Artist</label><select name="artist" defaultValue="" className={field}><option value="">No preference</option><option>Flo</option><option>Jake</option></select></div>
+      <div className="sm:col-span-2"><label className={label}>Tattoo Idea / Description</label><textarea name="message" required rows={4} placeholder="Describe your tattoo idea in detail (theme, symbols, text, etc.)" className={`${field} min-h-28 resize-y`} /></div>
+      <div className="sm:col-span-2"><label className={label}>Upload Reference Images</label><input name="referenceImage" type="file" accept="image/*" multiple className="w-full border border-dashed border-neutral-300 bg-white px-3 py-3 text-sm text-neutral-500 file:mr-3 file:border-0 file:bg-transparent file:text-sm file:text-neutral-600" /></div>
+      <button type="submit" data-page-button disabled={loading} style={{ backgroundColor: theme.primaryColor, color: readableTextColor(theme.primaryColor) }} className="sm:col-span-2 flex min-h-12 items-center justify-center gap-2 bg-[#00cbb2] px-6 font-[Impact,'Arial_Narrow',sans-serif] uppercase text-black disabled:opacity-60">{loading ? 'Sending…' : buttonText || 'Request appointment'}</button>
+    </form>;
   }
 
   return (
@@ -1333,6 +1403,25 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId, variant = '', co
 export function LeadFormSection({ section, theme, pageId }: { section: any; theme: ThemeConfig; pageId?: string }) {
   const { title, description, buttonText } = section.content;
   const variant = section.variant || 'card-centered';
+
+  if (variant === 'appointment-inquiry') return <section className="relative w-full overflow-hidden bg-white px-5 py-16 text-[#202020] sm:px-8 md:px-[8%] md:py-20">
+    <div className="mx-auto grid max-w-6xl items-start gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10">
+      <div className="relative bg-[#050606] p-3 text-white">
+        <div aria-hidden="true" className="pointer-events-none absolute -inset-1 -rotate-[0.4deg] border-[3px] border-[#00cbb2]" style={{ clipPath: 'polygon(0 2%,8% 1%,13% 0,88% 1%,100% 0,99% 18%,100% 83%,98% 100%,88% 99%,4% 100%,0 94%,1% 10%)' }} />
+        <div className="relative z-10 px-4 pt-7 sm:px-7 sm:pt-8">
+          <SectionOrnament color="#00cbb2" />
+          <h2 className="mt-2 text-center font-[Impact,'Arial_Narrow',sans-serif] text-[clamp(2.4rem,5vw,4rem)] uppercase leading-none tracking-[-0.025em]">{title || 'Book your session'}</h2>
+          {description && <p className="mx-auto mt-4 max-w-md text-center text-sm leading-relaxed text-white/75">{description}</p>}
+          <div className="mt-7 grid grid-cols-2 gap-4 text-center">
+            <div><div aria-hidden="true" className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-white text-xl text-black">☎</div><h3 className="mt-2 font-[Impact,'Arial_Narrow',sans-serif] text-lg uppercase">Telephone</h3><p className="mt-1 text-sm text-white/80">{section.content.phone || '+44 0000 000000'}</p></div>
+            <div><div aria-hidden="true" className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-white text-xl text-black">⌖</div><h3 className="mt-2 font-[Impact,'Arial_Narrow',sans-serif] text-lg uppercase">Opening Times</h3><p className="mt-1 whitespace-pre-line text-sm text-white/80">{section.content.openingHours || 'Tue – Sat · 10:00am – 4:00pm'}</p></div>
+          </div>
+        </div>
+        <iframe title={`Map to ${section.content.location || 'the studio'}`} src={`https://maps.google.com/maps?q=${encodeURIComponent(section.content.mapQuery || section.content.location || 'Barnsley, United Kingdom')}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="relative mt-6 block h-64 w-full border-0 sm:h-72" />
+      </div>
+      <div className="pt-1"><LeadFormFields buttonText={buttonText} theme={theme} pageId={pageId} sectionId={section.id} variant="appointment-inquiry" content={section.content} /></div>
+    </div>
+  </section>;
 
   if (variant === 'salon-inquiry') {
     return <section className="w-full bg-[#f6f4ee] px-5 py-16 text-[#1f1a18] sm:px-10 md:py-24">
@@ -2087,6 +2176,27 @@ export function TimelineSection({ section, theme }: { section: any; theme: Theme
 
   const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
+  if (section.variant === 'numbered-panel') return <section className="w-full bg-[#050606] px-5 py-16 text-white sm:px-8 md:px-[8%] md:py-20">
+    <div className="mx-auto grid max-w-6xl items-center gap-8 border border-white/80 bg-[#080909] p-5 sm:p-8 lg:grid-cols-2 lg:gap-12 lg:p-12">
+      <div className="relative mx-auto w-full max-w-[520px] p-2.5">
+        <div aria-hidden="true" className="absolute inset-0 rotate-[2deg] bg-[#00cbb2]" style={{ clipPath: 'polygon(3% 0,97% 2%,100% 7%,98% 94%,100% 100%,1% 97%,0 91%,2% 8%)' }} />
+        <PageImage src={section.content.imageUrl} alt="Tattoo studio" className="relative aspect-[1.12/1] w-full object-cover" />
+      </div>
+      <div className="relative z-10">
+        <SectionOrnament color="#ffffff" />
+        <h2 className="mt-1 text-center font-[Impact,'Arial_Narrow',sans-serif] text-[clamp(2.6rem,5vw,4.6rem)] uppercase leading-[0.88] tracking-[-0.025em]">{title || 'The process'}</h2>
+        {section.content.description && <p className="mx-auto mt-4 max-w-lg text-center text-sm leading-relaxed text-white/65">{section.content.description}</p>}
+        <div className="relative mt-8 space-y-4 before:absolute before:bottom-5 before:left-8 before:top-5 before:border-l-2 before:border-dashed before:border-[#00cbb2]/70">
+          {items.slice(0, 4).map((item: any, index: number) => <article key={item.id} className="relative grid grid-cols-[4rem_1fr] items-center gap-3">
+            <span className="relative z-10 grid h-14 w-14 place-items-center border border-[#00cbb2] bg-[#050606] font-[Impact,'Arial_Narrow',sans-serif] text-2xl">0{index + 1}</span>
+            <div><h3 className="font-[Impact,'Arial_Narrow',sans-serif] text-xl leading-tight">{item.label || item.title}</h3><p className="mt-1 text-xs leading-relaxed text-white/65 sm:text-sm">{item.description}</p></div>
+          </article>)}
+        </div>
+        {section.content.buttonText && <PageLink href={section.content.buttonUrl || '#contact'} data-page-button className="mt-7 inline-flex min-h-12 items-center justify-center bg-[#00cbb2] px-7 font-[Impact,'Arial_Narrow',sans-serif] text-sm uppercase text-black">{section.content.buttonText}</PageLink>}
+      </div>
+    </div>
+  </section>;
+
   if (section.variant === 'pinned-thread') return <TattooProcessSection section={section} title={title} items={items} />;
 
   if (layout === 'restaurant-history') return <section className="w-full bg-white px-6 py-14 text-neutral-900 sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="font-serif text-4xl md:text-5xl">{title || 'La nostra storia'}</h2><div className="flex gap-2 text-sm text-[#c6a66b]"><button aria-label="Previous years" className="grid h-8 w-8 place-items-center rounded-full border border-current">←</button><button aria-label="Next years" className="grid h-8 w-8 place-items-center rounded-full border border-current">→</button></div></div><div className="mb-5 overflow-x-auto overscroll-x-contain"><div className="flex min-w-max items-end gap-10 border-b border-neutral-400 px-5">{items.map((item: any, index: number) => <PageLink key={item.id} href={`#history-${item.id}`} className={`relative pb-3 font-serif text-3xl italic ${index === 0 ? 'text-[#c6a66b]' : 'text-neutral-900'}`}>{item.label}<span className={`absolute -bottom-1 left-0 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-[#c6a66b]' : 'bg-neutral-900'}`} /></PageLink>)}</div></div><div className="grid gap-4 md:grid-cols-3">{items.map((item: any) => <article id={`history-${item.id}`} key={item.id} className="scroll-mt-8">{item.imageUrl && <PageImage src={item.imageUrl} alt="" className="mb-3 aspect-[1.35/1] w-full object-cover" />}<p className="text-[9px] leading-relaxed text-neutral-600">{item.description}</p></article>)}</div></div></section>;
@@ -2302,6 +2412,26 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
   const isImageLeft = layout === 'image-left';
   const portfolioPortrait = section.variant === 'portfolio-about';
   const editorial = section.variant === 'editorial' || portfolioPortrait;
+
+  if (section.variant === 'torn-editorial') return <section className="relative w-full overflow-hidden bg-white text-[#202020]">
+    <div aria-hidden="true" className="absolute inset-x-0 top-0 z-10 h-7 bg-white" style={{ clipPath: 'polygon(0 0,100% 0,100% 40%,97% 22%,94% 46%,91% 28%,88% 60%,85% 34%,81% 54%,77% 26%,72% 58%,68% 30%,63% 54%,59% 22%,55% 48%,50% 25%,45% 55%,40% 32%,36% 62%,31% 28%,26% 53%,21% 25%,17% 57%,12% 33%,8% 60%,4% 30%,0 55%)' }} />
+    <div className={cn('grid min-h-[660px] md:min-h-[780px] md:grid-cols-2', isImageLeft ? '' : 'md:[&>div:first-child]:order-2')}>
+      <div className="relative min-h-[420px] overflow-hidden bg-neutral-900 md:min-h-[660px]">
+        <PageImage src={content.imageUrl} alt={content.imageAlt || content.title} className="absolute inset-0 h-full w-full object-cover" />
+        <div aria-hidden="true" className="absolute inset-0 border-[8px] border-transparent" style={{ clipPath: 'polygon(0 1%,100% 0,98% 100%,1% 98%)', boxShadow: 'inset 0 0 0 5px #fff' }} />
+      </div>
+      <div className="relative flex flex-col items-center justify-center px-7 py-16 text-center sm:px-12 md:px-[10%] md:py-24">
+        <SectionOrnament color="#111111" />
+        {content.eyebrow && <p className="mt-2 font-[Impact,'Arial_Narrow',sans-serif] text-xs uppercase tracking-[0.18em] text-neutral-600">{content.eyebrow}</p>}
+        <h2 className="mt-3 max-w-[16ch] font-[Impact,'Arial_Narrow',sans-serif] text-[clamp(2.6rem,5.5vw,4.6rem)] uppercase leading-[0.9] tracking-[-0.035em]">{content.title}</h2>
+        <SectionOrnament color="#111111" flipped className="mt-3" />
+        {content.description && <p className="mt-7 max-w-xl text-sm leading-relaxed text-neutral-600 md:text-base">{content.description}</p>}
+        {content.checkpoints.length > 0 && <ul className="mt-5 max-w-lg space-y-2 text-left text-sm text-neutral-700">{content.checkpoints.slice(0, 3).map((point) => <li key={point.id} className="flex gap-2"><span className="font-bold text-[#00cbb2]">✦</span>{point.text}</li>)}</ul>}
+        {content.buttonText && content.buttonUrl && <PageLink href={content.buttonUrl} data-page-button className="mt-7 inline-flex min-h-12 items-center justify-center bg-[#00cbb2] px-8 font-[Impact,'Arial_Narrow',sans-serif] text-sm uppercase tracking-wide text-black">{content.buttonText}</PageLink>}
+      </div>
+    </div>
+    <div aria-hidden="true" className="absolute inset-x-0 bottom-0 z-10 h-8 bg-black" style={{ clipPath: 'polygon(0 60%,4% 34%,8% 68%,12% 39%,17% 69%,22% 31%,27% 70%,32% 42%,37% 67%,43% 28%,48% 65%,53% 38%,58% 70%,63% 33%,68% 64%,73% 38%,78% 67%,83% 30%,88% 65%,93% 38%,97% 66%,100% 35%,100% 100%,0 100%)' }} />
+  </section>;
 
   if (section.variant === 'restaurant-story') return <section className="w-full bg-white px-6 py-12 text-neutral-900 sm:px-10 md:px-[10%] md:py-16"><div className={`mx-auto grid max-w-6xl items-center gap-6 md:grid-cols-2 md:gap-10 ${isImageLeft ? '' : 'md:[&>div:first-child]:order-2'}`}>
     <div className="aspect-[1.05/1] overflow-hidden"><PageImage src={content.imageUrl} alt={content.imageAlt || content.title} className="h-full w-full object-cover" /></div>

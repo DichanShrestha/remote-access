@@ -240,6 +240,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     fields: [
       { key: 'content.title', label: 'Section Title', type: 'text' },
       { key: 'content.subtitle', label: 'Subtitle / Description', type: 'textarea' },
+      { key: 'content.backgroundImageUrl', label: 'Background Image', type: 'image' },
     ],
     arrayFields: [{
       key: 'content.items', label: 'Questions',
@@ -269,6 +270,9 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
       { key: 'content.email', label: 'Contact Email', type: 'email' },
       { key: 'content.instagram', label: 'Instagram URL', type: 'url' },
       { key: 'content.location', label: 'Studio Address', type: 'text' },
+      { key: 'content.phone', label: 'Phone Number', type: 'text' },
+      { key: 'content.openingHours', label: 'Opening Hours', type: 'textarea' },
+      { key: 'content.mapQuery', label: 'Map Search', type: 'text' },
     ],
   },
   'collect-emails': {
@@ -373,7 +377,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     ],
   },
   timeline: {
-    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }, { key: 'content.description', label: 'Description', type: 'textarea' }, { key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Vertical', value: 'vertical' }, { label: 'Chronology', value: 'chronology' }] }],
+    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }, { key: 'content.description', label: 'Description', type: 'textarea' }, { key: 'content.imageUrl', label: 'Feature Image', type: 'image' }, { key: 'content.buttonText', label: 'Button Label', type: 'text' }, { key: 'content.buttonUrl', label: 'Button URL', type: 'url' }, { key: 'layout', label: 'Layout', type: 'select', options: [{ label: 'Vertical', value: 'vertical' }, { label: 'Chronology', value: 'chronology' }] }],
     arrayFields: [{
       key: 'content.items', label: 'Steps',
       itemFields: [{ key: 'label', label: 'Label', type: 'text' }, { key: 'description', label: 'Description', type: 'textarea' }, { key: 'imageUrl', label: 'Image', type: 'image' }],
@@ -974,6 +978,9 @@ function HeroVariantPicker({ currentVariant, onChange }: { currentVariant: strin
     )},
     { id: 'curved-strip', label: 'Curved Strip', icon: (
       <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect width="60" height="32" rx="2" fill="currentColor" opacity=".12"/><rect x="13" y="7" width="34" height="5" rx="1" fill="currentColor" opacity=".7"/><rect x="17" y="14" width="26" height="3" rx="1" fill="currentColor" opacity=".4"/><rect x="22" y="20" width="16" height="2" rx="1" fill="currentColor" opacity=".3"/></svg>
+    )},
+    { id: 'framed-editorial', label: 'Framed Editorial', icon: (
+      <svg className="w-full h-full" viewBox="0 0 60 32" fill="none"><rect width="60" height="32" rx="2" fill="currentColor" opacity=".12"/><rect x="34" y="4" width="19" height="24" transform="rotate(-7 34 4)" fill="currentColor" opacity=".2" stroke="currentColor"/><path d="M5 9h22M5 13h17M5 18h13M5 24h12" stroke="currentColor" strokeWidth="2" opacity=".6"/></svg>
     )},
   ];
 

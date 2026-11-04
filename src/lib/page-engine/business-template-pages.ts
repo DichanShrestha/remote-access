@@ -1432,10 +1432,96 @@ const tattooContact = page('CONTACT', 'Book an appointment', 'contact', [
   }),
 ]);
 
+const studioHero = (title: string, subtitle: string): PageSection => p({
+  id: 'page-hero', type: 'hero', variant: 'framed-editorial', layout: 'center', isHidden: false,
+  backgroundColor: '#090a0a', textColor: '#ffffff', textContrast: 'light',
+  content: { eyebrow: 'INK 77 · BARNSLEY', headline: 'Tattoo Studio', title, subtitle, buttonText: 'Book an appointment', buttonUrl: '#contact' },
+});
+
+const studioContact: PageSection = p({
+  id: 'contact', type: 'lead-form', variant: 'appointment-inquiry', isHidden: false,
+  backgroundColor: '#ffffff', textColor: '#202020',
+  content: {
+    title: 'Book your session',
+    description: 'Share your idea, placement, and approximate size. We will be in touch with the next steps.',
+    buttonText: 'Request an appointment',
+    successMessage: 'Thanks for your enquiry. The studio will be in touch soon.',
+    nameLabel: 'Full name', namePlaceholder: 'Enter your full name',
+    contactLabel: 'Email address', contactPlaceholder: 'you@example.com',
+    messageLabel: 'Tattoo idea / description', messagePlaceholder: 'Describe your idea, placement, approximate size, and style…',
+    email: 'flotattoos@yahoo.com', phone: '+44 7498 253918', openingHours: 'Tue – Sat: 10:00am – 04:00 pm', location: 'Shambles Street, Barnsley, United Kingdom, S70 2SH', mapQuery: 'Ink 77 Tattoo Studio, Shambles Street, Barnsley, UK',
+  },
+});
+
+const studioAbout = page('ABOUT', 'About the studio', 'about', [
+  studioHero('A studio built around your story', 'Meet the artists and the considered process behind every custom piece.'),
+  p({ id: 'studio-story', type: 'feature-split', variant: 'torn-editorial', layout: 'image-left', isHidden: false, backgroundColor: '#ffffff', textColor: '#202020', content: { eyebrow: 'ABOUT INK 77', title: 'Creativity, precision, and respect', description: 'Ink 77 is a welcoming tattoo studio in Barnsley, creating custom work with care at every stage. From realism to fine line and black & grey, we work with you to make a design that feels personal and lasts a lifetime.', buttonText: 'Book an appointment', buttonUrl: '#contact', imageUrl: 'https://images.unsplash.com/photo-1598373182133-52452f7691ef?auto=format&fit=crop&w=1000&q=85', imageAlt: 'Tattoo artist working in the studio', checkpoints: [] } }),
+  p({ id: 'studio-values', type: 'services', variant: 'minimal-border', isHidden: false, backgroundColor: '#101111', textColor: '#ffffff', content: { eyebrow: 'THE STUDIO', title: 'What matters to us', subtitle: 'Good work starts with listening and continues with care.', items: [{ id: 'value-1', title: 'Your idea', description: 'Every project begins with a conversation about what matters to you.' }, { id: 'value-2', title: 'Thoughtful craft', description: 'We give the design, placement, and details the attention they deserve.' }, { id: 'value-3', title: 'A comfortable session', description: 'We explain each step and make space for questions and breaks.' }] } }),
+  p({ id: 'about-quote', type: 'quote', variant: 'editorial-statement', isHidden: false, backgroundColor: '#101111', textColor: '#ffffff', content: { text: 'A great tattoo should feel like it was always meant to be yours.', author: 'Ink 77 Tattoo Studio' } }),
+  structuredClone(studioContact),
+]);
+
+const studioPortfolio = page('GALLERY', 'Portfolio', 'portfolio', [
+  studioHero('Recent work', 'Explore custom tattoo work from the Ink 77 studio.'),
+  p({ id: 'portfolio-gallery', type: 'gallery', variant: 'editorial-masonry', layout: 'grid', isHidden: false, backgroundColor: '#101111', textColor: '#ffffff', content: { eyebrow: 'SELECTED WORK', title: 'Ink with a story', description: 'Every piece starts with an idea and becomes something personal.', images: [
+    { id: 'work-1', url: 'https://images.unsplash.com/photo-1565058379802-bbe93b2f703a?auto=format&fit=crop&w=900&q=85', caption: 'Blackwork portrait' },
+    { id: 'work-2', url: 'https://images.unsplash.com/photo-1590246814883-57c511e86e73?auto=format&fit=crop&w=900&q=85', caption: 'Fine line study' },
+    { id: 'work-3', url: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?auto=format&fit=crop&w=900&q=85', caption: 'Custom piece' },
+    { id: 'work-4', url: 'https://images.unsplash.com/photo-1542561943-baca4dd0fc93?auto=format&fit=crop&w=900&q=85', caption: 'Black and grey detail' },
+    { id: 'work-5', url: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?auto=format&fit=crop&w=900&q=85', caption: 'Illustrative work' },
+    { id: 'work-6', url: 'https://images.unsplash.com/photo-1598971861713-54ad16a7e72e?auto=format&fit=crop&w=900&q=85', caption: 'Studio session' },
+  ] } }),
+  p({ id: 'portfolio-note', type: 'rich-text', variant: 'split', isHidden: false, backgroundColor: '#ffffff', textColor: '#202020', content: { text: '<h2>Your idea can start here</h2><p>Use the images as inspiration, then tell us what you would like to make your own. We will discuss style, placement, and scale together.</p>' } }),
+  structuredClone(studioContact),
+]);
+
+const studioProcess = page('SERVICES', 'The process', 'process', [
+  studioHero('From first idea to fresh ink', 'A clear, personal process helps you feel ready for your appointment.'),
+  p({ id: 'process-steps', type: 'timeline', variant: 'numbered-panel', layout: 'vertical', isHidden: false, backgroundColor: '#101111', textColor: '#ffffff', content: { title: 'The process', description: 'We guide you through each step, from your first message to caring for your new tattoo.', imageUrl: 'https://images.unsplash.com/photo-1598373182133-52452f7691ef?auto=format&fit=crop&w=1000&q=85', buttonText: 'Book an appointment', buttonUrl: '#contact', items: [
+    { id: 'step-1', label: 'Share your idea', description: 'Tell us about the design, placement, approximate size, and any reference images.' },
+    { id: 'step-2', label: 'Plan the details', description: 'We discuss your vision, style, and practical details before confirming the session.' },
+    { id: 'step-3', label: 'Get tattooed', description: 'We check the placement together and make sure you are comfortable throughout.' },
+    { id: 'step-4', label: 'Care for your ink', description: 'Your artist will walk you through aftercare and answer questions about healing.' },
+  ] } }),
+  p({ id: 'process-prep', type: 'feature-split', variant: 'bio-spotlight', layout: 'image-right', isHidden: false, backgroundColor: '#ffffff', textColor: '#202020', content: { eyebrow: 'BEFORE YOU ARRIVE', title: 'A little preparation goes a long way', description: 'Rest well, eat before your session, stay hydrated, and wear comfortable clothing that makes the area easy to reach. If anything is unclear, ask us before your appointment.', imageUrl: 'https://images.unsplash.com/photo-1598373182133-52452f7691ef?auto=format&fit=crop&w=1000&q=85', imageAlt: 'Tattoo studio preparation', checkpoints: [] } }),
+  structuredClone(studioContact),
+]);
+
+const studioTestimonials = page('CUSTOM', 'Testimonials', 'testimonials', [
+  studioHero('Good people, good ink', 'A few words from people who have visited the studio.'),
+  p({ id: 'client-stories', type: 'testimonials', variant: 'review-cards', isHidden: false, backgroundColor: '#ffffff', textColor: '#202020', content: { title: 'Client stories', items: [
+    { id: 'story-1', quote: 'The whole experience felt welcoming and unhurried. I love how the design turned out.', author: 'Studio client', role: 'Custom tattoo' },
+    { id: 'story-2', quote: 'A lovely studio, great communication, and beautiful attention to detail.', author: 'Studio client', role: 'Fine line piece' },
+    { id: 'story-3', quote: 'They listened carefully to my idea and made it feel completely personal.', author: 'Studio client', role: 'Black and grey piece' },
+  ] } }),
+  p({ id: 'testimonial-quote', type: 'quote', variant: 'editorial-statement', isHidden: false, backgroundColor: '#101111', textColor: '#ffffff', content: { text: 'The best part is seeing someone leave with a piece that feels like their own.', author: 'Ink 77 Tattoo Studio' } }),
+  structuredClone(studioContact),
+]);
+
+const studioFaq = page('FAQ', 'Frequently asked questions', 'faq', [
+  studioHero('Questions, answered', 'A few helpful details before you book.'),
+  p({ id: 'faq-list', type: 'faq', variant: 'photo-overlay', isHidden: false, backgroundColor: '#101111', textColor: '#ffffff', content: { title: 'Before your appointment', backgroundImageUrl: 'https://images.unsplash.com/photo-1598373182133-52452f7691ef?auto=format&fit=crop&w=1800&q=85', subtitle: 'If you need more information, send us a message with your idea.', items: [
+    { id: 'question-1', question: 'How much do tattoos cost?', answer: 'Pricing depends on size, placement, detail, and session time. Share your idea and we can provide an estimate.' },
+    { id: 'question-2', question: 'Do you accept walk-ins?', answer: 'Appointments are recommended so there is time to discuss your design. Ask us about current walk-in availability.' },
+    { id: 'question-3', question: 'Can I bring my own design?', answer: 'Yes. Bring your references and we can discuss how to adapt them for your placement.' },
+    { id: 'question-4', question: 'How should I prepare?', answer: 'Get a good night of sleep, eat beforehand, drink water, and wear clothing that makes the area easy to reach.' },
+    { id: 'question-5', question: 'What about aftercare?', answer: 'Your artist will explain how to care for your new tattoo and what to expect as it heals.' },
+  ] } }),
+  p({ id: 'faq-note', type: 'feature-split', variant: 'bio-spotlight', layout: 'image-left', isHidden: false, backgroundColor: '#ffffff', textColor: '#202020', content: { eyebrow: 'NEED A HAND?', title: 'Talk through your idea with us', description: 'If your question is not covered here, include it with your enquiry. We will help you understand the next step.', imageUrl: 'https://images.unsplash.com/photo-1598373182133-52452f7691ef?auto=format&fit=crop&w=1000&q=85', imageAlt: 'Artist preparing for a tattoo session', checkpoints: [] } }),
+  structuredClone(studioContact),
+]);
+
+const studioBooking = page('CONTACT', 'Book an appointment', 'contact', [
+  studioHero('Book your session', 'Tell us about the tattoo you have in mind and we will get back to you.'),
+  p({ id: 'booking-info', type: 'feature-split', variant: 'bio-spotlight', layout: 'image-left', isHidden: false, backgroundColor: '#101111', textColor: '#ffffff', content: { eyebrow: 'INK 77 TATTOO STUDIO', title: 'A personal appointment, from the first conversation', description: 'Share your idea, placement, approximate size, and any reference images. We will review the details and reply with availability and next steps.', imageUrl: 'https://images.unsplash.com/photo-1598971861713-54ad16a7e72e?auto=format&fit=crop&w=1000&q=85', imageAlt: 'Tattoo session at the studio', checkpoints: [{ id: 'booking-detail-1', text: 'Based in Barnsley, United Kingdom.' }, { id: 'booking-detail-2', text: 'Include reference images if you have them.' }] } }),
+  structuredClone(studioContact),
+]);
+
 export const BUSINESS_TEMPLATE_PAGE_BLUEPRINTS: Record<string, BlueprintPage[]> = {
   restaurant: [restaurantAbout, restaurantMenu, restaurantReservations, restaurantGallery],
   'corporate-consulting': [corporateAbout, corporateServices, corporateClientStories, corporateFaq, corporateContact],
   'luxury-skincare': [luxuryAbout, luxuryShop, luxuryJournal, luxuryFaq, luxuryContact],
   'spa-salon': [spaAbout, spaServices, spaGallery, spaFaq, spaContact],
   'tattoo-artist': [tattooAbout, tattooProcess, tattooGallery, tattooFaq, tattooContact],
+  'tattoo-studio': [studioAbout, studioPortfolio, studioProcess, studioTestimonials, studioFaq, studioBooking],
 };
