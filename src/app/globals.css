@@ -362,7 +362,7 @@ body {
   background-color: transparent !important;
 }
 
-.page-component-frame[data-button-text-color="custom"] [data-page-button] {
+.page-component-frame[data-button-text-color="custom"] [data-page-button]:not([data-color-preserve]) {
   color: var(--section-button-text) !important;
 }
 

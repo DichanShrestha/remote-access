@@ -180,6 +180,7 @@ function HeroCTA({ content, theme, colors, className }: SubProps & { colors: Ret
         <PageLink
           href={secondaryButtonUrl || '#'}
           data-page-button
+          data-color-preserve
           className={cn(
             'inline-flex items-center justify-center gap-2 font-sans font-semibold transition-all duration-300 border',
             colors.secondaryBtn
@@ -912,7 +913,7 @@ function SalonArchHero({ content }: SubProps) {
             <h1 className="font-serif text-4xl leading-[1.08] tracking-tight text-[#1f1a18] dark:text-stone-100 @sm:text-5xl @md:text-6xl @lg:text-7xl">
               {content.headline && content.title ? (
                 <>
-                  {content.headline}
+                  {content.headline}{' '}
                   <br />
                   <span className="italic font-serif text-[#b89562]">{content.title}</span>
                 </>
@@ -922,7 +923,7 @@ function SalonArchHero({ content }: SubProps) {
                 if (words.length <= 2) {
                   return (
                     <>
-                      {words[0]}
+                      {words[0]}{' '}
                       {words[1] && (
                         <>
                           <br />
@@ -936,7 +937,7 @@ function SalonArchHero({ content }: SubProps) {
                 const accentPart = words.slice(-2).join(' ');
                 return (
                   <>
-                    {firstPart}
+                    {firstPart}{' '}
                     <br />
                     <span className="italic font-serif text-[#b89562]">{accentPart}</span>
                   </>

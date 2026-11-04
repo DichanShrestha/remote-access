@@ -16,6 +16,55 @@ export function FaqSection({ section, theme }: FaqProps) {
 
   const variant = section.variant || 'default';
 
+  if (variant === 'corporate-list') {
+    return <section className="w-full bg-white px-6 py-16 text-[#171717] sm:px-10 md:px-[8%] md:py-24">
+      <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[0.8fr_1.2fr] md:gap-16">
+        <header className="md:sticky md:top-24 md:self-start">
+          {content.eyebrow && <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#093326]">{content.eyebrow}</p>}
+          {content.title && <h2 className="max-w-sm font-serif text-[clamp(2rem,5vw,3.5rem)] leading-[1.02] tracking-[-0.04em]">{content.title}</h2>}
+          {(content.subtitle || content.description) && <p className="mt-5 max-w-sm text-sm leading-relaxed text-[#171717]/60">{content.subtitle || content.description}</p>}
+        </header>
+        <div className="border-t border-[#093326]/20">
+          {content.items.map((item, index) => {
+            const isOpen = openIndex === index;
+            return <div key={item.id} className="border-b border-[#093326]/20">
+              <button type="button" aria-expanded={isOpen} className="flex w-full items-start gap-5 py-6 text-left md:py-7" onClick={() => setOpenIndex(isOpen ? null : index)}>
+                <span className="pt-1 font-serif text-xs italic text-[#093326]/50">{String(index + 1).padStart(2, '0')}</span>
+                <span className="flex-1 font-serif text-lg leading-snug tracking-[-0.02em] md:text-xl">{item.question}</span>
+                <span aria-hidden="true" className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[#093326]/25 text-lg font-light leading-none">{isOpen ? '−' : '+'}</span>
+              </button>
+              <div className={cn('overflow-hidden text-sm leading-relaxed text-[#171717]/65 transition-all duration-300', isOpen ? 'max-h-96 pb-6 pl-10 pr-10 opacity-100 md:pb-7' : 'max-h-0 opacity-0')}>{item.answer}</div>
+            </div>;
+          })}
+        </div>
+      </div>
+    </section>;
+  }
+
+  if (variant === 'tattoo-list') {
+    return <section className="w-full bg-[#0c0d0c] px-6 py-16 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-24">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-10 flex flex-col gap-4 border-b border-white/15 pb-8 md:mb-12 md:flex-row md:items-end md:justify-between">
+          {content.title && <h2 className="max-w-lg font-serif text-[clamp(2rem,5.8vw,4rem)] leading-[0.95] tracking-[-0.045em]">{content.title}</h2>}
+          {(content.subtitle || content.description) && <p className="max-w-xs text-[11px] leading-relaxed text-white/50 md:pb-1 md:text-right">{content.subtitle || content.description}</p>}
+        </div>
+        <div className="divide-y divide-white/15 border-b border-white/15">
+          {content.items.map((item, index) => {
+            const isOpen = openIndex === index;
+            return <div key={item.id}>
+              <button type="button" aria-expanded={isOpen} className="flex w-full items-center gap-4 py-5 text-left md:gap-6 md:py-6" onClick={() => setOpenIndex(isOpen ? null : index)}>
+                <span className="w-6 shrink-0 text-[9px] uppercase tracking-widest text-white/35">{String(index + 1).padStart(2, '0')}</span>
+                <span className="flex-1 font-serif text-lg leading-snug md:text-xl">{item.question}</span>
+                <span aria-hidden="true" className="text-2xl font-light leading-none text-white/60">{isOpen ? '−' : '+'}</span>
+              </button>
+              <div className={cn('overflow-hidden pl-10 text-sm leading-relaxed text-white/55 transition-all duration-300 md:pl-12', isOpen ? 'max-h-96 pb-6 pr-8 opacity-100' : 'max-h-0 opacity-0')}>{item.answer}</div>
+            </div>;
+          })}
+        </div>
+      </div>
+    </section>;
+  }
+
   if (variant === 'compact-grid') {
     return <section className="w-full px-6 py-20 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-28">
       <div className="mx-auto max-w-6xl">

@@ -143,6 +143,7 @@ export const ImageSectionSchema = BaseSectionSchema.extend({
 export const GallerySectionSchema = BaseSectionSchema.extend({
   type: z.literal('gallery'),
   content: z.object({
+    eyebrow: z.string().optional(),
     title: z.string().optional(),
     description: z.string().optional(),
     buttonText: z.string().optional(),
@@ -218,7 +219,9 @@ export const ServicesSectionSchema = BaseSectionSchema.extend({
 export const ProductsSectionSchema = BaseSectionSchema.extend({
   type: z.literal('products'),
   content: z.object({
+    eyebrow: z.string().optional(),
     title: z.string().optional(),
+    description: z.string().optional(),
     menuImageUrl: z.string().optional(),
     items: z.array(z.object({
       id: z.string(),
@@ -283,6 +286,7 @@ export const BlogListSectionSchema = BaseSectionSchema.extend({
 export const FaqSectionSchema = BaseSectionSchema.extend({
   type: z.literal('faq'),
   content: z.object({
+    eyebrow: z.string().optional(),
     title: z.string().optional(),
     subtitle: z.string().optional(),
     description: z.string().optional(),

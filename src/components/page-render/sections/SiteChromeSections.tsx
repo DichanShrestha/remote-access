@@ -5,6 +5,7 @@ import { Menu, X } from 'lucide-react';
 import { SiteFooterSectionSchema, SiteNavbarSectionSchema, ThemeConfig } from '@/lib/page-engine/schemas';
 import { PageImage } from '@/components/page-render/PageImage';
 import { PageLink } from '@/components/page-render/PageLink';
+import { readableTextColor } from '@/lib/color-contrast';
 import { z } from 'zod';
 
 type NavbarSection = z.infer<typeof SiteNavbarSectionSchema>;
@@ -18,6 +19,8 @@ export function SiteNavbar({ section, theme }: { section: NavbarSection; theme: 
   const pill = section.variant === 'pill';
   const overlay = section.variant === 'overlay';
   const restaurant = section.variant === 'restaurant-overlay';
+  const floatingFill = section.buttonColor || section.textColor || '#e9e7dc';
+  const floatingText = readableTextColor(floatingFill);
 
   if (restaurant) return <header className="absolute left-0 top-0 z-20 w-full px-5 py-4 text-white sm:px-8 md:px-12">
     <div className="mx-auto flex max-w-6xl items-center justify-between">
@@ -33,7 +36,7 @@ export function SiteNavbar({ section, theme }: { section: NavbarSection; theme: 
       <a href="#top" className="min-h-10 shrink-0 self-center text-[10px] font-bold tracking-[0.08em] sm:text-xs">{content.logoText}</a>
       <button type="button" onClick={() => setMenuOpen(value => !value)} aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menuOpen} aria-controls="pageory-floating-navigation" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-current/30 bg-black/30 md:hidden">{menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
       <nav id="pageory-floating-navigation" aria-label="Main navigation" className={`${menuOpen ? 'flex' : 'hidden'} absolute left-0 right-0 top-full mt-2 flex-col gap-1 rounded-xl border border-current/15 bg-black/90 p-2 text-sm shadow-xl backdrop-blur md:static md:mt-0 md:flex md:flex-row md:items-center md:gap-6 md:border-0 md:bg-transparent md:p-0 md:text-xs md:shadow-none md:backdrop-blur-0`}>{content.links.map(link => <PageLink key={link.id} href={link.url} onClick={() => setMenuOpen(false)} className="rounded px-3 py-3 text-current/75 hover:bg-white/10 hover:text-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-current md:whitespace-nowrap md:px-0 md:py-2">{link.label}</PageLink>)}</nav>
-      {content.primaryLabel && <PageLink href={content.primaryUrl || '#contact'} className="hidden min-h-10 shrink-0 items-center rounded-full bg-current px-4 py-2 text-xs font-medium text-neutral-900 md:inline-flex">{content.primaryLabel}</PageLink>}
+      {content.primaryLabel && <PageLink href={content.primaryUrl || '#contact'} data-page-button style={{ backgroundColor: floatingFill, color: floatingText }} className="hidden min-h-10 shrink-0 items-center rounded-full px-4 py-2 text-xs font-medium md:inline-flex">{content.primaryLabel}</PageLink>}
     </div>
   </header>;
 

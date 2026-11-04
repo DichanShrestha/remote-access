@@ -13,6 +13,7 @@ import { motion, useScroll, useTransform, useInView } from 'motion/react';
 import { Marquee } from '@/components/ui/marquee';
 import { submitLead } from '@/actions/leads';
 import { formatVideoEmbedUrl } from '@/lib/video-embed';
+import { readableTextColor } from '@/lib/color-contrast';
 
 // Optional interaction-heavy presentation modules stay out of the base page chunk.
 const ChromaGrid = lazy(() => import('@/components/ChromaGrid'));
@@ -240,6 +241,81 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
   }
 
   const urls = images.map((img: any) => img.url);
+
+  if (variant === 'restaurant-gallery') {
+    return <section className="w-full bg-white px-4 py-14 text-[#171717] sm:px-8 md:px-[8%] md:py-24">
+      <div className="mx-auto max-w-6xl">
+        <div className="mx-auto mb-10 max-w-2xl text-center md:mb-14">
+          {section.content.eyebrow && <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#a8874e]">{section.content.eyebrow}</p>}
+          {section.content.title && <h2 className="font-serif text-[clamp(2rem,5.5vw,4rem)] leading-[1.02] tracking-[-0.035em]">{section.content.title}</h2>}
+          {section.content.description && <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#171717]/65">{section.content.description}</p>}
+        </div>
+        <div className="grid auto-rows-[150px] grid-cols-2 gap-2 sm:auto-rows-[210px] md:auto-rows-[190px] md:grid-cols-4 md:gap-3">
+          {images.map((img: any, index: number) => <figure key={img.id || index} className={cn(
+            'group relative overflow-hidden bg-[#eee8dd]',
+            index === 0 && 'col-span-2 row-span-2',
+            index === 3 && 'col-span-2 md:col-span-2',
+          )}>
+            <PageImage src={img.url} alt={img.caption || ''} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+            {img.caption && <figcaption className="absolute inset-x-0 bottom-0 translate-y-2 px-4 pb-3 font-serif text-sm italic text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">{img.caption}</figcaption>}
+          </figure>)}
+        </div>
+        {(section.content.buttonText || section.content.secondaryButtonText) && <div className="mt-10 flex flex-wrap items-center justify-center gap-5">
+          {section.content.buttonText && <PageLink href={section.content.buttonUrl || '#booking'} data-page-button className="inline-flex min-h-11 items-center border-b border-[#a8874e] pb-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#171717]">{section.content.buttonText}</PageLink>}
+          {section.content.secondaryButtonText && <PageLink href={section.content.secondaryButtonUrl || '#menu'} className="inline-flex min-h-11 items-center text-xs font-medium uppercase tracking-[0.16em] text-[#171717]/60">{section.content.secondaryButtonText}</PageLink>}
+        </div>}
+      </div>
+    </section>;
+  }
+
+  if (variant === 'salon-gallery') {
+    return <section className="w-full bg-[#f6f4ee] px-5 py-16 text-[#1f1a18] sm:px-10 md:py-24">
+      <div className="mx-auto max-w-6xl">
+        <div className="mx-auto mb-10 max-w-2xl text-center md:mb-14">
+          {section.content.eyebrow && <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b89562]">{section.content.eyebrow}</p>}
+          {section.content.title && <h2 className="font-serif text-[clamp(2rem,5.5vw,4rem)] leading-[1.02] tracking-[-0.035em]">{section.content.title}</h2>}
+          {section.content.description && <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#1f1a18]/60">{section.content.description}</p>}
+        </div>
+        <div className="grid gap-3 md:grid-cols-3 md:gap-4">
+          {images.map((img: any, index: number) => <figure key={img.id || index} className={cn('group relative overflow-hidden rounded-[1.75rem] bg-[#ede6dc]', index === 0 ? 'md:col-span-2' : '')}>
+            <PageImage src={img.url} alt={img.caption || ''} className={cn('w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]', index === 0 ? 'aspect-[4/3] md:aspect-[2.1/1]' : 'aspect-[4/5]')} />
+            {img.caption && <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/45 to-transparent px-5 pb-4 pt-10 text-[10px] uppercase tracking-[0.18em] text-white/90">{img.caption}</figcaption>}
+          </figure>)}
+        </div>
+        {(section.content.buttonText || section.content.secondaryButtonText) && <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+          {section.content.buttonText && <PageLink href={section.content.buttonUrl || '#contact'} data-page-button className="inline-flex min-h-11 items-center rounded-full bg-[#1f1a18] px-7 text-xs font-semibold uppercase tracking-[0.14em] text-white">{section.content.buttonText}</PageLink>}
+          {section.content.secondaryButtonText && <PageLink href={section.content.secondaryButtonUrl || '#contact'} className="inline-flex min-h-11 items-center rounded-full border border-[#1f1a18]/20 px-7 text-xs font-medium uppercase tracking-[0.14em]">{section.content.secondaryButtonText}</PageLink>}
+        </div>}
+      </div>
+    </section>;
+  }
+
+  if (variant === 'tattoo-gallery') {
+    return <section className="w-full overflow-hidden bg-[#0c0d0c] px-5 py-16 text-[#e9e7dc] sm:px-10 md:px-[8%] md:py-24">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-10 grid gap-5 md:mb-14 md:grid-cols-[1.1fr_0.9fr] md:items-end">
+          <div>
+            {section.content.eyebrow && <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.24em] text-white/45">{section.content.eyebrow}</p>}
+            {section.content.title && <h2 className="font-serif text-[clamp(2rem,5.8vw,4.25rem)] leading-[0.95] tracking-[-0.045em]">{section.content.title}</h2>}
+          </div>
+          <div className="md:pb-1">
+            {section.content.description && <p className="max-w-md text-sm leading-relaxed text-white/55">{section.content.description}</p>}
+            {section.content.buttonText && <PageLink href={section.content.buttonUrl || '#contact'} data-page-button className="mt-5 inline-flex min-h-10 items-center rounded-full bg-[#e3e2d8] px-5 text-[10px] font-medium uppercase tracking-[0.14em] text-[#171715]">{section.content.buttonText}</PageLink>}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+          {images.map((img: any, index: number) => <figure key={img.id || index} className={cn('group relative overflow-hidden border border-white/10 bg-[#141513]', index % 3 === 1 && 'md:mt-10')}>
+            <PageImage src={img.url} alt={img.caption || ''} className="aspect-[4/5] w-full object-cover grayscale-[18%] transition-all duration-700 group-hover:scale-[1.03] group-hover:grayscale-0" />
+            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent px-3 pb-3 pt-10">
+              {img.caption && <figcaption className="text-[9px] uppercase tracking-[0.14em] text-white/70">{img.caption}</figcaption>}
+              {img.note && <span className="max-w-[9rem] rotate-[-2deg] bg-[#e3e2d8] px-2 py-1 text-[8px] font-medium leading-tight text-[#171715]">{img.note}</span>}
+            </div>
+          </figure>)}
+        </div>
+      </div>
+    </section>;
+  }
 
   if (variant === 'photo-strip') return <section className="relative w-full overflow-hidden bg-[#0c0d0c] pb-7 pt-1 sm:pb-9">
     <div className="relative h-[24vw] min-h-[84px] max-h-[250px] sm:h-[19vw] sm:min-h-[120px]">
@@ -612,6 +688,87 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
 
   const renderDescription = (desc?: string) => desc || <span className="opacity-60">Premium service offering tailored to your unique requirements and goals.</span>;
 
+  if (variant === 'restaurant-list') {
+    const { eyebrow, subtitle } = section.content;
+    return <section className="w-full bg-white px-6 py-16 text-[#171717] sm:px-10 md:px-[10%] md:py-24">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid gap-6 md:grid-cols-[0.9fr_1.1fr] md:items-end md:gap-16">
+          <div>
+            {eyebrow && <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#a8874e]">{eyebrow}</p>}
+            {title && <h2 className="max-w-md font-serif text-[clamp(2rem,5.5vw,3.75rem)] leading-[1.02] tracking-[-0.04em]">{title}</h2>}
+          </div>
+          {subtitle && <p className="max-w-lg text-sm leading-relaxed text-[#171717]/65 md:pb-1">{subtitle}</p>}
+        </div>
+        <div className="mt-10 grid gap-x-14 md:mt-14 md:grid-cols-2">
+          {items.map((item: any, index: number) => <article key={item.id} className="group border-t border-[#171717]/15 py-6 md:py-7">
+            <div className="flex items-start gap-5">
+              <span className="pt-0.5 font-serif text-sm italic text-[#a8874e]">{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <h3 className="font-serif text-xl leading-snug tracking-[-0.02em] md:text-2xl">{item.title}</h3>
+                {item.description && <p className="mt-2 max-w-md text-sm leading-relaxed text-[#171717]/60">{item.description}</p>}
+              </div>
+            </div>
+          </article>)}
+        </div>
+      </div>
+    </section>;
+  }
+
+  if (variant === 'corporate-index') {
+    const { eyebrow, subtitle } = section.content;
+    return <section className="w-full px-6 py-16 text-[#171717] sm:px-10 md:px-[8%] md:py-24">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid gap-10 md:grid-cols-[0.82fr_1.18fr] md:gap-16">
+          <header className="md:sticky md:top-24 md:self-start">
+            {eyebrow && <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#093326]">{eyebrow}</p>}
+            {title && <h2 className="max-w-sm font-serif text-[clamp(2rem,5vw,3.5rem)] leading-[1.02] tracking-[-0.04em]">{title}</h2>}
+            {subtitle && <p className="mt-5 max-w-sm text-sm leading-relaxed text-[#171717]/60">{subtitle}</p>}
+          </header>
+          <div className="border-t border-[#093326]/20">
+            {items.map((item: any, index: number) => <article key={item.id} className="grid gap-3 border-b border-[#093326]/20 py-7 md:grid-cols-[2.5rem_1fr] md:gap-6 md:py-9">
+              <span className="font-serif text-sm italic text-[#093326]/50">{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                {item.tag && <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#093326]/70">{item.tag}</p>}
+                <h3 className="max-w-lg font-serif text-2xl leading-tight tracking-[-0.025em] md:text-3xl">{item.title}</h3>
+                {item.description && <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#171717]/60">{item.description}</p>}
+                {item.buttonText && <PageLink href={item.buttonUrl || '#contact'} data-page-button className="mt-5 inline-flex min-h-10 items-center border-b border-[#093326] pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#093326]">{item.buttonText}</PageLink>}
+              </div>
+            </article>)}
+          </div>
+        </div>
+      </div>
+    </section>;
+  }
+
+  if (variant === 'salon-menu') {
+    const { eyebrow, subtitle } = section.content;
+    return <section className="w-full bg-[#f6f4ee] px-5 py-16 text-[#1f1a18] sm:px-10 md:py-24">
+      <div className="mx-auto max-w-5xl">
+        <div className="mx-auto mb-10 max-w-2xl text-center md:mb-14">
+          {eyebrow && <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b89562]">{eyebrow}</p>}
+          {title && <h2 className="font-serif text-[clamp(2rem,5.5vw,3.75rem)] leading-[1.02] tracking-[-0.04em]">{title}</h2>}
+          {subtitle && <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#1f1a18]/60">{subtitle}</p>}
+        </div>
+        <div className="divide-y divide-[#1f1a18]/12 border-y border-[#1f1a18]/12">
+          {items.map((item: any, index: number) => <article key={item.id} className="grid gap-6 py-7 md:grid-cols-[10rem_1fr] md:gap-9 md:py-9">
+            <div className="relative overflow-hidden rounded-t-[5rem] rounded-b-2xl bg-[#ede6dc]">
+              {item.imageUrl ? <PageImage src={item.imageUrl} alt={item.title} className="aspect-[4/5] w-full object-cover md:aspect-[4/5]" /> : <div className="grid aspect-[4/5] place-items-center text-[10px] uppercase tracking-widest text-[#1f1a18]/30">Nue Studio</div>}
+            </div>
+            <div className="flex flex-col justify-center">
+              <div className="flex flex-wrap items-center gap-3">
+                {item.tag && <span className="rounded-full bg-[#ede6dc] px-3 py-1 text-[8px] font-semibold uppercase tracking-[0.14em] text-[#8f7042]">{item.tag}</span>}
+                {item.price && <span className="text-[10px] uppercase tracking-[0.14em] text-[#1f1a18]/50">{item.price}</span>}
+              </div>
+              <h3 className="mt-3 font-serif text-2xl leading-tight tracking-[-0.025em] md:text-3xl">{item.title}</h3>
+              {item.description && <p className="mt-3 max-w-lg text-sm leading-relaxed text-[#1f1a18]/60">{item.description}</p>}
+              {item.buttonText && <PageLink href={item.buttonUrl || '#contact'} data-page-button className="mt-5 inline-flex min-h-10 w-fit items-center rounded-full border border-[#1f1a18] px-5 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#1f1a18]">{item.buttonText}</PageLink>}
+            </div>
+          </article>)}
+        </div>
+      </div>
+    </section>;
+  }
+
   if (variant === 'salon-staggered' || variant === 'staggered') {
     return (
       <section className="py-16 md:py-24 px-6 max-w-6xl mx-auto text-current">
@@ -792,11 +949,37 @@ export function ProductsSection({ section, theme }: { section: any; theme: Theme
   const { title, items } = section.content;
   const variant = section.variant || 'default';
 
+  if (variant === 'luxury-products') {
+    const { eyebrow, description } = section.content;
+    return <section className="w-full bg-white px-6 py-16 text-[#171717] sm:px-10 md:px-[8%] md:py-24">
+      <div className="mx-auto max-w-6xl">
+        <div className="mx-auto mb-10 max-w-2xl text-center md:mb-16">
+          {eyebrow && <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#171717]/45">{eyebrow}</p>}
+          {title && <h2 className="font-serif text-[clamp(2rem,5.5vw,3.75rem)] leading-[1.02] tracking-[-0.04em]">{title}</h2>}
+          {description && <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-[#171717]/55">{description}</p>}
+        </div>
+        <div className="grid gap-10 md:grid-cols-3 md:gap-8">
+          {items.map((item: any) => <article key={item.id} className="group">
+            <PageLink href={item.url || '#contact'} className="relative block overflow-hidden bg-[#f5f5f5]">
+              {item.imageUrl && <PageImage src={item.imageUrl} alt={item.title} className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />}
+              <span className="absolute inset-x-0 bottom-0 translate-y-full bg-white/95 py-3 text-center text-[9px] font-semibold uppercase tracking-[0.18em] transition-transform duration-300 group-hover:translate-y-0">View product</span>
+            </PageLink>
+            <div className="mt-4 flex items-start justify-between gap-4 border-t border-[#171717]/12 pt-4">
+              <h3 className="font-serif text-xl leading-snug tracking-[-0.02em]">{item.title}</h3>
+              <span className="whitespace-nowrap text-xs tabular-nums text-[#171717]/60">{item.price}</span>
+            </div>
+            {item.description && <p className="mt-2 text-xs leading-relaxed text-[#171717]/50">{item.description}</p>}
+          </article>)}
+        </div>
+      </div>
+    </section>;
+  }
+
   if (variant === 'restaurant-menu' || variant === 'categorized-menu') {
     const categories = Array.from(new Set(items.map((item: any) => item.category || 'Menu')));
     return <section className="w-full px-6 py-14 text-inherit sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[0.8fr_1fr] md:gap-12">
       {section.content.menuImageUrl && <PageImage src={section.content.menuImageUrl} alt="A selection from our kitchen" className="aspect-[0.8/1] w-full object-cover" />}
-      <div><div className="mb-5 flex items-end justify-between"><h2 className="font-serif text-4xl">{title || 'Menu'}</h2><PageLink href="#menu" className="text-xs uppercase underline underline-offset-4">Vedi tutto</PageLink></div><nav aria-label="Menu categories" className="mb-6 flex flex-wrap gap-x-3 text-xs uppercase text-current/70">{categories.map((category: any, index: number) => <PageLink key={category} href={`#menu-${index}`} className="whitespace-nowrap">{category}{index < categories.length - 1 && <span className="ml-3 opacity-50">/</span>}</PageLink>)}</nav>
+      <div><div className="mb-5 flex items-end justify-between"><h2 className="font-serif text-4xl">{title || 'Menu'}</h2><PageLink href="#menu-0" className="text-xs uppercase underline underline-offset-4">Vedi tutto</PageLink></div><nav aria-label="Menu categories" className="mb-6 flex flex-wrap gap-x-3 text-xs uppercase text-current/70">{categories.map((category: any, index: number) => <PageLink key={category} href={`#menu-${index}`} className="whitespace-nowrap">{category}{index < categories.length - 1 && <span className="ml-3 opacity-50">/</span>}</PageLink>)}</nav>
         {categories.map((category: any, index: number) => <div key={category} id={`menu-${index}`} className="mb-5 scroll-mt-6"><h3 className="sr-only">{category}</h3><div className="border-t border-current/30">{items.filter((item: any) => (item.category || 'Menu') === category).map((item: any) => <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3 border-b border-current/20 py-3 text-sm"><div><p className="font-medium">{item.title}</p><p className="mt-1 text-xs leading-relaxed text-current/65">{item.description}</p></div><span className="whitespace-nowrap text-current/75">{item.price}</span></div>)}</div></div>)}
       </div>
     </div></section>;
@@ -1019,12 +1202,17 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId, variant = '', co
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const tattooInquiry = variant === 'split-inquiry';
+  const salonInquiry = variant === 'salon-inquiry';
   const fieldClass = tattooInquiry
     ? 'w-full rounded-xl border border-white/15 bg-transparent px-3 py-2.5 text-[8px] text-[#e9e7dc] placeholder:text-white/25 focus:border-white/35 focus:outline-none sm:px-4 sm:py-3 sm:text-xs'
-    : 'w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm';
+    : salonInquiry
+      ? 'w-full rounded-2xl border border-[#1f1a18]/15 bg-white/70 px-4 py-3 text-sm text-[#1f1a18] placeholder:text-[#1f1a18]/30 focus:border-[#b89562] focus:outline-none focus:ring-2 focus:ring-[#b89562]/20'
+      : 'w-full bg-white dark:bg-slate-900 border border-neutral-300 dark:border-slate-700 rounded-xl px-4 py-3 text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white focus:border-transparent hover:border-neutral-400 dark:hover:border-slate-500 transition-all shadow-sm';
   const labelClass = tattooInquiry
     ? 'mb-1.5 block text-[7px] text-white/60 sm:text-[10px]'
-    : 'block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2';
+    : salonInquiry
+      ? 'mb-2 block text-[9px] font-semibold uppercase tracking-[0.16em] text-[#1f1a18]/55'
+      : 'block text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-2';
 
   const chips = ['Web Design', 'Branding', 'Growth', 'Other'];
 
@@ -1073,7 +1261,7 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId, variant = '', co
   return (
     <form className="flex flex-col gap-5 w-full" onSubmit={handleSubmit}>
       {/* Service Pills */}
-      {!tattooInquiry && <div className="flex flex-wrap gap-2 mb-1">
+      {!tattooInquiry && !salonInquiry && <div className="flex flex-wrap gap-2 mb-1">
         {chips.map(chip => (
           <button
             key={chip}
@@ -1105,16 +1293,16 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId, variant = '', co
       </div>
 
       {/* CTA Button */}
-      <button type="submit" data-page-button disabled={loading} style={{ backgroundColor: theme.primaryColor }} className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 text-white dark:text-neutral-900 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-1 disabled:opacity-70">
+      <button type="submit" data-page-button disabled={loading} style={{ backgroundColor: theme.primaryColor, color: readableTextColor(theme.primaryColor) }} className="w-full bg-neutral-900 dark:bg-white hover:bg-black dark:hover:bg-neutral-200 font-medium py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-1 disabled:opacity-70">
         {loading ? 'Sending...' : buttonText || 'Send Message'}
         {!loading && <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
       </button>
 
       {/* Trust Badges */}
-      <div className="flex items-center justify-center gap-5 mt-1">
+      {!salonInquiry && <div className="flex items-center justify-center gap-5 mt-1">
         <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">⚡ Avg. response: &lt; 24h</span>
         <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">🔒 100% Privacy. No spam.</span>
-      </div>
+      </div>}
     </form>
   );
 }
@@ -1122,6 +1310,25 @@ function LeadFormFields({ buttonText, theme, pageId, sectionId, variant = '', co
 export function LeadFormSection({ section, theme, pageId }: { section: any; theme: ThemeConfig; pageId?: string }) {
   const { title, description, buttonText } = section.content;
   const variant = section.variant || 'card-centered';
+
+  if (variant === 'salon-inquiry') {
+    return <section className="w-full bg-[#f6f4ee] px-5 py-16 text-[#1f1a18] sm:px-10 md:py-24">
+      <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[0.85fr_1.15fr] md:gap-16">
+        <div>
+          <span className="mb-4 inline-block text-[9px] font-semibold uppercase tracking-[0.22em] text-[#b89562]">Appointments</span>
+          <h2 className="max-w-sm font-serif text-[clamp(2rem,5vw,3.5rem)] leading-[1.02] tracking-[-0.04em]">{title || 'Send us a note'}</h2>
+          {description && <p className="mt-5 max-w-sm text-sm leading-relaxed text-[#1f1a18]/60">{description}</p>}
+          <div className="mt-8 space-y-4 border-t border-[#1f1a18]/12 pt-6 text-sm">
+            {section.content.email && <p className="flex flex-col gap-1"><span className="text-[9px] uppercase tracking-[0.16em] text-[#1f1a18]/45">Email</span><PageLink href={`mailto:${section.content.email}`} className="w-fit border-b border-[#1f1a18]/25 pb-0.5 text-[#1f1a18]">{section.content.email}</PageLink></p>}
+            {section.content.location && <p className="flex flex-col gap-1"><span className="text-[9px] uppercase tracking-[0.16em] text-[#1f1a18]/45">Studio</span><span className="max-w-xs text-[#1f1a18]/75">{section.content.location}</span></p>}
+          </div>
+        </div>
+        <div className="rounded-[2rem] border border-[#1f1a18]/10 bg-white/60 p-5 sm:p-8 md:p-10">
+          <LeadFormFields buttonText={buttonText} theme={theme} pageId={pageId} sectionId={section.id} variant="salon-inquiry" content={section.content} />
+        </div>
+      </div>
+    </section>;
+  }
 
   if (variant === 'split-inquiry') {
     const infoCards = [
@@ -1414,6 +1621,33 @@ function ContactForm({ theme, pageId, sectionId, submitLabel = 'Send Message', s
 export function ContactSection({ section, theme, pageId }: { section: z.infer<typeof ContactSectionSchema>; theme: ThemeConfig; pageId?: string }) {
   const { title, description, buttonText, email, phone, address } = section.content;
   const variant = section.variant || 'card-centered';
+
+  if (variant === 'corporate-details') {
+    return <section className="w-full overflow-hidden bg-[#062f26] px-6 py-16 text-[#f5f2f0] sm:px-10 md:px-[8%] md:py-24">
+      <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.05fr_0.95fr] md:gap-16">
+        <div>
+          {section.content.eyebrow && <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b9c9c2]">{section.content.eyebrow}</p>}
+          <h2 className="max-w-md font-serif text-[clamp(2rem,5.5vw,4rem)] leading-[1.02] tracking-[-0.04em]">{title || 'Start with a conversation'}</h2>
+          {description && <p className="mt-5 max-w-md text-sm leading-relaxed text-[#f5f2f0]/65">{description}</p>}
+          {buttonText && <PageLink href={section.content.email ? `mailto:${section.content.email}` : '#contact'} data-page-button className="mt-8 inline-flex min-h-11 items-center bg-[#f5f2f0] px-6 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#062f26]">{buttonText}</PageLink>}
+        </div>
+        <div className="border-t border-white/20 md:border-l md:border-t-0 md:pl-12 md:pt-0">
+          {email && <div className="border-b border-white/15 py-6 first:pt-0 md:first:pt-0">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#b9c9c2]/70">Email</p>
+            <PageLink href={`mailto:${email}`} className="mt-2 inline-block font-serif text-xl tracking-[-0.02em] hover:text-[#b9c9c2] md:text-2xl">{email}</PageLink>
+          </div>}
+          {phone && <div className="border-b border-white/15 py-6">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#b9c9c2]/70">Phone</p>
+            <PageLink href={`tel:${phone}`} className="mt-2 inline-block font-serif text-xl tracking-[-0.02em] hover:text-[#b9c9c2] md:text-2xl">{phone}</PageLink>
+          </div>}
+          {address && <div className="border-b border-white/15 py-6">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#b9c9c2]/70">Office</p>
+            <p className="mt-2 max-w-xs text-sm leading-relaxed text-[#f5f2f0]/75">{address}</p>
+          </div>}
+        </div>
+      </div>
+    </section>;
+  }
 
   if (variant === 'salon-cards' || variant === 'cards-row' || variant === 'contact-cards') {
     return (

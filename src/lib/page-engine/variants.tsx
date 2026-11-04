@@ -89,6 +89,9 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'bounce', label: 'Bounce Cards', previewNode: <PlaceholderSVG /> },
     { id: 'pinboard', label: 'Pinboard', previewNode: <PlaceholderSVG /> },
     { id: 'photo-strip', label: 'Photo Strip', previewNode: <PlaceholderSVG /> },
+    { id: 'restaurant-gallery', label: 'Restaurant Editorial Grid', previewNode: <PlaceholderSVG /> },
+    { id: 'salon-gallery', label: 'Salon Soft Grid', previewNode: <PlaceholderSVG /> },
+    { id: 'tattoo-gallery', label: 'Tattoo Flash Board', previewNode: <PlaceholderSVG /> },
   ],
   services: [
     { id: 'portfolio-band', label: 'Portfolio Band', previewNode: <PlaceholderSVG /> },
@@ -97,11 +100,16 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'glass-dark', label: 'Dark Feature Panel', previewNode: <PlaceholderSVG /> },
     { id: 'asymmetric-bento', label: 'Asymmetric Bento', previewNode: <PlaceholderSVG /> },
     { id: 'staggered', label: 'Offset Showcase', previewNode: <PlaceholderSVG /> },
+    { id: 'salon-staggered', label: 'Salon Offset Showcase', previewNode: <PlaceholderSVG /> },
+    { id: 'restaurant-list', label: 'Restaurant Values List', previewNode: <PlaceholderSVG /> },
+    { id: 'corporate-index', label: 'Corporate Numbered Index', previewNode: <PlaceholderSVG /> },
+    { id: 'salon-menu', label: 'Salon Treatment Menu', previewNode: <PlaceholderSVG /> },
   ],
   products: [
     { id: 'default', label: 'Standard Grid', previewNode: <PlaceholderSVG /> },
     { id: 'glare', label: 'Glare Hover', previewNode: <PlaceholderSVG /> },
     { id: 'restaurant-menu', label: 'Structured List', previewNode: <PlaceholderSVG /> },
+    { id: 'luxury-products', label: 'Luxury Product Editorial', previewNode: <PlaceholderSVG /> },
   ],
   image: [
     { id: 'default', label: 'Standard Image', previewNode: <PlaceholderSVG /> },
@@ -135,12 +143,14 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'editorial-panel', label: 'Editorial Panel', previewNode: <PlaceholderSVG /> },
     { id: 'minimal-footer', label: 'Minimal Footer', previewNode: <PlaceholderSVG /> },
     { id: 'contact-cards', label: 'Contact Details Grid', previewNode: <PlaceholderSVG /> },
+    { id: 'corporate-details', label: 'Corporate Details', previewNode: <PlaceholderSVG /> },
   ],
   'lead-form': [
     { id: 'card-centered', label: 'Card Centered', previewNode: <PlaceholderSVG /> },
     { id: 'split-layout', label: 'Split Layout', previewNode: <PlaceholderSVG /> },
     { id: 'editorial-panel', label: 'Editorial Panel', previewNode: <PlaceholderSVG /> },
     { id: 'split-inquiry', label: 'Split Inquiry', previewNode: <PlaceholderSVG /> },
+    { id: 'salon-inquiry', label: 'Salon Inquiry', previewNode: <PlaceholderSVG /> },
   ],
   'social-links': [
     { id: 'default', label: 'Standard Row', previewNode: <PlaceholderSVG /> },
@@ -164,5 +174,8 @@ export const SECTION_VARIANTS: Partial<Record<SectionType, VariantMetadata[]>> =
     { id: 'spacious', label: 'Spacious Split', previewNode: <PlaceholderSVG /> },
     { id: 'pill-accordion', label: 'Pill Accordion', previewNode: <PlaceholderSVG /> },
     { id: 'compact-grid', label: 'Compact Grid', previewNode: <PlaceholderSVG /> },
+    { id: 'corporate-list', label: 'Corporate Split List', previewNode: <PlaceholderSVG /> },
+    { id: 'tattoo-list', label: 'Tattoo Dark List', previewNode: <PlaceholderSVG /> },
+    { id: 'salon-pill', label: 'Salon Pill Accordion', previewNode: <PlaceholderSVG /> },
   ],
 };

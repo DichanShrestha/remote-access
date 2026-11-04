@@ -1,5 +1,6 @@
 import type { GroupNode, PageDocument, PageNode, PageSection } from './schemas';
 import type { CreatablePageType } from './page-types';
+import { BUSINESS_TEMPLATE_PAGE_BLUEPRINTS } from './business-template-pages';
 
 export type TemplateStarterPage = {
   pageType: CreatablePageType;
@@ -41,6 +42,16 @@ function pageTitle(type: CreatablePageType, templateId: string, sections: PageSe
 
 /** Split meaningful sections from a chosen starter site into editable pages. */
 export function buildTemplatePages(templateId: string, document: PageDocument) {
+  const blueprints = BUSINESS_TEMPLATE_PAGE_BLUEPRINTS[templateId];
+  if (blueprints) {
+    return {
+      // The chosen homepage is never modified. Business templates get
+      // purpose-built subpages that match their homepage's visual identity.
+      home: document,
+      starterPages: structuredClone(blueprints),
+    };
+  }
+
   const buckets = new Map<CreatablePageType, PageSection[]>();
   const collectSections = (nodes: PageNode[]) => {
     for (const node of nodes) {
