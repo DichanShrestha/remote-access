@@ -107,6 +107,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
   },
   gallery: {
     fields: [
+      { key: 'content.eyebrow', label: 'Eyebrow', type: 'text' },
       { key: 'content.title', label: 'Section Title', type: 'text' },
       { key: 'content.description', label: 'Description', type: 'textarea' },
       { key: 'content.buttonText', label: 'Primary Button', type: 'text' },
@@ -156,7 +157,12 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
     }],
   },
   services: {
-    fields: [{ key: 'content.title', label: 'Section Title', type: 'text' }],
+    fields: [
+      { key: 'content.eyebrow', label: 'Eyebrow', type: 'text' },
+      { key: 'content.title', label: 'Section Title', type: 'text' },
+      { key: 'content.subtitle', label: 'Subtitle / Description', type: 'textarea' },
+      { key: 'content.socialLabel', label: 'Social Column Label', type: 'text', placeholder: 'Follow the studio' },
+    ],
     arrayFields: [{
       key: 'content.items', label: 'Services',
       itemFields: [
@@ -169,6 +175,10 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
         { key: 'buttonUrl', label: 'Button URL', type: 'url', placeholder: '#contact' },
       ],
       newItem: () => ({ id: Math.random().toString(36).substr(2, 9), title: '', description: '', price: '', buttonText: 'Book Now', buttonUrl: '#contact' }),
+    }, {
+      key: 'content.socialLinks', label: 'Social Links',
+      itemFields: [{ key: 'title', label: 'Name', type: 'text' }, { key: 'url', label: 'URL', type: 'url' }],
+      newItem: () => ({ id: Math.random().toString(36).substr(2, 9), title: 'Instagram', url: '' }),
     }],
   },
   products: {
@@ -378,6 +388,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
   },
   stats: {
     fields: [
+      { key: 'content.eyebrow', label: 'Eyebrow', type: 'text' },
       { key: 'content.title', label: 'Section Title', type: 'text' },
       { key: 'content.description', label: 'Description', type: 'textarea' },
     ],
@@ -402,6 +413,7 @@ const INSPECTOR_DEFS: Partial<Record<SectionType, InspectorDef>> = {
       { key: 'content.imageAlt', label: 'Image Alt Text', type: 'text' },
       { key: 'content.imageLabel', label: 'Image Overlay Label', type: 'text' },
       { key: 'content.secondaryImageUrl', label: 'Secondary Image', type: 'image' },
+      { key: 'content.secondaryImageAlt', label: 'Secondary Image Alt Text', type: 'text' },
       { key: 'content.buttonText', label: 'Button Text', type: 'text' },
       { key: 'content.buttonUrl', label: 'Button URL', type: 'url' },
     ],

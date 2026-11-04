@@ -11,6 +11,7 @@ import {
   type TemplateCategory,
 } from './template-catalog';
 import { buildTemplatePages, type TemplateStarterPage } from './template-pages';
+import { BUSINESS_TEMPLATE_PAGE_BLUEPRINTS } from './business-template-pages';
 import {
   WebsiteConfig,
   extractWebsiteConfig,
@@ -42,6 +43,8 @@ export type TemplateSwitchInput = {
 export type TemplatePageUpdate = {
   pageId: string;
   title: string;
+  /** Set when a managed page needs to adopt the target template's page type. */
+  pageType?: string;
   draftDocument: PageDocument;
   publishedDocument: PageDocument | null;
 };
@@ -233,13 +236,55 @@ function findDefaultPage(
   return null;
 }
 
+type LegacyBlueprintMatch = {
+  templateId: string;
+  blueprint: TemplateStarterPage;
+};
+
+/**
+ * Older Tattoo sites shipped their Process page as a CUSTOM page. Recognise
+ * the generated page from its route and section signature so it can be
+ * migrated to the managed page type instead of being duplicated. A genuinely
+ * custom page will not match a complete blueprint signature.
+ */
+function legacyBlueprintFor(
+  page: Pick<TemplateSwitchPage, 'slug' | 'pageType' | 'draftDocument'>,
+): LegacyBlueprintMatch | null {
+  if (page.pageType !== 'CUSTOM' || !page.draftDocument) return null;
+  const pageSectionIds = new Set(sectionIds(page.draftDocument.sections));
+
+  for (const [templateId, blueprints] of Object.entries(BUSINESS_TEMPLATE_PAGE_BLUEPRINTS)) {
+    for (const blueprint of blueprints) {
+      if (blueprint.slug !== page.slug || blueprint.sections.length === 0) continue;
+      if (blueprint.sections.every((section) => pageSectionIds.has(section.id))) {
+        return { templateId, blueprint };
+      }
+    }
+  }
+  return null;
+}
+
+function findLegacyDefaultPage(
+  page: Pick<TemplateSwitchPage, 'slug' | 'pageType' | 'draftDocument'>,
+): DefaultPageMatch | null {
+  const match = legacyBlueprintFor(page);
+  if (!match) return null;
+  return {
+    templateId: match.templateId,
+    page: match.blueprint,
+    title: match.blueprint.title,
+  };
+}
+
 function isTemplateManaged(page: TemplateSwitchPage, currentTemplateId?: string | null): boolean {
   if (page.pageType === 'HOME' || page.slug === '') return true;
   // A blog index is always safe to restyle: its articles are separate rows and
   // the page content is merged, never replaced with placeholder posts.
   if (page.pageType === 'BLOG') return true;
-  // Custom pages belong to the customer. They are never rewritten.
-  if (page.pageType === 'CUSTOM') return false;
+  // Custom pages belong to the customer. They are never rewritten, unless the
+  // page is a legacy template-generated page whose complete blueprint still
+  // matches (for example, the original Tattoo Process page).
+  if (page.pageType === 'CUSTOM') return Boolean(legacyBlueprintFor(page));
   return Boolean(findDefaultPage(page, currentTemplateId));
 }
 
@@ -680,7 +725,7 @@ export function planTemplateSwitch(input: TemplateSwitchInput): TemplateSwitchPl
 
     if (existing) {
       usedPageIds.add(existing.id);
-      const oldDefault = findDefaultPage(existing, input.currentTemplateId);
+      const oldDefault = findDefaultPage(existing, input.currentTemplateId) || findLegacyDefaultPage(existing);
       const oldDefaultSections = defaultSections(oldDefault);
       const targetPage = pageDocumentFor(target.document, starter);
       const mergedDraft = mergeDocument(targetPage, existing.draftDocument, oldDefaultSections);
@@ -692,6 +737,7 @@ export function planTemplateSwitch(input: TemplateSwitchInput): TemplateSwitchPl
       updates.push({
         pageId: existing.id,
         title: existing.title && !sameTitle(existing.title, oldTitle) ? existing.title : starter.title,
+        pageType: starter.pageType,
         draftDocument: toPageContentDocument(mergedDraft),
         publishedDocument: mergedPublished ? toPageContentDocument(mergedPublished) : null,
       });

@@ -181,6 +181,7 @@ export async function applyTemplateToPage(templateId: string): Promise<ApplyTemp
           where: { id: update.pageId },
           data: {
             title: update.title,
+            ...(update.pageType ? { pageType: update.pageType as never } : {}),
             draftConfig: update.draftDocument as unknown as Prisma.InputJsonValue,
             ...(source?.isPublished && publishedDocument
               ? {

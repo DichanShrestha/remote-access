@@ -838,19 +838,42 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
   }
 
   if (variant === 'portfolio-band') {
+    type BandItem = { id: string; title: string; description?: string; tag?: string };
+    type BandLink = { id: string; title?: string; platform?: string; label?: string; url?: string };
+    const band = section.content;
+    const socialLinks: BandLink[] = band.socialLinks
+      || [{ id: 'fb', title: 'Facebook' }, { id: 'tw', title: 'Twitter' }, { id: 'ig', title: 'Instagram' }];
     return (
-      <section className="w-full bg-[#171717] px-6 py-12 text-white sm:px-10 md:px-[10%] md:py-16">
-        <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-[1.45fr_0.7fr] md:gap-12">
-          <div>
-            <p className="mb-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">Services</p>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
-              {items.map((item: any) => <p key={item.id} className="text-base font-semibold tracking-tight sm:text-lg">{item.title}</p>)}
+      <section
+        className="w-full px-6 py-16 sm:px-10 md:px-[8%] md:py-24"
+        style={{ backgroundColor: section.backgroundColor || '#171717', color: section.textColor || '#ffffff' }}
+      >
+        <div className="mx-auto max-w-6xl">
+          {(band.eyebrow || band.title || band.subtitle || band.description) && (
+            <div className="mb-10 grid gap-4 md:mb-14 md:grid-cols-[1.1fr_0.9fr] md:items-end">
+              <div>
+                <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.24em] text-current/45">{band.eyebrow || 'Services'}</p>
+                {band.title && <h2 className="font-serif text-[clamp(2rem,5.8vw,4.25rem)] leading-[0.95] tracking-[-0.045em]">{band.title}</h2>}
+              </div>
+              {(band.subtitle || band.description) && <p className="max-w-md text-sm leading-relaxed text-current/55">{band.subtitle || band.description}</p>}
             </div>
-          </div>
-          <div className="border-t border-white/20 pt-6 md:border-l md:border-t-0 md:pl-10 md:pt-0">
-            <p className="mb-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">Follow me</p>
-            <div className="flex flex-col items-start gap-2">
-              {(section.content.socialLinks || [{ id: 'fb', title: 'Facebook' }, { id: 'tw', title: 'Twitter' }, { id: 'ig', title: 'Instagram' }]).map((link: any) => <PageLink key={link.id} href={link.url || '#'} className="w-full max-w-48 border-b border-white/70 pb-1 text-sm font-medium">{link.title || link.platform || link.label}<span className="float-right">↗</span></PageLink>)}
+          )}
+          <div className="grid gap-8 md:grid-cols-[1.45fr_0.7fr] md:gap-12">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+              {items.map((item: BandItem, index: number) => <div key={item.id} className="border-t border-current/15 pt-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="text-base font-semibold tracking-tight sm:text-lg">{item.title}</p>
+                  <span className="text-[9px] tabular-nums text-current/30">{String(index + 1).padStart(2, '0')}</span>
+                </div>
+                {item.description && <p className="mt-2 text-xs leading-relaxed text-current/50">{item.description}</p>}
+                {item.tag && <span className="mt-3 inline-block border border-current/20 px-2 py-1 text-[8px] uppercase tracking-[0.14em] text-current/60">{item.tag}</span>}
+              </div>)}
+            </div>
+            <div className="border-t border-current/20 pt-6 md:border-l md:border-t-0 md:pl-10 md:pt-0">
+              <p className="mb-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-current/40">{band.socialLabel || 'Follow me'}</p>
+              <div className="flex flex-col items-start gap-2">
+                {socialLinks.map((link: BandLink) => <PageLink key={link.id} href={link.url || '#'} className="w-full max-w-48 border-b border-current/70 pb-1 text-sm font-medium">{link.title || link.platform || link.label}<span className="float-right">↗</span></PageLink>)}
+              </div>
             </div>
           </div>
         </div>
@@ -2129,7 +2152,7 @@ export function SpacerSection({ section }: { section: any; theme: ThemeConfig })
 }
 // ── Stats ──────────────────────────────────────────────────────
 export function StatsSection({ section, theme }: { section: z.infer<typeof StatsSectionSchema>; theme: ThemeConfig }) {
-  const { title, description, items } = section.content;
+  const { eyebrow, title, description, items } = section.content;
   if (section.variant === 'salon-minimal' || section.variant === 'minimal-row') {
     return (
       <section className="w-full px-6 py-12 md:py-16 text-current">
@@ -2157,7 +2180,7 @@ export function StatsSection({ section, theme }: { section: z.infer<typeof Stats
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 grid gap-6 md:grid-cols-2 md:items-end">
             <div>
-              <span className="mb-3 inline-flex rounded-sm bg-white/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide">Commitment</span>
+              <span className="mb-3 inline-flex rounded-sm bg-white/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide">{eyebrow || 'Commitment'}</span>
               {title && <h2 className="max-w-xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{title}</h2>}
             </div>
             <div>
@@ -2295,7 +2318,7 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
         {content.eyebrow && <p className="mb-1 text-[7px] font-semibold uppercase tracking-[0.18em] text-white/50 sm:text-[9px]">{content.eyebrow}</p>}
         <h2 className="max-w-[9ch] font-serif text-[clamp(1.4rem,5.5vw,3.8rem)] leading-[0.83] tracking-[-0.05em]">{content.title}</h2>
         <ul className="mt-4 flex flex-col gap-3 sm:mt-6 sm:gap-4">{content.checkpoints.map((item, i) => <li key={item.id} className="flex items-start gap-2 text-[7px] leading-[1.35] text-white/65 sm:gap-3 sm:text-[10px]"><span className="font-serif text-sm leading-none text-[#c7c6bb] sm:text-lg">✳</span><span>{item.text}</span></li>)}</ul>
-        {content.secondaryImageUrl && <PageImage src={content.secondaryImageUrl} alt="A recent tattoo session" className="mt-4 aspect-[1.65/1] w-[calc(100%+1rem)] -translate-x-4 rounded-sm object-cover shadow-lg sm:mt-7 sm:w-full sm:translate-x-0" />}
+        {content.secondaryImageUrl && <PageImage src={content.secondaryImageUrl} alt={content.secondaryImageAlt || content.imageAlt || 'A recent studio image'} className="mt-4 aspect-[1.65/1] w-[calc(100%+1rem)] -translate-x-4 rounded-sm object-cover shadow-lg sm:mt-7 sm:w-full sm:translate-x-0" />}
       </div>
     </div>
   </section>;

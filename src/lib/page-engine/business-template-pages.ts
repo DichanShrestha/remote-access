@@ -1108,7 +1108,7 @@ const tattooAbout = page('ABOUT', 'About', 'about', [
   }),
   p({
     id: 'artist', type: 'feature-split', variant: 'bio-spotlight', layout: 'image-left', isHidden: false,
-    backgroundColor: '#0c0d0c',
+    backgroundColor: '#0c0d0c', textColor: '#e9e7dc',
     content: {
       eyebrow: 'About Rowan',
       title: 'Blackwork with a quiet point of view',
@@ -1126,15 +1126,32 @@ const tattooAbout = page('ABOUT', 'About', 'about', [
   }),
   p({
     id: 'styles', type: 'services', variant: 'portfolio-band', isHidden: false,
-    backgroundColor: '#0c0d0c',
+    backgroundColor: '#0c0d0c', textColor: '#e9e7dc',
     content: {
+      eyebrow: 'Signature styles',
       title: 'Styles',
+      subtitle: 'Blackwork, fine line, and illustrative pieces, each drawn for the person who will wear it.',
       items: [
         { id: 'style-1', title: 'Blackwork', description: 'Bold, graphic work built from solid black and negative space.' },
         { id: 'style-2', title: 'Fine line', description: 'Delicate linework with a light, precise touch.' },
         { id: 'style-3', title: 'Illustrative', description: 'Custom imagery drawn to sit naturally on the body.' },
       ],
+      socialLabel: 'Follow the studio',
       socialLinks: [{ id: 'instagram', title: 'Instagram', url: 'https://instagram.com/rowanblack' }],
+    },
+  }),
+  p({
+    id: 'about-stats', type: 'stats', variant: 'editorial-band', isHidden: false,
+    backgroundColor: '#0c0d0c', textColor: '#e9e7dc',
+    content: {
+      eyebrow: 'By the numbers',
+      title: 'A practice built on repetition and care',
+      description: 'A small studio with a focused output. Every piece is drawn, tattooed, and followed through to healing.',
+      items: [
+        { id: 'stat-years', value: '10', suffix: '+', label: 'Years tattooing' },
+        { id: 'stat-pieces', value: '600', suffix: '+', label: 'Pieces healed' },
+        { id: 'stat-styles', value: '3', label: 'Signature styles' },
+      ],
     },
   }),
   p({
@@ -1165,7 +1182,7 @@ const tattooAbout = page('ABOUT', 'About', 'about', [
   }),
 ]);
 
-const tattooProcess = page('CUSTOM', 'Process', 'process', [
+const tattooProcess = page('SERVICES', 'Process', 'process', [
   p({
     id: 'process-hero', type: 'hero', variant: 'editorial-center', layout: 'center', isHidden: false,
     backgroundColor: '#0c0d0c', textColor: '#e9e7dc', textContrast: 'light', buttonColor: '#e3e2d8', buttonTextColor: '#171715',
@@ -1179,7 +1196,7 @@ const tattooProcess = page('CUSTOM', 'Process', 'process', [
   }),
   p({
     id: 'process', type: 'timeline', variant: 'pinned-thread', layout: 'vertical', isHidden: false,
-    backgroundColor: '#0c0d0c',
+    backgroundColor: '#0c0d0c', textColor: '#e9e7dc',
     content: {
       title: 'From Idea To Ink',
       description: 'Here’s how we bring your tattoo to life, guiding you through every step of the process from start to finish.',
@@ -1193,7 +1210,7 @@ const tattooProcess = page('CUSTOM', 'Process', 'process', [
   }),
   p({
     id: 'prepare', type: 'feature-split', variant: 'bio-spotlight', layout: 'image-left', isHidden: false,
-    backgroundColor: '#0c0d0c',
+    backgroundColor: '#0c0d0c', textColor: '#e9e7dc',
     content: {
       eyebrow: 'Before your session',
       title: 'A little preparation goes a long way',
@@ -1245,7 +1262,7 @@ const tattooGallery = page('GALLERY', 'Flash board', 'gallery', [
   }),
   p({
     id: 'board', type: 'gallery', variant: 'tattoo-gallery', layout: 'grid', isHidden: false,
-    backgroundColor: '#0c0d0c',
+    backgroundColor: '#0c0d0c', textColor: '#e9e7dc',
     content: {
       eyebrow: 'Selected work',
       title: 'Every piece is drawn for the person who will wear it',
@@ -1263,6 +1280,14 @@ const tattooGallery = page('GALLERY', 'Flash board', 'gallery', [
         { id: 'board-8', url: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=800&q=80', caption: '25.10.2022' },
         { id: 'board-9', url: 'https://images.unsplash.com/photo-1504805572947-34fad45aed93?auto=format&fit=crop&w=800&q=80', caption: '01.08.2022', note: 'Tiny flash, big meaning' },
       ],
+    },
+  }),
+  p({
+    id: 'gallery-quote', type: 'quote', variant: 'editorial-statement', isHidden: false,
+    backgroundColor: '#0c0d0c', textColor: '#e9e7dc',
+    content: {
+      text: 'A flash sheet is a starting point. The best pieces begin with a conversation.',
+      author: 'Rowan Black',
     },
   }),
   p({
@@ -1300,7 +1325,7 @@ const tattooFaq = page('FAQ', 'FAQ', 'faq', [
   }),
   p({
     id: 'faq', type: 'faq', variant: 'tattoo-list', isHidden: false,
-    backgroundColor: '#0c0d0c',
+    backgroundColor: '#0c0d0c', textColor: '#e9e7dc',
     content: {
       title: 'Frequently Asked Questions',
       subtitle: 'A few things you might want to know before booking.',
@@ -1312,6 +1337,14 @@ const tattooFaq = page('FAQ', 'FAQ', 'faq', [
         { id: 'faq-5', question: 'Do you take walk-ins?', answer: 'All sessions are by appointment so every design gets the time and attention it deserves.' },
         { id: 'faq-6', question: 'How should I prepare for my appointment?', answer: 'Get a good night of sleep, eat beforehand, stay hydrated, and wear clothing that gives easy access to the tattoo area.' },
       ],
+    },
+  }),
+  p({
+    id: 'faq-quote', type: 'quote', variant: 'editorial-statement', isHidden: false,
+    backgroundColor: '#0c0d0c', textColor: '#e9e7dc',
+    content: {
+      text: 'If your question is not here, send it with your idea. The answer is usually a short conversation away.',
+      author: 'Rowan Black',
     },
   }),
   p({
@@ -1347,7 +1380,7 @@ const tattooContact = page('CONTACT', 'Book an appointment', 'contact', [
   }),
   p({
     id: 'studio-strip', type: 'gallery', variant: 'photo-strip', layout: 'grid', isHidden: false,
-    backgroundColor: '#0c0d0c',
+    backgroundColor: '#0c0d0c', textColor: '#e9e7dc',
     content: {
       images: [
         { id: 'strip-1', url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1200&q=80', caption: 'Blackwork tattoo in progress' },
@@ -1357,6 +1390,25 @@ const tattooContact = page('CONTACT', 'Book an appointment', 'contact', [
         { id: 'strip-5', url: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?auto=format&fit=crop&w=1200&q=80', caption: 'Tattoo work' },
         { id: 'strip-6', url: 'https://images.unsplash.com/photo-1598971861713-54ad16a7e72e?auto=format&fit=crop&w=1200&q=80', caption: 'Studio session' },
       ],
+    },
+  }),
+  p({
+    id: 'studio-details', type: 'feature-split', variant: 'bio-spotlight', layout: 'image-left', isHidden: false,
+    backgroundColor: '#0c0d0c', textColor: '#e9e7dc',
+    content: {
+      eyebrow: 'The studio',
+      title: 'A private room on Queen West',
+      description: 'Appointments happen in a quiet, private studio. There is time to talk through placement, look at references, and settle in before the machine comes out.',
+      checkpoints: [
+        { id: 'studio-note-1', text: 'Private Studio · Queen Street West, Toronto, ON' },
+        { id: 'studio-note-2', text: 'Tuesday to Saturday, by appointment only.' },
+        { id: 'studio-note-3', text: 'Send references, placement, and approximate size when you write.' },
+      ],
+      imageUrl: 'https://images.unsplash.com/photo-1598971861713-54ad16a7e72e?auto=format&fit=crop&w=800&q=80',
+      secondaryImageUrl: 'https://images.unsplash.com/photo-1573806439793-82c5bbd4c06e?auto=format&fit=crop&w=800&q=80',
+      imageAlt: 'The private tattoo studio',
+      secondaryImageAlt: 'Tattoo tools laid out in the studio',
+      imageLabel: 'Studio',
     },
   }),
   p({

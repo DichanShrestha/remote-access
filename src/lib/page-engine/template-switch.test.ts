@@ -316,3 +316,172 @@ test('published page designs are redesigned with the same preserved content', ()
   assert.ok(update.publishedDocument, 'a published page keeps a redesigned published snapshot');
   assert.equal(sectionTitle(update.publishedDocument!, 'approach'), 'Family recipes');
 });
+
+function applySwitchPlan(
+  pages: TemplateSwitchPage[],
+  plan: ReturnType<typeof planTemplateSwitch>,
+): TemplateSwitchPage[] {
+  const updates = new Map(plan.updates.map((update) => [update.pageId, update]));
+  const next = pages.map((page) => {
+    const update = updates.get(page.id);
+    if (!update) return page;
+    return {
+      ...page,
+      title: update.title,
+      pageType: update.pageType || page.pageType,
+      draftDocument: update.draftDocument,
+      publishedDocument: update.publishedDocument,
+    };
+  });
+  for (const create of plan.creates) {
+    next.push({
+      id: `created-${create.slug}`,
+      title: create.title,
+      slug: create.slug,
+      pageType: create.pageType,
+      navOrder: create.navOrder,
+      showInNavigation: true,
+      draftDocument: create.draftDocument,
+      publishedDocument: null,
+    });
+  }
+  return next;
+}
+
+test('tattoo process page is managed and never duplicated across switches', () => {
+  const tattooPages = starterPages('tattoo-artist');
+  const process = tattooPages.find((page) => page.slug === 'process')!;
+  assert.equal(process.pageType, 'SERVICES', 'Process uses a managed page type');
+
+  const toCorporate = planTemplateSwitch({
+    templateId: 'corporate-consulting',
+    profileType: 'BUSINESS',
+    currentTemplateId: 'tattoo-artist',
+    pages: [homePage('tattoo-artist'), ...tattooPages],
+    homePageId: 'home',
+  });
+
+  const processUpdate = toCorporate.updates.find((update) => update.pageId === process.id);
+  assert.ok(processUpdate, 'the existing Process page is updated in place');
+  assert.equal(processUpdate.pageType, 'SERVICES');
+  assert.ok(!toCorporate.creates.some((page) => page.slug === 'process'), 'switching away does not create another Process page');
+  assert.ok(!toCorporate.preservedPageIds.includes(process.id), 'the Process page is treated as template-managed');
+
+  const corporatePages = applySwitchPlan([homePage('tattoo-artist'), ...tattooPages], toCorporate);
+  const backToTattoo = planTemplateSwitch({
+    templateId: 'tattoo-artist',
+    profileType: 'BUSINESS',
+    currentTemplateId: 'corporate-consulting',
+    pages: corporatePages,
+    homePageId: 'home',
+  });
+
+  const restored = backToTattoo.updates.find((update) => update.pageId === process.id);
+  assert.ok(restored, 'the same row is restyled back into the Process page');
+  assert.equal(restored.title, 'Process');
+  assert.ok(!backToTattoo.creates.some((page) => page.slug === 'process'), 'the return switch does not create a duplicate route');
+});
+
+test('legacy tattoo custom process pages are migrated instead of duplicated', () => {
+  const pages = starterPages('tattoo-artist');
+  const generated = pages.find((page) => page.slug === 'process')!;
+  const legacyProcess: TemplateSwitchPage = {
+    ...generated,
+    id: 'legacy-tattoo-process',
+    pageType: 'CUSTOM',
+  };
+  legacyProcess.draftDocument = customizeSection(legacyProcess.draftDocument!, 'process', (section) => {
+    section.content = { ...section.content, title: 'How my tattoo came together' } as PageSection['content'];
+  });
+  const legacyPages = pages.map((page) => (page.id === generated.id ? legacyProcess : page));
+
+  const plan = planTemplateSwitch({
+    templateId: 'tattoo-artist',
+    profileType: 'BUSINESS',
+    currentTemplateId: 'tattoo-artist',
+    pages: [homePage('tattoo-artist'), ...legacyPages],
+    homePageId: 'home',
+  });
+
+  const update = plan.updates.find((item) => item.pageId === legacyProcess.id);
+  assert.ok(update, 'the generated CUSTOM Process page is claimed by the template');
+  assert.equal(update.pageType, 'SERVICES', 'the legacy page adopts the managed page type');
+  assert.equal(update.title, 'Process');
+  assert.equal(sectionTitle(update.draftDocument, 'process'), 'How my tattoo came together');
+  assert.ok(!plan.creates.some((page) => page.slug === 'process'), 'no duplicate Process route is created');
+  assert.ok(!plan.preservedPageIds.includes(legacyProcess.id), 'the legacy page is not left behind as a custom page');
+});
+
+test('tattoo customer content survives switching away and back', () => {
+  const tattooPages = starterPages('tattoo-artist');
+  const about = tattooPages.find((page) => page.slug === 'about')!;
+  const gallery = tattooPages.find((page) => page.slug === 'gallery')!;
+  const faq = tattooPages.find((page) => page.slug === 'faq')!;
+  const contact = tattooPages.find((page) => page.slug === 'contact')!;
+
+  about.draftDocument = customizeSection(about.draftDocument!, 'artist', (section) => {
+    section.content = { ...section.content, title: 'The artist behind the ink' } as PageSection['content'];
+  });
+  gallery.draftDocument = customizeSection(gallery.draftDocument!, 'board', (section) => {
+    const content = section.content as { title?: string; images: Array<{ id: string; url: string; caption?: string; note?: string }> };
+    section.content = {
+      ...content,
+      title: 'A custom flash title',
+      images: content.images.map((image, index) => index === 0
+        ? { ...image, caption: 'Healed blackwork, 2025' }
+        : image),
+    } as PageSection['content'];
+  });
+  faq.draftDocument = customizeSection(faq.draftDocument!, 'faq', (section) => {
+    const content = section.content as { items: Array<{ id: string; question: string; answer: string }> };
+    section.content = {
+      ...content,
+      items: content.items.map((item, index) => index === 0
+        ? { ...item, answer: 'A custom answer from the studio.' }
+        : item),
+    } as PageSection['content'];
+  });
+  contact.draftDocument = customizeSection(contact.draftDocument!, 'contact', (section) => {
+    section.content = {
+      ...section.content,
+      title: 'Tell us the idea you cannot stop thinking about.',
+    } as PageSection['content'];
+  });
+
+  const start = [homePage('tattoo-artist'), ...tattooPages];
+  const toCorporate = planTemplateSwitch({
+    templateId: 'corporate-consulting',
+    profileType: 'BUSINESS',
+    currentTemplateId: 'tattoo-artist',
+    pages: start,
+    homePageId: 'home',
+  });
+  const corporatePages = applySwitchPlan(start, toCorporate);
+  const backToTattoo = planTemplateSwitch({
+    templateId: 'tattoo-artist',
+    profileType: 'BUSINESS',
+    currentTemplateId: 'corporate-consulting',
+    pages: corporatePages,
+    homePageId: 'home',
+  });
+  const finalPages = applySwitchPlan(corporatePages, backToTattoo);
+
+  const finalAbout = finalPages.find((page) => page.id === about.id)!;
+  const finalGallery = finalPages.find((page) => page.id === gallery.id)!;
+  const finalFaq = finalPages.find((page) => page.id === faq.id)!;
+  const finalContact = finalPages.find((page) => page.id === contact.id)!;
+
+  assert.equal(sectionTitle(finalAbout.draftDocument!, 'artist'), 'The artist behind the ink');
+  assert.equal(sectionTitle(finalGallery.draftDocument!, 'board'), 'A custom flash title');
+  const finalBoard = findSection(finalGallery.draftDocument!, 'board')!;
+  assert.equal((finalBoard.content as { images: Array<{ caption?: string }> }).images[0].caption, 'Healed blackwork, 2025');
+  const finalFaqSection = findSection(finalFaq.draftDocument!, 'faq')!;
+  assert.equal((finalFaqSection.content as { items: Array<{ answer: string }> }).items[0].answer, 'A custom answer from the studio.');
+  assert.equal(
+    sectionTitle(finalContact.draftDocument!, 'contact'),
+    'Tell us the idea you cannot stop thinking about.',
+  );
+
+  assert.equal(new Set(finalPages.map((page) => page.slug)).size, finalPages.length, 'no child route is duplicated');
+  assert.equal(finalPages.filter((page) => page.slug === 'process').length, 1, 'the Process route survives exactly once');
+});

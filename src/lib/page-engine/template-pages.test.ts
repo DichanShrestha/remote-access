@@ -109,3 +109,40 @@ test('template page sections remain reusable through the shared component regist
     }
   }
 });
+
+test('tattoo secondary pages are complete, distinct, and share the homepage identity', () => {
+  const { starterPages } = buildTemplatePages('tattoo-artist', TEMPLATES_MAP['tattoo-artist']);
+
+  assert.deepEqual(
+    starterPages.map((page) => page.slug),
+    ['about', 'process', 'gallery', 'faq', 'contact'],
+    'the Tattoo site exposes a complete secondary page set',
+  );
+  assert.equal(
+    new Set(starterPages.map((page) => page.pageType)).size,
+    starterPages.length,
+    'each Tattoo page has a distinct managed page type',
+  );
+  assert.equal(
+    starterPages.find((page) => page.slug === 'process')?.pageType,
+    'SERVICES',
+    'Process is a managed page, not a CUSTOM page',
+  );
+
+  for (const page of starterPages) {
+    assert.ok(page.sections.length >= 4, `tattoo ${page.slug} has a full page structure`);
+    assert.equal(page.sections[0].type, 'hero', `tattoo ${page.slug} opens with a hero`);
+    assert.ok(page.sections.some((section) => section.id === 'contact'), `tattoo ${page.slug} includes #contact`);
+    assert.ok(
+      page.sections.every((section) => section.backgroundColor === '#0c0d0c'),
+      `tattoo ${page.slug} keeps the homepage dark palette`,
+    );
+    assert.ok(
+      page.sections.every((section) => section.textColor === '#e9e7dc'),
+      `tattoo ${page.slug} keeps readable light text on every section`,
+    );
+
+    const ids = page.sections.map((section) => section.id);
+    assert.equal(new Set(ids).size, ids.length, `tattoo ${page.slug} section ids are unique`);
+  }
+});

@@ -212,6 +212,7 @@ export const ServicesSectionSchema = BaseSectionSchema.extend({
       buttonText: z.string().optional(),
       buttonUrl: z.string().optional(),
     })),
+    socialLabel: z.string().optional(),
     socialLinks: z.array(z.object({ id: z.string(), title: z.string(), url: z.string() })).optional(),
   }),
 });
@@ -428,6 +429,7 @@ export const CountdownSectionSchema = BaseSectionSchema.extend({
 export const StatsSectionSchema = BaseSectionSchema.extend({
   type: z.literal('stats'),
   content: z.object({
+    eyebrow: z.string().optional(),
     title: z.string().optional(),
     description: z.string().optional(),
     items: z.array(z.object({
@@ -480,6 +482,7 @@ export const FeatureSplitSectionSchema = BaseSectionSchema.extend({
     imageUrl: z.string(),
     secondaryImageUrl: z.string().optional(),
     imageAlt: z.string().optional(),
+    secondaryImageAlt: z.string().optional(),
     imageLabel: z.string().optional(),
     buttonText: z.string().optional(),
     buttonUrl: z.string().optional(),
