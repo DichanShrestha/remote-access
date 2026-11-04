@@ -26,6 +26,7 @@ const details: Record<string, TemplateDetails> = {
   'corporate-consulting': { name: 'Corporate Consulting', description: 'Make your expertise, approach, and results easy to understand.', category: 'BUSINESS', mood: 'Consulting · Refined' },
   'point-architecture': { name: 'Point+ Architecture', description: 'A portfolio-led studio page for projects, services, and inquiries.', category: 'BUSINESS', mood: 'Architecture · Gallery' },
   'spa-salon': { name: 'Spa & Nail Salon', description: 'An editorial sanctuary template for luxury nail salons, wellness spas, and beauty studios.', category: 'BUSINESS', mood: 'Salon · Editorial' },
+  'beauty-studio': { name: 'Beauty Studio', description: 'A polished beauty salon site with editorial treatment pages, bridal packages, and appointment inquiries.', category: 'BUSINESS', mood: 'Beauty · Editorial' },
   'tattoo-artist': { name: 'Tattoo Artist', description: 'A dark editorial portfolio for custom tattoo work, the artist’s process, and appointment inquiries.', category: 'BUSINESS', mood: 'Blackwork · Editorial' },
   'tattoo-studio': { name: 'Tattoo Studio', description: 'A bold studio site for custom tattoo work, artist stories, client reviews, and booking inquiries.', category: 'BUSINESS', mood: 'Ink · High contrast' },
 };

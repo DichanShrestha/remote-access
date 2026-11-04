@@ -47,6 +47,16 @@ const PAGE_HASH_ALIASES: Record<string, Record<string, string>> = {
     gallery: 'gallery',
     faq: 'faq',
   },
+  'beauty-studio': {
+    hero: '',
+    story: 'story',
+    about: 'story',
+    services: 'services',
+    wedding: 'wedding',
+    review: 'reviews',
+    reviews: 'reviews',
+    contact: 'contact',
+  },
   'tattoo-artist': {
     artist: 'about',
     about: 'about',
