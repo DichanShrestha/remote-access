@@ -124,10 +124,14 @@ function normalizeLabel(label: string): string {
   return label.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-function mergeNavigationLinks(existing: NavigationLink[], managed: NavigationLink[]): NavigationLink[] {
+function mergeNavigationLinks(
+  existing: NavigationLink[],
+  managed: NavigationLink[],
+  matchingPages: NavigationLink[] = managed,
+): NavigationLink[] {
   const result = [...existing];
 
-  for (const link of managed) {
+  for (const link of matchingPages) {
     const linkSlug = link.slug || '';
     const existingIndex = result.findIndex((candidate) => {
       if (isExternalLink(candidate.url)) return false;
@@ -146,7 +150,7 @@ function mergeNavigationLinks(existing: NavigationLink[], managed: NavigationLin
         label: link.label,
         url: link.url,
       };
-    } else {
+    } else if (managed.some((managedLink) => managedLink.url === link.url)) {
       result.push({
         id: `${MANAGED_NAVIGATION_PREFIX}${link.id}`,
         label: link.label,
@@ -169,8 +173,12 @@ function mergeNavigationLinks(existing: NavigationLink[], managed: NavigationLin
  * document. This is only applied at render time; it is never persisted, so
  * renaming, unpublishing, or deleting a page always updates navigation.
  */
-export function applyManagedNavigation(document: PageDocument, links: NavigationLink[]): PageDocument {
-  if (!links.length) return document;
+export function applyManagedNavigation(
+  document: PageDocument,
+  links: NavigationLink[],
+  matchingPages: NavigationLink[] = links,
+): PageDocument {
+  if (!links.length && !matchingPages.length) return document;
 
   const updateNodes = (nodes: PageNode[]): PageNode[] =>
     nodes.map((node) => {
@@ -183,7 +191,7 @@ export function applyManagedNavigation(document: PageDocument, links: Navigation
         ...parsed.data,
         content: {
           ...parsed.data.content,
-          links: mergeNavigationLinks(parsed.data.content.links, links),
+          links: mergeNavigationLinks(parsed.data.content.links, links, matchingPages),
         },
       };
     });

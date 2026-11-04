@@ -6,6 +6,7 @@ import { HeroSectionSchema, ThemeConfig } from '@/lib/page-engine/schemas';
 import { cn } from '@/lib/utils';
 import { ArrowRight, MapPin, ExternalLink } from 'lucide-react';
 import { PageImage } from '@/components/page-render/PageImage';
+import { PageLink } from '@/components/page-render/PageLink';
 import { BlurFade } from '@/components/ui/blur-fade';
 import { motion, useScroll, useTransform } from 'motion/react';
 
@@ -158,7 +159,7 @@ function HeroCTA({ content, theme, colors, className }: SubProps & { colors: Ret
   return (
     <div className={cn('flex flex-wrap items-center gap-3', className)}>
       {/* Primary */}
-      <a
+      <PageLink
         href={buttonUrl || '#'}
         data-page-button
         className="group inline-flex items-center justify-center gap-2.5 font-sans font-semibold text-white transition-all duration-300 hover:-translate-y-px active:translate-y-0"
@@ -172,11 +173,11 @@ function HeroCTA({ content, theme, colors, className }: SubProps & { colors: Ret
       >
         {buttonText}
         <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-      </a>
+      </PageLink>
 
       {/* Secondary */}
       {secondaryButtonText && (
-        <a
+        <PageLink
           href={secondaryButtonUrl || '#'}
           data-page-button
           className={cn(
@@ -190,7 +191,7 @@ function HeroCTA({ content, theme, colors, className }: SubProps & { colors: Ret
           }}
         >
           {secondaryButtonText}
-        </a>
+        </PageLink>
       )}
     </div>
   );
@@ -224,7 +225,7 @@ function HeroSocialLinks({ links, className }: { links?: HeroContent['socialLink
   return (
     <div className={cn('flex items-center gap-2', className)}>
       {links.map((link) => (
-        <a
+        <PageLink
           key={link.id}
           href={link.url}
           target="_blank"
@@ -232,7 +233,7 @@ function HeroSocialLinks({ links, className }: { links?: HeroContent['socialLink
           className="flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 text-slate-500 text-sm font-semibold transition-all duration-200 hover:border-slate-400 hover:text-slate-800 hover:bg-slate-50"
         >
           {iconMap[link.platform.toLowerCase()] || <ExternalLink className="h-3.5 w-3.5" />}
-        </a>
+        </PageLink>
       ))}
     </div>
   );
@@ -585,11 +586,11 @@ function PortfolioEditorialHero({ content }: SubProps) {
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">{content.title}</p>
             <p className="mt-12 max-w-[16rem] text-[11px] leading-relaxed text-neutral-500">{content.subtitle}</p>
           </div>
-          {content.buttonText?.trim() ? <a href={content.buttonUrl || '#contact'} className="inline-flex min-h-11 items-center rounded-full bg-neutral-900 px-8 text-[11px] font-semibold uppercase tracking-wide !text-white">{content.buttonText}</a> : null}
+          {content.buttonText?.trim() ? <PageLink href={content.buttonUrl || '#contact'} className="inline-flex min-h-11 items-center rounded-full bg-neutral-900 px-8 text-[11px] font-semibold uppercase tracking-wide !text-white">{content.buttonText}</PageLink> : null}
         </div>
         <div className="pb-1">
           <h1 className="max-w-4xl text-5xl font-normal leading-[0.98] tracking-[-0.065em] sm:text-6xl md:text-[clamp(3.5rem,6.2vw,6rem)]">{content.headline}</h1>
-          <a href="#services" className="mt-10 inline-flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.16em]">Scroll down <span className="grid h-11 w-11 place-items-center rounded-full border border-neutral-400 text-lg font-normal">↓</span></a>
+          <PageLink href="#services" className="mt-10 inline-flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.16em]">Scroll down <span className="grid h-11 w-11 place-items-center rounded-full border border-neutral-400 text-lg font-normal">↓</span></PageLink>
         </div>
       </div>
     </section>
@@ -609,7 +610,7 @@ function FashionEditorialHero({ content }: SubProps) {
           {content.eyebrow && <p className="mb-5 text-[9px] font-medium uppercase tracking-[0.24em] text-neutral-500">{content.eyebrow}</p>}
           <h1 className="font-serif text-4xl font-normal leading-[1.02] tracking-[-0.035em] sm:text-5xl md:text-[clamp(2.75rem,4vw,4.25rem)]">{content.headline || content.title}</h1>
           {content.subtitle && <p className="mt-5 max-w-sm text-[11px] leading-relaxed text-neutral-500 md:text-xs">{content.subtitle}</p>}
-          {content.buttonText && <a href={content.buttonUrl || '#outfits'} className="mt-7 inline-flex items-center gap-4 text-[9px] font-semibold uppercase tracking-[0.2em]">{content.buttonText}<span aria-hidden="true" className="h-px w-9 bg-current" /></a>}
+          {content.buttonText && <PageLink href={content.buttonUrl || '#outfits'} className="mt-7 inline-flex items-center gap-4 text-[9px] font-semibold uppercase tracking-[0.2em]">{content.buttonText}<span aria-hidden="true" className="h-px w-9 bg-current" /></PageLink>}
         </div>
       </div>
     </section>
@@ -627,8 +628,8 @@ function SpeakerEditorialHero({ content }: SubProps) {
           {content.title && <p className="mb-4 text-[9px] font-semibold uppercase tracking-[0.22em]">{content.title}</p>}
           <h1 className="font-serif text-4xl font-bold leading-[1.02] tracking-[-0.04em] sm:text-5xl md:text-[clamp(3rem,5vw,5rem)]">{content.headline || content.title}</h1>
           {content.subtitle && <p className="mt-5 max-w-md text-xs leading-relaxed text-neutral-800/80">{content.subtitle}</p>}
-          {content.buttonText && <a href={content.buttonUrl || '#events'} className="mt-7 inline-flex min-h-10 items-center bg-[#ff634f] px-6 text-[9px] font-semibold uppercase tracking-wide text-white">{content.buttonText}</a>}
-          {content.secondaryButtonText && <a href={content.secondaryButtonUrl || '#newsletter'} className="ml-3 mt-7 inline-flex min-h-10 items-center border border-neutral-900/30 px-5 text-[9px] font-semibold uppercase tracking-wide">{content.secondaryButtonText}</a>}
+          {content.buttonText && <PageLink href={content.buttonUrl || '#events'} className="mt-7 inline-flex min-h-10 items-center bg-[#ff634f] px-6 text-[9px] font-semibold uppercase tracking-wide text-white">{content.buttonText}</PageLink>}
+          {content.secondaryButtonText && <PageLink href={content.secondaryButtonUrl || '#newsletter'} className="ml-3 mt-7 inline-flex min-h-10 items-center border border-neutral-900/30 px-5 text-[9px] font-semibold uppercase tracking-wide">{content.secondaryButtonText}</PageLink>}
         </div>
       </div>
     </section>
@@ -650,8 +651,8 @@ function TattooCoverHero({ content, backgroundColor, textColor }: SubProps) {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#0c0d0c] to-transparent" />
       </div>}
       <div className="relative z-10 mt-4 flex justify-center gap-2 sm:mt-5 sm:gap-3">
-        {content.buttonText && <a href={content.buttonUrl || '#contact'} data-page-button className="rounded-full bg-[#e3e2d8] px-4 py-2 text-[9px] font-medium text-[#171715] sm:px-5 sm:py-2.5 sm:text-xs">{content.buttonText}</a>}
-        {content.secondaryButtonText && <a href={content.secondaryButtonUrl || '#board'} className="rounded-full border border-white/30 px-4 py-2 text-[9px] text-[#e9e7dc] sm:px-5 sm:py-2.5 sm:text-xs">{content.secondaryButtonText}</a>}
+        {content.buttonText && <PageLink href={content.buttonUrl || '#contact'} data-page-button className="rounded-full bg-[#e3e2d8] px-4 py-2 text-[9px] font-medium text-[#171715] sm:px-5 sm:py-2.5 sm:text-xs">{content.buttonText}</PageLink>}
+        {content.secondaryButtonText && <PageLink href={content.secondaryButtonUrl || '#board'} className="rounded-full border border-white/30 px-4 py-2 text-[9px] text-[#e9e7dc] sm:px-5 sm:py-2.5 sm:text-xs">{content.secondaryButtonText}</PageLink>}
       </div>
     </div>
   </section>;
@@ -663,7 +664,7 @@ function RestaurantCoverHero({ content }: SubProps) {
     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/15" />
     <div className="relative z-10 w-full px-6 pb-10 text-center sm:pb-14">
       {content.title && <h1 className="mx-auto max-w-4xl font-serif text-4xl leading-[0.95] tracking-tight drop-shadow sm:text-6xl md:text-7xl">{content.title}</h1>}
-      <a href={content.buttonUrl || '#menu'} className="mt-5 inline-flex min-h-10 items-center border-b border-white/70 pb-1 text-xs font-medium uppercase tracking-[0.16em] text-white">{content.buttonText || 'Scopri il menu'} <span aria-hidden="true" className="ml-2">↓</span></a>
+      <PageLink href={content.buttonUrl || '#menu'} className="mt-5 inline-flex min-h-10 items-center border-b border-white/70 pb-1 text-xs font-medium uppercase tracking-[0.16em] text-white">{content.buttonText || 'Scopri il menu'} <span aria-hidden="true" className="ml-2">↓</span></PageLink>
     </div>
   </section>;
 }
@@ -953,23 +954,23 @@ function SalonArchHero({ content }: SubProps) {
           <div className="mt-8 flex flex-wrap items-center gap-4">
             {content.buttonText && (
               <BlurFade delay={0.2} inView direction="right">
-                <a
+                <PageLink
                   href={content.buttonUrl || '#contact'}
                   data-page-button
                   className="inline-flex items-center justify-center rounded-full bg-[#1f1a18] px-8 py-3.5 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-[#382f2c] hover:shadow-md"
                 >
                   {content.buttonText}
-                </a>
+                </PageLink>
               </BlurFade>
             )}
             {content.secondaryButtonText && (
               <BlurFade delay={0.24} inView direction="right">
-                <a
+                <PageLink
                   href={content.secondaryButtonUrl || '#treatments'}
                   className="inline-flex items-center justify-center rounded-full border border-black/15 dark:border-white/20 px-7 py-3.5 text-sm font-medium text-current hover:bg-black/5 dark:hover:bg-white/5 transition-all"
                 >
                   {content.secondaryButtonText}
-                </a>
+                </PageLink>
               </BlurFade>
             )}
           </div>

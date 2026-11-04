@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { 
   Users, 
   MessageSquare, 
@@ -175,9 +176,9 @@ export default function AnalyticsDashboard({ data }: { data: AnalyticsData }) {
             <h2 className="text-sm font-semibold text-[#171717]">Recent Leads</h2>
           </div>
           {totalLeads > 5 && (
-            <a href="/dashboard/leads" className="text-xs font-medium text-[#737373] hover:text-[#171717] transition-colors flex items-center gap-1">
+            <Link href="/dashboard/leads" className="text-xs font-medium text-[#737373] hover:text-[#171717] transition-colors flex items-center gap-1">
               View all <ArrowUpRight size={12} />
-            </a>
+            </Link>
           )}
         </div>
 

@@ -26,6 +26,7 @@ const Stepper = lazy(() => import('@/components/Stepper'));
 import { MagicCard } from '@/components/ui/magic-card';
 import { NumberTicker } from '@/components/ui/number-ticker';
 import { PageImage } from '@/components/page-render/PageImage';
+import { PageLink } from '@/components/page-render/PageLink';
 
 // ── URL Button ─────────────────────────────────────────────────
 export function UrlButtonSection({ section, theme }: { section: any; theme: ThemeConfig }) {
@@ -38,7 +39,7 @@ export function UrlButtonSection({ section, theme }: { section: any; theme: Them
   };
   return (
     <section className="py-4 px-4 md:px-8 max-w-xl mx-auto">
-      <a
+      <PageLink
         href={url}
         target="_blank"
         rel="noopener noreferrer"
@@ -51,7 +52,7 @@ export function UrlButtonSection({ section, theme }: { section: any; theme: Them
           {description && <span className="text-sm font-normal opacity-70">{description}</span>}
         </div>
         <svg className="w-5 h-5 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-      </a>
+      </PageLink>
     </section>
   );
 }
@@ -61,7 +62,7 @@ export function ImageButtonSection({ section }: { section: any; theme: ThemeConf
   const { imageUrl, label, url } = section.content;
   return (
     <section className="py-4 px-4 md:px-8 max-w-xl mx-auto">
-      <a href={url} target="_blank" rel="noopener noreferrer" className="group block w-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 relative">
+      <PageLink href={url} target="_blank" rel="noopener noreferrer" className="group block w-full rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 relative">
         <div className="aspect-[16/9] w-full bg-slate-200 dark:bg-slate-800">
           <PageImage src={imageUrl} alt={label || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         </div>
@@ -70,7 +71,7 @@ export function ImageButtonSection({ section }: { section: any; theme: ThemeConf
             <span className="px-6 py-4 text-white font-bold text-lg">{label}</span>
           </div>
         )}
-      </a>
+      </PageLink>
     </section>
   );
 }
@@ -81,10 +82,10 @@ export function EmailButtonSection({ section, theme }: { section: any; theme: Th
   const href = `mailto:${email}${subject ? `?subject=${encodeURIComponent(subject)}` : ''}`;
   return (
     <section className="py-4 px-4 md:px-8 max-w-xl mx-auto">
-      <a href={href} data-page-button className="group flex items-center justify-between w-full px-6 py-4 rounded-2xl font-semibold text-lg border-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg" style={{ borderColor: theme.primaryColor, color: theme.primaryColor }}>
+      <PageLink href={href} data-page-button className="group flex items-center justify-between w-full px-6 py-4 rounded-2xl font-semibold text-lg border-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg" style={{ borderColor: theme.primaryColor, color: theme.primaryColor }}>
         <span>{label}</span>
         <svg className="w-5 h-5 opacity-60 group-hover:opacity-100 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-      </a>
+      </PageLink>
     </section>
   );
 }
@@ -94,10 +95,10 @@ export function FileButtonSection({ section, theme }: { section: any; theme: The
   const { label, fileUrl } = section.content;
   return (
     <section className="py-4 px-4 md:px-8 max-w-xl mx-auto">
-      <a href={fileUrl} download data-page-button className="group flex items-center justify-between w-full px-6 py-4 rounded-2xl font-semibold text-lg border-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg" style={{ borderColor: theme.primaryColor, color: theme.primaryColor }}>
+      <PageLink href={fileUrl} download data-page-button className="group flex items-center justify-between w-full px-6 py-4 rounded-2xl font-semibold text-lg border-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg" style={{ borderColor: theme.primaryColor, color: theme.primaryColor }}>
         <span>{label}</span>
         <svg className="w-5 h-5 opacity-60 group-hover:opacity-100 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-      </a>
+      </PageLink>
     </section>
   );
 }
@@ -105,15 +106,15 @@ export function FileButtonSection({ section, theme }: { section: any; theme: The
 // ── CTA ────────────────────────────────────────────────────────
 export function CtaSection({ section, theme }: { section: any; theme: ThemeConfig }) {
   const { title, text, buttonText, buttonUrl } = section.content;
-  if (section.variant === 'portfolio-footer') return <section className="w-full bg-[#171717] px-6 py-20 text-center text-white md:py-28"><div className="mx-auto max-w-xl"><h2 className="text-2xl font-bold uppercase leading-tight tracking-[0.08em] md:text-3xl">{title}</h2>{text && <p className="mx-auto mt-4 max-w-md text-[10px] leading-relaxed text-white/60">{text}</p>}<a href={buttonUrl} data-page-button className="mt-7 inline-flex rounded-full bg-white px-9 py-3 text-[9px] font-bold uppercase tracking-wide text-neutral-900">{buttonText}</a></div></section>;
+  if (section.variant === 'portfolio-footer') return <section className="w-full bg-[#171717] px-6 py-20 text-center text-white md:py-28"><div className="mx-auto max-w-xl"><h2 className="text-2xl font-bold uppercase leading-tight tracking-[0.08em] md:text-3xl">{title}</h2>{text && <p className="mx-auto mt-4 max-w-md text-[10px] leading-relaxed text-white/60">{text}</p>}<PageLink href={buttonUrl} data-page-button className="mt-7 inline-flex rounded-full bg-white px-9 py-3 text-[9px] font-bold uppercase tracking-wide text-neutral-900">{buttonText}</PageLink></div></section>;
   return (
     <section className="py-20 px-4 md:px-8">
       <div className="max-w-3xl mx-auto text-center">
         <h2 className="text-4xl md:text-5xl font-extrabold mb-6 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">{title}</h2>
         {text && <p className="text-xl text-slate-500 dark:text-slate-400 mb-10 max-w-xl mx-auto leading-relaxed">{text}</p>}
-        <a href={buttonUrl} data-page-button className="inline-block px-10 py-4 text-white font-bold text-lg rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" style={{ backgroundColor: theme.primaryColor }}>
+        <PageLink href={buttonUrl} data-page-button className="inline-block px-10 py-4 text-white font-bold text-lg rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" style={{ backgroundColor: theme.primaryColor }}>
           {buttonText}
-        </a>
+        </PageLink>
       </div>
     </section>
   );
@@ -128,9 +129,9 @@ export function SocialLinksSection({ section, theme }: { section: any; theme: Th
     const dockItems = links.map((link: any) => ({
       title: link.platform,
       icon: (
-        <a href={link.url} target="_blank" rel="noreferrer" className="w-full h-full flex items-center justify-center rounded-full text-white text-lg font-bold" style={{ backgroundColor: theme.primaryColor }}>
+        <PageLink href={link.url} target="_blank" rel="noreferrer" className="w-full h-full flex items-center justify-center rounded-full text-white text-lg font-bold" style={{ backgroundColor: theme.primaryColor }}>
           {link.platform.charAt(0).toUpperCase()}
-        </a>
+        </PageLink>
       ),
     }));
     return (
@@ -162,7 +163,7 @@ export function SocialLinksSection({ section, theme }: { section: any; theme: Th
     <section className="py-8 px-4 md:px-8 max-w-4xl mx-auto">
       <div className="flex flex-wrap justify-center gap-3 py-8">
         {links.map((link: any) => (
-          <a
+          <PageLink
             key={link.id}
             href={link.url}
             target="_blank"
@@ -171,7 +172,7 @@ export function SocialLinksSection({ section, theme }: { section: any; theme: Th
           >
             {getIcon(link.platform)}
             {link.platform}
-          </a>
+          </PageLink>
         ))}
       </div>
     </section>
@@ -248,8 +249,8 @@ export function GallerySection({ section }: { section: any; theme: ThemeConfig }
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#0c0d0c] to-transparent" />
     </div>
     <div className="relative z-10 flex justify-center gap-2 px-5">
-      {section.content.buttonText && <a href={section.content.buttonUrl || '#contact'} data-page-button className="rounded-full bg-[#d4d3c8] px-4 py-2 text-[8px] font-medium text-[#171715] shadow-sm sm:text-[10px]">{section.content.buttonText}</a>}
-      {section.content.secondaryButtonText && <a href={section.content.secondaryButtonUrl || '#board'} className="rounded-full border border-white/25 px-4 py-2 text-[8px] text-[#e9e7dc] sm:text-[10px]">{section.content.secondaryButtonText}</a>}
+      {section.content.buttonText && <PageLink href={section.content.buttonUrl || '#contact'} data-page-button className="rounded-full bg-[#d4d3c8] px-4 py-2 text-[8px] font-medium text-[#171715] shadow-sm sm:text-[10px]">{section.content.buttonText}</PageLink>}
+      {section.content.secondaryButtonText && <PageLink href={section.content.secondaryButtonUrl || '#board'} className="rounded-full border border-white/25 px-4 py-2 text-[8px] text-[#e9e7dc] sm:text-[10px]">{section.content.secondaryButtonText}</PageLink>}
     </div>
   </section>;
 
@@ -663,13 +664,13 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
                   <p className="text-sm md:text-base text-current/75 leading-relaxed font-sans mb-7 max-w-md">
                     {item.description}
                   </p>
-                  <a
+                  <PageLink
                     href={item.buttonUrl || "#contact"}
                     data-page-button
                     className="inline-flex items-center justify-center rounded-full bg-[#1f1a18] px-7 py-3 text-xs font-semibold uppercase tracking-wider text-white shadow-sm hover:bg-[#382f2c] hover:shadow transition-all"
                   >
                     {item.buttonText || "Book Now"}
-                  </a>
+                  </PageLink>
                 </div>
               </div>
             );
@@ -692,7 +693,7 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
           <div className="border-t border-white/20 pt-6 md:border-l md:border-t-0 md:pl-10 md:pt-0">
             <p className="mb-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">Follow me</p>
             <div className="flex flex-col items-start gap-2">
-              {(section.content.socialLinks || [{ id: 'fb', title: 'Facebook' }, { id: 'tw', title: 'Twitter' }, { id: 'ig', title: 'Instagram' }]).map((link: any) => <a key={link.id} href={link.url || '#'} className="w-full max-w-48 border-b border-white/70 pb-1 text-sm font-medium">{link.title || link.platform || link.label}<span className="float-right">↗</span></a>)}
+              {(section.content.socialLinks || [{ id: 'fb', title: 'Facebook' }, { id: 'tw', title: 'Twitter' }, { id: 'ig', title: 'Instagram' }]).map((link: any) => <PageLink key={link.id} href={link.url || '#'} className="w-full max-w-48 border-b border-white/70 pb-1 text-sm font-medium">{link.title || link.platform || link.label}<span className="float-right">↗</span></PageLink>)}
             </div>
           </div>
         </div>
@@ -703,7 +704,7 @@ export function ServicesSection({ section, theme }: { section: any; theme: Theme
   if (variant === 'architecture-accordion') {
     return <section className="w-full bg-white px-6 py-16 text-[#123b38] sm:px-10 md:px-[10%] md:py-20">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-8 flex items-center justify-between"><p className="text-[10px] font-semibold uppercase tracking-wide">Our services</p><a href="#contact" className="border-b border-current/50 pb-1 text-[9px] uppercase">Get in touch&nbsp; ↘</a></div>
+        <div className="mb-8 flex items-center justify-between"><p className="text-[10px] font-semibold uppercase tracking-wide">Our services</p><PageLink href="#contact" className="border-b border-current/50 pb-1 text-[9px] uppercase">Get in touch&nbsp; ↘</PageLink></div>
         <div className="border-t border-[#123b38]/30">
           {items.map((item: any, index: number) => <details key={item.id} open={index === 1} className="group border-b border-[#123b38]/30">
             <summary className="flex cursor-pointer list-none items-center gap-3 py-4 marker:hidden [&::-webkit-details-marker]:hidden"><span className="text-[9px] font-semibold">{String(index + 1).padStart(2, '0')}</span><span className="flex-1 text-2xl font-medium uppercase leading-none tracking-[-0.04em] text-[#bdd1e0] sm:text-3xl md:text-4xl">{item.title}</span><span className="text-2xl font-light group-open:text-[#123b38]"><span className="group-open:hidden">+</span><span className="hidden group-open:inline">−</span></span></summary>
@@ -795,7 +796,7 @@ export function ProductsSection({ section, theme }: { section: any; theme: Theme
     const categories = Array.from(new Set(items.map((item: any) => item.category || 'Menu')));
     return <section className="w-full px-6 py-14 text-inherit sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[0.8fr_1fr] md:gap-12">
       {section.content.menuImageUrl && <PageImage src={section.content.menuImageUrl} alt="A selection from our kitchen" className="aspect-[0.8/1] w-full object-cover" />}
-      <div><div className="mb-5 flex items-end justify-between"><h2 className="font-serif text-4xl">{title || 'Menu'}</h2><a href="#menu" className="text-xs uppercase underline underline-offset-4">Vedi tutto</a></div><nav aria-label="Menu categories" className="mb-6 flex flex-wrap gap-x-3 text-xs uppercase text-current/70">{categories.map((category: any, index: number) => <a key={category} href={`#menu-${index}`} className="whitespace-nowrap">{category}{index < categories.length - 1 && <span className="ml-3 opacity-50">/</span>}</a>)}</nav>
+      <div><div className="mb-5 flex items-end justify-between"><h2 className="font-serif text-4xl">{title || 'Menu'}</h2><PageLink href="#menu" className="text-xs uppercase underline underline-offset-4">Vedi tutto</PageLink></div><nav aria-label="Menu categories" className="mb-6 flex flex-wrap gap-x-3 text-xs uppercase text-current/70">{categories.map((category: any, index: number) => <PageLink key={category} href={`#menu-${index}`} className="whitespace-nowrap">{category}{index < categories.length - 1 && <span className="ml-3 opacity-50">/</span>}</PageLink>)}</nav>
         {categories.map((category: any, index: number) => <div key={category} id={`menu-${index}`} className="mb-5 scroll-mt-6"><h3 className="sr-only">{category}</h3><div className="border-t border-current/30">{items.filter((item: any) => (item.category || 'Menu') === category).map((item: any) => <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3 border-b border-current/20 py-3 text-sm"><div><p className="font-medium">{item.title}</p><p className="mt-1 text-xs leading-relaxed text-current/65">{item.description}</p></div><span className="whitespace-nowrap text-current/75">{item.price}</span></div>)}</div></div>)}
       </div>
     </div></section>;
@@ -844,7 +845,7 @@ export function ProductsSection({ section, theme }: { section: any; theme: Theme
                   <div className="font-medium text-slate-500 whitespace-nowrap">{item.price}</div>
                 </div>
                 <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">{item.description}</p>
-                <a href={item.url || '#'} className="inline-block mt-3 text-sm font-semibold tracking-wide uppercase border-b border-transparent hover:border-slate-800 transition-colors self-start pb-0.5">Shop Now</a>
+                <PageLink href={item.url || '#'} className="inline-block mt-3 text-sm font-semibold tracking-wide uppercase border-b border-transparent hover:border-slate-800 transition-colors self-start pb-0.5">Shop Now</PageLink>
               </div>
             </div>
           ))}
@@ -1007,7 +1008,7 @@ export function AnnouncementSection({ section, theme }: { section: any; theme: T
   return (
     <div className="w-full py-3.5 px-4 text-center text-sm font-semibold tracking-wide" style={{ backgroundColor: theme.primaryColor, color: '#fff' }}>
       <span>{text}</span>
-      {url && <a href={url} className="ml-3 underline underline-offset-2 opacity-80 hover:opacity-100">{buttonText || 'Learn More →'}</a>}
+      {url && <PageLink href={url} className="ml-3 underline underline-offset-2 opacity-80 hover:opacity-100">{buttonText || 'Learn More →'}</PageLink>}
     </div>
   );
 }
@@ -1134,7 +1135,7 @@ export function LeadFormSection({ section, theme, pageId }: { section: any; them
         <div className="grid min-w-0 grid-cols-1 items-start gap-4 sm:grid-cols-[0.92fr_1.08fr] sm:gap-8 md:gap-12">
           <div>
             {description && <p className="mb-5 text-[11px] leading-relaxed text-white/65 sm:mb-8 sm:text-sm">{description}</p>}
-            <div className="flex flex-col gap-2 sm:gap-3">{infoCards.map(card => <a key={card.title} href={card.href || '#'} className="flex min-h-12 min-w-0 items-center gap-2 rounded-lg border border-white/10 px-2 py-2 sm:min-h-16 sm:gap-3 sm:px-3"><span className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-white/20 text-[10px] sm:h-7 sm:w-7 sm:text-sm">{card.icon}</span><span className="min-w-0"><span className="block text-[10px] text-white/55 sm:text-xs">{card.title}</span><span className="mt-1 block truncate text-[10px] sm:text-sm">{card.value}</span></span></a>)}</div>
+            <div className="flex flex-col gap-2 sm:gap-3">{infoCards.map(card => <PageLink key={card.title} href={card.href || '#'} className="flex min-h-12 min-w-0 items-center gap-2 rounded-lg border border-white/10 px-2 py-2 sm:min-h-16 sm:gap-3 sm:px-3"><span className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-white/20 text-[10px] sm:h-7 sm:w-7 sm:text-sm">{card.icon}</span><span className="min-w-0"><span className="block text-[10px] text-white/55 sm:text-xs">{card.title}</span><span className="mt-1 block truncate text-[10px] sm:text-sm">{card.value}</span></span></PageLink>)}</div>
           </div>
           <div className="min-w-0 rounded-lg border border-white/10 p-2.5 sm:rounded-xl sm:p-4">
             <LeadFormFields buttonText={buttonText} theme={theme} pageId={pageId} sectionId={section.id} variant="split-inquiry" content={section.content} />
@@ -1318,9 +1319,9 @@ export function BookingSection({ section, theme }: { section: any; theme: ThemeC
       <div className="p-10 rounded-3xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-800/30 border border-slate-200 dark:border-slate-700">
         <h2 className="text-2xl font-bold mb-3">{title}</h2>
         {description && <p className="text-slate-500 dark:text-slate-400 mb-8 text-sm">{description}</p>}
-        <a href={link} target="_blank" rel="noopener noreferrer" data-page-button className="inline-block px-10 py-4 rounded-full font-bold text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" style={{ backgroundColor: theme.primaryColor }}>
+        <PageLink href={link} target="_blank" rel="noopener noreferrer" data-page-button className="inline-block px-10 py-4 rounded-full font-bold text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" style={{ backgroundColor: theme.primaryColor }}>
           Book Now
-        </a>
+        </PageLink>
       </div>
     </section>
   );
@@ -1439,9 +1440,9 @@ export function ContactSection({ section, theme, pageId }: { section: z.infer<ty
             <h3 className="font-serif text-lg font-medium text-current mb-1">Email</h3>
             <p className="text-xs text-current/60 mb-3">Reach our salon concierge</p>
             {email && (
-              <a href={`mailto:${email}`} className="text-sm font-medium text-current hover:underline">
+              <PageLink href={`mailto:${email}`} className="text-sm font-medium text-current hover:underline">
                 {email}
-              </a>
+              </PageLink>
             )}
           </div>
           {/* Phone */}
@@ -1452,9 +1453,9 @@ export function ContactSection({ section, theme, pageId }: { section: z.infer<ty
             <h3 className="font-serif text-lg font-medium text-current mb-1">Phone</h3>
             <p className="text-xs text-current/60 mb-3">Mon-Sat from 9am to 7pm</p>
             {phone && (
-              <a href={`tel:${phone}`} className="text-sm font-medium text-current hover:underline">
+              <PageLink href={`tel:${phone}`} className="text-sm font-medium text-current hover:underline">
                 {phone}
-              </a>
+              </PageLink>
             )}
           </div>
           {/* Office */}
@@ -1481,7 +1482,7 @@ export function ContactSection({ section, theme, pageId }: { section: z.infer<ty
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex gap-6 items-center">
             {address && <span>{address}</span>}
-            {email && <a href={`mailto:${email}`} className="hover:text-slate-900 dark:hover:text-slate-200 transition-colors">{email}</a>}
+            {email && <PageLink href={`mailto:${email}`} className="hover:text-slate-900 dark:hover:text-slate-200 transition-colors">{email}</PageLink>}
             {phone && <span>{phone}</span>}
           </div>
           <div className="text-xs opacity-60">© {new Date().getFullYear()} Forma. All rights reserved.</div>
@@ -1507,7 +1508,7 @@ export function ContactSection({ section, theme, pageId }: { section: z.infer<ty
               {email && (
                 <div>
                   <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Email Us</div>
-                  <a href={`mailto:${email}`} className="text-lg font-medium text-neutral-900 dark:text-white hover:underline decoration-neutral-300 underline-offset-4">{email}</a>
+                  <PageLink href={`mailto:${email}`} className="text-lg font-medium text-neutral-900 dark:text-white hover:underline decoration-neutral-300 underline-offset-4">{email}</PageLink>
                 </div>
               )}
               {phone && (
@@ -1623,13 +1624,13 @@ export function DonateSection({ section, theme }: { section: any; theme: ThemeCo
       {title && <h2 className="text-xl font-bold mb-6">{title}</h2>}
       <div className="flex flex-wrap gap-3 justify-center">
         {links.map((link: any) => (
-          <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition font-semibold text-sm border border-slate-200 dark:border-slate-700">
+          <PageLink key={link.id} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition font-semibold text-sm border border-slate-200 dark:border-slate-700">
             {link.platform === 'PayPal' && <span className="text-lg">₱</span>}
             {link.platform === 'Venmo' && <span className="text-lg font-black">V</span>}
             {link.platform === 'Cash App' && <span className="text-lg font-black">$</span>}
             {!['PayPal', 'Venmo', 'Cash App'].includes(link.platform) && <span>💰</span>}
             {link.platform}
-          </a>
+          </PageLink>
         ))}
       </div>
     </section>
@@ -1831,7 +1832,7 @@ export function TimelineSection({ section, theme }: { section: any; theme: Theme
 
   if (section.variant === 'pinned-thread') return <TattooProcessSection section={section} title={title} items={items} />;
 
-  if (layout === 'restaurant-history') return <section className="w-full bg-white px-6 py-14 text-neutral-900 sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="font-serif text-4xl md:text-5xl">{title || 'La nostra storia'}</h2><div className="flex gap-2 text-sm text-[#c6a66b]"><button aria-label="Previous years" className="grid h-8 w-8 place-items-center rounded-full border border-current">←</button><button aria-label="Next years" className="grid h-8 w-8 place-items-center rounded-full border border-current">→</button></div></div><div className="mb-5 overflow-x-auto overscroll-x-contain"><div className="flex min-w-max items-end gap-10 border-b border-neutral-400 px-5">{items.map((item: any, index: number) => <a key={item.id} href={`#history-${item.id}`} className={`relative pb-3 font-serif text-3xl italic ${index === 0 ? 'text-[#c6a66b]' : 'text-neutral-900'}`}>{item.label}<span className={`absolute -bottom-1 left-0 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-[#c6a66b]' : 'bg-neutral-900'}`} /></a>)}</div></div><div className="grid gap-4 md:grid-cols-3">{items.map((item: any) => <article id={`history-${item.id}`} key={item.id} className="scroll-mt-8">{item.imageUrl && <PageImage src={item.imageUrl} alt="" className="mb-3 aspect-[1.35/1] w-full object-cover" />}<p className="text-[9px] leading-relaxed text-neutral-600">{item.description}</p></article>)}</div></div></section>;
+  if (layout === 'restaurant-history') return <section className="w-full bg-white px-6 py-14 text-neutral-900 sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="font-serif text-4xl md:text-5xl">{title || 'La nostra storia'}</h2><div className="flex gap-2 text-sm text-[#c6a66b]"><button aria-label="Previous years" className="grid h-8 w-8 place-items-center rounded-full border border-current">←</button><button aria-label="Next years" className="grid h-8 w-8 place-items-center rounded-full border border-current">→</button></div></div><div className="mb-5 overflow-x-auto overscroll-x-contain"><div className="flex min-w-max items-end gap-10 border-b border-neutral-400 px-5">{items.map((item: any, index: number) => <PageLink key={item.id} href={`#history-${item.id}`} className={`relative pb-3 font-serif text-3xl italic ${index === 0 ? 'text-[#c6a66b]' : 'text-neutral-900'}`}>{item.label}<span className={`absolute -bottom-1 left-0 h-3 w-3 rounded-full border-2 border-white ${index === 0 ? 'bg-[#c6a66b]' : 'bg-neutral-900'}`} /></PageLink>)}</div></div><div className="grid gap-4 md:grid-cols-3">{items.map((item: any) => <article id={`history-${item.id}`} key={item.id} className="scroll-mt-8">{item.imageUrl && <PageImage src={item.imageUrl} alt="" className="mb-3 aspect-[1.35/1] w-full object-cover" />}<p className="text-[9px] leading-relaxed text-neutral-600">{item.description}</p></article>)}</div></div></section>;
 
   if (layout === 'horizontal-cards') {
     return (
@@ -1966,8 +1967,8 @@ export function StatsSection({ section, theme }: { section: z.infer<typeof Stats
 export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseStudiesSectionSchema> }) {
   const { title, description, actionText, actionUrl, items } = section.content;
   if (section.variant === 'speaker-events') return <section className="w-full bg-[#ff715c] px-6 py-14 text-[#171717] sm:px-10 md:px-[8%] md:py-16">
-    <div className="mx-auto max-w-6xl"><div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="mb-2 text-[8px] font-semibold uppercase tracking-[0.2em]">Ideas in motion</p><h2 className="font-serif text-3xl font-bold leading-tight md:text-4xl">{title || 'Seminars & lectures'}</h2>{description && <p className="mt-3 max-w-lg text-[10px] leading-relaxed text-neutral-800/75">{description}</p>}</div>{actionText && <a href={actionUrl || '#events'} className="bg-sky-500 px-5 py-3 text-[8px] font-semibold uppercase tracking-wide text-white">{actionText} &nbsp; →</a>}</div>
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">{items.map((item: any) => <article key={item.id} className="group relative min-h-[270px] overflow-hidden rounded-xl bg-neutral-900 text-white"><PageImage src={item.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" /><div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent" /><div className="absolute left-3 top-3 bg-[#ff715c] px-2.5 py-2 text-center text-[8px] font-bold uppercase leading-tight">{item.date || 'LIVE'}<br /><span className="text-[7px] font-medium">{item.category || 'EVENT'}</span></div><div className="absolute inset-x-4 bottom-4"><p className="text-[7px] font-semibold uppercase tracking-[0.16em] text-white/70">{item.client || 'Talks & conversations'}</p><h3 className="mt-1 font-serif text-xl font-bold leading-tight">{item.title}</h3><p className="mt-1 line-clamp-2 text-[9px] leading-relaxed text-white/75">{item.description}</p>{item.url && <a href={item.url} className="mt-3 inline-block text-[8px] font-semibold uppercase tracking-wide underline underline-offset-4">{item.buttonText || 'Reserve a seat'}</a>}</div></article>)}</div>
+    <div className="mx-auto max-w-6xl"><div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="mb-2 text-[8px] font-semibold uppercase tracking-[0.2em]">Ideas in motion</p><h2 className="font-serif text-3xl font-bold leading-tight md:text-4xl">{title || 'Seminars & lectures'}</h2>{description && <p className="mt-3 max-w-lg text-[10px] leading-relaxed text-neutral-800/75">{description}</p>}</div>{actionText && <PageLink href={actionUrl || '#events'} className="bg-sky-500 px-5 py-3 text-[8px] font-semibold uppercase tracking-wide text-white">{actionText} &nbsp; →</PageLink>}</div>
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">{items.map((item: any) => <article key={item.id} className="group relative min-h-[270px] overflow-hidden rounded-xl bg-neutral-900 text-white"><PageImage src={item.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" /><div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent" /><div className="absolute left-3 top-3 bg-[#ff715c] px-2.5 py-2 text-center text-[8px] font-bold uppercase leading-tight">{item.date || 'LIVE'}<br /><span className="text-[7px] font-medium">{item.category || 'EVENT'}</span></div><div className="absolute inset-x-4 bottom-4"><p className="text-[7px] font-semibold uppercase tracking-[0.16em] text-white/70">{item.client || 'Talks & conversations'}</p><h3 className="mt-1 font-serif text-xl font-bold leading-tight">{item.title}</h3><p className="mt-1 line-clamp-2 text-[9px] leading-relaxed text-white/75">{item.description}</p>{item.url && <PageLink href={item.url} className="mt-3 inline-block text-[8px] font-semibold uppercase tracking-wide underline underline-offset-4">{item.buttonText || 'Reserve a seat'}</PageLink>}</div></article>)}</div>
     </div>
   </section>;
   if (section.variant === 'editorial-rows') {
@@ -1977,11 +1978,11 @@ export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseSt
           <div className="mb-10"><h2 className="text-2xl font-bold uppercase tracking-[0.08em]">{title || 'Projects'}</h2></div>
           <div className="space-y-10 md:space-y-12">
             {items.map((item: any) => <article key={item.id} className="grid items-center gap-5 md:grid-cols-[1.25fr_0.75fr] md:gap-8">
-              <a href={item.url || '#'} className="group block aspect-[1.65/1] overflow-hidden bg-neutral-200"><PageImage src={item.imageUrl} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" /></a>
-              <div><p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-neutral-400">{item.date || item.category || 'Selected work'}</p><h3 className="max-w-xs text-xl font-bold uppercase leading-[1.05] tracking-[0.07em] sm:text-2xl">{item.title}</h3><p className="mt-3 text-[10px] leading-relaxed text-neutral-600">{item.description}</p><a href={item.url || '#'} className="mt-4 inline-flex items-center gap-3 text-[9px] font-semibold uppercase">{item.buttonText || 'View live'} <span className="grid h-8 w-8 place-items-center rounded-full border border-neutral-300 text-base">›</span></a></div>
+              <PageLink href={item.url || '#'} className="group block aspect-[1.65/1] overflow-hidden bg-neutral-200"><PageImage src={item.imageUrl} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" /></PageLink>
+              <div><p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-neutral-400">{item.date || item.category || 'Selected work'}</p><h3 className="max-w-xs text-xl font-bold uppercase leading-[1.05] tracking-[0.07em] sm:text-2xl">{item.title}</h3><p className="mt-3 text-[10px] leading-relaxed text-neutral-600">{item.description}</p><PageLink href={item.url || '#'} className="mt-4 inline-flex items-center gap-3 text-[9px] font-semibold uppercase">{item.buttonText || 'View live'} <span className="grid h-8 w-8 place-items-center rounded-full border border-neutral-300 text-base">›</span></PageLink></div>
             </article>)}
           </div>
-          {actionText && <a href={actionUrl || '#'} className="mt-8 inline-flex rounded-full bg-neutral-900 px-7 py-3 text-[9px] font-semibold uppercase tracking-wide text-white">{actionText}</a>}
+          {actionText && <PageLink href={actionUrl || '#'} className="mt-8 inline-flex rounded-full bg-neutral-900 px-7 py-3 text-[9px] font-semibold uppercase tracking-wide text-white">{actionText}</PageLink>}
         </div>
       </section>
     );
@@ -1990,11 +1991,11 @@ export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseSt
     const [feature, ...previews] = items;
     if (!feature) return null;
     return <section className="w-full bg-white px-6 py-16 text-[#123b38] sm:px-10 md:px-[10%] md:py-20">
-      <div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><p className="text-[10px] font-semibold uppercase">Curated works we’re proud of</p>{actionText && <a href={actionUrl || '#'} className="border-b border-current/50 pb-1 text-[9px] uppercase">{actionText} ↘</a>}</div>
+      <div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><p className="text-[10px] font-semibold uppercase">Curated works we’re proud of</p>{actionText && <PageLink href={actionUrl || '#'} className="border-b border-current/50 pb-1 text-[9px] uppercase">{actionText} ↘</PageLink>}</div>
         <div className="grid items-center gap-6 md:grid-cols-[0.75fr_1.5fr_0.45fr]">
-          <div><h3 className="text-xl font-semibold">{feature.title}</h3><p className="mt-2 text-[10px] leading-relaxed text-neutral-600">{feature.description}</p><p className="mt-3 text-[9px]">Client <strong>{feature.client}</strong></p><p className="mt-1 text-[9px]">{feature.location}</p><a href={feature.url || '#'} className="mt-3 inline-block border-b border-current pb-1 text-[9px] uppercase">See detail ↘</a><div className="mt-8 flex gap-6 text-sm"><span>←</span><span className="text-[9px]">01 / {String(items.length).padStart(2, '0')}</span><span>→</span></div></div>
-          <a href={feature.url || '#'} className="block aspect-[1.35/1] overflow-hidden rounded-md bg-neutral-100"><PageImage src={feature.imageUrl} alt={feature.title} className="h-full w-full object-cover" /></a>
-          <div className="hidden flex-col gap-3 md:flex">{previews.slice(0, 2).map(item => <a key={item.id} href={item.url || '#'} className="block aspect-[1.15/1] overflow-hidden rounded-md bg-neutral-100"><PageImage src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" /></a>)}</div>
+          <div><h3 className="text-xl font-semibold">{feature.title}</h3><p className="mt-2 text-[10px] leading-relaxed text-neutral-600">{feature.description}</p><p className="mt-3 text-[9px]">Client <strong>{feature.client}</strong></p><p className="mt-1 text-[9px]">{feature.location}</p><PageLink href={feature.url || '#'} className="mt-3 inline-block border-b border-current pb-1 text-[9px] uppercase">See detail ↘</PageLink><div className="mt-8 flex gap-6 text-sm"><span>←</span><span className="text-[9px]">01 / {String(items.length).padStart(2, '0')}</span><span>→</span></div></div>
+          <PageLink href={feature.url || '#'} className="block aspect-[1.35/1] overflow-hidden rounded-md bg-neutral-100"><PageImage src={feature.imageUrl} alt={feature.title} className="h-full w-full object-cover" /></PageLink>
+          <div className="hidden flex-col gap-3 md:flex">{previews.slice(0, 2).map(item => <PageLink key={item.id} href={item.url || '#'} className="block aspect-[1.15/1] overflow-hidden rounded-md bg-neutral-100"><PageImage src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" /></PageLink>)}</div>
         </div>
       </div>
     </section>;
@@ -2005,17 +2006,17 @@ export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseSt
         <div className="mb-10 grid gap-5 md:grid-cols-[1fr_1fr_auto] md:items-center">
           <h2 className="max-w-md text-3xl font-semibold leading-tight tracking-tight md:text-4xl">{title}</h2>
           {description && <p className="max-w-md text-xs leading-relaxed text-current/70">{description}</p>}
-          {actionText && <a href={actionUrl || '#'} className="justify-self-start border border-current/40 px-4 py-2 text-[10px] font-semibold transition hover:bg-white hover:text-slate-900">{actionText}</a>}
+          {actionText && <PageLink href={actionUrl || '#'} className="justify-self-start border border-current/40 px-4 py-2 text-[10px] font-semibold transition hover:bg-white hover:text-slate-900">{actionText}</PageLink>}
         </div>
         <div className="grid gap-5 md:grid-cols-3">
           {items.map((item: any) => (
             <article key={item.id} className="min-w-0">
-              <a href={item.url || '#'} className="group block aspect-[4/3] overflow-hidden bg-white/10">
+              <PageLink href={item.url || '#'} className="group block aspect-[4/3] overflow-hidden bg-white/10">
                 <PageImage src={item.imageUrl} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
-              </a>
+              </PageLink>
               <h3 className="mt-4 text-sm font-semibold leading-snug">{item.title}</h3>
               <p className="mt-2 text-[11px] leading-relaxed text-current/70">{item.description}</p>
-              {item.url && <a href={item.url} className="mt-3 inline-block text-[10px] font-semibold underline decoration-current/40 underline-offset-4">{item.buttonText || 'Read more'}</a>}
+              {item.url && <PageLink href={item.url} className="mt-3 inline-block text-[10px] font-semibold underline decoration-current/40 underline-offset-4">{item.buttonText || 'Read more'}</PageLink>}
             </article>
           ))}
         </div>
@@ -2026,12 +2027,12 @@ export function CaseStudiesSection({ section }: { section: z.infer<typeof CaseSt
 
 export function BlogListSection({ section }: { section: z.infer<typeof BlogListSectionSchema> }) {
   const { title, actionText, actionUrl, items } = section.content;
-  if (section.variant === 'image-cards') return <section className="w-full bg-white px-6 py-16 text-[#123b38] sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="text-[10px] font-semibold uppercase">{title}</h2>{actionText && <a href={actionUrl || '#'} className="border-b border-current/50 pb-1 text-[9px] uppercase">{actionText} ↘</a>}</div><div className="grid gap-5 md:grid-cols-3">{items.map(item => <article key={item.id} className="min-w-0"><a href={item.url || '#'} className="block aspect-[1.35/1] overflow-hidden rounded-md bg-neutral-100"><PageImage src={item.imageUrl} alt="" className="h-full w-full object-cover" /></a><p className="mt-3 text-[8px] text-[#123b38]/60">{item.date} &nbsp; • &nbsp; by Julie Hill</p><a href={item.url || '#'} className="line-clamp-2 text-sm font-semibold leading-snug text-neutral-900">{item.title}</a></article>)}</div></div></section>;
+  if (section.variant === 'image-cards') return <section className="w-full bg-white px-6 py-16 text-[#123b38] sm:px-10 md:px-[10%] md:py-20"><div className="mx-auto max-w-6xl"><div className="mb-8 flex items-center justify-between"><h2 className="text-[10px] font-semibold uppercase">{title}</h2>{actionText && <PageLink href={actionUrl || '#'} className="border-b border-current/50 pb-1 text-[9px] uppercase">{actionText} ↘</PageLink>}</div><div className="grid gap-5 md:grid-cols-3">{items.map(item => <article key={item.id} className="min-w-0"><PageLink href={item.url || '#'} className="block aspect-[1.35/1] overflow-hidden rounded-md bg-neutral-100"><PageImage src={item.imageUrl} alt="" className="h-full w-full object-cover" /></PageLink><p className="mt-3 text-[8px] text-[#123b38]/60">{item.date} &nbsp; • &nbsp; by Julie Hill</p><PageLink href={item.url || '#'} className="line-clamp-2 text-sm font-semibold leading-snug text-neutral-900">{item.title}</PageLink></article>)}</div></div></section>;
   return <section className="w-full rounded-b-[2rem] border-t border-neutral-400 bg-[#f4f4f6] px-6 py-14 text-[#171717] sm:px-10 md:px-[15%] md:py-20">
     <div className="mx-auto max-w-6xl">
-      <div className="mb-8 flex items-center justify-between"><h2 className="text-2xl font-bold uppercase tracking-[0.08em]">{title}</h2>{actionText && <a href={actionUrl || '#'} className="rounded-full bg-neutral-900 px-6 py-3 text-[9px] font-semibold uppercase tracking-wide text-white">{actionText}</a>}</div>
+      <div className="mb-8 flex items-center justify-between"><h2 className="text-2xl font-bold uppercase tracking-[0.08em]">{title}</h2>{actionText && <PageLink href={actionUrl || '#'} className="rounded-full bg-neutral-900 px-6 py-3 text-[9px] font-semibold uppercase tracking-wide text-white">{actionText}</PageLink>}</div>
       <div>{items.map(item => <article key={item.id} className="grid gap-4 border-b border-neutral-400 py-6 first:border-t md:grid-cols-[1fr_0.8fr] md:gap-10">
-        <div><p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-500">{item.category}<span className="mx-3">/</span>{item.date}</p><a href={item.url || '#'} className="max-w-sm text-sm font-bold leading-snug hover:underline">{item.title}</a></div>
+        <div><p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-500">{item.category}<span className="mx-3">/</span>{item.date}</p><PageLink href={item.url || '#'} className="max-w-sm text-sm font-bold leading-snug hover:underline">{item.title}</PageLink></div>
         <p className="max-w-md text-[10px] leading-relaxed text-neutral-600">{item.description}</p>
       </article>)}</div>
     </div>
@@ -2104,13 +2105,13 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
               </p>
             )}
             {content.buttonText && content.buttonUrl && (
-              <a
+              <PageLink
                 href={content.buttonUrl}
                 data-page-button
                 className="inline-flex items-center justify-center rounded-full bg-[#b89562] px-8 py-3.5 text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition-all hover:bg-[#a68352] hover:shadow-md"
               >
                 {content.buttonText}
-              </a>
+              </PageLink>
             )}
           </div>
         </div>
@@ -2168,14 +2169,14 @@ function FeatureSplitSection({ section, theme }: { section: z.infer<typeof Featu
           )}
 
           {content.buttonText && content.buttonUrl && (
-            <a
+            <PageLink
               href={content.buttonUrl}
               data-page-button
               className="inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white rounded-lg transition-all shadow-sm hover:shadow-md"
               style={{ backgroundColor: theme.primaryColor, borderRadius: theme.radius === 'none' ? '0' : theme.radius === 'small' ? '0.375rem' : theme.radius === 'medium' ? '0.5rem' : theme.radius === 'large' ? '0.75rem' : '9999px' }}
             >
               {content.buttonText}
-            </a>
+            </PageLink>
           )}
         </div>
 

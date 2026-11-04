@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { ArrowUpRight, ArrowRight, Loader2, Check } from 'lucide-react';
 import { applyTemplateToPage } from '@/app/actions/template-actions';
 import { toast } from 'sonner';
@@ -118,14 +119,14 @@ export function TemplatesClient({ templates }: { templates: TemplateProps[] }) {
                 </div>
                 
                 {/* Preview Hover Affordance */}
-                <a 
+                <Link
                   href={`/template-preview?id=${template.id}`} 
                   target="_blank" 
                   rel="noreferrer"
                   className="absolute z-20 right-4 top-4 flex items-center gap-1.5 text-xs text-[#4C4E47] bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full opacity-0 translate-y-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 shadow-sm"
                 >
                   Preview <ArrowUpRight size={12} />
-                </a>
+                </Link>
               </div>
               
               <div className="p-6 flex flex-col flex-1">

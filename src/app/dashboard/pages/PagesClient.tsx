@@ -377,7 +377,7 @@ export function PagesClient({
                         <Pencil size={13} /> Edit
                       </Link>
 
-                      <a
+                      <Link
                         href={page.path}
                         target="_blank"
                         rel="noreferrer"
@@ -385,7 +385,7 @@ export function PagesClient({
                         title="View page"
                       >
                         <ExternalLink size={14} />
-                      </a>
+                      </Link>
 
                       {!isHome && (
                         <>
@@ -494,7 +494,7 @@ export function PagesClient({
                                     <Pencil size={11} /> Edit in Studio
                                   </Link>
                                   {isPub && (
-                                    <a
+                                    <Link
                                       href={`/${username}/blog/${article.slug}`}
                                       target="_blank"
                                       rel="noreferrer"
@@ -502,7 +502,7 @@ export function PagesClient({
                                       title="View live post"
                                     >
                                       <ExternalLink size={12} />
-                                    </a>
+                                    </Link>
                                   )}
                                 </div>
                               </li>

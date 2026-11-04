@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Check,
   ChevronRight,
@@ -513,7 +514,7 @@ export function BlogStudio({
 
           {selectedIsPublished ? (
             <>
-              <a
+              <Link
                 href={`/${username}/blog/${draft?.publicSlug || draft?.slug}`}
                 target="_blank"
                 rel="noreferrer"
@@ -521,7 +522,7 @@ export function BlogStudio({
               >
                 <Eye className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">View live</span>
-              </a>
+              </Link>
               <button
                 type="button"
                 onClick={() => void publish()}

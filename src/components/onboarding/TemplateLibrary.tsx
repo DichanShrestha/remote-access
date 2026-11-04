@@ -228,7 +228,7 @@ export function TemplateLibrary({ templates }: { templates: Template[] }) {
 
               {/* External link & Close buttons */}
               <div className="flex items-center gap-2">
-                <a
+                <Link
                   href={`/template-preview?id=${previewTemplate.id}`}
                   target="_blank"
                   rel="noreferrer"
@@ -237,7 +237,7 @@ export function TemplateLibrary({ templates }: { templates: Template[] }) {
                 >
                   <ExternalLink size={13} />
                   <span>Full tab</span>
-                </a>
+                </Link>
 
                 <button
                   type="button"

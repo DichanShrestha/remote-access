@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Link from 'next/link';
 import {
   AlertCircle,
   FileText,
@@ -318,7 +319,7 @@ export function ArticleSettings({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <StatusPill status={article.status} />
                 {article.status === 'PUBLISHED' && (
-                  <a
+                  <Link
                     href={publicPath}
                     target="_blank"
                     rel="noreferrer"
@@ -326,7 +327,7 @@ export function ArticleSettings({
                   >
                     <Globe2 className="h-3 w-3" />
                     View live article
-                  </a>
+                  </Link>
                 )}
               </div>
             </SectionCard>

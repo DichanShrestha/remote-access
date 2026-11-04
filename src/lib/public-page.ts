@@ -184,14 +184,17 @@ export const getPublishedPage = cache(async (rawUsername: string, rawSlug?: stri
   };
   const resolvedWebsiteConfig = websiteConfig || fallbackConfig;
 
+  const publishedPages = profile.pages.filter((page) => page.isPublished);
   const navigation = getNavigationLinksForPages(
     profile.username,
-    profile.pages.filter((page) => page.isPublished && page.showInNavigation),
+    publishedPages.filter((page) => page.showInNavigation),
   );
+  const matchingPages = getNavigationLinksForPages(profile.username, publishedPages);
 
   const renderedDocument = applyManagedNavigation(
     applyWebsiteConfig(document, resolvedWebsiteConfig),
     navigation,
+    matchingPages,
   );
 
   const entitlement = getSmartPageEntitlement(profile.user);

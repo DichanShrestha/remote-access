@@ -90,14 +90,14 @@ export function DashboardHome({ data }: { data: DashboardData }) {
           <p className="text-sm text-[#737373] mt-1">Your page performance and active lead status.</p>
         </div>
         <div className="flex items-center gap-2.5">
-          <a 
+          <Link
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E8E5DF] bg-white text-xs font-medium text-[#565850] hover:bg-[#FBF9F5] hover:text-[#171717] transition-colors shadow-2xs" 
             href={`/${data.username}`} 
             target="_blank" 
             rel="noreferrer"
           >
             View page <ExternalLink size={13}/>
-          </a>
+          </Link>
           <Link 
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#171717] text-white text-xs font-medium hover:bg-[#262626] transition-colors shadow-xs" 
             href="/editor"
@@ -224,7 +224,7 @@ export function DashboardHome({ data }: { data: DashboardData }) {
           <div className="md:col-span-8 space-y-4">
             <div>
               <p className="text-[11px] font-mono uppercase tracking-wider text-[#8C8D85] mb-1">YOUR PUBLIC ADDRESS</p>
-              <a 
+              <Link
                 href={`/${data.username}`} 
                 target="_blank" 
                 rel="noreferrer" 
@@ -233,7 +233,7 @@ export function DashboardHome({ data }: { data: DashboardData }) {
                 <span>{data.origin.replace(/^https?:\/\//, '')}/</span>
                 <span className="text-[#171717]">{data.username}</span>
                 <ArrowUpRight size={18} className="text-[#8C8D85]"/>
-              </a>
+              </Link>
               <p className="text-xs text-[#737373] mt-2 leading-relaxed">
                 {data.bio || 'Your public page is ready for visitors. Add a short bio in the editor to introduce your work.'}
               </p>

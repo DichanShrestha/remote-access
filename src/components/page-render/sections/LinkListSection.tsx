@@ -2,6 +2,7 @@ import React from 'react';
 import { z } from 'zod';
 import { LinkListSectionSchema, ThemeConfig } from '@/lib/page-engine/schemas';
 import { ExternalLink } from 'lucide-react';
+import { PageLink } from '@/components/page-render/PageLink';
 
 type LinkListProps = {
   section: z.infer<typeof LinkListSectionSchema>;
@@ -15,7 +16,7 @@ export function LinkListSection({ section, theme }: LinkListProps) {
     return (
       <nav aria-label="Main navigation" className="w-full flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-current">
         {content.links.map(link => (
-          <a key={link.id} href={link.url} className="transition-opacity hover:opacity-60">{link.label}</a>
+          <PageLink key={link.id} href={link.url} className="transition-opacity hover:opacity-60">{link.label}</PageLink>
         ))}
       </nav>
     );
@@ -28,7 +29,7 @@ export function LinkListSection({ section, theme }: LinkListProps) {
           {content.links.map(link => {
             const isActive = Boolean(link.isActive);
             return (
-              <a
+              <PageLink
                 key={link.id}
                 href={link.url}
                 aria-current={isActive ? 'page' : undefined}
@@ -37,7 +38,7 @@ export function LinkListSection({ section, theme }: LinkListProps) {
                 {link.label}
                 {link.badge && <span className="rounded-sm bg-emerald-50 px-1 py-0.5 text-[8px] font-bold uppercase text-emerald-800">{link.badge}</span>}
                 {isActive && <span className="absolute inset-x-3 bottom-0 h-px" style={{ backgroundColor: theme.primaryColor }} />}
-              </a>
+              </PageLink>
             );
           })}
         </div>

@@ -447,7 +447,7 @@ export const TEMPLATE_CORPORATE_CONSULTING: PageDocument = {
       content: {
         logoText: 'Northstar',
         links: [
-          { id: 'nav-about', label: 'About us', url: '#hero' }, { id: 'nav-services', label: 'Services', url: '#service-tabs' }, { id: 'nav-pricing', label: 'Pricing', url: '#value-cards' }, { id: 'nav-news', label: 'News', url: '#success-stories' }, { id: 'nav-contact', label: 'Contact', url: '#contact' },
+          { id: 'nav-about', label: 'About us', url: '#about' }, { id: 'nav-services', label: 'Services', url: '#service-tabs' }, { id: 'nav-pricing', label: 'Pricing', url: '#value-cards' }, { id: 'nav-news', label: 'News', url: '#success-stories' }, { id: 'nav-contact', label: 'Contact', url: '#contact' },
         ],
         secondaryLabel: 'Free consultation', secondaryUrl: '#contact', primaryLabel: 'Get started', primaryUrl: '#contact',
       },
@@ -595,7 +595,7 @@ export const TEMPLATE_EDITORIAL_PORTFOLIO: PageDocument = {
   theme: { style: 'premium-minimal', primaryColor: '#171717', radius: 'small', density: 'spacious' },
   settings: { showFooterBranding: false, enableSmoothScrolling: true },
   sections: [
-    { id: 'site-header', type: 'site-navbar', variant: 'pill', isHidden: false, backgroundColor: '#f4f4f6', textColor: '#171717', content: { logoText: '', links: [{ id: 'nav-projects', label: 'Projects', url: '#projects' }, { id: 'nav-about', label: 'About', url: '#about' }, { id: 'nav-blogs', label: 'Blogs', url: '#blogs' }, { id: 'nav-contact', label: 'Contact', url: '#contact' }] } },
+    { id: 'site-header', type: 'site-navbar', variant: 'pill', isHidden: false, backgroundColor: '#f4f4f6', textColor: '#171717', content: { logoText: '', links: [{ id: 'nav-projects', label: 'Projects', url: '#projects' }, { id: 'nav-about', label: 'About', url: '#about' }, { id: 'nav-blogs', label: 'Blog', url: '#blog' }, { id: 'nav-contact', label: 'Contact', url: '#contact' }] } },
     { id: 'hero', type: 'hero', variant: 'portfolio-editorial', layout: 'split', isHidden: false, backgroundColor: '#f4f4f6', textColor: '#171717', content: { title: 'Nandini Jaryal', eyebrow: 'INDEPENDENT DESIGNER', headline: 'Digital experiences with clarity and character', subtitle: 'I partner with thoughtful teams to shape useful products and the identities around them.', buttonText: 'Start a conversation', buttonUrl: '#contact' } },
     { id: 'services', type: 'services', variant: 'portfolio-band', isHidden: false, backgroundColor: '#171717', textColor: '#ffffff', content: { title: 'Services', items: [{ id: 's1', title: 'Web Design', description: '' }, { id: 's2', title: 'Product Design', description: '' }, { id: 's3', title: 'UI/UX Design', description: '' }, { id: 's4', title: 'Graphic Design', description: '' }, { id: 's5', title: 'Art Direction', description: '' }, { id: 's6', title: 'Brand Design', description: '' }], socialLinks: [{ id: 'so1', title: 'Facebook', url: '#' }, { id: 'so2', title: 'Twitter', url: '#' }, { id: 'so3', title: 'Instagram', url: '#' }] } },
     { id: 'projects', type: 'case-studies', variant: 'editorial-rows', isHidden: false, backgroundColor: '#f4f4f6', textColor: '#171717', content: { title: 'Selected work', items: [{ id: 'p1', title: 'A calmer way to manage money', category: 'Digital product', date: 'MAR 2025', description: 'A clear, approachable experience that helps first-time investors make confident decisions.', imageUrl: 'https://images.unsplash.com/photo-1559028012-481c04fa702d?auto=format&fit=crop&w=1200&q=85', url: '#', buttonText: 'View project' }, { id: 'p2', title: 'Care, built around real life', category: 'Brand and product', date: 'DEC 2024', description: 'A mobile-first identity and booking journey for an independent wellbeing practice.', imageUrl: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=1200&q=85', url: '#', buttonText: 'View project' }, { id: 'p3', title: 'A more human city guide', category: 'Editorial platform', date: 'AUG 2024', description: 'A visual system that helps curious residents find the places shaping their neighborhood.', imageUrl: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?auto=format&fit=crop&w=1200&q=85', url: '#', buttonText: 'View project' }], actionText: 'Explore selected work', actionUrl: '#projects' } },
@@ -634,7 +634,7 @@ export const TEMPLATE_POINT_ARCHITECTURE: PageDocument = {
   theme: { style: 'premium-minimal', primaryColor: '#0b4039', radius: 'small', density: 'spacious' },
   settings: { showFooterBranding: false, enableSmoothScrolling: true },
   sections: [
-    { id: 'site-header', type: 'site-navbar', variant: 'overlay', isHidden: false, textColor: '#ffffff', content: { logoText: 'POINT+', links: [{ id: 'n1', label: 'About us', url: '#about' }, { id: 'n2', label: 'Services', url: '#services' }, { id: 'n3', label: 'Projects', url: '#projects' }, { id: 'n4', label: 'Blog', url: '#news' }, { id: 'n5', label: 'Contact', url: '#contact' }] } },
+    { id: 'site-header', type: 'site-navbar', variant: 'overlay', isHidden: false, textColor: '#ffffff', content: { logoText: 'POINT+', links: [{ id: 'n1', label: 'About us', url: '#about' }, { id: 'n2', label: 'Services', url: '#services' }, { id: 'n3', label: 'Projects', url: '#projects' }, { id: 'n4', label: 'Blog', url: '#blog' }, { id: 'n5', label: 'Contact', url: '#contact' }] } },
     { id: 'hero', type: 'hero', variant: 'immersive', layout: 'center', textContrast: 'light', isHidden: false, backgroundColor: '#344d5d', content: { title: 'POINT+', headline: 'Spaces for better life', subtitle: 'Architecture shaped around people, place, and possibility.', buttonText: 'See more', buttonUrl: '#about', imageUrl: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1800&q=85' } },
     consultingGroup('about-impact', 'About and impact', 'row', [
       consultingGroup('about-copy', 'About us', 'column', [{ id: 'about', type: 'rich-text', variant: 'architecture-about', isHidden: false, content: { text: '<h2>We are specializing in innovative and sustainable design.</h2><p>We listen closely to your needs, study the nuances of each site, and combine these insights with creative ingenuity to deliver extraordinary results.</p><p>We are dedicated to leaving a meaningful impact on communities and lives. At the heart of what we do is a passion for creating spaces that enrich experiences and stand the test of time.</p>' } }], { width: 'custom', customWidth: 35, padding: 'custom', customPadding: 0 }),
@@ -777,7 +777,7 @@ export const TEMPLATE_SPA_SALON: PageDocument = {
         logoText: 'Nue Studio',
         links: [
           { id: 'nav-home', label: 'Home', url: '#hero' },
-          { id: 'nav-about', label: 'About Us', url: '#services-overview' },
+          { id: 'nav-about', label: 'About Us', url: '#about' },
           { id: 'nav-services', label: 'Services', url: '#treatments' },
           { id: 'nav-contact', label: 'Contact', url: '#contact' },
         ],
