@@ -39,8 +39,8 @@ export function TemplatePickerModal({
         
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Change Template</h2>
-            <p className="text-xs text-slate-500">Preview a new template. Your content will be preserved.</p>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Preview a template</h2>
+            <p className="text-xs text-slate-500">Preview this design on the current page. To redesign the whole website, use Dashboard → Templates.</p>
           </div>
           <button 
             onClick={onClose}
@@ -90,7 +90,7 @@ export function TemplatePickerModal({
                       {applying === template.id ? (
                         <><Loader2 size={14} className="animate-spin" /> Previewing...</>
                       ) : (
-                        'Preview Template'
+                        'Preview on this page'
                       )}
                     </button>
                   </div>

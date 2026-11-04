@@ -84,6 +84,7 @@ model Profile {
   slugRedirects     PageSlugRedirect[]
   blogArticles      BlogArticle[]
   blogSlugRedirects BlogArticleSlugRedirect[]
+  templateSnapshots TemplateSwitchSnapshot[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -137,6 +138,26 @@ model Page {
   @@index([profileId, pageType])
   @@index([profileId, isPublished, showInNavigation, navOrder])
   @@index([isPublished, noindex, updatedAt])
+}
+
+/// Recoverable snapshot written immediately before a whole-site template
+/// switch. The JSON payload is the complete previous website and page design so
+/// an operator can restore the exact configuration if a switch fails.
+model TemplateSwitchSnapshot {
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  fromTemplateId String?
+  toTemplateId   String
+
+  websiteConfig          Json
+  publishedWebsiteConfig Json?
+  pages                  Json
+
+  createdAt DateTime @default(now())
+
+  @@index([profileId, createdAt])
 }
 
 /// Tenant-scoped redirects so changing a page slug never breaks old links and

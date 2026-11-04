@@ -26,7 +26,7 @@ export async function useTemplate(templateId: string) {
 
   const home = await findHomePage(user.profile.id);
   const pageContent = toPageContentDocument(template);
-  const siteConfig = extractWebsiteConfig(template);
+  const siteConfig = extractWebsiteConfig(template, { templateId });
 
   await db.$transaction(async (tx) => {
     if (home) {

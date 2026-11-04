@@ -35,7 +35,7 @@ export async function chooseOnboardingTemplate(templateId: string) {
   const template = getTemplateDetails(templateId);
   if (!template) throw new Error('Choose an available template.');
   const home = await findHomePage(user.profile.id);
-  const siteConfig = extractWebsiteConfig(template.document);
+  const siteConfig = extractWebsiteConfig(template.document, { templateId });
   const { home: templateHome } = buildTemplatePages(templateId, template.document);
 
   // Pre-seed the homepage with the chosen template right away. The shared
@@ -90,7 +90,7 @@ export async function selectOnboardingTemplateDirect(templateId: string) {
   const template = getTemplateDetails(templateId);
   if (!template) throw new Error('Choose an available template.');
   const home = await findHomePage(user.profile.id);
-  const siteConfig = extractWebsiteConfig(template.document);
+  const siteConfig = extractWebsiteConfig(template.document, { templateId });
   const { home: templateHome } = buildTemplatePages(templateId, template.document);
 
   await db.$transaction(async (tx) => {
@@ -177,7 +177,7 @@ export async function saveOnboardingPersonalization(input: unknown) {
   const home = await findHomePage(user.profile.id);
   const { home: personalizedHome } = buildTemplatePages(templateId, validated.data);
   const pageContent = toPageContentDocument(personalizedHome);
-  const siteConfig = extractWebsiteConfig(validated.data);
+  const siteConfig = extractWebsiteConfig(validated.data, { templateId });
 
   await db.$transaction(async (tx) => {
     await tx.profile.update({

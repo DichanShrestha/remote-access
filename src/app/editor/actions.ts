@@ -8,6 +8,7 @@ import { revalidatePath } from 'next/cache';
 import { buildPagePath } from '@/lib/page-engine/page-types';
 import {
   extractWebsiteConfig,
+  parseWebsiteConfig,
   toPageContentDocument,
 } from '@/lib/page-engine/site-config';
 import { getSeoPublishSnapshot } from '@/lib/seo';
@@ -128,7 +129,13 @@ export async function saveDraftConfig(pageId: string, rawConfig: unknown) {
   }
 
   const pageContent = toPageContentDocument(parsed.data);
-  const siteConfig = extractWebsiteConfig(parsed.data);
+  const website = await db.website.findUnique({
+    where: { profileId: page.profileId },
+    select: { draftConfig: true },
+  });
+  const siteConfig = extractWebsiteConfig(parsed.data, {
+    templateId: parseWebsiteConfig(website?.draftConfig)?.templateId,
+  });
 
   await db.$transaction(async (tx) => {
     await tx.page.update({
@@ -166,7 +173,13 @@ export async function publishDraftConfig(pageId: string, rawConfig: unknown) {
   if (!page || page.profile.userId !== user.id) throw new Error('Unauthorized');
 
   const pageContent = toPageContentDocument(parsed.data);
-  const siteConfig = extractWebsiteConfig(parsed.data);
+  const website = await db.website.findUnique({
+    where: { profileId: page.profileId },
+    select: { draftConfig: true },
+  });
+  const siteConfig = extractWebsiteConfig(parsed.data, {
+    templateId: parseWebsiteConfig(website?.draftConfig)?.templateId,
+  });
   const seoSnapshot = getSeoPublishSnapshot(parsed.data.settings);
   const isHome = page.pageType === 'HOME' || page.slug === '';
 

@@ -18,6 +18,10 @@ export const WebsiteSettingsSchema = z.object({
 
 export const WebsiteConfigSchema = z.object({
   version: z.number().default(1),
+  /// The template whose design currently drives every template-managed page.
+  /// Optional because websites created before whole-site switching have no
+  /// stored provenance; those are detected from their page signatures.
+  templateId: z.string().optional(),
   theme: ThemeConfigSchema,
   settings: WebsiteSettingsSchema.default({ showFooterBranding: true, enableSmoothScrolling: false }),
   header: SiteNavbarSectionSchema.nullable().default(null),
@@ -49,7 +53,10 @@ function stripSiteChrome(nodes: PageNode[]): PageNode[] {
     .map((node) => (isGroup(node) ? { ...node, children: stripSiteChrome(node.children) } : node));
 }
 
-export function extractWebsiteConfig(document: PageDocument): WebsiteConfig {
+export function extractWebsiteConfig(
+  document: PageDocument,
+  options: { templateId?: string | null } = {},
+): WebsiteConfig {
   const headerCandidate = findFirstSection(document.sections, 'site-navbar');
   const footerCandidate = findFirstSection(document.sections, 'site-footer');
   const header = headerCandidate ? SiteNavbarSectionSchema.safeParse(headerCandidate) : null;
@@ -57,6 +64,7 @@ export function extractWebsiteConfig(document: PageDocument): WebsiteConfig {
 
   return {
     version: 1,
+    ...(options.templateId ? { templateId: options.templateId } : {}),
     theme: document.theme,
     settings: {
       showFooterBranding: document.settings.showFooterBranding,
